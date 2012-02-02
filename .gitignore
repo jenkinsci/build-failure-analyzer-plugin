@@ -1,0 +1,6 @@
+target
+bin
+*.iml
+*.iws
+*.ipr
+work
