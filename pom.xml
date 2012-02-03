@@ -59,6 +59,10 @@
             <id>maven.jenkins-ci.org</id>
             <url>http://maven.jenkins-ci.org/content/repositories/releases</url>
         </repository>
+        <repository>
+            <id>powermock-repo</id>
+            <url>http://powermock.googlecode.com/svn/repo/</url>
+        </repository>
     </repositories>
 
     <pluginRepositories>
