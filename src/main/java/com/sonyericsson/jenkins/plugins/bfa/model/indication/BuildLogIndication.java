@@ -46,6 +46,13 @@ public class BuildLogIndication extends Indication {
         super(pattern);
     }
 
+    /**
+     * Default constructor.
+     * <strong>Do not use this unless you are a serializer.</strong>
+     */
+    public BuildLogIndication() {
+    }
+
     @Override
     public Reader getReader(AbstractBuild build) throws IOException {
         return build.getLogReader();

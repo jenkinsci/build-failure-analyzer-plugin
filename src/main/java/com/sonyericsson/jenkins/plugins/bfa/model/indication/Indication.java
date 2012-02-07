@@ -23,22 +23,27 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import hudson.ExtensionList;
 import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Hudson;
 import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.Reader;
+import java.io.Serializable;
 import java.util.regex.Pattern;
+
 /**
  * Indication that can match a search string for a specific reader.
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public abstract class Indication implements Describable<Indication> {
+public abstract class Indication implements Describable<Indication>, Serializable {
 
     private Pattern pattern;
+
     /**
-     *
      * @param pattern the String value.
      */
     @DataBoundConstructor
@@ -47,15 +52,24 @@ public abstract class Indication implements Describable<Indication> {
     }
 
     /**
+     * Default constructor. <strong>Do not use this unless you are a serializer.</strong>
+     */
+    protected Indication() {
+    }
+
+    /**
      * Gets the reader for the specific build.
+     *
      * @param build the build to analyze.
      * @return a reader that can we will use to look for a pattern.
+     *
      * @throws Exception if the reader could not be loaded.
      */
     public abstract Reader getReader(AbstractBuild build) throws Exception;
 
     /**
-     *  Getter for the pattern to match.
+     * Getter for the pattern to match.
+     *
      * @return the pattern to match.
      */
     public Pattern getPattern() {
@@ -66,6 +80,15 @@ public abstract class Indication implements Describable<Indication> {
      * The descriptor for this indicator.
      */
     public abstract static class IndicationDescriptor extends Descriptor<Indication> {
+
+        /**
+         * Provides a list of all registered descriptors of this type.
+         *
+         * @return the list of descriptors.
+         */
+        public static ExtensionList<IndicationDescriptor> getAll() {
+            return Hudson.getInstance().getExtensionList(IndicationDescriptor.class);
+        }
     }
 
 }

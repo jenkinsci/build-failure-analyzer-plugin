@@ -24,6 +24,9 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 /**
@@ -31,10 +34,26 @@ import java.util.List;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureCause {
+public class FailureCause implements Serializable {
     private String name;
     private String description;
     private List<Indication> indications;
+
+    /**
+     * Standard data bound constructor.
+     * @param name the name of this FailureCause.
+     * @param description the description of this FailureCause.
+     * @param indications the list of indications
+     */
+    @DataBoundConstructor
+    public FailureCause(String name, String description, List<Indication> indications) {
+        this.name = name;
+        this.description = description;
+        this.indications = indications;
+        if (this.indications == null) {
+            this.indications = new LinkedList<Indication>();
+        }
+    }
 
     /**
      * Standard constructor.
@@ -42,9 +61,14 @@ public class FailureCause {
      * @param description the description of this FailureCause.
      */
     public FailureCause(String name, String description) {
-        this.name = name;
-        this.description = description;
-        this.indications = new LinkedList<Indication>();
+        this (name, description, null);
+    }
+
+    /**
+     * Default constructor.
+     * <strong>Do not use this unless you are a serializer.</strong>
+     */
+    public FailureCause() {
     }
 
     /**

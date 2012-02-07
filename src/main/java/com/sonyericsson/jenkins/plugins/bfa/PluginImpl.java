@@ -24,10 +24,16 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import hudson.Plugin;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
 import hudson.model.Hudson;
+import hudson.security.Permission;
+import hudson.security.PermissionGroup;
+import hudson.util.CopyOnWriteList;
+
+import java.util.Collection;
 
 /**
  * The main thing.
@@ -36,7 +42,28 @@ import hudson.model.Hudson;
  */
 public class PluginImpl extends Plugin {
 
+    /**
+     * The permission group for all permissions related to this plugin.
+     */
+    public static final PermissionGroup PERMISSION_GROUP =
+            new PermissionGroup(PluginImpl.class, Messages._PermissionGroup_Title());
+
+    /**
+     * Permission to update the causes. E.e. Access {@link CauseManagement}.
+     */
+    public static final Permission UPDATE_PERMISSION =
+            new Permission(PERMISSION_GROUP, "UpdateCauses",
+                    Messages._PermissionUpdate_Description(), Hudson.ADMINISTER);
+
     private static String staticResourcesBase = null;
+
+    private CopyOnWriteList<FailureCause> causes = new CopyOnWriteList<FailureCause>();
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+        load();
+    }
 
     /**
      * Returns the base relative URI for static resources packaged in webapp.
@@ -74,11 +101,53 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Provides a Jenkins relative url to a plugin internal image.
+     *
+     * @param size the size of the image (the sub directory of images).
+     * @param name the name of the image file.
+     * @return a URL to the image.
+     */
+    public static String getImageUrl(String size, String name) {
+        return getStaticImagesBase() + "/" + size + "/" + name;
+    }
+
+    /**
      * Returns the singleton instance.
      *
      * @return the one.
      */
     public static PluginImpl getInstance() {
         return Hudson.getInstance().getPlugin(PluginImpl.class);
+    }
+
+    /**
+     * A direct reference to the list of Failure Causes.
+     *
+     * @return the causes.
+     */
+    public CopyOnWriteList<FailureCause> getCauses() {
+        return causes;
+    }
+
+    /**
+     * Sets the list of failure causes to the provided list. Only the content of the provided list will be used not the
+     * list itself.
+     *
+     * @param causes the list.
+     * @see CopyOnWriteList#replaceBy(hudson.util.CopyOnWriteList).
+     */
+    public void setCauses(CopyOnWriteList<FailureCause> causes) {
+        this.causes.replaceBy(causes);
+    }
+
+    /**
+     * Sets the list of failure causes to the provided list. Only the content of the provided list will be used not the
+     * list itself.
+     *
+     * @param causes the list.
+     * @see CopyOnWriteList#replaceBy(java.util.Collection)
+     */
+    public void setCauses(Collection<FailureCause> causes) {
+        this.causes.replaceBy(causes);
     }
 }
