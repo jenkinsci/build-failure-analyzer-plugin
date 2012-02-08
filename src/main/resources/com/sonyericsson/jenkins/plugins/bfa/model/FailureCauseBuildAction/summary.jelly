@@ -29,25 +29,44 @@
             </td>
             <td>
                 <h2>
-                    Identified problems:
+                    ${%Identified problems}
                 </h2>
             </td>
         </tr>
-        <j:forEach var="cause" items="${it.getFailureCauses()}">
+        <j:set var="failureCauses" value="${it.getFailureCauses()}"/>
+        <j:if test="${failureCauses.size() lt 1}">
             <tr>
                 <td/>
                 <td>
                     <b>
-                      ${cause.name}
+                        ${%No identified problems}
                     </b>
                 </td>
             </tr>
             <tr>
-            <td/>
-            <td>
-                ${cause.description}
-            </td>
-        </tr>
-        </j:forEach>
+                <td/>
+                <td>
+                    ${it.getPluginImpl().noCausesMessage}
+                </td>
+            </tr>
+        </j:if>
+        <j:if test="${failureCauses.size() gt 0}">
+            <j:forEach var="cause" items="${failureCauses}">
+                <tr>
+                    <td/>
+                    <td>
+                        <b>
+                        ${cause.name}
+                        </b>
+                    </td>
+                </tr>
+                <tr>
+                <td/>
+                <td>
+                    ${cause.description}
+                </td>
+            </tr>
+            </j:forEach>
+        </j:if>
     </table>
 </j:jelly>

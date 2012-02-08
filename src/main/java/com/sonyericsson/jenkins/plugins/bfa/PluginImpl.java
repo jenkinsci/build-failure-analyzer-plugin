@@ -28,11 +28,15 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import hudson.Plugin;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
+import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
 
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -65,14 +69,23 @@ public class PluginImpl extends Plugin {
             new Permission(PERMISSION_GROUP, "UpdateCauses",
                     Messages._PermissionUpdate_Description(), Hudson.ADMINISTER);
 
+    private static final String DEFAULT_NO_CAUSES_MESSAGE = "No problems were identified. "
+            + "If you know why this problem occurred, please add a suitable Cause for it.";
+
     private static String staticResourcesBase = null;
 
+    private String noCausesMessage;
+
     private CopyOnWriteList<FailureCause> causes = new CopyOnWriteList<FailureCause>();
+
 
     @Override
     public void start() throws Exception {
         super.start();
         load();
+        if (noCausesMessage == null) {
+            noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
+        }
     }
 
     /**
@@ -179,5 +192,20 @@ public class PluginImpl extends Plugin {
      */
     public void setCauses(Collection<FailureCause> causes) {
         this.causes.replaceBy(causes);
+    }
+
+    /**
+     * Getter for the no causes message.
+     *
+     * @return the message.
+     */
+    public String getNoCausesMessage() {
+        return noCausesMessage;
+    }
+
+    @Override
+    public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
+        noCausesMessage = o.getString("noCausesMessage");
+        save();
     }
 }

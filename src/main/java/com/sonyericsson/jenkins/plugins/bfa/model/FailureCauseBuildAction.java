@@ -87,4 +87,12 @@ public class FailureCauseBuildAction implements Action {
     public String getImageUrl() {
         return PluginImpl.getImageUrl("48x48", PluginImpl.DEFAULT_ICON_NAME);
     }
+
+    /**
+     * Convenience method for jelly access to pluginimpl.
+     * @return the pluginimpl instance.
+     */
+    public PluginImpl getPluginImpl() {
+        return PluginImpl.getInstance();
+    }
 }
