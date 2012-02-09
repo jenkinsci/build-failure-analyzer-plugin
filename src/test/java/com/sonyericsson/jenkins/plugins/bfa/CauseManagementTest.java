@@ -81,6 +81,36 @@ public class CauseManagementTest extends HudsonTestCase {
     }
 
     /**
+     * Happy test for {@link CauseManagement#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
+     * org.kohsuke.stapler.StaplerResponse)} with only one cause configured.
+     *
+     * @throws Exception if so.
+     */
+    public void testDoConfigSubmitOne() throws Exception {
+        List<FailureCause> list = new LinkedList<FailureCause>();
+        FailureCause c = new FailureCause("A Name", "Some Description");
+        c.addIndicator(new BuildLogIndication("some pattern"));
+        list.add(c);
+        PluginImpl.getInstance().setCauses(list);
+
+        WebClient client = this.createWebClient();
+        HtmlPage page = client.goTo(CauseManagement.URL_NAME);
+
+        this.submit(page.getFormByName("causesForm"));
+
+        List<FailureCause> newList = PluginImpl.getInstance().getCauses().getView();
+
+        assertEquals(list.size(), newList.size());
+        FailureCause cause = list.get(0);
+        FailureCause newCause = newList.get(0);
+        assertEquals(cause.getName(), newCause.getName());
+        assertEquals(cause.getDescription(), newCause.getDescription());
+        assertEquals(cause.getIndications().get(0).getPattern().pattern(),
+                newCause.getIndications().get(0).getPattern().pattern());
+        assertNotSame(cause, newCause);
+    }
+
+    /**
      * Tests {@link com.sonyericsson.jenkins.plugins.bfa.CauseManagement#isUnderTest()}.
      */
     public void testIsUnderTest() {

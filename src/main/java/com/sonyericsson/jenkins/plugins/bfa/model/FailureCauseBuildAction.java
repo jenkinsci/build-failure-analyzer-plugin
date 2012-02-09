@@ -21,10 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.model.Action;
+import hudson.model.Hudson;
 
 import java.util.List;
 
@@ -37,7 +41,8 @@ public class FailureCauseBuildAction implements Action {
     private List<FailureCause> failureCauses;
 
     /**
-     *  Standard constructor.
+     * Standard constructor.
+     *
      * @param failureCause the FailureCause.
      */
     public FailureCauseBuildAction(List<FailureCause> failureCause) {
@@ -46,17 +51,25 @@ public class FailureCauseBuildAction implements Action {
 
     @Override
     public String getIconFileName() {
-        return null;
+        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+            return PluginImpl.getDefaultIcon();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public String getDisplayName() {
-        return null;
+        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+            return Messages.CauseManagement_DisplayName();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public String getUrlName() {
-        return null;
+        return "../" + CauseManagement.getInstance().getUrlName();
     }
 
     /**
@@ -72,6 +85,6 @@ public class FailureCauseBuildAction implements Action {
      * @return the image url.
      */
     public String getImageUrl() {
-        return PluginImpl.getStaticImagesBase() + "/48x48/information.png";
+        return PluginImpl.getImageUrl("48x48", PluginImpl.DEFAULT_ICON_NAME);
     }
 }

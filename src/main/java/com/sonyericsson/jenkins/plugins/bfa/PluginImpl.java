@@ -43,6 +43,16 @@ import java.util.Collection;
 public class PluginImpl extends Plugin {
 
     /**
+     * Convenience constant for the 24x24 icon size. used for {@link #getImageUrl(String, String)}.
+     */
+    public static final String DEFAULT_ICON_SIZE = "24x24";
+
+    /**
+     * Convenience constant for the default icon size. used for {@link #getImageUrl(String, String)}.
+     */
+    public static final String DEFAULT_ICON_NAME = "information.png";
+
+    /**
      * The permission group for all permissions related to this plugin.
      */
     public static final PermissionGroup PERMISSION_GROUP =
@@ -109,6 +119,26 @@ public class PluginImpl extends Plugin {
      */
     public static String getImageUrl(String size, String name) {
         return getStaticImagesBase() + "/" + size + "/" + name;
+    }
+
+    /**
+     * Provides a Jenkins relative url to a plugin internal image of {@link #DEFAULT_ICON_SIZE} size.
+     * @param name the name of the image.
+     * @return a URL to the image.
+     * @see #getImageUrl(String, String)
+     */
+    public static String getImageUrl(String name) {
+        return getImageUrl(DEFAULT_ICON_SIZE, name);
+    }
+
+    /**
+     * The default icon to be used throughout this plugin.
+     * @return the relative URL to the image.
+     * @see #getImageUrl(String)
+     * @see #getImageUrl(String, String)
+     */
+    public static String getDefaultIcon() {
+        return getImageUrl(DEFAULT_ICON_NAME);
     }
 
     /**

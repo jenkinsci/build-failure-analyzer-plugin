@@ -31,9 +31,9 @@ import hudson.ExtensionList;
 import hudson.model.Action;
 import hudson.model.Failure;
 import hudson.model.Hudson;
+import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.security.Permission;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -41,6 +41,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Page for managing the failure causes.
@@ -50,17 +51,19 @@ import java.util.List;
 @Extension
 public class CauseManagement implements RootAction {
 
+    private static final Logger logger = Logger.getLogger(CauseManagement.class.getName());
+
     /**
      * Where in the Jenkins name space this action will be.
      *
-     * @see #getDisplayName()
+     * @see #getUrlName()
      */
     public static final String URL_NAME = "failure-cause-management";
 
     @Override
     public String getIconFileName() {
         if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-            return getImageUrl("24x24", "information.png");
+            return PluginImpl.getDefaultIcon();
         } else {
             return null;
         }
@@ -115,15 +118,15 @@ public class CauseManagement implements RootAction {
     public void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
         Hudson.getInstance().checkPermission(getPermission());
         JSONObject form = request.getSubmittedForm();
-        JSONArray array = form.optJSONArray("causes");
-        if (array == null) {
+        Object jsonCauses = form.opt("causes");
+        if (jsonCauses == null) {
             throw new Failure("You need to provide some causes!");
         }
-        List<FailureCause> causes = request.bindJSONToList(FailureCause.class, array);
+        List<FailureCause> causes = request.bindJSONToList(FailureCause.class, jsonCauses);
 
         PluginImpl.getInstance().setCauses(causes);
         PluginImpl.getInstance().save();
-        response.sendRedirect2("/");
+        response.sendRedirect2(getOwnerUrl());
     }
 
     /**
@@ -132,8 +135,17 @@ public class CauseManagement implements RootAction {
      *
      * @return the holder of the beer.
      */
-    public Object getOwner() {
+    public ModelObject getOwner() {
         return Hudson.getInstance();
+    }
+
+    /**
+     * Where to redirect after the form has been saved, probably to the owner.
+     *
+     * @return the owner's URL or some place else to redirect the user after save.
+     */
+    protected String getOwnerUrl() {
+        return "/";
     }
 
     /**
