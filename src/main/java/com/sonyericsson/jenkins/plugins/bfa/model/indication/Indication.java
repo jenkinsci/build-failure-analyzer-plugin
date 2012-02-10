@@ -28,11 +28,14 @@ import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Indication that can match a search string for a specific reader.
@@ -41,14 +44,15 @@ import java.util.regex.Pattern;
  */
 public abstract class Indication implements Describable<Indication>, Serializable {
 
-    private Pattern pattern;
+    private String pattern;
+    private transient Pattern compiled = null;
 
     /**
      * @param pattern the String value.
      */
     @DataBoundConstructor
     public Indication(String pattern) {
-        this.pattern = Pattern.compile(pattern);
+        this.pattern = pattern;
     }
 
     /**
@@ -68,12 +72,27 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     public abstract Reader getReader(AbstractBuild build) throws Exception;
 
     /**
+     * Checks if the indication is correctly configured.
+     * Default implementation checks for pattern compilation errors.
+     * Override this method to provide more validation.
+     *
+     * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @see IndicationDescriptor#doHelp(org.kohsuke.stapler.StaplerRequest, org.kohsuke.stapler.StaplerResponse)
+     */
+    public FormValidation validate() {
+        return IndicationDescriptor.checkPattern(pattern);
+    }
+
+    /**
      * Getter for the pattern to match.
      *
      * @return the pattern to match.
      */
     public Pattern getPattern() {
-        return pattern;
+        if (compiled == null) {
+            compiled = Pattern.compile(pattern);
+        }
+        return compiled;
     }
 
     /**
@@ -88,6 +107,37 @@ public abstract class Indication implements Describable<Indication>, Serializabl
          */
         public static ExtensionList<IndicationDescriptor> getAll() {
             return Hudson.getInstance().getExtensionList(IndicationDescriptor.class);
+        }
+
+        /**
+         * Checks that the pattern is a valid regexp.
+         *
+         * @param value the pattern to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public static FormValidation checkPattern(@QueryParameter String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.error("Please provide a pattern!");
+            }
+            try {
+                Pattern.compile(value);
+                return FormValidation.ok();
+            } catch (PatternSyntaxException e) {
+                return FormValidation.error("Bad syntax! " + e.getMessage());
+            } catch (Exception e) {
+                return FormValidation.warning("Unpredicted error. " + e.getMessage());
+            }
+        }
+
+        /**
+         * Checks that the pattern is a valid regexp.
+         *
+         * @param value the pattern to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         * @see #checkPattern(String)
+         */
+        public FormValidation doCheckPattern(@QueryParameter String value) {
+            return checkPattern(value);
         }
     }
 

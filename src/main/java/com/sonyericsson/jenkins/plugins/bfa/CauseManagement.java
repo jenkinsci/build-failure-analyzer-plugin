@@ -34,6 +34,7 @@ import hudson.model.Hudson;
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.security.Permission;
+import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -123,6 +124,19 @@ public class CauseManagement implements RootAction {
             throw new Failure("You need to provide some causes!");
         }
         List<FailureCause> causes = request.bindJSONToList(FailureCause.class, jsonCauses);
+        StringBuilder error = new StringBuilder("");
+        for (FailureCause cause : causes) {
+            FormValidation validation = cause.validate(causes);
+            if (validation.kind != FormValidation.Kind.OK) {
+                if (error.length() > 0) {
+                    error.append("\n");
+                }
+                error.append(validation.getMessage());
+            }
+        }
+        if (error.length() > 0) {
+            throw FormValidation.error(error.toString());
+        }
 
         PluginImpl.getInstance().setCauses(causes);
         PluginImpl.getInstance().save();

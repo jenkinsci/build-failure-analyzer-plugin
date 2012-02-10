@@ -24,11 +24,13 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+
 /**
  * FailureCause of a build..
  *
@@ -41,7 +43,8 @@ public class FailureCause implements Serializable {
 
     /**
      * Standard data bound constructor.
-     * @param name the name of this FailureCause.
+     *
+     * @param name        the name of this FailureCause.
      * @param description the description of this FailureCause.
      * @param indications the list of indications
      */
@@ -57,22 +60,57 @@ public class FailureCause implements Serializable {
 
     /**
      * Standard constructor.
-     * @param name the name of this FailureCause.
+     *
+     * @param name        the name of this FailureCause.
      * @param description the description of this FailureCause.
      */
     public FailureCause(String name, String description) {
-        this (name, description, null);
+        this(name, description, null);
     }
 
     /**
-     * Default constructor.
-     * <strong>Do not use this unless you are a serializer.</strong>
+     * Default constructor. <strong>Do not use this unless you are a serializer.</strong>
      */
     public FailureCause() {
     }
 
     /**
+     * Validates this FailureCause.
+     * Checks for:
+     * <ul>
+     *     <li>Name empty.</li>
+     *     <li>Name unique.</li>
+     *     <li>Indications.size > 0.</li>
+     *     <li>{@link com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication#validate()}.</li>
+     * </ul>
+     *
+     * @param allCauses the list of all configured causes to see if there are any duplicated names.
+     * @return {@link hudson.util.FormValidation#ok()} if everything is fine.
+     */
+    public FormValidation validate(List<FailureCause> allCauses) {
+        if (name == null || name.isEmpty()) {
+            return FormValidation.error("You must provide a name for the failure cause!");
+        }
+        for (FailureCause failureCause : allCauses) {
+            if (failureCause != this && failureCause.getName().equals(name)) {
+                return FormValidation.error("Duplicated name for " + name);
+            }
+        }
+        if (indications == null || indications.isEmpty()) {
+            return FormValidation.error("Need at least one indication for " + name);
+        }
+        for (Indication indication : indications) {
+            FormValidation validation = indication.validate();
+            if (validation.kind != FormValidation.Kind.OK) {
+                return validation;
+            }
+        }
+        return FormValidation.ok();
+    }
+
+    /**
      * Adds an indication to the list.
+     *
      * @param indication the indication to add.
      */
     public void addIndicator(Indication indication) {
@@ -84,6 +122,7 @@ public class FailureCause implements Serializable {
 
     /**
      * Getter for the name.
+     *
      * @return the name.
      */
     public String getName() {
@@ -92,6 +131,7 @@ public class FailureCause implements Serializable {
 
     /**
      * Getter for the description.
+     *
      * @return the description.
      */
     public String getDescription() {
@@ -100,6 +140,7 @@ public class FailureCause implements Serializable {
 
     /**
      * Getter for the list of indications.
+     *
      * @return the list.
      */
     public List<Indication> getIndications() {

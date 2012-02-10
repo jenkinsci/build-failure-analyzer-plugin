@@ -28,6 +28,7 @@ import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.IOException;
 import java.io.Reader;
 
@@ -39,6 +40,7 @@ import java.io.Reader;
 public class BuildLogIndication extends Indication {
     /**
      * Standard constructor.
+     *
      * @param pattern the string value to search for.
      */
     @DataBoundConstructor
