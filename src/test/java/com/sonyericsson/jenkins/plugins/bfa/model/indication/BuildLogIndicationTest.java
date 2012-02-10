@@ -23,12 +23,12 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import org.jvnet.hudson.test.HudsonTestCase;
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 
 /**
  * Tests for the BuildLogIndication.
@@ -38,17 +38,15 @@ public class BuildLogIndicationTest extends HudsonTestCase {
 
     /**
      * Tests that the BuildLogIndication can get the build log correctly.
+     *
      * @throws Exception if so.
      */
     public void testReadBuildLog() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication("");
         BufferedReader reader = new BufferedReader(indication.getReader(build));
-        File logfile = build.getLogFile();
-        FileWriter fw = new FileWriter(logfile, true);
-        fw.write(TEST_STRING);
-        fw.close();
         String line = "";
         boolean foundString = false;
         while ((line = reader.readLine()) != null) {

@@ -30,15 +30,12 @@ import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Shell;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -76,8 +73,6 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
     public void testOnABuild() throws Exception {
         FreeStyleProject project = createFreeStyleProject("nils-job");
         FreeStyleBuild build = buildAndAssertSuccess(project);
-        //TODO let the system provide it when that is implemented.
-        build.addAction(new FailureCauseBuildAction(Collections.<FailureCause>emptyList()));
         WebClient web = createWebClient();
         HtmlPage page = web.goTo("/" + build.getUrl());
         try {

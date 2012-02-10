@@ -21,20 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.tasks.Builder;
 import org.jvnet.hudson.test.HudsonTestCase;
-import java.io.IOException;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -46,15 +44,15 @@ import java.util.List;
 
 public class FailureScannerTest extends HudsonTestCase {
 
+    private static final String TO_PRINT = "ERROR";
+
     /**
      * Happy test that should find one failure indication in the build.
      * @throws Exception if so.
      */
     public void testOneIndicationFound() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        FailureScanner failureScanner = new FailureScanner();
-        project.getPublishersList().add(failureScanner);
-        project.getBuildersList().add(new DummyBuilder());
+        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
 
         Indication ind = new BuildLogIndication(".*ERROR.*");
         List<Indication> indicationList = new LinkedList<Indication>();
@@ -77,9 +75,7 @@ public class FailureScannerTest extends HudsonTestCase {
      */
     public void testNoIndicationFound() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        FailureScanner failureScanner = new FailureScanner();
-        project.getPublishersList().add(failureScanner);
-        project.getBuildersList().add(new DummyBuilder());
+        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
 
         Indication ind = new BuildLogIndication(".*something completely different.*");
         List<Indication> indicationList = new LinkedList<Indication>();
@@ -111,14 +107,4 @@ public class FailureScannerTest extends HudsonTestCase {
         return false;
     }
 
-    /**
-     * A builder that writes ERROR in the build log.
-     */
-    public static class DummyBuilder extends Builder {
-        @Override
-        public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException {
-            listener.getLogger().println("ERROR");
-            return true;
-        }
-    }
 }
