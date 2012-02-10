@@ -29,12 +29,18 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import org.jvnet.hudson.test.HudsonTestCase;
-
+import org.jvnet.hudson.test.MockBuilder;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+//CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
 /**
  * Tests for the FailureScanner.
@@ -53,6 +59,7 @@ public class FailureScannerTest extends HudsonTestCase {
     public void testOneIndicationFound() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
 
         Indication ind = new BuildLogIndication(".*ERROR.*");
         List<Indication> indicationList = new LinkedList<Indication>();
@@ -62,7 +69,9 @@ public class FailureScannerTest extends HudsonTestCase {
         causeList.add(failureCause);
         PluginImpl.getInstance().setCauses(causeList);
 
-        FreeStyleBuild build = buildAndAssertSuccess(project);
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+
+        FreeStyleBuild build =  future.get(10, TimeUnit.SECONDS);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FailureCause> causeListFromAction = action.getFailureCauses();
@@ -76,6 +85,7 @@ public class FailureScannerTest extends HudsonTestCase {
     public void testNoIndicationFound() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
 
         Indication ind = new BuildLogIndication(".*something completely different.*");
         List<Indication> indicationList = new LinkedList<Indication>();
@@ -85,11 +95,33 @@ public class FailureScannerTest extends HudsonTestCase {
         causeList.add(failureCause);
         PluginImpl.getInstance().setCauses(causeList);
 
-        FreeStyleBuild build = buildAndAssertSuccess(project);
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build =  future.get(10, TimeUnit.SECONDS);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FailureCause> causeListFromAction = action.getFailureCauses();
         assertTrue(causeListFromAction.size() == 0);
+    }
+
+    /**
+     * Makes sure that the build action is not added to a successful build.
+     * @throws Exception if so.
+     */
+    public void testSuccessfulBuild() throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        Indication ind = new BuildLogIndication(".*ERROR.*");
+        List<Indication> indicationList = new LinkedList<Indication>();
+        indicationList.add(ind);
+        FailureCause failureCause = new FailureCause("Error", "This is an error", indicationList);
+        List<FailureCause> causeList = new LinkedList<FailureCause>();
+        causeList.add(failureCause);
+        PluginImpl.getInstance().setCauses(causeList);
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build =  future.get(10, TimeUnit.SECONDS);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNull(action);
     }
 
     /**

@@ -30,13 +30,19 @@ import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.tasks.Shell;
 import org.jvnet.hudson.test.HudsonTestCase;
-
+import org.jvnet.hudson.test.MockBuilder;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+//CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
 /**
  * Tests for the config page being transient.
@@ -72,7 +78,9 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
      */
     public void testOnABuild() throws Exception {
         FreeStyleProject project = createFreeStyleProject("nils-job");
-        FreeStyleBuild build = buildAndAssertSuccess(project);
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build =  future.get(10, TimeUnit.SECONDS);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo("/" + build.getUrl());
         try {

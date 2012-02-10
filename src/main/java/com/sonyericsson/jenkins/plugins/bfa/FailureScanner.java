@@ -32,6 +32,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -65,11 +66,13 @@ public class FailureScanner extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild build, final Launcher launcher, final BuildListener buildListener) {
-        PrintStream buildLog = buildListener.getLogger();
-        List<FailureCause> causeList = PluginImpl.getInstance().getCauses().getView();
-        causeList = findCauses(causeList, build, buildLog);
-        FailureCauseBuildAction buildAction = new FailureCauseBuildAction(causeList);
-        build.addAction(buildAction);
+        if (build.getResult().isWorseThan(Result.SUCCESS)) {
+            PrintStream buildLog = buildListener.getLogger();
+            List<FailureCause> causeList = PluginImpl.getInstance().getCauses().getView();
+            causeList = findCauses(causeList, build, buildLog);
+            FailureCauseBuildAction buildAction = new FailureCauseBuildAction(causeList);
+            build.addAction(buildAction);
+        }
         return true;
     }
 
