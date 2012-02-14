@@ -28,6 +28,9 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Launcher;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -51,7 +54,7 @@ import java.util.regex.Pattern;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureScanner extends Notifier {
+public class FailureScanner extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(FailureScanner.class.getName());
     @Override
@@ -143,6 +146,11 @@ public class FailureScanner extends Notifier {
     @Override
     public FailureScannerDescriptor getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(FailureScannerDescriptor.class);
+    }
+
+    @Override
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        return new FailureCauseMatrixAggregator(build, launcher, listener);
     }
 
     /**
