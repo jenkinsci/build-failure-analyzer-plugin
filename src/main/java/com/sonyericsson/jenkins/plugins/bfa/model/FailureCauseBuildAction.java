@@ -27,7 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
-import hudson.model.Action;
+import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
 
 import java.util.List;
@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureCauseBuildAction implements Action {
+public class FailureCauseBuildAction implements BuildBadgeAction {
     private List<FailureCause> failureCauses;
 
     /**
@@ -74,6 +74,7 @@ public class FailureCauseBuildAction implements Action {
 
     /**
      * Getter for the FailureCause.
+     *
      * @return the FailureCause.
      */
     public List<FailureCause> getFailureCauses() {
@@ -82,6 +83,7 @@ public class FailureCauseBuildAction implements Action {
 
     /**
      * Gets the image url for the summary page.
+     *
      * @return the image url.
      */
     public String getImageUrl() {
@@ -89,7 +91,17 @@ public class FailureCauseBuildAction implements Action {
     }
 
     /**
+     * Gets the image url for the badge page.
+     *
+     * @return the image url.
+     */
+    public String getBadgeImageUrl() {
+        return PluginImpl.getImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+    }
+
+    /**
      * Convenience method for jelly access to pluginimpl.
+     *
      * @return the pluginimpl instance.
      */
     public PluginImpl getPluginImpl() {

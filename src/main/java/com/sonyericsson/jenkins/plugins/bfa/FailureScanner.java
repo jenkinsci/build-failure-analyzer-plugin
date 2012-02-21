@@ -124,13 +124,16 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @return true if this indication matches, false if not.
      */
     private boolean findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
+        BufferedReader reader = null;
+        boolean found = false;
         try {
             Pattern pattern = indication.getPattern();
-            BufferedReader reader = new BufferedReader(indication.getReader(build));
+            reader = new BufferedReader(indication.getReader(build));
             String line;
             while ((line = reader.readLine()) != null) {
                 if (pattern.matcher(line).matches()) {
-                    return true;
+                    found = true;
+                    break;
                 }
             }
         } catch (IOException ioe) {
@@ -139,8 +142,16 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "[BFA] Could not open reader for indication: ", e);
             buildLog.println("[BFA] Could not open reader for indication.");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
+                }
+            }
         }
-        return false;
+        return found;
     }
 
     @Override

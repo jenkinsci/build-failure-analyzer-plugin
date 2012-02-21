@@ -25,21 +25,23 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.matrix.MatrixRun;
-import hudson.model.Action;
+import hudson.model.BuildBadgeAction;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Build action for the aggregated result of failure causes
- * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt; .
+ * Build action for the aggregated result of failure causes.
+ *
+ * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureCauseMatrixBuildAction implements Action {
+public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
 
     private List<MatrixRun> runs;
 
     /**
      * Standard constructor.
+     *
      * @param runs the list of MatrixRuns for this action.
      */
     public FailureCauseMatrixBuildAction(List<MatrixRun> runs) {
@@ -63,6 +65,7 @@ public class FailureCauseMatrixBuildAction implements Action {
 
     /**
      * Convenience method for getting the action for a specific run.
+     *
      * @param run the run to get the action for.
      * @return the FailureCauseBuildAction.
      */
@@ -72,6 +75,7 @@ public class FailureCauseMatrixBuildAction implements Action {
 
     /**
      * Gets all the matrix runs that have the failure cause build action.
+     *
      * @return the runs with the action.
      */
     public List<MatrixRun> getRunsWithAction() {
@@ -85,7 +89,25 @@ public class FailureCauseMatrixBuildAction implements Action {
     }
 
     /**
+     * Finds the first run with the first identified cause. Null if there are none.
+     *
+     * @return the first cause found.
+     */
+    public FailureCause getFirstFailureCause() {
+        for (MatrixRun run : runs) {
+            FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
+            if (action != null) {
+                if (action.getFailureCauses() != null && !action.getFailureCauses().isEmpty()) {
+                    return action.getFailureCauses().get(0);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Gets the image url for the summary page.
+     *
      * @return the image url.
      */
     public String getImageUrl() {
@@ -93,7 +115,17 @@ public class FailureCauseMatrixBuildAction implements Action {
     }
 
     /**
+     * Gets the image url for the badge page.
+     *
+     * @return the image url.
+     */
+    public String getBadgeImageUrl() {
+        return PluginImpl.getImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+    }
+
+    /**
      * Gets the failure causes for a specific matrix run.
+     *
      * @param run the run to find failure causes for.
      * @return the failure causes of the run.
      */
