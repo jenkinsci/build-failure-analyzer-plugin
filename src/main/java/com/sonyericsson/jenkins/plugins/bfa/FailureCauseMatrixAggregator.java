@@ -36,12 +36,14 @@ import java.util.List;
 
 /**
  *  Aggregates the failure causes from downstream builds to the parent build.
+ *
  *  @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class FailureCauseMatrixAggregator extends MatrixAggregator {
 
     /**
      * Standard constructor.
+     *
      * @param build the MatrixBuild to aggregate FailureCauses for.
      * @param launcher the launcher.
      * @param listener the listener.
@@ -52,7 +54,7 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
 
     @Override
     public boolean endBuild() {
-        if (build.getResult().isWorseThan(Result.SUCCESS)) {
+        if (PluginImpl.getInstance().isGlobalEnabled() && build.getResult().isWorseThan(Result.SUCCESS)) {
             List<MatrixRun> runs = build.getRuns();
             List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
             for (MatrixRun run : runs) {

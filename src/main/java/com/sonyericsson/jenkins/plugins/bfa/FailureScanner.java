@@ -69,7 +69,7 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
 
     @Override
     public boolean perform(AbstractBuild build, final Launcher launcher, final BuildListener buildListener) {
-        if (build.getResult().isWorseThan(Result.SUCCESS)) {
+        if (PluginImpl.getInstance().isGlobalEnabled() && build.getResult().isWorseThan(Result.SUCCESS)) {
             PrintStream buildLog = buildListener.getLogger();
             List<FailureCause> causeList = PluginImpl.getInstance().getCauses().getView();
             causeList = findCauses(causeList, build, buildLog);

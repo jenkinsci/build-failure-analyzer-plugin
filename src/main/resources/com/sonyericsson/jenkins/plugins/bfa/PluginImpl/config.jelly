@@ -23,6 +23,10 @@
   -->
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:section title="${%Build failure analyzer}">
+        <f:entry title="${%Enabled}"
+                 description="${%If builds should be scanned or not.}">
+            <f:checkbox name="globalEnabled" checked="${it.globalEnabled}" default="true"/>
+        </f:entry>
         <f:entry title="${%Text when no failure causes are found}"
                  description="${%If no problems are identified, this text will be shown on the build page}">
             <f:textbox name="noCausesMessage" value="${it.noCausesMessage}"/>

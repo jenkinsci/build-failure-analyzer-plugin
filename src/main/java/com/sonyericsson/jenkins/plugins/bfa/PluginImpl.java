@@ -76,6 +76,8 @@ public class PluginImpl extends Plugin {
 
     private String noCausesMessage;
 
+    private Boolean globalEnabled;
+
     private CopyOnWriteList<FailureCause> causes = new CopyOnWriteList<FailureCause>();
 
 
@@ -136,8 +138,10 @@ public class PluginImpl extends Plugin {
 
     /**
      * Provides a Jenkins relative url to a plugin internal image of {@link #DEFAULT_ICON_SIZE} size.
+     *
      * @param name the name of the image.
      * @return a URL to the image.
+     *
      * @see #getImageUrl(String, String)
      */
     public static String getImageUrl(String name) {
@@ -146,7 +150,9 @@ public class PluginImpl extends Plugin {
 
     /**
      * The default icon to be used throughout this plugin.
+     *
      * @return the relative URL to the image.
+     *
      * @see #getImageUrl(String)
      * @see #getImageUrl(String, String)
      */
@@ -203,9 +209,23 @@ public class PluginImpl extends Plugin {
         return noCausesMessage;
     }
 
+    /**
+     * If this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
+     *
+     * @return true if on.
+     */
+    public boolean isGlobalEnabled() {
+        if (globalEnabled == null) {
+            return true;
+        } else {
+            return globalEnabled;
+        }
+    }
+
     @Override
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
+        globalEnabled = o.getBoolean("globalEnabled");
         save();
     }
 }

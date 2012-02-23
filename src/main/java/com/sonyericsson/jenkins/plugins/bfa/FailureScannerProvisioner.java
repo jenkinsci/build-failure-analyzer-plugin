@@ -45,7 +45,8 @@ public class FailureScannerProvisioner extends RunListener<AbstractBuild> {
 
     @Override
     public void onStarted(AbstractBuild build, TaskListener listener) {
-        if (build.getProject().getPublishersList().get(FailureScanner.class) == null) {
+        if (PluginImpl.getInstance().isGlobalEnabled()
+                && build.getProject().getPublishersList().get(FailureScanner.class) == null) {
             try {
                 build.getProject().getPublishersList().add(new FailureScanner());
             } catch (IOException e) {
