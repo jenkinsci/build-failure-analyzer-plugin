@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +55,7 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
 
     @Override
     public boolean endBuild() {
-        if (PluginImpl.getInstance().isGlobalEnabled() && build.getResult().isWorseThan(Result.SUCCESS)) {
+        if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
             List<MatrixRun> runs = build.getRuns();
             List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
             for (MatrixRun run : runs) {

@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +26,12 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
 import hudson.Plugin;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.Permission;
@@ -219,6 +223,36 @@ public class PluginImpl extends Plugin {
             return true;
         } else {
             return globalEnabled;
+        }
+    }
+
+    /**
+     * Sets if this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
+     *
+     * @param globalEnabled on or off. null == on.
+     */
+    public void setGlobalEnabled(Boolean globalEnabled) {
+        this.globalEnabled = globalEnabled;
+    }
+
+    /**
+     * Checks if the specified build should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
+     * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty#isDoNotScan()}.
+     *
+     * @param build the build
+     * @return true if it should be scanned.
+     */
+    public static boolean shouldScan(AbstractBuild build) {
+        if (getInstance().isGlobalEnabled()) {
+            AbstractProject project = build.getProject();
+            ScannerOffJobProperty property = (ScannerOffJobProperty)project.getProperty(ScannerOffJobProperty.class);
+            if (property != null) {
+                return !property.isDoNotScan();
+            } else {
+                return true;
+            }
+        } else {
+            return false;
         }
     }
 
