@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
@@ -71,7 +72,7 @@ public class FailureScannerTest extends HudsonTestCase {
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
-        List<FailureCause> causeListFromAction = action.getFailureCauses();
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, failureCause));
     }
 
@@ -90,7 +91,7 @@ public class FailureScannerTest extends HudsonTestCase {
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
-        List<FailureCause> causeListFromAction = action.getFailureCauses();
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(causeListFromAction.size() == 0);
     }
 
@@ -210,9 +211,10 @@ public class FailureScannerTest extends HudsonTestCase {
      * @param failureCause        the cause.
      * @return true if found, false if not.
      */
-    private boolean findCauseInList(List<FailureCause> causeListFromAction, FailureCause failureCause) {
-        for (FailureCause cause : causeListFromAction) {
-            if (failureCause.equals(cause)) {
+    private boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
+        for (FoundFailureCause cause : causeListFromAction) {
+            if (failureCause.getName().equals(cause.getName())
+                && failureCause.getDescription().equals(cause.getDescription())) {
                 return true;
             }
         }

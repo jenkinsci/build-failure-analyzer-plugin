@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,14 +40,15 @@ import java.util.List;
  */
 public class FailureCauseBuildAction implements BuildBadgeAction {
     private List<FailureCause> failureCauses;
+    private List<FoundFailureCause> foundFailureCauses;
 
     /**
      * Standard constructor.
      *
-     * @param failureCause the FailureCause.
+     * @param foundFailureCauses the FoundFailureCauses.
      */
-    public FailureCauseBuildAction(List<FailureCause> failureCause) {
-        this.failureCauses = failureCause;
+    public FailureCauseBuildAction(List<FoundFailureCause> foundFailureCauses) {
+        this.foundFailureCauses = foundFailureCauses;
     }
 
     @Override
@@ -73,12 +75,12 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
     }
 
     /**
-     * Getter for the FailureCause.
+     * Getter for the FoundFailureCauses.
      *
-     * @return the FailureCause.
+     * @return the FoundFailureCauses.
      */
-    public List<FailureCause> getFailureCauses() {
-        return failureCauses;
+    public List<FoundFailureCause> getFoundFailureCauses() {
+        return foundFailureCauses;
     }
 
     /**

@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,10 +49,10 @@ public class CauseManagementTest extends HudsonTestCase {
     public void testDoConfigSubmit() throws Exception {
         List<FailureCause> list = new LinkedList<FailureCause>();
         FailureCause c = new FailureCause("A Name", "Some Description");
-        c.addIndicator(new BuildLogIndication("some pattern"));
+        c.addIndication(new BuildLogIndication("some pattern"));
         list.add(c);
         c = new FailureCause("An other Name", "Some other Description");
-        c.addIndicator(new BuildLogIndication("some other pattern"));
+        c.addIndication(new BuildLogIndication("some other pattern"));
         list.add(c);
         PluginImpl.getInstance().setCauses(list);
 
@@ -89,7 +90,7 @@ public class CauseManagementTest extends HudsonTestCase {
     public void testDoConfigSubmitOne() throws Exception {
         List<FailureCause> list = new LinkedList<FailureCause>();
         FailureCause c = new FailureCause("A Name", "Some Description");
-        c.addIndicator(new BuildLogIndication("some pattern"));
+        c.addIndication(new BuildLogIndication("some pattern"));
         list.add(c);
         PluginImpl.getInstance().setCauses(list);
 

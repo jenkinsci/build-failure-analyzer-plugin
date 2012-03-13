@@ -2,6 +2,7 @@
   ~ The MIT License
   ~
   ~ Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+  ~ Copyright 2012 Sony Mobile Communications AB. All rights reserved.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +24,7 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core">
-    <j:set var="failureCauses" value="${it.getFailureCauses()}"/>
+    <j:set var="failureCauses" value="${it.getFoundFailureCauses()}"/>
     <j:if test="${failureCauses.size() gt 0}">
         <j:set var="firstCause" value="${failureCauses.get(0)}"/>
         <img src="${it.getBadgeImageUrl()}" border="0" alt="${%Identified problems}" title="${firstCause.name}"/>

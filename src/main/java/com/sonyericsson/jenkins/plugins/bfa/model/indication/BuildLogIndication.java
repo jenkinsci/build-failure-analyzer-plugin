@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +25,11 @@
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
-import java.io.Reader;
 
 /**
  * Indication that parses the build log file for a pattern.
@@ -56,8 +55,8 @@ public class BuildLogIndication extends Indication {
     }
 
     @Override
-    public Reader getReader(AbstractBuild build) throws IOException {
-        return build.getLogReader();
+    public FailureReader getReader() {
+        return new BuildLogFailureReader(this);
     }
 
     @Override

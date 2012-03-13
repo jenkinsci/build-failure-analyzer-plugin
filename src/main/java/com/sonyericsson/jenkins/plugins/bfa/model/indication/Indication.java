@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +24,14 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.ExtensionList;
-import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.Reader;
 import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -62,14 +61,10 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     }
 
     /**
-     * Gets the reader for the specific build.
-     *
-     * @param build the build to analyze.
-     * @return a reader that can we will use to look for a pattern.
-     *
-     * @throws Exception if the reader could not be loaded.
+     * Gets a FailureReader used for finding this indication.
+     * @return a FailureReader.
      */
-    public abstract Reader getReader(AbstractBuild build) throws Exception;
+    public abstract FailureReader getReader();
 
     /**
      * Checks if the indication is correctly configured.

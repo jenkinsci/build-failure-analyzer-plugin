@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * FailureCause of a build..
+ * FailureCause of a build.
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
@@ -113,7 +114,7 @@ public class FailureCause implements Serializable {
      *
      * @param indication the indication to add.
      */
-    public void addIndicator(Indication indication) {
+    public void addIndication(Indication indication) {
         if (indications == null) {
             indications = new LinkedList<Indication>();
         }

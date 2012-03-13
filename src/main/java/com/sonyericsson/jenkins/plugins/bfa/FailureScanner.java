@@ -27,6 +27,9 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Launcher;
 import hudson.matrix.MatrixAggregatable;
@@ -41,14 +44,9 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -56,8 +54,6 @@ import java.util.regex.Pattern;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class FailureScanner extends Notifier implements MatrixAggregatable {
-
-    private static final Logger logger = Logger.getLogger(FailureScanner.class.getName());
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
@@ -73,8 +69,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
         if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
             PrintStream buildLog = buildListener.getLogger();
             List<FailureCause> causeList = PluginImpl.getInstance().getCauses().getView();
-            causeList = findCauses(causeList, build, buildLog);
-            FailureCauseBuildAction buildAction = new FailureCauseBuildAction(causeList);
+            List<FoundFailureCause> foundCauseList = findCauses(causeList, build, buildLog);
+            FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             build.addAction(buildAction);
         }
         return true;
@@ -86,16 +82,19 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param causeList the list of possible causes.
      * @param build the build to analyze.
      * @param buildLog the build log.
-     * @return a list of failure causes.
+     * @return a list of found failure causes.
      */
-    private List<FailureCause> findCauses(List<FailureCause> causeList, AbstractBuild build, PrintStream buildLog) {
-        List<FailureCause> returnList = new LinkedList<FailureCause>();
+    private List<FoundFailureCause> findCauses(List<FailureCause> causeList, AbstractBuild build, PrintStream buildLog) {
+        List<FoundFailureCause> foundFailureCauseList = new LinkedList<FoundFailureCause>();
         for (FailureCause cause : causeList) {
-            if (findIndications(cause, build, buildLog)) {
-                returnList.add(cause);
+            List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
+            if (!foundIndications.isEmpty()) {
+                FoundFailureCause foundFailureCause = new FoundFailureCause(cause);
+                foundFailureCause.addIndications(foundIndications);
+                foundFailureCauseList.add(foundFailureCause);
             }
         }
-        return returnList;
+        return foundFailureCauseList;
     }
 
     /**
@@ -104,16 +103,18 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param cause the cause to find indications for.
      * @param build the build to analyze.
      * @param buildLog the build log.
-     * @return true if this cause is the cause of the failure, false if not.
+     * @return a list of found indications for a cause.
      */
-    private boolean findIndications(FailureCause cause, AbstractBuild build, PrintStream buildLog) {
+    private List<FoundIndication> findIndications(FailureCause cause, AbstractBuild build, PrintStream buildLog) {
         List<Indication> indicationList = cause.getIndications();
+        List<FoundIndication> foundIndicationList = new LinkedList<FoundIndication>();
         for (Indication indication : indicationList) {
-            if (findIndication(indication, build, buildLog)) {
-                return true;
+            FoundIndication foundIndication = findIndication(indication, build, buildLog);
+            if (foundIndication != null) {
+                foundIndicationList.add(foundIndication);
             }
         }
-        return false;
+        return foundIndicationList;
     }
 
     /**
@@ -122,37 +123,11 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param indication the indication to look for.
      * @param build the build to analyze.
      * @param buildLog the build log.
-     * @return true if this indication matches, false if not.
+     * @return an indication if one is found, null otherwise.
      */
-    private boolean findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
-        BufferedReader reader = null;
-        boolean found = false;
-        try {
-            Pattern pattern = indication.getPattern();
-            reader = new BufferedReader(indication.getReader(build));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (pattern.matcher(line).matches()) {
-                    found = true;
-                    break;
-                }
-            }
-        } catch (IOException ioe) {
-            logger.log(Level.SEVERE, "[BFA] I/O problems during indication analysis: ", ioe);
-            buildLog.println("[BFA] I/O problems during indication analysis.");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "[BFA] Could not open reader for indication: ", e);
-            buildLog.println("[BFA] Could not open reader for indication.");
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
-                }
-            }
-        }
-        return found;
+    private FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
+        FailureReader failureReader = indication.getReader();
+        return failureReader.scan(build, buildLog);
     }
 
     @Override

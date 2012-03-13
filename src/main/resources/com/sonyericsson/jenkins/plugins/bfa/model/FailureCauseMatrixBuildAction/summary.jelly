@@ -2,6 +2,7 @@
   ~ The MIT License
   ~
   ~ Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+  ~ Copyright 2012 Sony Mobile Communications AB. All rights reserved.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +35,7 @@
         </td>
     </tr>
     <j:forEach var="run" items="${it.getRunsWithAction()}">
-        <j:set var="failureCauses" value="${it.getFailureCauses(run)}"/>
+        <j:set var="failureCauses" value="${it.getFoundFailureCauses(run)}"/>
         <tr>
             <td/>
             <td>

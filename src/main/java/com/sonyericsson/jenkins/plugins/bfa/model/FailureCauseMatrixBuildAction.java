@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,12 +94,13 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      *
      * @return the first cause found.
      */
-    public FailureCause getFirstFailureCause() {
+    public FoundFailureCause getFirstFailureCause() {
         for (MatrixRun run : runs) {
             FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
             if (action != null) {
-                if (action.getFailureCauses() != null && !action.getFailureCauses().isEmpty()) {
-                    return action.getFailureCauses().get(0);
+                List<FoundFailureCause> foundFailureCauses = action.getFoundFailureCauses();
+                if (foundFailureCauses != null && !foundFailureCauses.isEmpty()) {
+                    return foundFailureCauses.get(0);
                 }
             }
         }
@@ -129,11 +131,11 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * @param run the run to find failure causes for.
      * @return the failure causes of the run.
      */
-    public List<FailureCause> getFailureCauses(MatrixRun run) {
+    public List<FoundFailureCause> getFailureCauses(MatrixRun run) {
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
-            return action.getFailureCauses();
+            return action.getFoundFailureCauses();
         }
-        return new LinkedList<FailureCause>();
+        return new LinkedList<FoundFailureCause>();
     }
 }
