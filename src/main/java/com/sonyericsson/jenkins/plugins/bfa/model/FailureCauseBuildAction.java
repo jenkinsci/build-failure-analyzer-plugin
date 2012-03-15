@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -39,7 +40,7 @@ import java.util.List;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class FailureCauseBuildAction implements BuildBadgeAction {
-    private List<FailureCause> failureCauses;
+    private transient List<FailureCause> failureCauses;
     private List<FoundFailureCause> foundFailureCauses;
 
     /**
@@ -102,11 +103,28 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
     }
 
     /**
-     * Convenience method for jelly access to pluginimpl.
+     * Convenience method for jelly access to PluginImpl.
      *
-     * @return the pluginimpl instance.
+     * @return the PluginImpl instance.
      */
     public PluginImpl getPluginImpl() {
         return PluginImpl.getInstance();
+    }
+
+    /**
+     * Called after deserialization. Converts {@link #failureCauses} if existing.
+     *
+     * @return this.
+     */
+    public Object readResolve() {
+        if (failureCauses != null) {
+            List<FoundFailureCause> list = new LinkedList<FoundFailureCause>();
+            for (FailureCause fc : failureCauses) {
+                list.add(new FoundFailureCause(fc));
+            }
+            foundFailureCauses = list;
+            failureCauses = null;
+        }
+        return this;
     }
 }
