@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +31,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -84,7 +86,7 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
         WebClient web = createWebClient();
         HtmlPage page = web.goTo("/" + build.getUrl());
         try {
-            HtmlAnchor anchor = getAnchorBySuffix(page, "../" + CauseManagement.URL_NAME);
+            HtmlAnchor anchor = getAnchorBySuffix(page, FailureCauseBuildAction.URL_NAME);
             HtmlPage configPage = anchor.click();
             verifyIsConfigurationPage(configPage);
         } catch (ElementNotFoundException e) {

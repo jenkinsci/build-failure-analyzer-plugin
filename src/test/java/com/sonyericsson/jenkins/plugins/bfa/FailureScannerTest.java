@@ -25,6 +25,8 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
@@ -74,6 +76,17 @@ public class FailureScannerTest extends HudsonTestCase {
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, failureCause));
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo("/" + build.getUrl() + action.getUrlName() + "/1/1");
+        HtmlElement document = page.getDocumentElement();
+        HtmlElement focus = document.getElementById("focusLine");
+        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "class", "errorLine");
+        assertNotNull(errorElements);
+        HtmlElement error = errorElements.get(0);
+        assertNotNull(focus);
+        assertNotNull(error);
+        assertEquals("Error message not found: ", error.getTextContent(), TO_PRINT);
     }
 
     /**

@@ -58,7 +58,7 @@ public class BuildLogFailureReader extends FailureReader {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
-            foundIndication = scanOneFile(reader, currentFile);
+            foundIndication = scanOneFile(build, reader, currentFile);
         } catch (IOException ioe) {
             logger.log(Level.SEVERE, "[BFA] I/O problems during indication analysis: ", ioe);
             buildLog.println("[BFA] I/O problems during indication analysis.");

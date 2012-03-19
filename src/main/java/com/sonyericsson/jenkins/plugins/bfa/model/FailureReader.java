@@ -61,12 +61,14 @@ public abstract class FailureReader {
 
     /**
      * Scans one file for the required pattern.
+     * @param build the build we are processing.
      * @param reader the reader to read from.
      * @param currentFile the file path of the file we want to scan.
      * @return a FoundIndication if we find the pattern, null if not.
      * @throws IOException if problems occur in the reader handling.
      */
-    protected FoundIndication scanOneFile(BufferedReader reader, String currentFile) throws IOException {
+    protected FoundIndication scanOneFile(AbstractBuild build, BufferedReader reader, String currentFile)
+            throws IOException {
         FoundIndication foundIndication = null;
         boolean found = false;
         Pattern pattern = indication.getPattern();
@@ -80,7 +82,7 @@ public abstract class FailureReader {
             currentLine++;
         }
         if (found) {
-            foundIndication = new FoundIndication(pattern.pattern(), currentFile, currentLine);
+            foundIndication = new FoundIndication(build, pattern.pattern(), currentFile, currentLine);
         }
         return foundIndication;
     }

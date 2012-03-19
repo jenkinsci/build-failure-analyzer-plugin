@@ -25,14 +25,18 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 import java.util.LinkedList;
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The action to show the {@link FailureCause} to the user..
@@ -42,6 +46,9 @@ import java.util.List;
 public class FailureCauseBuildAction implements BuildBadgeAction {
     private transient List<FailureCause> failureCauses;
     private List<FoundFailureCause> foundFailureCauses;
+    /** The url of this action. */
+    public static final String URL_NAME = "bfa";
+    private static final Logger logger = Logger.getLogger(FailureCauseBuildAction.class.getName());
 
     /**
      * Standard constructor.
@@ -72,7 +79,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getUrlName() {
-        return "../" + CauseManagement.getInstance().getUrlName();
+        return URL_NAME;
     }
 
     /**
@@ -126,5 +133,35 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
             failureCauses = null;
         }
         return this;
+    }
+     /**
+     * Used when we are directed to a FoundFailureCause beneath the build action.
+     * @param token the FoundFailureCause number of this build action we are trying to navigate to.
+     * @param req the stapler request.
+     * @param resp the stapler response.
+     * @return the correct FoundFailureCause.
+     */
+    public FoundFailureCause getDynamic(String token, StaplerRequest req, StaplerResponse resp) {
+        try {
+        int causeNumber = Integer.parseInt(token) - 1;
+            if (causeNumber >= 0 && causeNumber < foundFailureCauses.size()) {
+                return foundFailureCauses.get(causeNumber);
+            }
+        } catch (NumberFormatException nfe) {
+            logger.log(Level.WARNING, "[BFA] Failed to parse token for getDynamic: " + token);
+            return null;
+        }
+        logger.log(Level.WARNING, "[BFA] Unable to navigate to the FailureCause: " + token);
+        return null;
+    }
+
+    /**
+     * Used for the link to the failure cause management page.
+     * @param req the stapler request.
+     * @param resp the stapler response
+     * @throws IOException if so.
+     */
+    public void doIndex(StaplerRequest req, StaplerResponse resp) throws IOException {
+        resp.sendRedirect2("../../failure-cause-management");
     }
 }

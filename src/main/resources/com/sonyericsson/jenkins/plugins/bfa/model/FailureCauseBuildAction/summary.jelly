@@ -23,7 +23,7 @@
   ~ THE SOFTWARE.
   -->
 
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <tr>
         <td>
             <img width="48" height="48" src="${it.getImageUrl()}" style="margin-right:1em;"/>
@@ -52,21 +52,33 @@
         </tr>
     </j:if>
     <j:if test="${failureCauses.size() gt 0}">
-        <j:forEach var="cause" items="${failureCauses}">
+        <j:forEach var="cause" items="${failureCauses}" indexVar="causeNumber">
             <tr>
                 <td/>
                 <td>
-                    <b>
+                    <h3>
                     ${cause.name}
-                    </b>
+                    </h3>
                 </td>
             </tr>
             <tr>
-            <td/>
-            <td>
-                ${cause.description}
-            </td>
-        </tr>
+                <td/>
+                <td>
+                    ${cause.description}
+                </td>
+            </tr>
+            <tr>
+                <td/>
+                <td>
+                    <b>${%Indications}:</b><st:nbsp/>
+                    <j:forEach var="indication" items="${cause.getIndications()}" indexVar="indicationNumber">
+                        <a href="bfa/${causeNumber+1}/${indicationNumber+1}#focusLine">
+                            ${%Indication} ${indicationNumber+1}
+                        </a>
+                        <st:nbsp/>
+                    </j:forEach>
+                </td>
+            </tr>
         </j:forEach>
     </j:if>
 </j:jelly>
