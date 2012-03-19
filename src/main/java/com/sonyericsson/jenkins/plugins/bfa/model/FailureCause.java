@@ -38,6 +38,7 @@ import java.util.List;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class FailureCause implements Serializable {
+    private String id;
     private String name;
     private String description;
     private List<Indication> indications;
@@ -45,12 +46,14 @@ public class FailureCause implements Serializable {
     /**
      * Standard data bound constructor.
      *
+     * @param id          the id.
      * @param name        the name of this FailureCause.
      * @param description the description of this FailureCause.
      * @param indications the list of indications
      */
     @DataBoundConstructor
-    public FailureCause(String name, String description, List<Indication> indications) {
+    public FailureCause(String id, String name, String description, List<Indication> indications) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.indications = indications;
@@ -66,7 +69,7 @@ public class FailureCause implements Serializable {
      * @param description the description of this FailureCause.
      */
     public FailureCause(String name, String description) {
-        this(name, description, null);
+        this(null, name, description, null);
     }
 
     /**
@@ -119,6 +122,23 @@ public class FailureCause implements Serializable {
             indications = new LinkedList<Indication>();
         }
         indications.add(indication);
+    }
+
+    /**
+     * The id.
+     *
+     * @return the id.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * The id.
+     * @param id the id.
+     */
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**

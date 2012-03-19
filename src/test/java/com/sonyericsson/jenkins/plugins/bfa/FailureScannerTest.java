@@ -183,7 +183,7 @@ public class FailureScannerTest extends HudsonTestCase {
     private FailureCause configureCauseAndIndication(String name, String description, Indication indication) {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
-        FailureCause failureCause = new FailureCause(name, description, indicationList);
+        FailureCause failureCause = new FailureCause(name, name, description, indicationList);
         List<FailureCause> causeList = new LinkedList<FailureCause>();
         causeList.add(failureCause);
         PluginImpl.getInstance().setCauses(causeList);
