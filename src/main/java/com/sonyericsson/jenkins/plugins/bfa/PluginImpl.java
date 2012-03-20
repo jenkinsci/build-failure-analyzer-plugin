@@ -25,8 +25,11 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
+import hudson.ExtensionList;
 import hudson.Plugin;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
@@ -82,7 +85,9 @@ public class PluginImpl extends Plugin {
 
     private Boolean globalEnabled;
 
-    private CopyOnWriteList<FailureCause> causes = new CopyOnWriteList<FailureCause>();
+    private CopyOnWriteList<FailureCause> causes;
+
+    private KnowledgeBase knowledgeBase;
 
 
     @Override
@@ -91,6 +96,12 @@ public class PluginImpl extends Plugin {
         load();
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
+        }
+        if (causes == null) {
+            causes = new CopyOnWriteList<FailureCause>();
+        }
+        if (knowledgeBase == null) {
+            knowledgeBase = new LocalFileKnowledgeBase(causes);
         }
     }
 
@@ -256,10 +267,34 @@ public class PluginImpl extends Plugin {
         }
     }
 
+    /**
+     * The knowledge base containing all causes.
+     * @return all the base.
+     */
+    public KnowledgeBase getKnowledgeBase() {
+        return knowledgeBase;
+    }
+
+    /**
+     * Convenience method to reach the list from jelly.
+     *
+     * @return the list of registered KnowledgeBaseDescriptors
+     */
+    public ExtensionList<KnowledgeBase.KnowledgeBaseDescriptor> getKnowledgeBaseDescriptors() {
+        return KnowledgeBase.KnowledgeBaseDescriptor.all();
+    }
+
     @Override
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
+        KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
+        if (base != null && !knowledgeBase.equals(base)) {
+            if (o.getBoolean("convertOldKb")) {
+                base.convertFrom(knowledgeBase);
+            }
+            knowledgeBase = base;
+        }
         save();
     }
 }

@@ -2,6 +2,7 @@
   ~ The MIT License
   ~
   ~ Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+  ~ Copyright 2012 Sony Mobile Communications AB. All rights reserved.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +22,7 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
     <f:section title="${%Build failure analyzer}">
         <f:entry title="${%Enabled}"
                  description="${%If builds should be scanned or not.}">
@@ -30,6 +31,26 @@
         <f:entry title="${%Text when no failure causes are found}"
                  description="${%If no problems are identified, this text will be shown on the build page}">
             <f:textbox name="noCausesMessage" value="${it.noCausesMessage}"/>
+        </f:entry>
+        <f:dropdownList name="knowledgeBase" title="${%Storage type}" help="${descriptor.getHelpFile('knowledgeBase')}">
+            <j:set var="current" value="${it.getKnowledgeBase()}"/>
+            <j:set var="defaultDescriptor" value="com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase.LocalFileKnowledgeBaseDescriptor"/>
+            <j:forEach var="descriptor" items="${it.getKnowledgeBaseDescriptors()}" varStatus="loop">
+                <f:dropdownListBlock value="${loop.index}" title="${descriptor.displayName}"
+                                     selected="${current.descriptor==descriptor || (current==null and descriptor==defaultDescriptor)}"
+                                     staplerClass="${descriptor.clazz.name}"
+                                     lazy="descriptor">
+                    <l:ajax>
+                        <j:set var="instance" value="${current.descriptor==descriptor ? current : null}"/>
+                        <st:include from="${descriptor}" page="${descriptor.configPage}" />
+                    </l:ajax>
+                </f:dropdownListBlock>
+            </j:forEach>
+        </f:dropdownList>
+        <f:entry title="${%Convert knowledge base}" description="${%Add the data from the old knowledge base to the new if changed}">
+            <!-- Should the user make this decision each time? -->
+            <f:checkbox name="convertOldKb" checked="true"/>
+            <span class="warning">Notice that when converting to an existing (non empty) knowledge base; duplicates could happen.</span>
         </f:entry>
     </f:section>
 </j:jelly>

@@ -106,6 +106,20 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
+     * Called to see if the configuration has changed.
+     *
+     * @param oldKnowledgeBase the previous config.
+     * @return true if it is the same.
+     */
+    public abstract boolean equals(KnowledgeBase oldKnowledgeBase);
+
+    @Override
+    public int hashCode() {
+        //Making checkstyle happy.
+        return super.hashCode();
+    }
+
+    /**
      * Descriptor for {@link KnowledgeBase}s.
      */
     public abstract static class KnowledgeBaseDescriptor extends Descriptor<KnowledgeBase> {

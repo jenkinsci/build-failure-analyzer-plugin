@@ -51,7 +51,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
      *
      * @param legacyCauses the causes.
      */
-    protected LocalFileKnowledgeBase(CopyOnWriteList<FailureCause> legacyCauses) {
+    public LocalFileKnowledgeBase(CopyOnWriteList<FailureCause> legacyCauses) {
         this.causes = new HashMap<String, FailureCause>();
         for (FailureCause cause : legacyCauses) {
             if (cause.getId() == null || cause.getId().isEmpty()) {
@@ -109,6 +109,30 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
         } else {
             convertFromAbstract(oldKnowledgeBase);
         }
+    }
+
+    @Override
+    public boolean equals(KnowledgeBase oldKnowledgeBase) {
+        if (getClass().isInstance(oldKnowledgeBase)) {
+            return oldKnowledgeBase.getClass().getName().equals(this.getClass().getName());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof KnowledgeBase) {
+            return this.equals((KnowledgeBase)other);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        //Making checkstyle happy.
+        return getClass().getName().hashCode();
     }
 
     @Override
