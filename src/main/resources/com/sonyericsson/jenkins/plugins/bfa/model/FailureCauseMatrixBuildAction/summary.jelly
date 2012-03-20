@@ -23,7 +23,7 @@
   ~ THE SOFTWARE.
   -->
 
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <tr>
         <td>
             <img width="48" height="48" src="${it.getImageUrl()}" style="margin-right:1em;"/>
@@ -38,16 +38,23 @@
         <j:set var="failureCauses" value="${it.getFoundFailureCauses(run)}"/>
         <tr>
             <td/>
-            <td>
+            <td style="font-size: larger; font-weight: bold">
                 <a href="${run.getParent().getCombination().toString()}">${run.getFullDisplayName()}</a>
             </td>
         </tr>
         <j:if test="${failureCauses.size() gt 0}">
-            <j:forEach var="failureCause" items="${failureCauses}">
+            <j:forEach var="failureCause" items="${failureCauses}" indexVar="failureCauseNumber">
                 <tr>
                     <td/>
                     <td>
                         ${failureCause.name}
+                        <j:forEach var="indication" items="${failureCause.getIndications()}"
+                                   indexVar="indicationNumber">
+                        <a href="${run.getParent().getCombination().toString()}/bfa/${failureCauseNumber+1}/${indicationNumber+1}#focusLine">
+                            (${%Indication} ${indicationNumber+1})
+                        </a>
+                        <st:nbsp/>
+                    </j:forEach>
                     </td>
                 </tr>
             </j:forEach>

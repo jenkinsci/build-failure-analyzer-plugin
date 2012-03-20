@@ -70,7 +70,6 @@
             <tr>
                 <td/>
                 <td>
-                    <b>${%Indications}:</b><st:nbsp/>
                     <j:forEach var="indication" items="${cause.getIndications()}" indexVar="indicationNumber">
                         <a href="bfa/${causeNumber+1}/${indicationNumber+1}#focusLine">
                             ${%Indication} ${indicationNumber+1}

@@ -131,7 +131,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * @param run the run to find failure causes for.
      * @return the failure causes of the run.
      */
-    public List<FoundFailureCause> getFailureCauses(MatrixRun run) {
+    public List<FoundFailureCause> getFoundFailureCauses(MatrixRun run) {
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
             return action.getFoundFailureCauses();
