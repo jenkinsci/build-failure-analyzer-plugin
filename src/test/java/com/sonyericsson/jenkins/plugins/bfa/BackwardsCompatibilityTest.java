@@ -24,16 +24,23 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.powermock.reflect.Whitebox;
 
+import java.util.Collection;
 import java.util.List;
+
+import static hudson.Util.fixEmpty;
+
+//CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData
 
 /**
  * Tests that the plugin can upgrade existing old data.
@@ -43,8 +50,7 @@ import java.util.List;
 public class BackwardsCompatibilityTest extends HudsonTestCase {
 
     /**
-     * Tests that a build containing version 1 of
-     * {@link FailureCauseBuildAction} can be done.
+     * Tests that a build containing version 1 of {@link FailureCauseBuildAction} can be done.
      */
     @LocalData
     public void testReadResolveFromVersion1() {
@@ -64,5 +70,25 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
         assertNotNull(foundFailureCauses);
         assertEquals(1, foundFailureCauses.size());
         assertNull(failureCauses);
+    }
+
+    /**
+     * Tests that legacy causes in {@link PluginImpl#causes} gets converted during startup to a {@link
+     * com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase}.
+     */
+    @LocalData
+    public void testLoadVersion1ConfigXml() {
+        KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        Collection<FailureCause> causes = knowledgeBase.getCauses();
+        assertEquals(3, causes.size());
+        Indication indication = null;
+        for (FailureCause c : causes) {
+            assertNotNull(c.getName() + " should have an id", fixEmpty(c.getId()));
+            if ("The Wrong".equals(c.getName())) {
+                indication = c.getIndications().get(0);
+            }
+        }
+        assertNotNull("Missing a cause!", indication);
+        assertEquals(".+wrong.*", Whitebox.getInternalState(indication, "pattern").toString());
     }
 }

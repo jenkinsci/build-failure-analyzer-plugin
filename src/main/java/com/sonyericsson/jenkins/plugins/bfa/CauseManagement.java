@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +25,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
@@ -41,8 +43,12 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static hudson.Util.fixEmpty;
 
 /**
  * Page for managing the failure causes.
@@ -102,10 +108,19 @@ public class CauseManagement implements RootAction {
      *
      * @return the list of causes.
      *
-     * @see com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getCauses()
+     * @see PluginImpl#getKnowledgeBase()
+     * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCauseNames()
+     * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCause(String)
      */
     public Iterable<FailureCause> getCauses() {
-        return PluginImpl.getInstance().getCauses();
+        //Need to follow the Knowledge base spec, so until a better UI is implemented...
+        List<FailureCause> list = new LinkedList<FailureCause>();
+        KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        Collection<FailureCause> names = knowledgeBase.getCauseNames();
+        for (FailureCause fc : names) {
+            list.add(knowledgeBase.getCause(fc.getId()));
+        }
+        return list;
     }
 
     /**
@@ -116,7 +131,9 @@ public class CauseManagement implements RootAction {
      * @throws IOException      if so.
      * @throws ServletException if so.
      */
-    public void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
+    public synchronized void doConfigSubmit(StaplerRequest request, StaplerResponse response)
+            throws IOException, ServletException {
+        logger.entering(getClass().getName(), "doConfigSubmit");
         Hudson.getInstance().checkPermission(getPermission());
         JSONObject form = request.getSubmittedForm();
         Object jsonCauses = form.opt("causes");
@@ -137,10 +154,18 @@ public class CauseManagement implements RootAction {
         if (error.length() > 0) {
             throw FormValidation.error(error.toString());
         }
-
-        PluginImpl.getInstance().setCauses(causes);
+        //Need to follow the Knowledge base spec, so until a better UI is implemented...
+        KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        for (FailureCause cause : causes) {
+            if (fixEmpty(cause.getId()) != null) {
+                knowledgeBase.saveCause(cause);
+            } else {
+                knowledgeBase.addCause(cause);
+            }
+        }
         PluginImpl.getInstance().save();
         response.sendRedirect2(getOwnerUrl());
+        logger.exiting(getClass().getName(), "doConfigSubmit");
     }
 
     /**

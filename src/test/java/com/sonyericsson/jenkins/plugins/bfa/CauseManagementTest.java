@@ -26,10 +26,15 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.powermock.reflect.Whitebox;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,31 +59,38 @@ public class CauseManagementTest extends HudsonTestCase {
         c = new FailureCause("An other Name", "Some other Description");
         c.addIndication(new BuildLogIndication("some other pattern"));
         list.add(c);
-        PluginImpl.getInstance().setCauses(list);
+        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
 
         WebClient client = this.createWebClient();
         HtmlPage page = client.goTo(CauseManagement.URL_NAME);
 
         this.submit(page.getFormByName("causesForm"));
 
-        List<FailureCause> newList = PluginImpl.getInstance().getCauses().getView();
+        Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
         assertEquals(list.size(), newList.size());
-        FailureCause cause = list.get(0);
-        FailureCause newCause = newList.get(0);
-        assertEquals(cause.getName(), newCause.getName());
-        assertEquals(cause.getDescription(), newCause.getDescription());
-        assertEquals(cause.getIndications().get(0).getPattern().pattern(),
-                newCause.getIndications().get(0).getPattern().pattern());
-        assertNotSame(cause, newCause);
+        Iterator<FailureCause> iterator = newList.iterator();
 
-        cause = list.get(1);
-        newCause = newList.get(1);
-        assertEquals(cause.getName(), newCause.getName());
-        assertEquals(cause.getDescription(), newCause.getDescription());
-        assertEquals(cause.getIndications().get(0).getPattern().pattern(),
-                newCause.getIndications().get(0).getPattern().pattern());
-        assertNotSame(cause, newCause);
+        FailureCause cause1 = list.get(0);
+        FailureCause cause2 = list.get(1);
+        //Is it ok that they end up in different order than inserted?
+        while (iterator.hasNext()) {
+            FailureCause oldCause = null;
+            FailureCause next = iterator.next();
+            if (next.getName().equals(cause1.getName())) {
+                oldCause = cause1;
+            } else if (next.getName().equals(cause2.getName())) {
+                oldCause = cause2;
+            } else {
+                fail("Unexpected cause saved: " + next.getName());
+            }
+            assertNotNull("It should have an id!", next.getId());
+            assertEquals(oldCause.getName(), next.getName());
+            assertEquals(oldCause.getDescription(), next.getDescription());
+            assertEquals(oldCause.getIndications().get(0).getPattern().pattern(),
+                    next.getIndications().get(0).getPattern().pattern());
+            assertNotSame(oldCause, next);
+        }
     }
 
     /**
@@ -92,18 +104,18 @@ public class CauseManagementTest extends HudsonTestCase {
         FailureCause c = new FailureCause("A Name", "Some Description");
         c.addIndication(new BuildLogIndication("some pattern"));
         list.add(c);
-        PluginImpl.getInstance().setCauses(list);
+        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
 
         WebClient client = this.createWebClient();
         HtmlPage page = client.goTo(CauseManagement.URL_NAME);
 
         this.submit(page.getFormByName("causesForm"));
 
-        List<FailureCause> newList = PluginImpl.getInstance().getCauses().getView();
+        Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
         assertEquals(list.size(), newList.size());
         FailureCause cause = list.get(0);
-        FailureCause newCause = newList.get(0);
+        FailureCause newCause = newList.iterator().next();
         assertEquals(cause.getName(), newCause.getName());
         assertEquals(cause.getDescription(), newCause.getDescription());
         assertEquals(cause.getIndications().get(0).getPattern().pattern(),

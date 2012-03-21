@@ -27,6 +27,8 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
@@ -40,6 +42,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
+import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -199,7 +202,7 @@ public class FailureScannerTest extends HudsonTestCase {
         FailureCause failureCause = new FailureCause(name, name, description, indicationList);
         List<FailureCause> causeList = new LinkedList<FailureCause>();
         causeList.add(failureCause);
-        PluginImpl.getInstance().setCauses(causeList);
+        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(causeList));
         return failureCause;
     }
 

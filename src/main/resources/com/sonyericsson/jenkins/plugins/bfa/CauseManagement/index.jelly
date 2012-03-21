@@ -2,6 +2,7 @@
   ~ The MIT License
   ~
   ~ Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
+  ~ Copyright 2012 Sony Mobile Communications AB. All rights reserved.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -41,10 +42,13 @@
                     />
             <f:form action="configSubmit" method="POST" name="causesForm">
                 <f:entry>
-                    <f:repeatable name="causes" items="${it.getCauses().getView()}" header="${%Cause}" var="fc" add="${%Add Cause}">
+                    <f:repeatable name="causes" items="${it.getCauses()}" header="${%Cause}" var="fc" add="${%Add Cause}">
+                        <input type="hidden" name="_.id" value="${fc.id}"/>
                         <table width="85%" cellpadding="2" cellspacing="0" style="margin-bottom: 2em; margin-left: 3em;">
                             <tr>
-                                <th align="left" width="80">${%Name}</th>
+                                <th align="left" width="80">
+                                    ${%Name}
+                                </th>
                                 <td><f:textbox field="name" value="${fc.name}"/></td>
                                 <td width="65" align="right"><f:repeatableDeleteButton value="${%Delete}"/></td>
                             </tr>

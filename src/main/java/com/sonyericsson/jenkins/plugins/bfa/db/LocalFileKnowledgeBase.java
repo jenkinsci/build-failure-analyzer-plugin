@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static hudson.Util.fixEmpty;
+
 /**
  * Handling of the list the traditional way. Local in memory and serialized with the object.
  *
@@ -52,9 +54,18 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
      * @param legacyCauses the causes.
      */
     public LocalFileKnowledgeBase(CopyOnWriteList<FailureCause> legacyCauses) {
+        this(legacyCauses.getView());
+    }
+
+    /**
+     * Standard constructor. Used for simple testability.
+     *
+     * @param initialCauses the causes.
+     */
+    public LocalFileKnowledgeBase(Collection<FailureCause> initialCauses) {
         this.causes = new HashMap<String, FailureCause>();
-        for (FailureCause cause : legacyCauses) {
-            if (cause.getId() == null || cause.getId().isEmpty()) {
+        for (FailureCause cause : initialCauses) {
+            if (fixEmpty(cause.getId()) == null) {
                 cause.setId(UUID.randomUUID().toString());
             }
             causes.put(cause.getId(), cause);
@@ -93,7 +104,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
 
     @Override
     public FailureCause saveCause(FailureCause cause) {
-        if (cause.getId() == null || cause.getId().isEmpty()) {
+        if (fixEmpty(cause.getId()) == null) {
             return addCause(cause);
         } else {
             causes.put(cause.getId(), cause);

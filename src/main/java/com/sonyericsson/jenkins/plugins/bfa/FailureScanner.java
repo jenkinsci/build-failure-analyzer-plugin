@@ -45,6 +45,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -68,8 +69,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
     public boolean perform(AbstractBuild build, final Launcher launcher, final BuildListener buildListener) {
         if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
             PrintStream buildLog = buildListener.getLogger();
-            List<FailureCause> causeList = PluginImpl.getInstance().getCauses().getView();
-            List<FoundFailureCause> foundCauseList = findCauses(causeList, build, buildLog);
+            Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
+            List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             build.addAction(buildAction);
         }
@@ -79,14 +80,15 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
     /**
      * Finds the failure causes for this build.
      *
-     * @param causeList the list of possible causes.
+     * @param causes the list of possible causes.
      * @param build the build to analyze.
      * @param buildLog the build log.
      * @return a list of found failure causes.
      */
-    private List<FoundFailureCause> findCauses(List<FailureCause> causeList, AbstractBuild build, PrintStream buildLog) {
+    private List<FoundFailureCause> findCauses(Collection<FailureCause> causes,
+                                               AbstractBuild build, PrintStream buildLog) {
         List<FoundFailureCause> foundFailureCauseList = new LinkedList<FoundFailureCause>();
-        for (FailureCause cause : causeList) {
+        for (FailureCause cause : causes) {
             List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
             if (!foundIndications.isEmpty()) {
                 FoundFailureCause foundFailureCause = new FoundFailureCause(cause);

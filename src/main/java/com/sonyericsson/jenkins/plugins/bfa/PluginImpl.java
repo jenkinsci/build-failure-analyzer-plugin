@@ -44,7 +44,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.util.Collection;
 
 /**
  * The main thing.
@@ -85,7 +84,7 @@ public class PluginImpl extends Plugin {
 
     private Boolean globalEnabled;
 
-    private CopyOnWriteList<FailureCause> causes;
+    private transient CopyOnWriteList<FailureCause> causes;
 
     private KnowledgeBase knowledgeBase;
 
@@ -97,11 +96,15 @@ public class PluginImpl extends Plugin {
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
         }
-        if (causes == null) {
-            causes = new CopyOnWriteList<FailureCause>();
-        }
         if (knowledgeBase == null) {
-            knowledgeBase = new LocalFileKnowledgeBase(causes);
+            if (causes == null) {
+                knowledgeBase = new LocalFileKnowledgeBase();
+            } else {
+                //Migrate old data.
+                knowledgeBase = new LocalFileKnowledgeBase(causes);
+                //No reason to keep it in memory right?
+                causes = null;
+            }
         }
     }
 
@@ -185,37 +188,6 @@ public class PluginImpl extends Plugin {
     }
 
     /**
-     * A direct reference to the list of Failure Causes.
-     *
-     * @return the causes.
-     */
-    public CopyOnWriteList<FailureCause> getCauses() {
-        return causes;
-    }
-
-    /**
-     * Sets the list of failure causes to the provided list. Only the content of the provided list will be used not the
-     * list itself.
-     *
-     * @param causes the list.
-     * @see CopyOnWriteList#replaceBy(hudson.util.CopyOnWriteList).
-     */
-    public void setCauses(CopyOnWriteList<FailureCause> causes) {
-        this.causes.replaceBy(causes);
-    }
-
-    /**
-     * Sets the list of failure causes to the provided list. Only the content of the provided list will be used not the
-     * list itself.
-     *
-     * @param causes the list.
-     * @see CopyOnWriteList#replaceBy(java.util.Collection)
-     */
-    public void setCauses(Collection<FailureCause> causes) {
-        this.causes.replaceBy(causes);
-    }
-
-    /**
      * Getter for the no causes message.
      *
      * @return the message.
@@ -269,6 +241,7 @@ public class PluginImpl extends Plugin {
 
     /**
      * The knowledge base containing all causes.
+     *
      * @return all the base.
      */
     public KnowledgeBase getKnowledgeBase() {

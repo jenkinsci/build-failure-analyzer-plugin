@@ -21,15 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
 import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,20 +41,28 @@ import java.util.logging.Logger;
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
 public class FoundIndication {
+
+    /**
+     * The platform file encoding. We assume that Jenkins uses it when writing the logs.
+     */
+    protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
     private int matchingLine;
     private String pattern;
     private AbstractBuild build;
-    /**The number of lines to show above the found Indication*/
+    /**
+     * The number of lines to show above the found Indication
+     */
     private static final int CONTEXT = 10;
     private static final Logger logger = Logger.getLogger(FoundIndication.class.getName());
 
     /**
      * Standard constructor.
-     * @param build the build of this indication.
+     *
+     * @param build           the build of this indication.
      * @param originalPattern the original pattern we used to match.
-     * @param matchingFile the path to the file in which we found the match.
-     * @param matchingLine the line on which we found the match.
+     * @param matchingFile    the path to the file in which we found the match.
+     * @param matchingLine    the line on which we found the match.
      */
     public FoundIndication(AbstractBuild build, String originalPattern, String matchingFile, int matchingLine) {
         this.pattern = originalPattern;
@@ -63,6 +73,7 @@ public class FoundIndication {
 
     /**
      * Getter for the matching file.
+     *
      * @return the file in which we found the match.
      */
     public String getMatchingFile() {
@@ -71,6 +82,7 @@ public class FoundIndication {
 
     /**
      * Getter for the matching line.
+     *
      * @return the line on which we found the match.
      */
     public int getMatchingLine() {
@@ -79,6 +91,7 @@ public class FoundIndication {
 
     /**
      * Getter for the pattern.
+     *
      * @return the pattern.
      */
     public String getPattern() {
@@ -87,6 +100,7 @@ public class FoundIndication {
 
     /**
      * Getter for the build.
+     *
      * @return the build.
      */
     public AbstractBuild getBuild() {
@@ -95,6 +109,7 @@ public class FoundIndication {
 
     /**
      * Adds extra information to the log and presents it.
+     *
      * @return the log file of this indication, with extra information.
      */
     public String getModifiedLog() {
@@ -111,7 +126,7 @@ public class FoundIndication {
         File inputFile = new File(rootDir, matchingFile);
         BufferedReader br = null;
         try {
-            br = new BufferedReader(new FileReader(inputFile));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), FILE_ENCODING));
             while ((currentLine = br.readLine()) != null) {
                 if (currentLineNumber == focusLine) {
                     //if focusLine and matchingLine both are equal to the first line.
