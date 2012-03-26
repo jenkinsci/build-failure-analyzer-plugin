@@ -75,9 +75,10 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
     /**
      * Tests that legacy causes in {@link PluginImpl#causes} gets converted during startup to a {@link
      * com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase}.
+     * @throws Exception if so.
      */
     @LocalData
-    public void testLoadVersion1ConfigXml() {
+    public void testLoadVersion1ConfigXml() throws Exception {
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         Collection<FailureCause> causes = knowledgeBase.getCauses();
         assertEquals(3, causes.size());

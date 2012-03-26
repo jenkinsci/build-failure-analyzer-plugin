@@ -26,11 +26,17 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.FormValidation;
+import net.vz.mongodb.jackson.Id;
+import net.vz.mongodb.jackson.ObjectId;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+
+
 
 /**
  * FailureCause of a build.
@@ -52,7 +58,9 @@ public class FailureCause implements Serializable {
      * @param indications the list of indications
      */
     @DataBoundConstructor
-    public FailureCause(String id, String name, String description, List<Indication> indications) {
+    @JsonCreator
+    public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
+    String description, @JsonProperty("indications") List<Indication> indications) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -129,6 +137,8 @@ public class FailureCause implements Serializable {
      *
      * @return the id.
      */
+    @Id
+    @ObjectId
     public String getId() {
         return id;
     }
@@ -137,6 +147,8 @@ public class FailureCause implements Serializable {
      * The id.
      * @param id the id.
      */
+    @Id
+    @ObjectId
     public void setId(String id) {
         this.id = id;
     }

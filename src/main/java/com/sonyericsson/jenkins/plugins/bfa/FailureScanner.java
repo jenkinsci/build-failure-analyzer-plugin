@@ -48,6 +48,8 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -55,6 +57,8 @@ import java.util.List;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class FailureScanner extends Notifier implements MatrixAggregatable {
+
+    private static final Logger logger = Logger.getLogger(FailureScanner.class.getName());
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
@@ -68,11 +72,16 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
     @Override
     public boolean perform(AbstractBuild build, final Launcher launcher, final BuildListener buildListener) {
         if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
-            PrintStream buildLog = buildListener.getLogger();
-            Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-            List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
-            FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
-            build.addAction(buildAction);
+            try {
+                PrintStream buildLog = buildListener.getLogger();
+                Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
+                List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
+                FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
+                build.addAction(buildAction);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
+                return false;
+            }
         }
         return true;
     }

@@ -33,6 +33,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
@@ -66,15 +67,19 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         ExtensionList<KnowledgeBase.KnowledgeBaseDescriptor> descriptors =
                 PluginImpl.getInstance().getKnowledgeBaseDescriptors();
         boolean foundLocalFile = false;
+        boolean foundMongoDB = false;
         boolean foundDifferentKb = false;
         for (KnowledgeBase.KnowledgeBaseDescriptor descriptor : descriptors) {
             if (descriptor instanceof LocalFileKnowledgeBase.LocalFileKnowledgeBaseDescriptor) {
                 foundLocalFile = true;
+            } else if (descriptor instanceof MongoDBKnowledgeBase.MongoDBKnowledgeBaseDescriptor) {
+                foundMongoDB = true;
             } else if (descriptor instanceof DifferentKnowledgeBase.DifferentKnowledgeBaseDescriptor) {
                 foundDifferentKb = true;
             }
         }
         assertTrue("Expected to find a LocalFileKnowledgeBaseDescriptor", foundLocalFile);
+        assertTrue("Expected to find a MongoDBKnowledgeBaseDescriptor", foundMongoDB);
         assertTrue("Expected to find a DifferentKnowledgeBaseDescriptor", foundDifferentKb);
     }
 

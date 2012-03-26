@@ -113,7 +113,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void convertFrom(KnowledgeBase oldKnowledgeBase) {
+    public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
         if (oldKnowledgeBase instanceof LocalFileKnowledgeBase) {
             LocalFileKnowledgeBase lfkb = (LocalFileKnowledgeBase)oldKnowledgeBase;
             causes = lfkb.causes;

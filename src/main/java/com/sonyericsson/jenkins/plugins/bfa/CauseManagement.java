@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static hudson.Util.fixEmpty;
@@ -111,8 +112,9 @@ public class CauseManagement implements RootAction {
      * @see PluginImpl#getKnowledgeBase()
      * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCauseNames()
      * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCause(String)
+     * @throws Exception if something fails in the KnowledgeBase handling.
      */
-    public Iterable<FailureCause> getCauses() {
+    public Iterable<FailureCause> getCauses() throws Exception {
         //Need to follow the Knowledge base spec, so until a better UI is implemented...
         List<FailureCause> list = new LinkedList<FailureCause>();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
@@ -156,14 +158,19 @@ public class CauseManagement implements RootAction {
         }
         //Need to follow the Knowledge base spec, so until a better UI is implemented...
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        for (FailureCause cause : causes) {
-            if (fixEmpty(cause.getId()) != null) {
-                knowledgeBase.saveCause(cause);
-            } else {
-                knowledgeBase.addCause(cause);
+        try {
+            for (FailureCause cause : causes) {
+                if (fixEmpty(cause.getId()) != null) {
+                    knowledgeBase.saveCause(cause);
+                } else {
+                    knowledgeBase.addCause(cause);
+                }
             }
+            PluginImpl.getInstance().save();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not save causes to knowledge base for knowledge base: "
+                    + knowledgeBase.toString());
         }
-        PluginImpl.getInstance().save();
         response.sendRedirect2(getOwnerUrl());
         logger.exiting(getClass().getName(), "doConfigSubmit");
     }

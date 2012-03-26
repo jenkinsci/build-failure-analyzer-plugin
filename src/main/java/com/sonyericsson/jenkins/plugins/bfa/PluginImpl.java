@@ -44,6 +44,8 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main thing.
@@ -51,6 +53,8 @@ import java.io.IOException;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class PluginImpl extends Plugin {
+
+    private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
 
     /**
      * Convenience constant for the 24x24 icon size. used for {@link #getImageUrl(String, String)}.
@@ -263,10 +267,14 @@ public class PluginImpl extends Plugin {
         globalEnabled = o.getBoolean("globalEnabled");
         KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
         if (base != null && !knowledgeBase.equals(base)) {
-            if (o.getBoolean("convertOldKb")) {
-                base.convertFrom(knowledgeBase);
+            try {
+                if (o.getBoolean("convertOldKb")) {
+                    base.convertFrom(knowledgeBase);
+                }
+                knowledgeBase = base;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Could not convert knowledge base", e);
             }
-            knowledgeBase = base;
         }
         save();
     }

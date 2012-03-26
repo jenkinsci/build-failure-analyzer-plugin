@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.model.AbstractBuild;
+import org.codehaus.jackson.annotate.JsonIgnoreType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import java.util.regex.Pattern;
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@JsonIgnoreType
 public abstract class FailureReader {
 
     /** The indication we are looking for. */

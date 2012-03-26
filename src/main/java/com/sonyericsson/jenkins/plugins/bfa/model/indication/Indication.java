@@ -30,6 +30,10 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreType;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import java.io.Serializable;
@@ -41,6 +45,7 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class Indication implements Describable<Indication>, Serializable {
 
     private String pattern;
@@ -50,7 +55,8 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      * @param pattern the String value.
      */
     @DataBoundConstructor
-    public Indication(String pattern) {
+    @JsonCreator
+    public Indication(@JsonProperty("pattern") String pattern) {
         this.pattern = pattern;
     }
 
@@ -93,6 +99,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     /**
      * The descriptor for this indicator.
      */
+    @JsonIgnoreType
     public abstract static class IndicationDescriptor extends Descriptor<Indication> {
 
         /**
