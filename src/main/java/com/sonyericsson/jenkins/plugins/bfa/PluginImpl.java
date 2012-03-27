@@ -261,6 +261,20 @@ public class PluginImpl extends Plugin {
         return KnowledgeBase.KnowledgeBaseDescriptor.all();
     }
 
+    /**
+     * Gets the KnowledgeBaseDescriptor that matches the name descString.
+     * @param descString either name of a KnowledgeBaseDescriptor or the fully qualified name.
+     * @return The matching KnowledgeBaseDescriptor or null if none is found.
+     */
+    public KnowledgeBase.KnowledgeBaseDescriptor getKnowledgeBaseDescriptor(String descString) {
+        for (KnowledgeBase.KnowledgeBaseDescriptor desc : getKnowledgeBaseDescriptors()) {
+            if (desc.getClass().toString().contains(descString)) {
+                return desc;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");

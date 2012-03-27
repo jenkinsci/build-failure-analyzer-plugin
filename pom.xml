@@ -125,13 +125,18 @@
             <groupId>net.vz.mongodb.jackson</groupId>
             <artifactId>mongo-jackson-mapper</artifactId>
             <version>1.4.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-mapper-asl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.cedarsoft.serialization</groupId>
-            <artifactId>jackson</artifactId>
-            <version>4.1.1</version>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.6</version>
         </dependency>
-
     </dependencies>
     <build>
         <pluginManagement>

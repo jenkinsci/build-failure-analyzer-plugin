@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.Util;
 import hudson.util.FormValidation;
 import net.vz.mongodb.jackson.Id;
 import net.vz.mongodb.jackson.ObjectId;
@@ -61,7 +62,7 @@ public class FailureCause implements Serializable {
     @JsonCreator
     public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
     String description, @JsonProperty("indications") List<Indication> indications) {
-        this.id = id;
+        this.id = Util.fixEmpty(id);
         this.name = name;
         this.description = description;
         this.indications = indications;

@@ -26,21 +26,27 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor;
+import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handling of the MongoDB way of saving the knowledge base.
@@ -48,15 +54,16 @@ import java.util.logging.Logger;
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
 public class MongoDBKnowledgeBase extends KnowledgeBase {
-    private Mongo mongo;
-    private DB db;
-    private DBCollection collection;
-    private JacksonDBCollection<FailureCause, String> jacksonCollection;
+    private transient Mongo mongo;
+    private transient DB db;
+    private transient DBCollection collection;
+    private transient JacksonDBCollection<FailureCause, String> jacksonCollection;
     private String host;
     private int port;
     private String dbName;
     /**The name of the cause collection in the database.*/
     public static final String COLLECTION_NAME = "failureCauses";
+    private static final int MONGO_DEFAULT_PORT = 27017;
 
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
 
@@ -150,7 +157,26 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
-        convertFromAbstract(oldKnowledgeBase);
+        if (oldKnowledgeBase instanceof MongoDBKnowledgeBase) {
+            convertFromAbstract(oldKnowledgeBase);
+        } else {
+            for (FailureCause cause : oldKnowledgeBase.getCauseNames()) {
+                try {
+                    //try finding the id in the knowledgebase, if so, update it.
+                    if (getCause(cause.getId()) != null) {
+                        saveCause(cause);
+                    //if not found, add a new.
+                    } else {
+                        cause.setId(null);
+                        addCause(cause);
+                    }
+                  //Safety net for the case that Mongo should throw anything if the id has a really weird form.
+                } catch (MongoException e) {
+                    cause.setId(null);
+                    addCause(cause);
+                }
+            }
+        }
     }
 
     @Override
@@ -246,6 +272,65 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         @Override
         public String getDisplayName() {
             return Messages.MongoDBKnowledgeBase_DisplayName();
+        }
+
+        /**
+         * Convenience method for jelly.
+         * @return the default port.
+         */
+        public int getDefaultPort() {
+            return MONGO_DEFAULT_PORT;
+        }
+
+        /**
+         * Checks that the host name is not empty.
+         *
+         * @param value the pattern to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public FormValidation doCheckHost(@QueryParameter("value") final String value) {
+            if (Util.fixEmpty(value) == null) {
+                return FormValidation.error("Please provide a host name!");
+            } else {
+                Matcher m = Pattern.compile("\\s").matcher(value);
+                if (m.find()) {
+                    return FormValidation.error("Host name contains white space!");
+                }
+                return FormValidation.ok();
+            }
+        }
+
+        /**
+         * Checks that the port number is not empty and is a number.
+         *
+         * @param value the port number to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public FormValidation doCheckPort(@QueryParameter("value") String value) {
+            try {
+                Long.parseLong(value);
+                return FormValidation.ok();
+            } catch (NumberFormatException e) {
+                return FormValidation.error("Please provide a port number!");
+            }
+        }
+
+        /**
+         * Checks that the database name is not empty.
+         *
+         * @param value the database name to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public FormValidation doCheckDBName(@QueryParameter("value") String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.error("Please provide a database name!");
+            } else {
+                Matcher m = Pattern.compile("\\s").matcher(value);
+                if (m.find()) {
+                    return FormValidation.error("Database name contains white space!");
+                }
+                return FormValidation.ok();
+            }
         }
     }
 }
