@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import hudson.MarkupText;
 import hudson.model.AbstractBuild;
 
 import java.io.BufferedReader;
@@ -128,6 +129,8 @@ public class FoundIndication {
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), FILE_ENCODING));
             while ((currentLine = br.readLine()) != null) {
+                MarkupText markup = new MarkupText(currentLine);
+                currentLine = markup.toString(true);
                 if (currentLineNumber == focusLine) {
                     //if focusLine and matchingLine both are equal to the first line.
                     if (currentLineNumber == matchingLine) {
