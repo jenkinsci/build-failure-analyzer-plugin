@@ -120,6 +120,17 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public abstract boolean equals(KnowledgeBase oldKnowledgeBase);
 
+    /**
+     * Called when the KnowledgeBase should be up and running.
+     * @throws  Exception if anything goes wrong during the startup.
+     */
+    public abstract void start() throws Exception;
+
+    /**
+     * Called when it is time to clean up after the KnowledgeBase.
+     */
+    public abstract void stop();
+
     @Override
     public int hashCode() {
         //Making checkstyle happy.

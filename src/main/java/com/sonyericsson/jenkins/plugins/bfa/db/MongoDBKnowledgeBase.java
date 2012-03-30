@@ -23,8 +23,10 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
@@ -65,7 +67,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     public static final String COLLECTION_NAME = "failureCauses";
     private static final int MONGO_DEFAULT_PORT = 27017;
 
+
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
+
+    private transient MongoDBKnowledgeBaseCache cache;
 
    /**
      * Getter for the host value.
@@ -102,6 +107,29 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         this.host = host;
         this.port = port;
         this.dbName = dbName;
+
+    }
+
+    @Override
+    public synchronized void start() throws UnknownHostException {
+        initCache();
+    }
+
+    @Override
+    public synchronized void stop() {
+        cache.stop();
+        cache = null;
+    }
+
+    /**
+     * Initializes the cache if it is null.
+     * @throws UnknownHostException if we cannot connect to the database.
+     */
+    private void initCache() throws UnknownHostException {
+        if (cache == null) {
+            cache = new MongoDBKnowledgeBaseCache(getJacksonCollection());
+            cache.start();
+        }
     }
 
     /**
@@ -112,12 +140,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getCauses() throws UnknownHostException {
-        List<FailureCause> list = new LinkedList<FailureCause>();
-        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find();
-        while (dbCauses.hasNext()) {
-            list.add(dbCauses.next());
-        }
-        return list;
+        initCache();
+        return cache.getCauses();
     }
 
     /**
@@ -128,7 +152,15 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getCauseNames() throws UnknownHostException {
-        return getCauses();
+        List<FailureCause> list = new LinkedList<FailureCause>();
+        DBObject query = new BasicDBObject();
+        query.put("name", 1);
+        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(new BasicDBObject(), query);
+        while (dbCauses.hasNext()) {
+            list.add(dbCauses.next());
+        }
+        return list;
+
     }
 
     @Override
@@ -145,13 +177,47 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public FailureCause addCause(FailureCause cause) throws UnknownHostException {
+        return addCause(cause, true);
+    }
+
+    /**
+     * @see MongoDBKnowledgeBase#addCause(FailureCause)
+     * Does not update the cache, used when we know we will have a lot of save/add calls all at once,
+     * e.g. during a convert.
+     * @param cause the FailureCause to add.
+     * @param doUpdate true if a cache update should be made, false if not.
+     * @return the added FailureCause.
+     * @throws UnknownHostException If a connection to the Mongo database cannot be made.
+     */
+    public FailureCause addCause(FailureCause cause, boolean doUpdate) throws UnknownHostException {
         WriteResult<FailureCause, String> result = getJacksonCollection().insert(cause);
+        if (doUpdate) {
+            initCache();
+            cache.updateCache();
+        }
         return result.getSavedObject();
     }
 
     @Override
     public FailureCause saveCause(FailureCause cause) throws UnknownHostException {
+        return saveCause(cause, true);
+    }
+
+    /**
+     * @see MongoDBKnowledgeBase#saveCause(FailureCause)
+     * Does not update the cache, used when we know we will have a lot of save/add calls all at once,
+     * e.g. during a convert.
+     * @param cause the FailureCause to save.
+     * @param doUpdate true if a cache update should be made, false if not.
+     * @return the saved FailureCause.
+     * @throws UnknownHostException If a connection to the Mongo database cannot be made.
+     */
+    public FailureCause saveCause(FailureCause cause, boolean doUpdate) throws UnknownHostException {
         WriteResult<FailureCause, String> result =  getJacksonCollection().save(cause);
+        if (doUpdate) {
+            initCache();
+            cache.updateCache();
+        }
         return result.getSavedObject();
     }
 
@@ -164,18 +230,21 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 try {
                     //try finding the id in the knowledgebase, if so, update it.
                     if (getCause(cause.getId()) != null) {
-                        saveCause(cause);
+                        //doing all the additions to the database first and then fetching to the cache only once.
+                        saveCause(cause, false);
                     //if not found, add a new.
                     } else {
                         cause.setId(null);
-                        addCause(cause);
+                        addCause(cause, false);
                     }
                   //Safety net for the case that Mongo should throw anything if the id has a really weird form.
                 } catch (MongoException e) {
                     cause.setId(null);
-                    addCause(cause);
+                    addCause(cause, false);
                 }
             }
+            initCache();
+            cache.updateCache();
         }
     }
 

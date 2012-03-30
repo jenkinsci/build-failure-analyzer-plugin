@@ -132,6 +132,16 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public void start() {
+        //TODO should something be done here?
+    }
+
+    @Override
+    public void stop() {
+        //TODO should something be done here?
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (other instanceof KnowledgeBase) {
             return this.equals((KnowledgeBase)other);

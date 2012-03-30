@@ -110,6 +110,13 @@ public class PluginImpl extends Plugin {
                 causes = null;
             }
         }
+        knowledgeBase.start();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        knowledgeBase.stop();
     }
 
     /**
@@ -282,9 +289,11 @@ public class PluginImpl extends Plugin {
         KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
         if (base != null && !knowledgeBase.equals(base)) {
             try {
+                base.start();
                 if (o.getBoolean("convertOldKb")) {
                     base.convertFrom(knowledgeBase);
                 }
+                knowledgeBase.stop();
                 knowledgeBase = base;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Could not convert knowledge base", e);

@@ -159,6 +159,8 @@ public class CauseManagement implements RootAction {
         //Need to follow the Knowledge base spec, so until a better UI is implemented...
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         try {
+            //in the current UI, this will take a lot of time since for each save there will be an cache update,
+            //this will be solved once we change UI though.
             for (FailureCause cause : causes) {
                 if (fixEmpty(cause.getId()) != null) {
                     knowledgeBase.saveCause(cause);

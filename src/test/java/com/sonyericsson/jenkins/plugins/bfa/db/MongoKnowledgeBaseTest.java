@@ -24,6 +24,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 
+import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
@@ -98,15 +99,15 @@ public class MongoKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testGetCauses() throws Exception {
+    public void testGetCauseNames() throws Exception {
         DBCursor<FailureCause> cursor = mock(DBCursor.class);
         Whitebox.setInternalState(kb, collection);
         List<FailureCause> list = new LinkedList<FailureCause>();
         list.add(mockedCause);
         when(cursor.next()).thenReturn(mockedCause);
         when(cursor.hasNext()).thenReturn(true, false);
-        doReturn(cursor).when(collection).find();
-        Collection<FailureCause> fetchedCauses = kb.getCauses();
+        doReturn(cursor).when(collection).find(Matchers.<DBObject>any(), Matchers.<DBObject>any());
+        Collection<FailureCause> fetchedCauses = kb.getCauseNames();
         assertNotNull("The fetched cause should not be null", fetchedCauses);
         Iterator fetch = fetchedCauses.iterator();
         assertTrue(fetch.hasNext());
@@ -121,6 +122,8 @@ public class MongoKnowledgeBaseTest {
     public void testAddCause() throws Exception {
         WriteResult<FailureCause, String> result = mock(WriteResult.class);
         when(result.getSavedObject()).thenReturn(mockedCause);
+        MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
+        Whitebox.setInternalState(kb, cache);
         doReturn(result).when(collection).insert(Matchers.<FailureCause>any());
         FailureCause addedCause = kb.addCause(mockedCause);
         assertNotNull(addedCause);
@@ -135,6 +138,8 @@ public class MongoKnowledgeBaseTest {
     public void testSaveCause() throws Exception {
         WriteResult<FailureCause, String> result = mock(WriteResult.class);
         when(result.getSavedObject()).thenReturn(mockedCause);
+        MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
+        Whitebox.setInternalState(kb, cache);
         doReturn(result).when(collection).save(Matchers.<FailureCause>any());
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
@@ -147,7 +152,7 @@ public class MongoKnowledgeBaseTest {
      */
     @Test(expected = MongoException.class)
     public void testThrowMongo() throws Exception {
-        when(collection.find()).thenThrow(MongoException.class);
-        kb.getCauses();
+        when(collection.find(Matchers.<DBObject>any(), Matchers.<DBObject>any())).thenThrow(MongoException.class);
+        kb.getCauseNames();
     }
 }
