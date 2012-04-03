@@ -24,12 +24,17 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.CopyOnWriteList;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.LinkedList;
 import java.util.UUID;
@@ -48,6 +53,8 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(PluginImpl.class)
 public class LocalFileKnowledgeBaseTest {
 
     private CopyOnWriteList<FailureCause> oldCauses;
@@ -66,6 +73,9 @@ public class LocalFileKnowledgeBaseTest {
         oldCauses.add(olle);
         existingCause = new FailureCause("existingId", "me", "I am already here!", new LinkedList<Indication>());
         oldCauses.add(existingCause);
+        PluginImpl mock = PowerMockito.mock(PluginImpl.class);
+        PowerMockito.mockStatic(PluginImpl.class);
+        PowerMockito.when(PluginImpl.getInstance()).thenReturn(mock);
     }
 
     /**

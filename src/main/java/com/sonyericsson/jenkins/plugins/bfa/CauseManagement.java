@@ -25,31 +25,19 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Action;
-import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.security.Permission;
-import hudson.util.FormValidation;
-import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static hudson.Util.fixEmpty;
 
 /**
  * Page for managing the failure causes.
@@ -67,6 +55,19 @@ public class CauseManagement implements RootAction {
      * @see #getUrlName()
      */
     public static final String URL_NAME = "failure-cause-management";
+    /**
+     * The reserved id for getting a new {@link FailureCause} from {@link #getDynamic(String,
+     * org.kohsuke.stapler.StaplerRequest, org.kohsuke.stapler.StaplerResponse)}.
+     */
+    public static final String NEW_CAUSE_DYNAMIC_ID = "new";
+    /**
+     * The pre-filled name that a new cause gets.
+     */
+    public static final String NEW_CAUSE_NAME = "New...";
+    /**
+     * The pre-filled description that a new cause gets.
+     */
+    public static final String NEW_CAUSE_DESCRIPTION = "Description...";
 
     @Override
     public String getIconFileName() {
@@ -105,76 +106,33 @@ public class CauseManagement implements RootAction {
     }
 
     /**
-     * The list of configured causes.
+     * Convenience method for {@link com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getShallowCauses()}.
      *
-     * @return the list of causes.
+     * @return the collection of causes.
      *
-     * @see PluginImpl#getKnowledgeBase()
-     * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCauseNames()
-     * @see com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase#getCause(String)
-     * @throws Exception if something fails in the KnowledgeBase handling.
+     * @throws Exception if communication fails.
      */
-    public Iterable<FailureCause> getCauses() throws Exception {
-        //Need to follow the Knowledge base spec, so until a better UI is implemented...
-        List<FailureCause> list = new LinkedList<FailureCause>();
-        KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        Collection<FailureCause> names = knowledgeBase.getCauseNames();
-        for (FailureCause fc : names) {
-            list.add(knowledgeBase.getCause(fc.getId()));
-        }
-        return list;
+    public Iterable<FailureCause> getShallowCauses() throws Exception {
+        return PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
     }
 
     /**
-     * The form submission handler. Takes the input form and stores the data. Called by Stapler.
+     * Dynamic Stapler URL binding. Provides the ability to navigate to a cause via for example:
+     * <code>/jenkins/failure-cause-management/abf123</code>
      *
-     * @param request  the request.
+     * @param id       the id of the cause of "new" to create a new cause.
+     * @param request  the request
      * @param response the response
-     * @throws IOException      if so.
-     * @throws ServletException if so.
+     * @return the cause if found or null.
+     *
+     * @throws Exception if communication with the knowledge base failed.
      */
-    public synchronized void doConfigSubmit(StaplerRequest request, StaplerResponse response)
-            throws IOException, ServletException {
-        logger.entering(getClass().getName(), "doConfigSubmit");
-        Hudson.getInstance().checkPermission(getPermission());
-        JSONObject form = request.getSubmittedForm();
-        Object jsonCauses = form.opt("causes");
-        if (jsonCauses == null) {
-            throw new Failure("You need to provide some causes!");
+    public FailureCause getDynamic(String id, StaplerRequest request, StaplerResponse response) throws Exception {
+        if (NEW_CAUSE_DYNAMIC_ID.equalsIgnoreCase(id)) {
+            return new FailureCause(NEW_CAUSE_NAME, NEW_CAUSE_DESCRIPTION);
+        } else {
+            return PluginImpl.getInstance().getKnowledgeBase().getCause(id);
         }
-        List<FailureCause> causes = request.bindJSONToList(FailureCause.class, jsonCauses);
-        StringBuilder error = new StringBuilder("");
-        for (FailureCause cause : causes) {
-            FormValidation validation = cause.validate(causes);
-            if (validation.kind != FormValidation.Kind.OK) {
-                if (error.length() > 0) {
-                    error.append("\n");
-                }
-                error.append(validation.getMessage());
-            }
-        }
-        if (error.length() > 0) {
-            throw FormValidation.error(error.toString());
-        }
-        //Need to follow the Knowledge base spec, so until a better UI is implemented...
-        KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        try {
-            //in the current UI, this will take a lot of time since for each save there will be an cache update,
-            //this will be solved once we change UI though.
-            for (FailureCause cause : causes) {
-                if (fixEmpty(cause.getId()) != null) {
-                    knowledgeBase.saveCause(cause);
-                } else {
-                    knowledgeBase.addCause(cause);
-                }
-            }
-            PluginImpl.getInstance().save();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Could not save causes to knowledge base for knowledge base: "
-                    + knowledgeBase.toString());
-        }
-        response.sendRedirect2(getOwnerUrl());
-        logger.exiting(getClass().getName(), "doConfigSubmit");
     }
 
     /**

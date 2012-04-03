@@ -33,6 +33,9 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
+import java.util.UUID;
+
+import static hudson.Util.fixEmpty;
 
 /**
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
@@ -59,7 +62,10 @@ public class DifferentKnowledgeBase extends LocalFileKnowledgeBase {
     public DifferentKnowledgeBase(List<FailureCause> initial) {
         if (initial != null) {
             for (FailureCause c : initial) {
-                saveCause(c);
+                if (fixEmpty(c.getId()) == null) {
+                    c.setId(UUID.randomUUID().toString());
+                }
+                put(c);
             }
         }
     }

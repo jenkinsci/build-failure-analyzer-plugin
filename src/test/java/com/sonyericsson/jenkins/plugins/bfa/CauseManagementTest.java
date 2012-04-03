@@ -25,18 +25,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
-import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.powermock.reflect.Whitebox;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Hudson tests for {@link CauseManagement}.
@@ -44,84 +33,6 @@ import java.util.List;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class CauseManagementTest extends HudsonTestCase {
-
-    /**
-     * Happy test for {@link CauseManagement#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}.
-     *
-     * @throws Exception if so.
-     */
-    public void testDoConfigSubmit() throws Exception {
-        List<FailureCause> list = new LinkedList<FailureCause>();
-        FailureCause c = new FailureCause("A Name", "Some Description");
-        c.addIndication(new BuildLogIndication("some pattern"));
-        list.add(c);
-        c = new FailureCause("An other Name", "Some other Description");
-        c.addIndication(new BuildLogIndication("some other pattern"));
-        list.add(c);
-        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
-
-        WebClient client = this.createWebClient();
-        HtmlPage page = client.goTo(CauseManagement.URL_NAME);
-
-        this.submit(page.getFormByName("causesForm"));
-
-        Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-
-        assertEquals(list.size(), newList.size());
-        Iterator<FailureCause> iterator = newList.iterator();
-
-        FailureCause cause1 = list.get(0);
-        FailureCause cause2 = list.get(1);
-        //Is it ok that they end up in different order than inserted?
-        while (iterator.hasNext()) {
-            FailureCause oldCause = null;
-            FailureCause next = iterator.next();
-            if (next.getName().equals(cause1.getName())) {
-                oldCause = cause1;
-            } else if (next.getName().equals(cause2.getName())) {
-                oldCause = cause2;
-            } else {
-                fail("Unexpected cause saved: " + next.getName());
-            }
-            assertNotNull("It should have an id!", next.getId());
-            assertEquals(oldCause.getName(), next.getName());
-            assertEquals(oldCause.getDescription(), next.getDescription());
-            assertEquals(oldCause.getIndications().get(0).getPattern().pattern(),
-                    next.getIndications().get(0).getPattern().pattern());
-            assertNotSame(oldCause, next);
-        }
-    }
-
-    /**
-     * Happy test for {@link CauseManagement#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} with only one cause configured.
-     *
-     * @throws Exception if so.
-     */
-    public void testDoConfigSubmitOne() throws Exception {
-        List<FailureCause> list = new LinkedList<FailureCause>();
-        FailureCause c = new FailureCause("A Name", "Some Description");
-        c.addIndication(new BuildLogIndication("some pattern"));
-        list.add(c);
-        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
-
-        WebClient client = this.createWebClient();
-        HtmlPage page = client.goTo(CauseManagement.URL_NAME);
-
-        this.submit(page.getFormByName("causesForm"));
-
-        Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-
-        assertEquals(list.size(), newList.size());
-        FailureCause cause = list.get(0);
-        FailureCause newCause = newList.iterator().next();
-        assertEquals(cause.getName(), newCause.getName());
-        assertEquals(cause.getDescription(), newCause.getDescription());
-        assertEquals(cause.getIndications().get(0).getPattern().pattern(),
-                newCause.getIndications().get(0).getPattern().pattern());
-        assertNotSame(cause, newCause);
-    }
 
     /**
      * Tests {@link com.sonyericsson.jenkins.plugins.bfa.CauseManagement#isUnderTest()}.

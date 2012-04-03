@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -32,6 +33,7 @@ import hudson.util.CopyOnWriteList;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -91,25 +93,40 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public Collection<FailureCause> getShallowCauses() throws Exception {
+        return getCauses();
+    }
+
+    @Override
     public FailureCause getCause(String id) {
         return causes.get(id);
     }
 
     @Override
-    public FailureCause addCause(FailureCause cause) {
+    public FailureCause addCause(FailureCause cause) throws IOException {
         cause.setId(UUID.randomUUID().toString());
         causes.put(cause.getId(), cause);
+        PluginImpl.getInstance().save();
         return cause;
     }
 
     @Override
-    public FailureCause saveCause(FailureCause cause) {
+    public FailureCause saveCause(FailureCause cause) throws IOException {
         if (fixEmpty(cause.getId()) == null) {
             return addCause(cause);
         } else {
             causes.put(cause.getId(), cause);
+            PluginImpl.getInstance().save();
             return cause;
         }
+    }
+
+    /**
+     * Puts the cause directly into the map. Does not call save.
+     * @param cause the cause to put.
+     */
+    protected void put(FailureCause cause) {
+        causes.put(cause.getId(), cause);
     }
 
     @Override

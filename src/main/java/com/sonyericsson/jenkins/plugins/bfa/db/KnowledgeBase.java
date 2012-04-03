@@ -60,6 +60,18 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     public abstract Collection<FailureCause> getCauseNames() throws Exception;
 
     /**
+     * Get a shallow list of the {@link FailureCause}s. The list should be the latest possible from the DB as
+     * they will be used in the list of causes to edit.
+     * shallow meaning no indications but information enough to show a nice list; at least id and name but description
+     * is preferred as well.
+     *
+     * @return a shallow list of all causes.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     * @see #getCauseNames()
+     */
+    public abstract Collection<FailureCause> getShallowCauses() throws Exception;
+
+    /**
      * Get the cause with the given id. The cause returned is intended to be edited right away, so it should be as fresh
      * from the db as possible.
      *

@@ -40,38 +40,37 @@
                         z-index: -100;
                         background-image: url('${it.getImageUrl('256x256', 'information.png')}');"
                     />
-            <f:form action="configSubmit" method="POST" name="causesForm">
-                <f:entry>
-                    <f:repeatable name="causes" items="${it.getCauses()}" header="${%Cause}" var="fc" add="${%Add Cause}">
-                        <input type="hidden" name="_.id" value="${fc.id}"/>
-                        <table width="85%" cellpadding="2" cellspacing="0" style="margin-bottom: 2em; margin-left: 3em;">
-                            <tr>
-                                <th align="left" width="80">
-                                    ${%Name}
-                                </th>
-                                <td><f:textbox field="name" value="${fc.name}"/></td>
-                                <td width="65" align="right"><f:repeatableDeleteButton value="${%Delete}"/></td>
-                            </tr>
-                            <tr>
-                                <th align="left" width="80" valign="top">${%Description}</th>
-                                <td colspan="2"><f:textarea field="description" value="${fc.description}"/></td>
-                            </tr>
-                            <tr>
-                                <th align="left" valign="top" colspan="3">${%Indications}</th>
-                            </tr>
-                            <tr>
-                                <td colspan="3">
-                                    <f:hetero-list descriptors="${it.getIndicationDescriptors()}" items="${fc.indications}"
-                                            name="indications" hasHeader="true" addCaption="${%Add Indication}"/>
-                                </td>
-                            </tr>
-                        </table>
-                    </f:repeatable>
-                </f:entry>
-                <f:entry>
-                    <f:submit name="btnSubmit" value="${%Save}"/>
-                </f:entry>
-            </f:form>
+            <table cellpadding="2" cellspacing="0" border="0">
+                <tr>
+                    <td>
+                        <a href="new">
+                            <img src="${it.getImageUrl('24x24', 'newinformation.png')}" alt="${%New}" title="${%New}"/>
+                        </a>
+                    </td>
+                    <td valign="middle">
+                        <a href="new" style="font-size: larger">
+                            ${%Create new}
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <table cellpadding="2" cellspacing="0" border="0" class="sortable pane bigtable" width="95%"
+                   style="width: 95%">
+                <tr>
+                    <th>${%Name}</th>
+                    <th>${%Description}</th>
+                </tr>
+                <j:forEach items="${it.getShallowCauses()}" var="cause">
+                    <tr>
+                        <td>
+                            <a href="${cause.id}">${cause.name}</a>
+                        </td>
+                        <td>
+                            ${cause.description}
+                        </td>
+                    </tr>
+                </j:forEach>
+            </table>
         </l:main-panel>
     </l:layout>
 </j:jelly>

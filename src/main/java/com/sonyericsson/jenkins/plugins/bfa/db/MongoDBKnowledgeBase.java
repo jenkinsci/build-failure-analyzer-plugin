@@ -56,21 +56,22 @@ import java.util.regex.Pattern;
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
 public class MongoDBKnowledgeBase extends KnowledgeBase {
+
+    private static final long serialVersionUID = 4984133048405390951L;
+    /**The name of the cause collection in the database.*/
+    public static final String COLLECTION_NAME = "failureCauses";
+    private static final int MONGO_DEFAULT_PORT = 27017;
+    private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
+
     private transient Mongo mongo;
     private transient DB db;
     private transient DBCollection collection;
     private transient JacksonDBCollection<FailureCause, String> jacksonCollection;
+    private transient MongoDBKnowledgeBaseCache cache;
+
     private String host;
     private int port;
     private String dbName;
-    /**The name of the cause collection in the database.*/
-    public static final String COLLECTION_NAME = "failureCauses";
-    private static final int MONGO_DEFAULT_PORT = 27017;
-
-
-    private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
-
-    private transient MongoDBKnowledgeBaseCache cache;
 
    /**
      * Getter for the host value.
@@ -161,6 +162,21 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         }
         return list;
 
+    }
+
+    @Override
+    public Collection<FailureCause> getShallowCauses() throws Exception {
+        List<FailureCause> list = new LinkedList<FailureCause>();
+        DBObject query = new BasicDBObject();
+        query.put("name", 1);
+        query.put("description", 1);
+        BasicDBObject orderBy = new BasicDBObject("name", 1);
+        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(new BasicDBObject(), query);
+        dbCauses = dbCauses.sort(orderBy);
+        while (dbCauses.hasNext()) {
+            list.add(dbCauses.next());
+        }
+        return list;
     }
 
     @Override

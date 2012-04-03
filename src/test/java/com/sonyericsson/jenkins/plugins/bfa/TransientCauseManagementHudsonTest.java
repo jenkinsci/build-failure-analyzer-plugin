@@ -29,7 +29,7 @@ import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlImage;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Cause;
@@ -39,6 +39,7 @@ import hudson.model.Result;
 import hudson.tasks.Shell;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -82,7 +83,7 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
         FreeStyleProject project = createFreeStyleProject("nils-job");
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
-        FreeStyleBuild build =  future.get(10, TimeUnit.SECONDS);
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo("/" + build.getUrl());
         try {
@@ -124,8 +125,14 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
     private void verifyIsConfigurationPage(HtmlPage page) throws IOException {
         try {
             //Some smoke test to see if it is the correct page
-            HtmlForm form = page.getFormByName("causesForm");
-            form.getElementsByAttribute("button", "name", "btnSubmit");
+            HtmlAnchor newAnchor = getAnchorBySuffix(page, "new");
+            HtmlElement next = newAnchor.getAllHtmlChildElements().iterator().next();
+            if (next instanceof HtmlImage) {
+                HtmlImage icon = (HtmlImage)next;
+                assertStringContains(icon.getSrcAttribute(), "newinformation.png");
+            } else {
+                fail("Expected to find an icon as the first href for \"new\"");
+            }
             DomNodeList<HtmlElement> elementsByTagName = page.getElementsByTagName("h1");
             boolean headingFound = false;
             for (HtmlElement element : elementsByTagName) {
@@ -135,6 +142,7 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
                 }
             }
             assertTrue("H1 Heading not found!", headingFound);
+
         } catch (ElementNotFoundException e) {
             fail("The element should be there! " + e.getMessage());
         }
