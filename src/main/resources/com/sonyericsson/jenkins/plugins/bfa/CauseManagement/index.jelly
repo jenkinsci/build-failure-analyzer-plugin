@@ -55,7 +55,7 @@
                 </tr>
             </table>
             <table cellpadding="2" cellspacing="0" border="0" class="sortable pane bigtable" width="95%"
-                   style="width: 95%">
+                   style="width: 95%" id="failureCausesTable">
                 <tr>
                     <th>${%Name}</th>
                     <th>${%Description}</th>
