@@ -59,7 +59,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(JacksonDBCollection.class)
-public class MongoKnowledgeBaseTest {
+public class MongoDBKnowledgeBaseTest {
 
     private JacksonDBCollection<FailureCause, String> collection;
     private MongoDBKnowledgeBase kb;
