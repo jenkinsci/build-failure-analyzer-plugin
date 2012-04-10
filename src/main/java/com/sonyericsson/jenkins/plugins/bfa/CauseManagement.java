@@ -29,6 +29,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Hudson;
 import hudson.model.ModelObject;
@@ -68,6 +69,7 @@ public class CauseManagement implements RootAction {
      * The pre-filled description that a new cause gets.
      */
     public static final String NEW_CAUSE_DESCRIPTION = "Description...";
+    private String errorMessage = null;
 
     @Override
     public String getIconFileName() {
@@ -113,7 +115,30 @@ public class CauseManagement implements RootAction {
      * @throws Exception if communication fails.
      */
     public Iterable<FailureCause> getShallowCauses() throws Exception {
-        return PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
+        errorMessage = null;
+        Iterable<FailureCause> returnValue = null;
+        try {
+            returnValue = PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
+        } catch (Exception e) {
+            errorMessage = "Could not fetch causes: " + e.getMessage();
+        }
+        return returnValue;
+    }
+
+    /**
+     * Convenience method for jelly.
+     * @return true if there is an error message to display.
+     */
+    public boolean isError() {
+       return Util.fixEmpty(errorMessage) != null;
+    }
+
+    /**
+     * Used for getting the error message to show on the page.
+     * @return the error message to show.
+     */
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     /**

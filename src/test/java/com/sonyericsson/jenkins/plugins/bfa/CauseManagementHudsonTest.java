@@ -32,10 +32,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import hudson.Util;
+import hudson.util.Secret;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -119,6 +123,19 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
                 CauseManagement.NEW_CAUSE_NAME,
                 CauseManagement.NEW_CAUSE_DESCRIPTION),
                 editPage);
+    }
+    //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
+    /**
+     * Tests that an error message is shown when there is no reachable Mongo database.
+     * @throws Exception if so.
+     */
+    public void testNoMongoDB() throws Exception {
+        KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"));
+        Whitebox.setInternalState(PluginImpl.getInstance(), kb);
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo(CauseManagement.URL_NAME);
+        HtmlElement element =  page.getElementById("errorMessage");
+        assertNotNull(element);
     }
 
     /**

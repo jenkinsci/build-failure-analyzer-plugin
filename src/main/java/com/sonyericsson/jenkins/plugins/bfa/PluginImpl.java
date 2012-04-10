@@ -110,7 +110,11 @@ public class PluginImpl extends Plugin {
                 causes = null;
             }
         }
-        knowledgeBase.start();
+        try {
+            knowledgeBase.start();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not initialize the knowledge base: ", e);
+        }
     }
 
     @Override
@@ -290,14 +294,20 @@ public class PluginImpl extends Plugin {
         if (base != null && !knowledgeBase.equals(base)) {
             try {
                 base.start();
-                if (o.getBoolean("convertOldKb")) {
-                    base.convertFrom(knowledgeBase);
-                }
-                knowledgeBase.stop();
-                knowledgeBase = base;
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Could not convert knowledge base", e);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Could not start new knowledge base, reverting ", e);
+                save();
+                return;
             }
+            if (o.getBoolean("convertOldKb")) {
+                try {
+                    base.convertFrom(knowledgeBase);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Could not convert knowledge base ", e);
+                }
+            }
+            knowledgeBase.stop();
+            knowledgeBase = base;
         }
         save();
     }

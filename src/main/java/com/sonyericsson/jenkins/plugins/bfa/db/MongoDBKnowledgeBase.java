@@ -35,6 +35,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -42,6 +43,7 @@ import net.vz.mongodb.jackson.WriteResult;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.naming.AuthenticationException;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -72,6 +74,24 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private String host;
     private int port;
     private String dbName;
+    private String userName;
+    private Secret password;
+
+    /**
+     * Getter for the MongoDB user name.
+     * @return the user name.
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * Getter for the MongoDB password.
+     * @return the password.
+     */
+    public Secret getPassword() {
+        return password;
+    }
 
    /**
      * Getter for the host value.
@@ -102,31 +122,37 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param host the host to connect to.
      * @param port the port to connect to.
      * @param dbName the database name to connect to.
+     * @param userName the user name for the database.
+     * @param password the password for the database.
      */
     @DataBoundConstructor
-    public MongoDBKnowledgeBase(String host, int port, String dbName) {
+    public MongoDBKnowledgeBase(String host, int port, String dbName, String userName, Secret password) {
         this.host = host;
         this.port = port;
         this.dbName = dbName;
-
+        this.userName = userName;
+        this.password = password;
     }
 
     @Override
-    public synchronized void start() throws UnknownHostException {
+    public synchronized void start() throws UnknownHostException, AuthenticationException {
         initCache();
     }
 
     @Override
     public synchronized void stop() {
-        cache.stop();
-        cache = null;
+        if (cache != null) {
+            cache.stop();
+            cache = null;
+        }
     }
 
     /**
      * Initializes the cache if it is null.
      * @throws UnknownHostException if we cannot connect to the database.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private void initCache() throws UnknownHostException {
+    private void initCache() throws UnknownHostException, AuthenticationException {
         if (cache == null) {
             cache = new MongoDBKnowledgeBaseCache(getJacksonCollection());
             cache.start();
@@ -138,9 +164,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Can throw MongoException if unknown fields exist in the database.
      * @return the full list of causes.
      * @throws UnknownHostException if a connection to the host cannot be made.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
     @Override
-    public Collection<FailureCause> getCauses() throws UnknownHostException {
+    public Collection<FailureCause> getCauses() throws UnknownHostException, AuthenticationException {
         initCache();
         return cache.getCauses();
     }
@@ -150,9 +177,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Can throw MongoException if unknown fields exist in the database.
      * @return the full list of the names and ids of the causes..
      * @throws UnknownHostException if a connection to the host cannot be made.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
     @Override
-    public Collection<FailureCause> getCauseNames() throws UnknownHostException {
+    public Collection<FailureCause> getCauseNames() throws UnknownHostException, AuthenticationException {
         List<FailureCause> list = new LinkedList<FailureCause>();
         DBObject query = new BasicDBObject();
         query.put("name", 1);
@@ -180,7 +208,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause getCause(String id) throws UnknownHostException {
+    public FailureCause getCause(String id) throws UnknownHostException, AuthenticationException {
         FailureCause returnCase = null;
         try {
             returnCase = getJacksonCollection().findOneById(id);
@@ -192,7 +220,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause addCause(FailureCause cause) throws UnknownHostException {
+    public FailureCause addCause(FailureCause cause) throws UnknownHostException, AuthenticationException {
         return addCause(cause, true);
     }
 
@@ -204,8 +232,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param doUpdate true if a cache update should be made, false if not.
      * @return the added FailureCause.
      * @throws UnknownHostException If a connection to the Mongo database cannot be made.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    public FailureCause addCause(FailureCause cause, boolean doUpdate) throws UnknownHostException {
+    public FailureCause addCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
+            AuthenticationException {
         WriteResult<FailureCause, String> result = getJacksonCollection().insert(cause);
         if (doUpdate) {
             initCache();
@@ -215,7 +245,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause saveCause(FailureCause cause) throws UnknownHostException {
+    public FailureCause saveCause(FailureCause cause) throws UnknownHostException, AuthenticationException {
         return saveCause(cause, true);
     }
 
@@ -227,8 +257,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param doUpdate true if a cache update should be made, false if not.
      * @return the saved FailureCause.
      * @throws UnknownHostException If a connection to the Mongo database cannot be made.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    public FailureCause saveCause(FailureCause cause, boolean doUpdate) throws UnknownHostException {
+    public FailureCause saveCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
+            AuthenticationException {
         WriteResult<FailureCause, String> result =  getJacksonCollection().save(cause);
         if (doUpdate) {
             initCache();
@@ -268,9 +300,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     public boolean equals(KnowledgeBase oldKnowledgeBase) {
         if (getClass().isInstance(oldKnowledgeBase)) {
             MongoDBKnowledgeBase oldMongoDBKnowledgeBase = (MongoDBKnowledgeBase)oldKnowledgeBase;
-            return oldMongoDBKnowledgeBase.getHost().equals(host)
+            return equals(oldMongoDBKnowledgeBase.getHost(), host)
                     && oldMongoDBKnowledgeBase.getPort() == port
-                    && oldMongoDBKnowledgeBase.getDbName().equals(dbName);
+                    && equals(oldMongoDBKnowledgeBase.getDbName(), dbName)
+                    && equals(oldMongoDBKnowledgeBase.getUserName(), userName)
+                    && equals(oldMongoDBKnowledgeBase.getPassword(), password);
         } else {
             return false;
         }
@@ -283,6 +317,25 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Checks if two objects equal each other, both being null counts as being equal.
+     * @param firstObject the firstObject.
+     * @param secondObject the secondObject.
+     * @return true if equal or both null, false otherwise.
+     */
+    public static boolean equals(Object firstObject, Object secondObject) {
+        if (firstObject == null) {
+            if (secondObject == null) {
+                return true;
+            }
+            return false;
+        }
+        if (secondObject == null) {
+            return false;
+        }
+        return secondObject.equals(firstObject);
     }
 
     @Override
@@ -312,10 +365,17 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the DB.
      * @return The DB.
      * @throws UnknownHostException if the host cannot be found.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private DB getDb() throws UnknownHostException {
+    private DB getDb() throws UnknownHostException, AuthenticationException {
         if (db == null) {
             db = getMongoConnection().getDB(dbName);
+        }
+        if (Util.fixEmpty(userName) != null && Util.fixEmpty(Secret.toString(password)) != null) {
+            char[] pwd = password.getPlainText().toCharArray();
+            if (!db.authenticate(userName, pwd)) {
+                throw new AuthenticationException("Could not athenticate with the mongo database");
+            }
         }
         return db;
     }
@@ -324,8 +384,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the DBCollection.
      * @return The db collection.
      * @throws UnknownHostException if the host cannot be found.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private DBCollection getCollection() throws UnknownHostException {
+    private DBCollection getCollection() throws UnknownHostException, AuthenticationException {
         if (collection == null) {
             collection = getDb().getCollection(COLLECTION_NAME);
         }
@@ -336,9 +397,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the JacksonDBCollection.
      * @return The jackson db collection.
      * @throws UnknownHostException if the host cannot be found.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
     private synchronized JacksonDBCollection<FailureCause, String> getJacksonCollection()
-            throws UnknownHostException {
+            throws UnknownHostException, AuthenticationException {
         if (jacksonCollection == null) {
             if (collection == null) {
                 collection = getCollection();
@@ -416,6 +478,32 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 }
                 return FormValidation.ok();
             }
+        }
+
+        /**
+         * Tests if the provided parameters can connect to the mongo database.
+         * @param host the host name.
+         * @param port the port.
+         * @param dbName the database name.
+         * @param userName the user name.
+         * @param password the password.
+         * @return {@link FormValidation#ok() } if can be done,
+         *         {@link FormValidation#error(java.lang.String) } otherwise.
+         */
+        public FormValidation doTestConnection(
+                @QueryParameter("host") final String host,
+                @QueryParameter("port") final int port,
+                @QueryParameter("dbName") final String dbName,
+                @QueryParameter("userName") final String userName,
+                @QueryParameter("password") final String password) {
+            MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
+                    Secret.fromString(password));
+            try {
+                base.getCollection();
+            } catch (Exception e) {
+                return FormValidation.error(e, Messages.MongoDBKnowledgeBase_ConnectionError());
+            }
+            return FormValidation.ok(Messages.MongoDBKnowledgeBase_ConnectionOK());
         }
     }
 }

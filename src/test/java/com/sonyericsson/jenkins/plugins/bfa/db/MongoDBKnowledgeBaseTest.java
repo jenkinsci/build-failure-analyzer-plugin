@@ -23,7 +23,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -39,6 +38,7 @@ import org.mockito.Matchers;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -73,7 +73,7 @@ public class MongoDBKnowledgeBaseTest {
      */
     @Before
     public void setUp() {
-        kb = new MongoDBKnowledgeBase("", PORT, "mydb");
+        kb = new MongoDBKnowledgeBase("", PORT, "mydb", null, null);
         collection = mock(JacksonDBCollection.class);
         Whitebox.setInternalState(kb, collection);
         indications = new LinkedList<Indication>();

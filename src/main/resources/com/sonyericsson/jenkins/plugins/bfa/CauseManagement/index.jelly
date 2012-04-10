@@ -30,6 +30,12 @@
             <st:include it="${it.owner}" page="sidepanel.jelly" from="${it.owner}"/>
         </j:if>
         <l:main-panel>
+            <j:set var="shallowCauses" value="${it.getShallowCauses()}"/>
+            <j:if test="${it.isError()}">
+                <div id="errorMessage" class="error">
+                    ${it.getErrorMessage()}
+                </div>
+            </j:if>
             <h1>${%Update Failure Causes}</h1>
             <div style="width: 256px;
                         height: 256px;

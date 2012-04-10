@@ -34,4 +34,11 @@
         <f:textbox name="dbName" value="${instance.dbName}"
                    checkUrl="'${rootURL}/plugin/build-failure-analyzer/knowledgeBaseDescriptor/MongoDBKnowledgeBaseDescriptor/checkDBName?value='+escape(this.value)"/>
     </f:entry>
+    <f:entry title="${%Username}" description="${%MongoDBKnowledgeBase_UserNameDesc}">
+        <f:textbox name="userName" value="${instance.userName}"/>
+    </f:entry>
+    <f:entry title="${%Password}" description="${%MongoDBKnowledgeBase_PasswordDesc}">
+        <f:password name="password" value="${instance.password}"/>
+    </f:entry>
+    <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="host,port,dbName,userName,password"/>
 </j:jelly>
