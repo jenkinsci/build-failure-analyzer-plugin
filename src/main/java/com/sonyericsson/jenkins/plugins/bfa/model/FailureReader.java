@@ -32,6 +32,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreType;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -41,6 +42,11 @@ import java.util.regex.Pattern;
  */
 @JsonIgnoreType
 public abstract class FailureReader {
+
+    private static final Logger logger = Logger.getLogger(FailureReader.class.getName());
+
+    private static final long TIMEOUT_LINE = 1000;
+    private static final long SLEEPTIME = 200;
 
     /** The indication we are looking for. */
     protected Indication indication;
@@ -71,21 +77,142 @@ public abstract class FailureReader {
      */
     protected FoundIndication scanOneFile(AbstractBuild build, BufferedReader reader, String currentFile)
             throws IOException {
+        TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
         boolean found = false;
         Pattern pattern = indication.getPattern();
         String line;
         int currentLine = 1;
-        while ((line = reader.readLine()) != null) {
-            if (pattern.matcher(line).find()) {
-                found = true;
-                break;
+        timerThread.start();
+        try {
+            while ((line = reader.readLine()) != null) {
+                try {
+                    if (pattern.matcher(new InterruptibleCharSequence(line)).find()) {
+                        found = true;
+                        break;
+                    }
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof InterruptedException) {
+                        logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
+                                + currentFile + ":" + currentLine);
+                    } else {
+                        // This is not a timeout exception
+                        throw e;
+
+                    }
+                }
+                currentLine++;
+                timerThread.touch();
             }
-            currentLine++;
+            if (found) {
+                foundIndication = new FoundIndication(build, pattern.pattern(), currentFile, currentLine);
+            }
+            return foundIndication;
+        } finally {
+            timerThread.requestStop();
+            timerThread.interrupt();
+            try {
+                timerThread.join();
+                //CS IGNORE EmptyBlock FOR NEXT 2 LINES. REASON: unimportant exception
+            } catch (InterruptedException eIgnore) {
+            }
+            // reset the interrupt
+            Thread.interrupted();
         }
-        if (found) {
-            foundIndication = new FoundIndication(build, pattern.pattern(), currentFile, currentLine);
+
+    }
+
+    /**
+     * CharSequence that notices thread interrupts -- as might be necessary
+     * to recover from a loose regex on unexpected challenging input.
+     */
+    public static class InterruptibleCharSequence implements CharSequence {
+        CharSequence inner;
+
+        /**
+        * Standard constructor.
+        * @param inner the CharSequence to be able to interrupt.
+        */
+        public InterruptibleCharSequence(CharSequence inner) {
+            super();
+            this.inner = inner;
         }
-        return foundIndication;
+
+        @Override
+        public char charAt(int index) {
+            if (Thread.interrupted()) { // clears flag if set
+                throw new RuntimeException(new InterruptedException());
+            }
+            return inner.charAt(index);
+        }
+
+        @Override
+        public int length() {
+            return inner.length();
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end) {
+            return new InterruptibleCharSequence(inner.subSequence(start, end));
+        }
+
+        @Override
+        public String toString() {
+            return inner.toString();
+        }
+    }
+
+    /**
+     * TimerThread interrupting a monitored thread unless TimerThread is touched within the
+     * specified timeout value
+     */
+    static class TimerThread extends Thread {
+
+        private Thread monitorThread;
+        private boolean stop = false;
+        private long timeout;
+        private long lastTouched;
+
+        /**
+       * Standard constructor.
+       * @param monitorThread The thread to monitor and interrupt after the timeout.
+       * @param timeout The timeout in ms.
+         */
+        TimerThread(Thread monitorThread, long timeout) {
+            this.monitorThread = monitorThread;
+            this.timeout = timeout;
+        }
+
+        @Override
+        public void run() {
+            lastTouched = System.currentTimeMillis();
+            while (!stop) {
+                try {
+                    Thread.sleep(SLEEPTIME);
+                    if (System.currentTimeMillis() - lastTouched >= timeout) {
+                        monitorThread.interrupt();
+                        // timeout met, interrupt the launcherThread
+                    }
+                //CS IGNORE EmptyBlock FOR NEXT 5 LINES. REASON: timeout exception
+                } catch (InterruptedException eRestartSleep) {
+                    // My thread was interrupted so continue loop and
+                    // check if I'm stopped and otherwise just restart sleep
+                }
+            }
+        }
+
+        /**
+        * Touch, i.e. reset countdown timer.
+        */
+        public void touch() {
+            lastTouched = System.currentTimeMillis();
+        }
+
+        /**
+         * Set stop flag to stop executing
+         */
+        public void requestStop() {
+            stop = true;
+        }
     }
 }

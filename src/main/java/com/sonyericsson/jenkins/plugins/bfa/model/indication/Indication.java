@@ -96,6 +96,11 @@ public abstract class Indication implements Describable<Indication>, Serializabl
         return compiled;
     }
 
+    @Override
+    public String toString() {
+        return pattern.toString();
+    }
+
     /**
      * The descriptor for this indicator.
      */
