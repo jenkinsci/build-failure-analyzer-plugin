@@ -42,6 +42,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -110,6 +111,22 @@ public class LocalFileKnowledgeBaseTest {
         assertNotNull(expected.getId());
         assertFalse(expected.getId().isEmpty());
         assertSame(expected, kb.getCause(expected.getId()));
+    }
+
+    /**
+     * Tests {@link LocalFileKnowledgeBase#removeCause(String)}.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testRemoveCause() throws Exception {
+        FailureCause expected = new FailureCause("olle", "description");
+        expected.addIndication(new BuildLogIndication(".*"));
+        LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
+        FailureCause addedCause = kb.addCause(expected);
+
+        assertSame(addedCause, kb.removeCause(addedCause.getId()));
+        assertNull(kb.getCause(addedCause.getId()));
     }
 
     /**

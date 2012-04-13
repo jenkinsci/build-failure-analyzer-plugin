@@ -31,13 +31,18 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Action;
+import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.security.Permission;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -69,7 +74,16 @@ public class CauseManagement implements RootAction {
      * The pre-filled description that a new cause gets.
      */
     public static final String NEW_CAUSE_DESCRIPTION = "Description...";
-    private String errorMessage = null;
+    /**
+     * The request attribute key where error messages are added.
+     */
+    public static final String REQUEST_CAUSE_MANAGEMENT_ERROR = "CauseManagementError";
+
+    /**
+     * Session key for the last removed {@link FailureCause} by the user. Will be removed by the index page when it
+     * displays it.
+     */
+    public static final String SESSION_REMOVED_FAILURE_CAUSE = "removed-failureCause";
 
     @Override
     public String getIconFileName() {
@@ -115,30 +129,45 @@ public class CauseManagement implements RootAction {
      * @throws Exception if communication fails.
      */
     public Iterable<FailureCause> getShallowCauses() throws Exception {
-        errorMessage = null;
         Iterable<FailureCause> returnValue = null;
         try {
             returnValue = PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
         } catch (Exception e) {
-            errorMessage = "Could not fetch causes: " + e.getMessage();
+            String message = "Could not fetch causes: " + e.getMessage();
+            setErrorMessage(message);
         }
         return returnValue;
     }
 
     /**
+     * Sets an error message as an attribute to the current request.
+     *
+     * @param message the message to set.
+     * @see #getErrorMessage(org.kohsuke.stapler.StaplerRequest)
+     * @see #REQUEST_CAUSE_MANAGEMENT_ERROR
+     */
+    private void setErrorMessage(String message) {
+        Stapler.getCurrentRequest().setAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR, message);
+    }
+
+    /**
      * Convenience method for jelly.
+     *
+     * @param request the request where the message might be.
      * @return true if there is an error message to display.
      */
-    public boolean isError() {
-       return Util.fixEmpty(errorMessage) != null;
+    public boolean isError(StaplerRequest request) {
+        return Util.fixEmpty((String)request.getAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR)) != null;
     }
 
     /**
      * Used for getting the error message to show on the page.
+     *
+     * @param request the request where the message might be.
      * @return the error message to show.
      */
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getErrorMessage(StaplerRequest request) {
+        return (String)request.getAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR);
     }
 
     /**
@@ -158,6 +187,32 @@ public class CauseManagement implements RootAction {
         } else {
             return PluginImpl.getInstance().getKnowledgeBase().getCause(id);
         }
+    }
+
+    /**
+     * Web call to remove a {@link FailureCause}. Does a permission check for {@link PluginImpl#REMOVE_PERMISSION}.
+     *
+     * @param id       the id of the cause to remove.
+     * @param request  the stapler request.
+     * @param response the stapler response.
+     * @throws IOException if so during redirect.
+     */
+    public void doRemoveConfirm(@QueryParameter String id, StaplerRequest request, StaplerResponse response)
+            throws IOException {
+        Jenkins.getInstance().checkPermission(PluginImpl.REMOVE_PERMISSION);
+        id = Util.fixEmpty(id);
+        if (id != null) {
+            try {
+                FailureCause cause = PluginImpl.getInstance().getKnowledgeBase().removeCause(id);
+                if (cause != null) {
+                    request.getSession(true).setAttribute(SESSION_REMOVED_FAILURE_CAUSE, cause);
+                }
+            } catch (Exception e) {
+                //Should we use errorMessage here as well?
+                throw (Failure)(new Failure(e.getMessage()).initCause(e));
+            }
+        }
+        response.sendRedirect2("./");
     }
 
     /**
@@ -199,6 +254,17 @@ public class CauseManagement implements RootAction {
      */
     public Permission getPermission() {
         return PluginImpl.UPDATE_PERMISSION;
+    }
+
+    /**
+     * The permission related to this action. For Jelly convenience.
+     *
+     * @return the permission.
+     *
+     * @see PluginImpl#UPDATE_PERMISSION
+     */
+    public Permission getRemovePermission() {
+        return PluginImpl.REMOVE_PERMISSION;
     }
 
     /**

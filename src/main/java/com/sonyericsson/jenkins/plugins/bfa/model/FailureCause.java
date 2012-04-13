@@ -37,6 +37,7 @@ import net.vz.mongodb.jackson.Id;
 import net.vz.mongodb.jackson.ObjectId;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -56,6 +57,7 @@ import java.util.logging.Logger;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FailureCause implements Serializable, Action {
     private static final Logger logger = Logger.getLogger(FailureCause.class.getName());
     private String id;

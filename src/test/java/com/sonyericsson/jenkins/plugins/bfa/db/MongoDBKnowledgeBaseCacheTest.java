@@ -21,9 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 
+import com.mongodb.DBObject;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -36,6 +38,7 @@ import org.powermock.reflect.Whitebox;
 import java.util.List;
 
 
+import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -56,17 +59,24 @@ public class MongoDBKnowledgeBaseCacheTest {
      * Tests that the cache can start, update itself and stop correctly.
      * @throws Exception if so.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testStartStop() throws Exception {
         FailureCause mockedCause = new FailureCause("id", "myFailureCause", "description", null);
         DBCursor<FailureCause> cursor = mock(DBCursor.class);
         JacksonDBCollection<FailureCause, String> collection = mock(JacksonDBCollection.class);
         when(cursor.next()).thenReturn(mockedCause);
         when(cursor.hasNext()).thenReturn(true, false);
-        doReturn(cursor).when(collection).find();
+        doReturn(cursor).when(collection).find(any(DBObject.class));
         MongoDBKnowledgeBaseCache cache = new MongoDBKnowledgeBaseCache(collection);
         cache.start();
-        Thread.sleep(1000);
+        while (cache.getCauses() == null) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                System.err.println("Got interrupted while waiting for the cache to update.");
+                break;
+            }
+        }
         List<FailureCause> list = cache.getCauses();
         assertNotNull("Updater thread should not be null", Whitebox.getInternalState(cache, "updaterThread"));
         assertEquals("Cache should have been updated with the correct cause", mockedCause, list.get(0));

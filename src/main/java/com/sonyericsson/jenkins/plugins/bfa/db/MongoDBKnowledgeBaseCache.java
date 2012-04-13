@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -33,6 +34,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase.NOT_REMOVED_QUERY;
 
 /**
  * Cache for the MongoDBKnowledgeBase.
@@ -118,7 +121,7 @@ public class MongoDBKnowledgeBaseCache {
                             break;
                         }
                         List<FailureCause> list = new LinkedList<FailureCause>();
-                        DBCursor<FailureCause> dbCauses =  jacksonCollection.find();
+                        DBCursor<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY);
                         while (dbCauses.hasNext()) {
                             list.add(dbCauses.next());
                         }

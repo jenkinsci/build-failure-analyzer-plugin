@@ -29,7 +29,6 @@ import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlImage;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Cause;
@@ -44,6 +43,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -126,13 +128,8 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
         try {
             //Some smoke test to see if it is the correct page
             HtmlAnchor newAnchor = getAnchorBySuffix(page, "new");
-            HtmlElement next = newAnchor.getAllHtmlChildElements().iterator().next();
-            if (next instanceof HtmlImage) {
-                HtmlImage icon = (HtmlImage)next;
-                assertStringContains(icon.getSrcAttribute(), "newinformation.png");
-            } else {
-                fail("Expected to find an icon as the first href for \"new\"");
-            }
+            assertThat("New Cause link is missing it's icon.",
+                    newAnchor.getStyleAttribute(), containsString("newinformation.png"));
             DomNodeList<HtmlElement> elementsByTagName = page.getElementsByTagName("h1");
             boolean headingFound = false;
             for (HtmlElement element : elementsByTagName) {

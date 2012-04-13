@@ -111,6 +111,13 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public FailureCause removeCause(String id) throws Exception {
+        FailureCause remove = causes.remove(id);
+        PluginImpl.getInstance().save();
+        return remove;
+    }
+
+    @Override
     public FailureCause saveCause(FailureCause cause) throws IOException {
         if (fixEmpty(cause.getId()) == null) {
             return addCause(cause);
