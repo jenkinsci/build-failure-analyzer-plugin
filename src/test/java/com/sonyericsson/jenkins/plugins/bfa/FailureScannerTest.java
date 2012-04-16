@@ -189,17 +189,30 @@ public class FailureScannerTest extends HudsonTestCase {
     }
 
     /**
+     * Convenience method for a standard cause with a category and the provided indication.
+     * @param name the name of the cause.
+     * @param description the description of the cause.
+     * @param indication the indication.
+     * @return the configured cause that was added to the global config.
+     */
+    private FailureCause configureCauseAndIndication(String name, String description, Indication indication) {
+        return configureCauseAndIndication(name, description, "category", indication);
+    }
+
+    /**
      * Configures the global settings with a cause that has the provided indication/
      *
      * @param name        the name of the cause.
      * @param description the description of the cause.
+     * @param category the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, Indication indication) {
+    private FailureCause configureCauseAndIndication(String name, String description, String category,
+                                                     Indication indication) {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
-        FailureCause failureCause = new FailureCause(name, name, description, indicationList);
+        FailureCause failureCause = new FailureCause(name, name, description, category, indicationList);
         List<FailureCause> causeList = new LinkedList<FailureCause>();
         causeList.add(failureCause);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(causeList));
@@ -230,7 +243,8 @@ public class FailureScannerTest extends HudsonTestCase {
     private boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
         for (FoundFailureCause cause : causeListFromAction) {
             if (failureCause.getName().equals(cause.getName())
-                && failureCause.getDescription().equals(cause.getDescription())) {
+                && failureCause.getDescription().equals(cause.getDescription())
+                    && failureCause.getCategories().equals(cause.getCategories())) {
                 return true;
             }
         }

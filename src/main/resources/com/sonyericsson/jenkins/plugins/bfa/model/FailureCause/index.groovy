@@ -23,11 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.FailureCause
 
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.Util
-import hudson.Functions
 
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
@@ -67,6 +64,9 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
             }
             f.entry(title: _("Description"), field: "description") {
               f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
+            }
+            f.entry(title: _("Categories"), field: "categories") {
+              f.textarea(value: my.getCategoriesAsString())
             }
             f.section(title: _("Indications")) {
               f.block {

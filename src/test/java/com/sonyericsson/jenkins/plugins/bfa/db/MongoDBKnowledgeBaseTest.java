@@ -80,7 +80,7 @@ public class MongoDBKnowledgeBaseTest {
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
-        mockedCause = new FailureCause("id", "myFailureCause", "description", indications);
+        mockedCause = new FailureCause("id", "myFailureCause", "description", "category", indications);
     }
 
     /**

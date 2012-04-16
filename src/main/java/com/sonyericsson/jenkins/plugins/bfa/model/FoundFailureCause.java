@@ -41,8 +41,10 @@ import java.util.logging.Logger;
 public class FoundFailureCause {
     private String name;
     private String description;
+    private List<String> categories;
     private List<FoundIndication> indications;
     private static final Logger logger = Logger.getLogger(FoundFailureCause.class.getName());
+
 
     /**
      * Standard constructor.
@@ -52,6 +54,7 @@ public class FoundFailureCause {
     public FoundFailureCause(FailureCause originalCause) {
         this.name = originalCause.getName();
         this.description = originalCause.getDescription();
+        this.categories = originalCause.getCategories();
         this.indications = new LinkedList<FoundIndication>();
     }
 
@@ -71,6 +74,15 @@ public class FoundFailureCause {
      */
     public String getDescription() {
         return description;
+    }
+
+    /**
+     * Getter for the categories.
+     *
+     * @return the categories.
+     */
+    public List<String> getCategories() {
+        return categories;
     }
 
     /**

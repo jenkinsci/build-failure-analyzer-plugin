@@ -244,9 +244,9 @@ public class FailureCauseTest {
     @Test
     public void testDoCheckNameExisting() throws Exception {
         List<FailureCause> initial = new LinkedList<FailureCause>();
-        FailureCause other = new FailureCause("abc", "AName", "description", Collections.EMPTY_LIST);
+        FailureCause other = new FailureCause("abc", "AName", "description", "", Collections.EMPTY_LIST);
         initial.add(other);
-        other = new FailureCause("cde", "BName", "description", Collections.EMPTY_LIST);
+        other = new FailureCause("cde", "BName", "description", "", Collections.EMPTY_LIST);
         initial.add(other);
         LocalFileKnowledgeBase base = new LocalFileKnowledgeBase(initial);
 
@@ -287,17 +287,20 @@ public class FailureCauseTest {
 
         String name = "AName";
         String description = "The Description";
+        String category = "category";
         String pattern = ".*";
-        StaplerRequest request = mockRequest("", name, description,
+        StaplerRequest request = mockRequest("", name, description, category,
                 Collections.singletonList(new BuildLogIndication(pattern)));
         StaplerResponse response = mock(StaplerResponse.class);
 
-        FailureCause cause = new FailureCause(CauseManagement.NEW_CAUSE_NAME, CauseManagement.NEW_CAUSE_DESCRIPTION);
+        FailureCause cause = new FailureCause(null, CauseManagement.NEW_CAUSE_NAME,
+                CauseManagement.NEW_CAUSE_DESCRIPTION, category, null);
         cause.doConfigSubmit(request, response);
 
         verify(baseMock).addCause(same(cause));
         assertEquals(name, cause.getName());
         assertEquals(description, cause.getDescription());
+        assertEquals(category, cause.getCategoriesAsString());
         assertEquals(1, cause.getIndications().size());
         assertEquals(pattern, cause.getIndications().get(0).getPattern().pattern());
         verify(response).sendRedirect2(any(String.class));
@@ -321,7 +324,7 @@ public class FailureCauseTest {
         String name = "AName";
         String description = "The Description";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(id, name, description,
+        StaplerRequest request = mockRequest(id, name, description, "",
                 Collections.singletonList(new BuildLogIndication(pattern)));
         StaplerResponse response = mock(StaplerResponse.class);
 
@@ -357,7 +360,7 @@ public class FailureCauseTest {
         String name = "AName";
         String description = "The Description";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description,
+        StaplerRequest request = mockRequest(newId, name, description, "",
                 Collections.singletonList(new BuildLogIndication(pattern)));
         StaplerResponse response = mock(StaplerResponse.class);
 
@@ -386,7 +389,7 @@ public class FailureCauseTest {
         String name = "AName";
         String description = "The Description";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description,
+        StaplerRequest request = mockRequest(newId, name, description, "",
                 Collections.singletonList(new BuildLogIndication(pattern)));
         StaplerResponse response = mock(StaplerResponse.class);
 
@@ -415,7 +418,7 @@ public class FailureCauseTest {
         String name = "New Name";
         String description = "New Description";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description,
+        StaplerRequest request = mockRequest(newId, name, description, "",
                 Collections.singletonList(new BuildLogIndication(pattern)));
         StaplerResponse response = mock(StaplerResponse.class);
 
@@ -430,18 +433,20 @@ public class FailureCauseTest {
      * @param id          the id of the cause
      * @param name        the name
      * @param description the description
+     * @param category the category
      * @param indications the list of indications as they should be returned from
      *                      {@link StaplerRequest#bindJSONToList(Class, Object)}
      * @return a mocked request object.
      *
      * @throws ServletException if so, but probably not.
      */
-    private StaplerRequest mockRequest(String id, String name, String description,
+    private StaplerRequest mockRequest(String id, String name, String description, String category,
                                        List<? extends Indication> indications) throws ServletException {
         JSONObject form = new JSONObject();
         form.put("id", id);
         form.put("name", name);
         form.put("description", description);
+        form.put("categories", category);
         if (indications != null) {
             form.put("indications", "");
         }

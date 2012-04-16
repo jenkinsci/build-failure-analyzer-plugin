@@ -72,7 +72,8 @@ public class LocalFileKnowledgeBaseTest {
         olle = new FailureCause("olle", "Olle is a good guy who wouldn't hurt a fly.");
         olle.addIndication(new BuildLogIndication(".*olle.*"));
         oldCauses.add(olle);
-        existingCause = new FailureCause("existingId", "me", "I am already here!", new LinkedList<Indication>());
+        existingCause = new FailureCause("existingId", "me", "I am already here!", "myCategory",
+                new LinkedList<Indication>());
         oldCauses.add(existingCause);
         PluginImpl mock = PowerMockito.mock(PluginImpl.class);
         PowerMockito.mockStatic(PluginImpl.class);
@@ -142,7 +143,7 @@ public class LocalFileKnowledgeBaseTest {
         assertSame(expected, kb.addCause(expected));
 
         FailureCause toSave = new FailureCause(expected.getId(), expected.getName(),
-                expected.getDescription(), expected.getIndications());
+                expected.getDescription(), "", expected.getIndications());
         assertSame(toSave, kb.saveCause(toSave));
         assertNotSame(expected, kb.getCause(toSave.getId()));
     }

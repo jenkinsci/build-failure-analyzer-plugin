@@ -61,7 +61,7 @@ public class MongoDBKnowledgeBaseCacheTest {
      */
     @Test(timeout = 5000)
     public void testStartStop() throws Exception {
-        FailureCause mockedCause = new FailureCause("id", "myFailureCause", "description", null);
+        FailureCause mockedCause = new FailureCause("id", "myFailureCause", "description", "category", null);
         DBCursor<FailureCause> cursor = mock(DBCursor.class);
         JacksonDBCollection<FailureCause, String> collection = mock(JacksonDBCollection.class);
         when(cursor.next()).thenReturn(mockedCause);

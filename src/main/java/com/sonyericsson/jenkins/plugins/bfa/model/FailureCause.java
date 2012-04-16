@@ -46,6 +46,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,6 +64,7 @@ public class FailureCause implements Serializable, Action {
     private String id;
     private String name;
     private String description;
+    private List<String> categories;
     private List<Indication> indications;
 
     /**
@@ -71,15 +73,31 @@ public class FailureCause implements Serializable, Action {
      * @param id          the id.
      * @param name        the name of this FailureCause.
      * @param description the description of this FailureCause.
+     * @param categories the categories of this FailureCause.
      * @param indications the list of indications
      */
     @DataBoundConstructor
+    public FailureCause(String id, String name, String description, String categories, List<Indication> indications) {
+        this(id, name, description, Arrays.<String>asList(Util.tokenize(categories)), indications);
+    }
+
+    /**
+     * JSON constructor.
+     *
+     * @param id          the id.
+     * @param name        the name of this FailureCause.
+     * @param description the description of this FailureCause.
+     * @param categories the categories of this FailureCause.
+     * @param indications the list of indications
+     */
     @JsonCreator
     public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
-    String description, @JsonProperty("indications") List<Indication> indications) {
+    String description, @JsonProperty("categories") List<String> categories,
+                        @JsonProperty("indications") List<Indication> indications) {
         this.id = Util.fixEmpty(id);
         this.name = name;
         this.description = description;
+        this.categories = categories;
         this.indications = indications;
         if (this.indications == null) {
             this.indications = new LinkedList<Indication>();
@@ -93,7 +111,7 @@ public class FailureCause implements Serializable, Action {
      * @param description the description of this FailureCause.
      */
     public FailureCause(String name, String description) {
-        this(null, name, description, null);
+        this(null, name, description, "", null);
     }
 
     /**
@@ -212,8 +230,15 @@ public class FailureCause implements Serializable, Action {
         }
         String newName = form.getString("name");
         String newDescription = form.getString("description");
+        String jsonCategories = form.optString("categories");
+        if (Util.fixEmpty(jsonCategories) != null) {
+            this.categories = Arrays.asList(Util.tokenize(jsonCategories));
+        } else {
+            this.categories = null;
+        }
+
         Object jsonIndications = form.opt("indications");
-        if (indications == null) {
+        if (jsonIndications == null) {
             throw new Failure("You need to provide at least one indication!");
         }
         List<Indication> newIndications = request.bindJSONToList(Indication.class, jsonIndications);
@@ -282,6 +307,44 @@ public class FailureCause implements Serializable, Action {
      */
     public String getDescription() {
         return description;
+    }
+
+    /**
+     * Getter for the categories.
+     *
+     * @return the categories.
+     */
+    public List<String> getCategories() {
+        return categories;
+
+    }
+
+    /**
+     * Returns the categories as a String, used for the view.
+     * @return the categories as a String.
+     */
+    @JsonIgnore
+    public String getCategoriesAsString() {
+        if (categories == null || categories.size() == 0) {
+            return null;
+        }
+        StringBuilder builder = new StringBuilder();
+        for (String item : categories) {
+            if (builder.length() > 0) {
+                builder.append(" ");
+            }
+            builder.append(item);
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Setter for the categories.
+     *
+     * @param categories the categories.
+     */
+    public void setCategories(List<String> categories) {
+        this.categories = categories;
     }
 
     /**
