@@ -30,13 +30,16 @@ import hudson.model.AbstractBuild;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.util.zip.ZipInputStream;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -55,10 +58,11 @@ public class FailureReaderTest {
     class TestReader extends FailureReader {
 
         /**
-         * Default constructor.
+         * Standard constructor.
+         * @param indicationString the indication string
          */
-        public TestReader() {
-            super(new BuildLogIndication(".*scan for me please.*"));
+        public TestReader(String indicationString) {
+            super(new BuildLogIndication(indicationString));
         }
 
         @Override
@@ -73,7 +77,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFile() throws Exception {
-        FailureReader reader = new TestReader();
+        FailureReader reader = new TestReader(".*scan for me please.*");
         BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanOneFile(null, br, "test");
@@ -89,8 +93,8 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanOneFileWithTimeout() throws Exception {
-        FailureReader reader = new TestReader();
+    public void testScanOneFileWithLineTimeout() throws Exception {
+        FailureReader reader = new TestReader(".*scan for me please.*");
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
@@ -103,4 +107,26 @@ public class FailureReaderTest {
         assertNotNull("Expected to find an indication", indication);
     }
 
+    /**
+     * Test of timeout on abusive file. Should timeout on entire scan.
+     * @throws Exception if so
+     */
+    @Test
+    public void testScanOneFileWithFileTimeout() throws Exception {
+        FailureReader reader = new TestReader(".*non existing string");
+        InputStream inStream = new ByteArrayInputStream(new byte[0]);
+        for (int i = 0; i < 10; i++) {
+            InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
+            ZipInputStream zipStream = new ZipInputStream(resStream);
+            zipStream.getNextEntry();
+            inStream = new SequenceInputStream(inStream, zipStream);
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+        long startTime = System.currentTimeMillis();
+        FoundIndication indication = reader.scanOneFile(null, br, "test");
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        br.close();
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
+        assertNull("Did not expect to find an indication", indication);
+    }
 }

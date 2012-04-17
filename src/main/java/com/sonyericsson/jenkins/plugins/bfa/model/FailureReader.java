@@ -45,6 +45,7 @@ public abstract class FailureReader {
 
     private static final Logger logger = Logger.getLogger(FailureReader.class.getName());
 
+    private static final long TIMEOUT_FILE = 10000;
     private static final long TIMEOUT_LINE = 1000;
     private static final long SLEEPTIME = 200;
 
@@ -85,6 +86,7 @@ public abstract class FailureReader {
         int currentLine = 1;
         timerThread.start();
         try {
+            long startTime = System.currentTimeMillis();
             while ((line = reader.readLine()) != null) {
                 try {
                     if (pattern.matcher(new InterruptibleCharSequence(line)).find()) {
@@ -98,11 +100,15 @@ public abstract class FailureReader {
                     } else {
                         // This is not a timeout exception
                         throw e;
-
                     }
                 }
                 currentLine++;
                 timerThread.touch();
+                if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
+                    logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
+                            + currentFile);
+                    break;
+                }
             }
             if (found) {
                 foundIndication = new FoundIndication(build, pattern.pattern(), currentFile, currentLine);
@@ -119,7 +125,6 @@ public abstract class FailureReader {
             // reset the interrupt
             Thread.interrupted();
         }
-
     }
 
     /**
