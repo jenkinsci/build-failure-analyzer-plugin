@@ -39,10 +39,21 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import hudson.Util;
 import hudson.util.Secret;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 import org.powermock.reflect.Whitebox;
 
+import javax.servlet.http.HttpSession;
 import java.util.Collection;
 import java.util.Iterator;
+
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Hudson tests for {@link CauseManagement}.
@@ -164,5 +175,40 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
             HtmlInput patternInput = indicationsDiv.getOneHtmlElementByAttribute("input", "name", "_.pattern");
             assertEquals(expectedCause.getIndications().get(0).getPattern().pattern(), patternInput.getValueAttribute());
         }
+    }
+
+    /**
+     * Tests {@link CauseManagement#doRemoveConfirm(String, org.kohsuke.stapler.StaplerRequest,
+     * org.kohsuke.stapler.StaplerResponse)}.
+     * Assumes that the default {@link com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase} is used.
+     *
+     * @throws Exception if so.
+     */
+    public void testDoRemoveConfirm() throws Exception {
+        FailureCause cause = new FailureCause("SomeName", "A Description");
+        cause.addIndication(new BuildLogIndication("."));
+        FailureCause cause1 = PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
+        cause = new FailureCause("SomeOtherName", "A Description");
+        cause.addIndication(new BuildLogIndication("."));
+        FailureCause cause2 = PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
+
+        KnowledgeBase kb = spy(PluginImpl.getInstance().getKnowledgeBase());
+        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, kb);
+
+        StaplerRequest request = mock(StaplerRequest.class);
+        HttpSession session = mock(HttpSession.class);
+        when(request.getSession(anyBoolean())).thenReturn(session);
+        StaplerResponse response = mock(StaplerResponse.class);
+
+        CauseManagement.getInstance().doRemoveConfirm(cause1.getId(), request, response);
+
+        verify(kb).removeCause(eq(cause1.getId()));
+        verify(session).setAttribute(eq(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE), same(cause1));
+
+        //Check that it is gone.
+        assertNull(kb.getCause(cause1.getId()));
+
+        //Check that the other one is still there
+        assertSame(cause2, kb.getCause(cause2.getId()));
     }
 }

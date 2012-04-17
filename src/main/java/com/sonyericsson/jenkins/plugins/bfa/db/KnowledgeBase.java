@@ -91,6 +91,15 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     public abstract FailureCause addCause(FailureCause cause) throws Exception;
 
     /**
+     * Removes the cause from the knowledge base.
+     *
+     * @param id the id of the cause to remove.
+     * @throws Exception if so.
+     * @return the removed FailureCause.
+     */
+    public abstract FailureCause removeCause(String id) throws Exception;
+
+    /**
      * Saves a cause to the db. Assumes that the id is kept from when it was fetched. Can also be an existing cause in
      * another {@link KnowledgeBase} implementation with a preexisting id that is being converted via {@link
      * #convertFrom(KnowledgeBase)}.

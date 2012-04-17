@@ -26,6 +26,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model.FailureCause
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import hudson.Util
 import hudson.Functions
 
 def f = namespace(lib.FormTagLib)
@@ -54,31 +55,51 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
             + "z-index: -100;"
             + "background-image: url(\'" + imageUrl + "');") {}
     h1(_("Failure Cause"))
-    div(style: "width: 70%") {
-      f.form(action: "configSubmit", method: "POST", name: "causeForm") {
-        f.invisibleEntry() {
-          f.textbox(field: "id", value: my.getId())
-        }
-        f.entry(title: _("Name"), field: "name") {
-          f.textbox(value: my.getName(), checkUrl: "'checkName?value='+escape(this.value)")
-        }
-        f.entry(title: _("Description"), field: "description") {
-          f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
-        }
-        f.section(title: _("Indications")) {
-          f.block {
-            f.hetero_list(
-                    name:"indications",
-                    hasHeader:true,
-                    descriptors:management.getIndicationDescriptors(),
-                    items:my.getIndications(),
-                    addCaption:_("Add Indication"),
-                    deleteCaption:_("Delete Indication"))
+    table(style: "width: 90%", border: "none", cellpadding: "5", cellspacing: "0", width: "90%") {
+      tr {
+        td(width: "90%") {
+          f.form(action: "configSubmit", method: "POST", name: "causeForm") {
+            f.invisibleEntry() {
+              f.textbox(field: "id", value: my.getId())
+            }
+            f.entry(title: _("Name"), field: "name") {
+              f.textbox(value: my.getName(), checkUrl: "'checkName?value='+escape(this.value)")
+            }
+            f.entry(title: _("Description"), field: "description") {
+              f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
+            }
+            f.section(title: _("Indications")) {
+              f.block {
+                f.hetero_list(
+                        name: "indications",
+                        hasHeader: true,
+                        descriptors: management.getIndicationDescriptors(),
+                        items: my.getIndications(),
+                        addCaption: _("Add Indication"),
+                        deleteCaption: _("Delete Indication"))
+              }
+            }
+            f.block {
+              div(style: "margin-top: 10px")
+              f.submit(value: _("Save"))
+            }
           }
         }
-        f.block {
-          div(style: "margin-top: 10px")
-          f.submit(value: _("Save"))
+        td(width: "10%", valign: "top") {
+          //The Remove Cause link
+          if (Util.fixEmpty(my.getId()) != null) {
+            a(style: "font-weight: bold; "
+                    + "font-size: larger; "
+                    + "padding-left: 30px; "
+                    + "min-height: 30px; "
+                    + "padding-top: 5px; "
+                    + "padding-bottom: 5px; "
+                    + "background-image: url( \'" + imagesURL + "/24x24/edit-delete.png\'); "
+                    + "background-position: left center; "
+                    + "background-repeat: no-repeat;",
+                    href: "../remove?id=" + my.getId(),
+                    title: _("Remove this cause")) {text(_("Remove"))}
+          }
         }
       }
     }

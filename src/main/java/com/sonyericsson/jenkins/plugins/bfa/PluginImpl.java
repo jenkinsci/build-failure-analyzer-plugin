@@ -79,6 +79,13 @@ public class PluginImpl extends Plugin {
             new Permission(PERMISSION_GROUP, "UpdateCauses",
                     Messages._PermissionUpdate_Description(), Hudson.ADMINISTER);
 
+    /**
+     * Permission to remove causes.
+     */
+    public static final Permission REMOVE_PERMISSION =
+            new Permission(PERMISSION_GROUP, "RemoveCause",
+                    Messages._PermissionRemove_Description(), Hudson.ADMINISTER);
+
     private static final String DEFAULT_NO_CAUSES_MESSAGE = "No problems were identified. "
             + "If you know why this problem occurred, please add a suitable Cause for it.";
 

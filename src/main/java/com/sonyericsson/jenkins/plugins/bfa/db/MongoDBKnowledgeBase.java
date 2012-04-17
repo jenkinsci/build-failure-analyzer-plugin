@@ -40,12 +40,14 @@ import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
+import org.bson.types.ObjectId;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.naming.AuthenticationException;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -63,6 +65,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     /**The name of the cause collection in the database.*/
     public static final String COLLECTION_NAME = "failureCauses";
     private static final int MONGO_DEFAULT_PORT = 27017;
+    /**
+     * Query to single out documents that doesn't have a "removed" property
+     */
+    static final BasicDBObject NOT_REMOVED_QUERY = new BasicDBObject("_removed", new BasicDBObject("$exists", false));
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
 
     private transient Mongo mongo;
@@ -182,9 +188,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public Collection<FailureCause> getCauseNames() throws UnknownHostException, AuthenticationException {
         List<FailureCause> list = new LinkedList<FailureCause>();
-        DBObject query = new BasicDBObject();
-        query.put("name", 1);
-        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(new BasicDBObject(), query);
+        DBObject keys = new BasicDBObject();
+        keys.put("name", 1);
+        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
         while (dbCauses.hasNext()) {
             list.add(dbCauses.next());
         }
@@ -195,11 +201,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public Collection<FailureCause> getShallowCauses() throws Exception {
         List<FailureCause> list = new LinkedList<FailureCause>();
-        DBObject query = new BasicDBObject();
-        query.put("name", 1);
-        query.put("description", 1);
+        DBObject keys = new BasicDBObject();
+        keys.put("name", 1);
+        keys.put("description", 1);
         BasicDBObject orderBy = new BasicDBObject("name", 1);
-        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(new BasicDBObject(), query);
+        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
         dbCauses = dbCauses.sort(orderBy);
         while (dbCauses.hasNext()) {
             list.add(dbCauses.next());
@@ -224,15 +230,28 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         return addCause(cause, true);
     }
 
+    @Override
+    public FailureCause removeCause(String id) throws Exception {
+        BasicDBObject idq = new BasicDBObject("_id", new ObjectId(id));
+        BasicDBObject removedInfo = new BasicDBObject("timestamp", new Date());
+        removedInfo.put("by", Jenkins.getAuthentication().getName());
+        BasicDBObject update = new BasicDBObject("$set", new BasicDBObject("_removed", removedInfo));
+        return getJacksonCollection().findAndModify(idq, null, null, false, update, true, false);
+    }
+
     /**
-     * @see MongoDBKnowledgeBase#addCause(FailureCause)
      * Does not update the cache, used when we know we will have a lot of save/add calls all at once,
      * e.g. during a convert.
+     *
      * @param cause the FailureCause to add.
      * @param doUpdate true if a cache update should be made, false if not.
+     *
      * @return the added FailureCause.
+     *
      * @throws UnknownHostException If a connection to the Mongo database cannot be made.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
+     * @throws javax.naming.AuthenticationException if we cannot authenticate towards the database.
+     *
+     * @see MongoDBKnowledgeBase#addCause(FailureCause)
      */
     public FailureCause addCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
             AuthenticationException {
@@ -250,14 +269,18 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * @see MongoDBKnowledgeBase#saveCause(FailureCause)
      * Does not update the cache, used when we know we will have a lot of save/add calls all at once,
      * e.g. during a convert.
+     *
      * @param cause the FailureCause to save.
      * @param doUpdate true if a cache update should be made, false if not.
+     *
      * @return the saved FailureCause.
+     *
      * @throws UnknownHostException If a connection to the Mongo database cannot be made.
      * @throws AuthenticationException if we cannot authenticate towards the database.
+     *
+     * @see MongoDBKnowledgeBase#saveCause(FailureCause)
      */
     public FailureCause saveCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
             AuthenticationException {
@@ -273,6 +296,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
         if (oldKnowledgeBase instanceof MongoDBKnowledgeBase) {
             convertFromAbstract(oldKnowledgeBase);
+            convertRemoved((MongoDBKnowledgeBase)oldKnowledgeBase);
         } else {
             for (FailureCause cause : oldKnowledgeBase.getCauseNames()) {
                 try {
@@ -294,6 +318,36 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             initCache();
             cache.updateCache();
         }
+    }
+
+    /**
+     * Copies all causes flagged as removed from the old database to this one.
+     *
+     * @param oldKnowledgeBase the old database.
+     * @throws Exception if something goes wrong.
+     */
+    protected void convertRemoved(MongoDBKnowledgeBase oldKnowledgeBase) throws Exception {
+        List<DBObject> removed = oldKnowledgeBase.getRemovedCauses();
+        DBCollection dbCollection = getJacksonCollection().getDbCollection();
+        for (DBObject obj : removed) {
+            dbCollection.save(obj);
+        }
+    }
+
+    /**
+     * Gets all causes flagged as removed in a "raw" JSON format.
+     *
+     * @return the list of removed causes.
+     * @throws Exception if so.
+     */
+    protected List<DBObject> getRemovedCauses() throws Exception {
+        BasicDBObject query = new BasicDBObject("_removed", new BasicDBObject("$exists", true));
+        com.mongodb.DBCursor dbCursor = getJacksonCollection().getDbCollection().find(query);
+        List<DBObject> removed = new LinkedList<DBObject>();
+        while (dbCursor.hasNext()) {
+            removed.add(dbCursor.next());
+        }
+        return removed;
     }
 
     @Override
@@ -481,7 +535,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         }
 
         /**
-         * Tests if the provided parameters can connect to the mongo database.
+         * Tests if the provided parameters can connect to the Mongo database.
          * @param host the host name.
          * @param port the port.
          * @param dbName the database name.
