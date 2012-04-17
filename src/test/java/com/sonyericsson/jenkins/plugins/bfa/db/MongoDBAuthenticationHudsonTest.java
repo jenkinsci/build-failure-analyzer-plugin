@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.mongodb.DB;
@@ -47,7 +48,7 @@ public class MongoDBAuthenticationHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
   public void testAuthenticate() throws Exception {
-      KnowledgeBase kb = new MongoDBKnowledgeBase("", 27017, "mydb", "user", Secret.fromString("password"));
+      KnowledgeBase kb = new MongoDBKnowledgeBase("", 27017, "mydb", "user", Secret.fromString("password"), false);
       DB db = mock(DB.class);
       when(db.authenticate("user", "password".toCharArray())).thenReturn(false);
       Whitebox.setInternalState(kb, db);

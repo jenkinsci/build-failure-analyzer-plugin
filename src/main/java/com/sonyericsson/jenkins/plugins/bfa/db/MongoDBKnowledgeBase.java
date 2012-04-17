@@ -82,6 +82,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private String dbName;
     private String userName;
     private Secret password;
+    private boolean enableStatistics;
 
     /**
      * Getter for the MongoDB user name.
@@ -130,14 +131,17 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param dbName the database name to connect to.
      * @param userName the user name for the database.
      * @param password the password for the database.
+     * @param enableStatistics if statistics logging should be enabled or not.
      */
     @DataBoundConstructor
-    public MongoDBKnowledgeBase(String host, int port, String dbName, String userName, Secret password) {
+    public MongoDBKnowledgeBase(String host, int port, String dbName, String userName, Secret password,
+                                boolean enableStatistics) {
         this.host = host;
         this.port = port;
         this.dbName = dbName;
         this.userName = userName;
         this.password = password;
+        this.enableStatistics = enableStatistics;
     }
 
     @Override
@@ -358,7 +362,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     && oldMongoDBKnowledgeBase.getPort() == port
                     && equals(oldMongoDBKnowledgeBase.getDbName(), dbName)
                     && equals(oldMongoDBKnowledgeBase.getUserName(), userName)
-                    && equals(oldMongoDBKnowledgeBase.getPassword(), password);
+                    && equals(oldMongoDBKnowledgeBase.getPassword(), password)
+                    && this.enableStatistics == oldMongoDBKnowledgeBase.enableStatistics;
         } else {
             return false;
         }
@@ -396,6 +401,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     public int hashCode() {
         //Making checkstyle happy.
         return getClass().getName().hashCode();
+    }
+
+    @Override
+    public boolean isStatisticsEnabled() {
+        return enableStatistics;
     }
 
     @Override
@@ -551,7 +561,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("userName") final String userName,
                 @QueryParameter("password") final String password) {
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
-                    Secret.fromString(password));
+                    Secret.fromString(password), false);
             try {
                 base.getCollection();
             } catch (Exception e) {

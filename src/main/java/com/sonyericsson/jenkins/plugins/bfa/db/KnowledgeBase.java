@@ -159,6 +159,15 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
+     * If Statistics logging is enabled on this knowledge base or not.
+     *
+     * @return true if so. False if not or not implemented.
+     */
+    public abstract boolean isStatisticsEnabled();
+
+    //TODO Define a method for data to log for statistics.
+
+    /**
      * Descriptor for {@link KnowledgeBase}s.
      */
     public abstract static class KnowledgeBaseDescriptor extends Descriptor<KnowledgeBase> {

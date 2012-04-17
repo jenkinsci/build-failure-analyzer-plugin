@@ -147,7 +147,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testNoMongoDB() throws Exception {
-        KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"));
+        KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"), false);
         Whitebox.setInternalState(PluginImpl.getInstance(), kb);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);

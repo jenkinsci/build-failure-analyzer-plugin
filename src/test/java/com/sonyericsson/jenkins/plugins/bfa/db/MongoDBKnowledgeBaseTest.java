@@ -74,7 +74,7 @@ public class MongoDBKnowledgeBaseTest {
      */
     @Before
     public void setUp() {
-        kb = new MongoDBKnowledgeBase("", PORT, "mydb", null, null);
+        kb = new MongoDBKnowledgeBase("", PORT, "mydb", null, null, false);
         collection = mock(JacksonDBCollection.class);
         Whitebox.setInternalState(kb, collection);
         indications = new LinkedList<Indication>();

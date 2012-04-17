@@ -181,6 +181,12 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public boolean isStatisticsEnabled() {
+        //Not implemented
+        return false;
+    }
+
+    @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(LocalFileKnowledgeBaseDescriptor.class);
     }
