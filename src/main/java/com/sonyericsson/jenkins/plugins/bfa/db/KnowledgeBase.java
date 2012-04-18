@@ -32,6 +32,7 @@ import jenkins.model.Jenkins;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
@@ -118,6 +119,13 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
     public abstract void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception;
+
+    /**
+     * Gets the unique categories of all FailureCauses.
+     * @return the list of categories.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     */
+    public abstract List<String> getCategories() throws Exception;
 
     /**
      * Does a full copy of the data in the old one to this one. Using the public api, can be used by implementations of

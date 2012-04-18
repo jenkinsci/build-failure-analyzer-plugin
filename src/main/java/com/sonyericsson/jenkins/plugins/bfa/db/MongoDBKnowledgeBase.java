@@ -324,6 +324,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         }
     }
 
+    @Override
+    public List<String> getCategories() throws UnknownHostException, AuthenticationException {
+        initCache();
+        return cache.getCategories();
+    }
+
     /**
      * Copies all causes flagged as removed from the old database to this one.
      *

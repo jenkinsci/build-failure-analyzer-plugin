@@ -27,8 +27,12 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.Extension;
 import hudson.Util;
 import hudson.model.Action;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
 import hudson.model.Failure;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
@@ -59,7 +63,7 @@ import java.util.logging.Logger;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FailureCause implements Serializable, Action {
+public class FailureCause implements Serializable, Action, Describable<FailureCause> {
     private static final Logger logger = Logger.getLogger(FailureCause.class.getName());
     private String id;
     private String name;
@@ -395,5 +399,48 @@ public class FailureCause implements Serializable, Action {
     @JsonIgnore
     public String getUrlName() {
         return id;
+    }
+
+
+    @Override
+    public FailureCauseDescriptor getDescriptor() {
+        return Jenkins.getInstance().getDescriptorByType(FailureCauseDescriptor.class);
+    }
+
+    /**
+     * Descriptor is only used for auto completion of categories.
+     */
+    @Extension
+    public static final class FailureCauseDescriptor extends Descriptor<FailureCause> {
+
+        @Override
+        public String getDisplayName() {
+            return null;
+        }
+
+        /**
+         * Does the auto completion for categories, matching with any category already present in the knowledge base.
+         * @param value the input value.
+         * @return the AutoCompletionCandidates.
+         */
+        public AutoCompletionCandidates doAutoCompleteCategories(@QueryParameter String value) {
+            List<String> categories;
+            try {
+                categories = PluginImpl.getInstance().getKnowledgeBase().getCategories();
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
+                return null;
+            }
+            AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+            if (categories == null) {
+                return candidates;
+            }
+            for (String category : categories) {
+                if (category.toLowerCase().startsWith(value.toLowerCase())) {
+                    candidates.add(category);
+                }
+            }
+            return candidates;
+        }
     }
 }

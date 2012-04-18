@@ -30,6 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Failure;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
@@ -51,6 +52,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.matchers.JUnitMatchers.hasItems;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.verify;
@@ -90,6 +93,28 @@ public class FailureCauseTest {
     private void mockEmptyKnowledgeBase() {
         baseMock = mock(KnowledgeBase.class);
         when(pluginMock.getKnowledgeBase()).thenReturn(baseMock);
+    }
+
+    /**
+     * Tests that the auto completion can find the correct canditates.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testAutoCompletionHappy() throws Exception {
+        mockEmptyKnowledgeBase();
+        List<String> categories = new LinkedList<String>();
+        String compFail = "compilationFailure";
+        String compCrashed = "computerCrashed";
+        String otherError = "otherError";
+        categories.add(compFail);
+        categories.add(compCrashed);
+        categories.add(otherError);
+        when(baseMock.getCategories()).thenReturn(categories);
+        FailureCause.FailureCauseDescriptor descriptor = new FailureCause.FailureCauseDescriptor();
+        AutoCompletionCandidates candidates = descriptor.doAutoCompleteCategories("comp");
+        List<String> values = candidates.getValues();
+        assertEquals("Two autocompletion candidates should have been found", 2, values.size());
+        assertThat(values, hasItems(compFail, compCrashed));
     }
 
     /**

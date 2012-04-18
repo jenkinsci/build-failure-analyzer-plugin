@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -49,6 +50,7 @@ public class MongoDBKnowledgeBaseCache {
     private Timer timer;
     private TimerTask timerTask;
     private List<FailureCause> cachedFailureCauses;
+    private List<String> categories;
     private JacksonDBCollection<FailureCause, String> jacksonCollection;
 
     private static final long CACHE_UPDATE_INTERVAL = 60000;
@@ -108,6 +110,14 @@ public class MongoDBKnowledgeBaseCache {
     }
 
     /**
+     * Getter for the categories of all FailureCauses.
+     * @return the categories.
+     */
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    /**
      * The thread responsible for updating the MongoDB cache.
      */
     protected class UpdateThread extends Thread {
@@ -126,6 +136,9 @@ public class MongoDBKnowledgeBaseCache {
                             list.add(dbCauses.next());
                         }
                         cachedFailureCauses = list;
+                        categories = jacksonCollection.distinct("categories");
+                    } catch (MongoException e) {
+                        logger.log(Level.SEVERE, "MongoException caught when updating cache: " + e);
                     } catch (InterruptedException e) {
                         logger.log(Level.WARNING, "Updater thread interrupted", e);
                     }

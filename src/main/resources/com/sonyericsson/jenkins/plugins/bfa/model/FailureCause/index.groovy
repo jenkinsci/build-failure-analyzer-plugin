@@ -36,6 +36,8 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   def management = my.getAncestorCauseManagement();
   def imageUrl = PluginImpl.getImageUrl("256x256", "information.png");
 
+  context.setVariable("descriptor", my.getDescriptor());
+
   l.side_panel() {
     if (!management.isUnderTest()) {
       include(management.getOwner(), "sidepanel.jelly")
@@ -66,7 +68,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
               f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
             }
             f.entry(title: _("Categories"), field: "categories") {
-              f.textarea(value: my.getCategoriesAsString())
+              f.textbox(value: my.getCategoriesAsString(), autoCompleteDelimChar: " ")
             }
             f.section(title: _("Indications")) {
               f.block {

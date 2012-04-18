@@ -36,7 +36,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static hudson.Util.fixEmpty;
@@ -144,6 +148,26 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
         } else {
             convertFromAbstract(oldKnowledgeBase);
         }
+    }
+
+    @Override
+    public List<String> getCategories() throws Exception {
+        if (causes == null) {
+            return null;
+        }
+        List<String> categories = new LinkedList<String>();
+        Set myset = new HashSet<String>();
+        for (FailureCause cause : causes.values()) {
+            List<String> categoriesForCause = cause.getCategories();
+            if (categoriesForCause != null) {
+                for (String string : categoriesForCause) {
+                    if (myset.add(string)) {
+                        categories.add(string);
+                    }
+                }
+            }
+        }
+        return categories;
     }
 
     @Override
