@@ -46,6 +46,8 @@ import org.powermock.reflect.Whitebox;
 import javax.servlet.http.HttpSession;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
@@ -76,10 +78,12 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testTableViewNavigation() throws Exception {
-        FailureCause cause = new FailureCause("SomeName", "A Description");
+        List<String> myCategories = new LinkedList<String>();
+        myCategories.add("myCtegory");
+        FailureCause cause = new FailureCause(null, "SomeName", "A Description", myCategories, null);
         cause.addIndication(new BuildLogIndication("."));
         PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
-        cause = new FailureCause("SomeOtherName", "A Description");
+        cause = new FailureCause(null, "SomeOtherName", "A Description", myCategories, null);
         cause.addIndication(new BuildLogIndication("."));
         PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
 
@@ -100,8 +104,10 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
             FailureCause c = causeIterator.next();
             HtmlTableRow row = table.getRow(i);
             String name = row.getCell(0).getTextContent();
-            String description = row.getCell(1).getTextContent();
+            String categories = row.getCell(1).getTextContent();
+            String description = row.getCell(2).getTextContent();
             assertEquals(c.getName(), name);
+            assertEquals(c.getCategoriesAsString(), categories);
             assertEquals(c.getDescription(), description);
             if (i == 1) {
                 firstCause = c;

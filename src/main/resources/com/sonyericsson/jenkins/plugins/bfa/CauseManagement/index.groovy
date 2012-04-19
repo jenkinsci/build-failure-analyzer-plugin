@@ -92,10 +92,11 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
     def canRemove = Jenkins.getInstance().hasPermission(PluginImpl.REMOVE_PERMISSION)
 
     //Main FailureCauses table
-    table(cellpadding: "2", cellspacing: "0", border: "0", class: "sortable pane bigtable", width: "90%",
+    table(cellpadding: "2", cellspacing: "0", border: "1", class: "sortable pane bigtable", width: "90%",
                    style: "width: 90%", id: "failureCausesTable") {
       tr {
         th{text(_("Name"))}
+        th{text(_("Categories"))}
         th{text(_("Description"))}
         th{text(" ")}
       }
@@ -104,6 +105,9 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
         tr {
           td{
             a(href: cause.getId()){ text(cause.getName())}
+          }
+          td{
+            text(cause.getCategoriesAsString())
           }
           td{
             raw(cause.getDescription())
