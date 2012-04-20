@@ -39,6 +39,7 @@ import java.util.logging.Logger;
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
 public class FoundFailureCause {
+    private String id;
     private String name;
     private String description;
     private List<String> categories;
@@ -52,10 +53,20 @@ public class FoundFailureCause {
      * @param originalCause the original FailureCause.
      */
     public FoundFailureCause(FailureCause originalCause) {
+        this.id = originalCause.getId();
         this.name = originalCause.getName();
         this.description = originalCause.getDescription();
         this.categories = originalCause.getCategories();
         this.indications = new LinkedList<FoundIndication>();
+    }
+
+    /**
+     * Getter for the id.
+     *
+     * @return the id.
+     */
+    public String getId() {
+        return id;
     }
 
     /**

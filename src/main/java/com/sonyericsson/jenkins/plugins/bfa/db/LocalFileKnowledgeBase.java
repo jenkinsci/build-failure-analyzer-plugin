@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.util.CopyOnWriteList;
@@ -208,6 +209,11 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     public boolean isStatisticsEnabled() {
         //Not implemented
         return false;
+    }
+
+    @Override
+    public void saveStatistics(Statistics stat) throws Exception {
+        //Not implemented.
     }
 
     @Override

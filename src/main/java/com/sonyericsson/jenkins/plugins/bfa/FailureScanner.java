@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import hudson.Launcher;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
@@ -78,6 +79,7 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
                 List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
                 FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
                 build.addAction(buildAction);
+                StatisticsLogger.getInstance().log(build, foundCauseList);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
                 return false;

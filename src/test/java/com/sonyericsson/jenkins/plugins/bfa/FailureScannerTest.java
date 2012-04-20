@@ -35,6 +35,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -42,6 +44,10 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Matchers;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
@@ -49,6 +55,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -61,6 +73,8 @@ import java.util.concurrent.TimeUnit;
 public class FailureScannerTest extends HudsonTestCase {
 
     private static final String TO_PRINT = "ERROR";
+
+    private boolean hasCalledStatistics = false;
 
     /**
      * Happy test that should find one failure indication in the build.
@@ -75,6 +89,7 @@ public class FailureScannerTest extends HudsonTestCase {
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
@@ -105,6 +120,7 @@ public class FailureScannerTest extends HudsonTestCase {
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
@@ -123,6 +139,7 @@ public class FailureScannerTest extends HudsonTestCase {
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.SUCCESS, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
     }
@@ -137,8 +154,8 @@ public class FailureScannerTest extends HudsonTestCase {
         FreeStyleProject project = createProject();
         configureCauseAndIndication();
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
-
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
     }
@@ -154,10 +171,74 @@ public class FailureScannerTest extends HudsonTestCase {
         project.addProperty(new ScannerOffJobProperty(true));
         configureCauseAndIndication();
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
-
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
+    }
+
+
+    /**
+     * Tests that the saveStatistics method of KnowledgeBase is called with a Statistics object.
+     *
+     * @throws Exception if so.
+     */
+    public void testStatisticsLogging() throws Exception {
+
+        Indication indication = new BuildLogIndication(".*ERROR.*");
+        List<Indication> indicationList = new LinkedList<Indication>();
+        indicationList.add(indication);
+        FailureCause cause = new FailureCause("myId", "testcause", "testdescription", "testcategory", indicationList);
+        List<FailureCause> causes = new LinkedList<FailureCause>();
+        causes.add(cause);
+        KnowledgeBase base = mock(KnowledgeBase.class);
+        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.getCauses()).thenReturn(causes);
+        when(base.isStatisticsEnabled()).thenReturn(true);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                hasCalledStatistics = true;
+                return null;
+            }
+        }).when(base).saveStatistics(Matchers.<Statistics>any());
+        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, base);
+        FreeStyleProject project = createProject();
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
+        long time = System.currentTimeMillis();
+        while (System.currentTimeMillis() < time + 30000) {
+            if (hasCalledStatistics) {
+                break;
+            }
+            Thread.sleep(2000);
+        }
+        verify(base).saveStatistics(argThat(new IsValidStatisticsObject()));
+    }
+
+    /**
+     * ArgumentMatcher for a Statistics object.
+     */
+    public static class IsValidStatisticsObject extends ArgumentMatcher<Statistics> {
+        @Override
+        public boolean matches(Object o) {
+            if (!(o instanceof Statistics)) {
+                return false;
+            }
+            Statistics stat = (Statistics)o;
+            if (stat.getBuildNumber() != 1) {
+                return  false;
+            }
+            List<FailureCauseStatistics> failureCauseStatisticsList =  stat.getFailureCauseStatisticsList();
+            if (failureCauseStatisticsList == null || failureCauseStatisticsList.size() != 1) {
+                return false;
+            }
+            if (!"myId".equals(failureCauseStatisticsList.get(0).getId())) {
+                return false;
+            }
+            return true;
+        }
     }
 
     //CS IGNORE LineLength FOR NEXT 11 LINES. REASON: JavaDoc.
@@ -250,5 +331,4 @@ public class FailureScannerTest extends HudsonTestCase {
         }
         return false;
     }
-
 }

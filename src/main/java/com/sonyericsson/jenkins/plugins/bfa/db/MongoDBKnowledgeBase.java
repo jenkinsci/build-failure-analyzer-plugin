@@ -27,10 +27,14 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -64,6 +68,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private static final long serialVersionUID = 4984133048405390951L;
     /**The name of the cause collection in the database.*/
     public static final String COLLECTION_NAME = "failureCauses";
+    /**The name of the statistics collection in the database.*/
+    public static final String STATISTICS_COLLECTION_NAME = "statistics";
     private static final int MONGO_DEFAULT_PORT = 27017;
     /**
      * Query to single out documents that doesn't have a "removed" property
@@ -74,6 +80,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private transient Mongo mongo;
     private transient DB db;
     private transient DBCollection collection;
+    private transient DBCollection statisticsCollection;
     private transient JacksonDBCollection<FailureCause, String> jacksonCollection;
     private transient MongoDBKnowledgeBaseCache cache;
 
@@ -416,6 +423,68 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public void saveStatistics(Statistics stat) throws UnknownHostException, AuthenticationException {
+        DBObject object = new BasicDBObject();
+        object.put("projectName", stat.getProjectName());
+        object.put("buildNumber", stat.getBuildNumber());
+        object.put("master", stat.getMaster());
+        object.put("slaveHostName", stat.getSlaveHostName());
+        object.put("startingTime", stat.getStartingTime());
+        object.put("duration", stat.getDuration());
+        object.put("timeZoneOffset", stat.getTimeZoneOffset());
+        object.put("triggerCauses", stat.getTriggerCauses());
+        object.put("result", stat.getResult());
+        List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
+        addFailureCausesToDBObject(object, failureCauseStatisticsList);
+
+        getStatisticsCollection().insert(object);
+    }
+
+    /**
+     * Adds the FailureCauses from the list to the DBObject.
+     * @param object the DBObject to add to.
+     * @param failureCauseStatisticsList the list of FailureCauseStatistics to add.
+     * @throws UnknownHostException If the mongoDB host cannot be found.
+     * @throws AuthenticationException if the mongoDB authentication fails.
+     */
+    private void addFailureCausesToDBObject(DBObject object, List<FailureCauseStatistics> failureCauseStatisticsList)
+            throws UnknownHostException, AuthenticationException {
+        if (failureCauseStatisticsList != null && failureCauseStatisticsList.size() > 0) {
+            List<DBObject> failureCauseStatisticsObjects = new LinkedList<DBObject>();
+
+            for (FailureCauseStatistics failureCauseStatistics : failureCauseStatisticsList) {
+                DBObject failureCauseStatisticsObject = new BasicDBObject();
+                ObjectId id = new ObjectId(failureCauseStatistics.getId());
+                DBRef failureCauseRef = new DBRef(getDb(), COLLECTION_NAME, id);
+                failureCauseStatisticsObject.put("failureCause", failureCauseRef);
+                List<FoundIndication> foundIndicationList = failureCauseStatistics.getIndications();
+                addIndicationsToDBObject(failureCauseStatisticsObject, foundIndicationList);
+                failureCauseStatisticsObjects.add(failureCauseStatisticsObject);
+            }
+            object.put("failureCauses", failureCauseStatisticsObjects);
+        }
+    }
+
+    /**
+     * Adds the indications from the list to the DBObject.
+     * @param object the DBObject to add to.
+     * @param indications the list of indications to add.
+     */
+    private void addIndicationsToDBObject(DBObject object, List<FoundIndication> indications) {
+        if (indications != null && indications.size() > 0) {
+            List<DBObject> foundIndicationObjects = new LinkedList<DBObject>();
+            for (FoundIndication foundIndication : indications) {
+                DBObject foundIndicationObject = new BasicDBObject();
+                foundIndicationObject.put("pattern", foundIndication.getPattern());
+                foundIndicationObject.put("matchingFile", foundIndication.getMatchingFile());
+                foundIndicationObject.put("matchingLine", foundIndication.getMatchingLine());
+                foundIndicationObjects.add(foundIndicationObject);
+            }
+            object.put("indications", foundIndicationObjects);
+        }
+    }
+
+    @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(MongoDBKnowledgeBaseDescriptor.class);
     }
@@ -462,6 +531,19 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             collection = getDb().getCollection(COLLECTION_NAME);
         }
         return collection;
+    }
+
+    /**
+     * Gets the Statistics DBCollection.
+     * @return The statistics db collection.
+     * @throws UnknownHostException if the host cannot be found.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
+     */
+    private DBCollection getStatisticsCollection() throws UnknownHostException, AuthenticationException {
+        if (statisticsCollection == null) {
+            statisticsCollection = getDb().getCollection(STATISTICS_COLLECTION_NAME);
+        }
+        return statisticsCollection;
     }
 
     /**

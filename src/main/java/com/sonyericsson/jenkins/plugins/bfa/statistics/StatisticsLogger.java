@@ -25,12 +25,23 @@
 package com.sonyericsson.jenkins.plugins.bfa.statistics;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import hudson.model.AbstractBuild;
+import hudson.model.Node;
+import jenkins.model.Jenkins;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Main singleton entrance for logging statistics.
@@ -38,8 +49,11 @@ import java.util.concurrent.ThreadFactory;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public final class StatisticsLogger {
+
+    private static final Logger logger = Logger.getLogger(StatisticsLogger.class.getName());
     private static StatisticsLogger instance;
     private ExecutorService queueExecutor;
+
 
     /**
      * Private Constructor.
@@ -71,11 +85,11 @@ public final class StatisticsLogger {
      * Logs a found indication asynchronously to the statistics database.
      *
      * @param build the build.
-     * @param cause the cause.
+     * @param causes the list of causes.
      */
-    public void log(AbstractBuild build, FoundFailureCause cause) {
+    public void log(AbstractBuild build, List<FoundFailureCause> causes) {
         if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
-            queueExecutor.submit(new LoggingWork(build, cause));
+            queueExecutor.submit(new LoggingWork(build, causes));
         }
     }
 
@@ -84,24 +98,57 @@ public final class StatisticsLogger {
      */
     static class LoggingWork implements Runnable {
 
-        FoundFailureCause cause;
+        List<FoundFailureCause> causes;
         AbstractBuild build;
 
         /**
          * Standard Constructor.
          *
          * @param build the build to log for.
-         * @param cause the cause to log.
+         * @param causes the causes to log.
          */
-        LoggingWork(AbstractBuild build, FoundFailureCause cause) {
+        LoggingWork(AbstractBuild build, List<FoundFailureCause> causes) {
             this.build = build;
-            this.cause = cause;
+            this.causes = causes;
         }
 
         @Override
         public void run() {
-            //TODO Extract relevant data and ask the KnowledgeBase to save it.
+            String projectName = build.getProject().getFullName();
+            int buildNumber = build.getNumber();
+            Date startingTime = build.getTime();
+            long duration = build.getDuration();
+            List<String> triggerCauses = new LinkedList<String>();
+            for (Object o : build.getCauses()) {
+                triggerCauses.add(o.getClass().getSimpleName());
+            }
+            Node node = build.getBuiltOn();
+            String nodeName = node.getNodeName();
+            int timeZoneOffset = TimeZone.getDefault().getRawOffset();
+            String master = "";
+
+            String result = build.getResult().toString();
+            List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();
+            for (FoundFailureCause cause : causes) {
+                FailureCauseStatistics stats = new FailureCauseStatistics(cause.getId(), cause.getIndications());
+                failureCauseStatistics.add(stats);
+            }
+
+            try {
+                String masterString = Jenkins.getInstance().getRootUrl();
+                master = new URL(masterString).getHost();
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Couldn't get name of master: ", e);
+            }
+            Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses,
+                    nodeName, master, timeZoneOffset, result, failureCauseStatistics);
+            try {
+                PluginImpl p = PluginImpl.getInstance();
+                KnowledgeBase kb = p.getKnowledgeBase();
+                kb.saveStatistics(obj);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Couldn't save statistics: ", e);
+            }
         }
     }
-
 }

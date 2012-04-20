@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.ExtensionList;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
@@ -173,8 +174,12 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public abstract boolean isStatisticsEnabled();
 
-    //TODO Define a method for data to log for statistics.
-
+    /**
+     * Saves the Statistics.
+     * @param stat the Statistics.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     */
+    public abstract void saveStatistics(Statistics stat) throws Exception;
     /**
      * Descriptor for {@link KnowledgeBase}s.
      */
