@@ -208,6 +208,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         DBObject keys = new BasicDBObject();
         keys.put("name", 1);
         keys.put("description", 1);
+        keys.put("categories", 1);
         BasicDBObject orderBy = new BasicDBObject("name", 1);
         DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
         dbCauses = dbCauses.sort(orderBy);

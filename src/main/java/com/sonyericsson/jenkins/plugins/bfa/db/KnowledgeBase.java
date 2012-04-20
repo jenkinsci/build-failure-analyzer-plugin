@@ -64,7 +64,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * Get a shallow list of the {@link FailureCause}s. The list should be the latest possible from the DB as
      * they will be used in the list of causes to edit.
      * shallow meaning no indications but information enough to show a nice list; at least id and name but description
-     * is preferred as well.
+     * and categories are preferred as well.
      *
      * @return a shallow list of all causes.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
