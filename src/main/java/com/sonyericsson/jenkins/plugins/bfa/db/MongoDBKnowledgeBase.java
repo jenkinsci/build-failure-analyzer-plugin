@@ -248,7 +248,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         BasicDBObject removedInfo = new BasicDBObject("timestamp", new Date());
         removedInfo.put("by", Jenkins.getAuthentication().getName());
         BasicDBObject update = new BasicDBObject("$set", new BasicDBObject("_removed", removedInfo));
-        return getJacksonCollection().findAndModify(idq, null, null, false, update, true, false);
+        FailureCause modified = getJacksonCollection().findAndModify(idq, null, null, false, update, true, false);
+        initCache();
+        cache.updateCache();
+        return modified;
     }
 
     /**
