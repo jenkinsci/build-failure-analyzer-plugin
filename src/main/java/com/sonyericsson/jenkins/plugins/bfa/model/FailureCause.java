@@ -42,6 +42,7 @@ import net.vz.mongodb.jackson.ObjectId;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonIgnoreType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -411,6 +412,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * Descriptor is only used for auto completion of categories.
      */
     @Extension
+    @JsonIgnoreType
     public static final class FailureCauseDescriptor extends Descriptor<FailureCause> {
 
         @Override
