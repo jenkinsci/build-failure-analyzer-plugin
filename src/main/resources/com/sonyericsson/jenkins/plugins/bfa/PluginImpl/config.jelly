@@ -52,5 +52,9 @@
             <f:checkbox name="convertOldKb" checked="true"/>
             <span class="warning">Notice that when converting to an existing (non empty) knowledge base; duplicates could happen.</span>
         </f:entry>
+        <f:entry title="${%Send notifications to Gerrit-Trigger-plugin}"
+                 description="${%enableGerritTriggerDescription}">
+            <f:checkbox name="gerritTriggerEnabled" checked="${it.gerritTriggerEnabled}" default="true"/>
+        </f:entry>
     </f:section>
 </j:jelly>

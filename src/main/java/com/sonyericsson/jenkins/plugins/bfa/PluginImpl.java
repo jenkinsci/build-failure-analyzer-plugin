@@ -95,6 +95,8 @@ public class PluginImpl extends Plugin {
 
     private Boolean globalEnabled;
 
+    private Boolean gerritTriggerEnabled;
+
     private transient CopyOnWriteList<FailureCause> causes;
 
     private KnowledgeBase knowledgeBase;
@@ -241,6 +243,28 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Send notifications to Gerrit-Trigger-plugin.
+     *
+     * @return true if on.
+     */
+    public boolean isGerritTriggerEnabled() {
+        if (gerritTriggerEnabled == null) {
+            return true;
+        } else {
+            return gerritTriggerEnabled;
+        }
+    }
+
+    /**
+     * Sets if this feature is enabled or not. When on, cause descriptions will be forwarded to Gerrit-Trigger-Plugin.
+     *
+     * @param gerritTriggerEnabled on or off. null == on.
+     */
+    public void setGerritTriggerEnabled(Boolean gerritTriggerEnabled) {
+        this.gerritTriggerEnabled = gerritTriggerEnabled;
+    }
+
+    /**
      * Checks if the specified build should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
      * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty#isDoNotScan()}.
      *
@@ -297,6 +321,7 @@ public class PluginImpl extends Plugin {
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
+        gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
         KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
         if (base != null && !knowledgeBase.equals(base)) {
             try {

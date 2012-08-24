@@ -108,6 +108,38 @@ public class FailureScannerTest extends HudsonTestCase {
     }
 
     /**
+     * One indication should be found and a correct looking Gerrit-Trigger-Plugin
+     * message can be constructed.
+     *
+     * @throws Exception if so.
+     */
+    public void testOneIndicationBuildCompletedMessage() throws Exception {
+        PluginImpl.getInstance().setGerritTriggerEnabled(true);
+
+        FreeStyleProject project = createProject();
+
+        FailureCause failureCause = configureCauseAndIndication();
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
+
+        GerritMessageProviderExtension messageProvider = new GerritMessageProviderExtension();
+
+        assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
+                + " extension would not return the expected message." ,
+                "This is an error",
+                messageProvider.getBuildCompletedMessage(build));
+
+        PluginImpl.getInstance().setGerritTriggerEnabled(false);
+
+        assertNull("The " + GerritMessageProviderExtension.class.getSimpleName()
+                + " extension would not return null." ,
+                messageProvider.getBuildCompletedMessage(build));
+    }
+
+    /**
      * Unhappy test that should not find any failure indications in the build.
      *
      * @throws Exception if so.

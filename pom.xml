@@ -25,6 +25,10 @@
             <name>MIT</name>
             <comments>Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.</comments>
         </license>
+        <license>
+            <name>MIT</name>
+            <comments>Copyright 2012 Sony Mobile Communications AB. All rights reserved.</comments>
+        </license>
     </licenses>
 
     <developers>
@@ -81,6 +85,12 @@
     </pluginRepositories>
 
     <dependencies>
+        <dependency>
+            <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
+            <artifactId>gerrit-trigger</artifactId>
+            <version>2.6.0</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
