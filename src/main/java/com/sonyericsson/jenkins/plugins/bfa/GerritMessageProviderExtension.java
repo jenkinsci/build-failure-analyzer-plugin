@@ -52,7 +52,7 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                         customMessage.append(failureCause.getDescription());
                     }
                     if (customMessage.length() > 0) {
-                        return customMessage.toString();
+                        return customMessage.toString().replaceAll("'", "\\'");
                     }
                 }
             }
