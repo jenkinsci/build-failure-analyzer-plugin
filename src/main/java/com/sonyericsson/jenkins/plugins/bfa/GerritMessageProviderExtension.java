@@ -47,7 +47,7 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                 if (action != null) {
                     for (FoundFailureCause failureCause : action.getFoundFailureCauses()) {
                         if (customMessage.length() > 0) {
-                            customMessage.append(" \n ");
+                            customMessage.append("\n\n");
                         }
                         customMessage.append(failureCause.getDescription());
                     }
