@@ -89,7 +89,7 @@ public abstract class FailureReader {
             long startTime = System.currentTimeMillis();
             while ((line = reader.readLine()) != null) {
                 try {
-                    if (pattern.matcher(new InterruptibleCharSequence(line)).find()) {
+                    if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
                         found = true;
                         break;
                     }
@@ -111,7 +111,7 @@ public abstract class FailureReader {
                 }
             }
             if (found) {
-                foundIndication = new FoundIndication(build, pattern.pattern(), currentFile, currentLine);
+                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, currentLine);
             }
             return foundIndication;
         } finally {
@@ -140,7 +140,7 @@ public abstract class FailureReader {
         */
         public InterruptibleCharSequence(CharSequence inner) {
             super();
-            this.inner = inner;
+            this.inner = inner.toString();
         }
 
         @Override

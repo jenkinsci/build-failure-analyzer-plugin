@@ -90,7 +90,24 @@
             <artifactId>gerrit-trigger</artifactId>
             <version>2.6.0</version>
             <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.sf.json-lib</groupId>
+                    <artifactId>json-lib</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!-- For future optimization options
+        <dependency>
+            <groupId>dk.brics.automaton</groupId>
+            <artifactId>automaton</artifactId>
+            <version>1.11-8</version>
+        </dependency>   Or this one.
+        <dependency>
+            <groupId>net.sourceforge.jregex</groupId>
+            <artifactId>jregex</artifactId>
+            <version>1.2_01</version>
+        </dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

@@ -57,6 +57,7 @@ public class BuildLogFailureReader extends FailureReader {
         FoundIndication foundIndication = null;
         String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;
+        long start = System.currentTimeMillis();
         try {
             reader = new BufferedReader(build.getLogReader());
             foundIndication = scanOneFile(build, reader, currentFile);
@@ -73,6 +74,12 @@ public class BuildLogFailureReader extends FailureReader {
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Failed to close the reader. ", e);
                 }
+            }
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "[BFA] [{0}] - [{1}] {2}ms",
+                        new Object[]{build.getFullDisplayName(),
+                                     indication.toString(),
+                                     String.valueOf(System.currentTimeMillis()-start)});
             }
         }
         return foundIndication;

@@ -105,6 +105,7 @@ public class PluginImpl extends Plugin {
     @Override
     public void start() throws Exception {
         super.start();
+        logger.finer("[BFA] Starting...");
         load();
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
@@ -121,6 +122,7 @@ public class PluginImpl extends Plugin {
         }
         try {
             knowledgeBase.start();
+            logger.fine("[BFA] Started!");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not initialize the knowledge base: ", e);
         }

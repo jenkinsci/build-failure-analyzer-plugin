@@ -45,7 +45,7 @@ public class BuildLogIndicationTest extends HudsonTestCase {
         FreeStyleProject project = createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = buildAndAssertSuccess(project);
-        BuildLogIndication indication = new BuildLogIndication("test");
+        BuildLogIndication indication = new BuildLogIndication(".*test.*");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
         FoundIndication found = reader.scan(build, System.out);
         assertNotNull(found);

@@ -99,6 +99,7 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
     private List<FoundFailureCause> findCauses(Collection<FailureCause> causes,
                                                AbstractBuild build, PrintStream buildLog) {
         List<FoundFailureCause> foundFailureCauseList = new LinkedList<FoundFailureCause>();
+        long start = System.currentTimeMillis();
         for (FailureCause cause : causes) {
             List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
             if (!foundIndications.isEmpty()) {
@@ -106,6 +107,11 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
                 foundFailureCause.addIndications(foundIndications);
                 foundFailureCauseList.add(foundFailureCause);
             }
+        }
+        if (logger.isLoggable(Level.FINER)) {
+            logger.log(Level.FINER, "[BFA] [{0}] {1}ms", new Object[]
+                    {build.getFullDisplayName(),
+                    String.valueOf(System.currentTimeMillis() - start)});
         }
         return foundFailureCauseList;
     }
@@ -119,6 +125,7 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @return a list of found indications for a cause.
      */
     private List<FoundIndication> findIndications(FailureCause cause, AbstractBuild build, PrintStream buildLog) {
+        long start = System.currentTimeMillis();
         List<Indication> indicationList = cause.getIndications();
         List<FoundIndication> foundIndicationList = new LinkedList<FoundIndication>();
         for (Indication indication : indicationList) {
@@ -126,6 +133,12 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
             if (foundIndication != null) {
                 foundIndicationList.add(foundIndication);
             }
+        }
+        if (logger.isLoggable(Level.FINER)) {
+            logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]
+                    {build.getFullDisplayName(),
+                    cause.getName(),
+                    String.valueOf(System.currentTimeMillis() - start)});
         }
         return foundIndicationList;
     }

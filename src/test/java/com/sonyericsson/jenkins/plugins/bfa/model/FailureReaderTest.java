@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -98,12 +99,12 @@ public class FailureReaderTest {
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
-        BufferedReader br = new BufferedReader(new InputStreamReader(zipStream));
+        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(zipStream)));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 2000 && elapsedTime <= 5000);
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= 5000);
         assertNotNull("Expected to find an indication", indication);
     }
 
@@ -121,12 +122,50 @@ public class FailureReaderTest {
             zipStream.getNextEntry();
             inStream = new SequenceInputStream(inStream, zipStream);
         }
-        BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(inStream)));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
         assertNull("Did not expect to find an indication", indication);
+    }
+
+    /**
+     * Desperate attempt at making a line longer to scan.
+     * When the readLine method is called it returns the line from the underlying reader
+     * and constructs the same line 15 times on top of the original.
+     * This so that the scanning has more to work on and can timeout
+     */
+    static class QuadrupleDupleLineReader extends BufferedReader {
+
+        public QuadrupleDupleLineReader(BufferedReader in, int sz) {
+            super(in, sz);
+        }
+
+        public QuadrupleDupleLineReader(BufferedReader in) {
+            super(in);
+        }
+
+        @Override
+        public String readLine() throws IOException {
+            String line = super.readLine();
+            StringBuilder str = new StringBuilder(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            str.append(line);
+            return str.toString();
+        }
     }
 }
