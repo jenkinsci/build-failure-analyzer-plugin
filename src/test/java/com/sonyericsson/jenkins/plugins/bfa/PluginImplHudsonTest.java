@@ -36,6 +36,7 @@ import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
 import hudson.ExtensionList;
 import net.sf.json.JSONObject;
@@ -240,6 +241,11 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         form.put("gerritTriggerEnabled", true);
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);
+        form.put("maximumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
+        form.put("minimumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS);
+        form.put("threadKeepAliveTime", ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
+        form.put("waitForJobShutdownTime", ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
+        form.put("corePoolNumberOfThreads", ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
         if (convert != null) {
             form.put("convertOldKb", convert);
         }

@@ -1,0 +1,93 @@
+<!--
+  ~ The MIT License
+  ~
+  ~ Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <l:layout title="${%Failure Scan Options}">
+        <st:include it="${it.project}" page="sidepanel.jelly" />
+        <l:main-panel>
+            <j:set var="nonScanBuilds" value="${it.getNotScannedBuilds()}"/>
+            <j:if test="${empty(nonScanBuilds)}">
+                <table width="100%" border="0" cellpadding="2" cellspacing="0"
+                       class="pane bigtable"
+                       style="margin-top: 0">
+                    <tr>
+                        <td/>
+                        <td>
+                            <b>
+                                ${%All builds are already scanned.}
+                            </b>
+                        </td>
+                    </tr>
+                </table>
+            </j:if>
+            <j:if test="${!empty(nonScanBuilds)}">
+                <f:form method="get" action="performScan">
+                    <f:section title="${%Scan non-scanned builds}">
+                        <f:description>
+                            ${%Builds to be scanned}
+                        </f:description>
+                        <f:block>
+                            <j:if test="${!empty(nonScanBuilds)}">
+                                <table width="100%" border="1" cellpadding="2" cellspacing="0"
+                                       class="pane bigtable"
+                                       style="margin-top: 0">
+                                    <tr>
+                                       <td>
+                                            <b>
+                                                ${%Build Name}
+                                            </b>
+                                        </td>
+                                        <td>
+                                            <b>
+                                                ${%Build Timestamp}
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <j:forEach var="res" items="${nonScanBuilds}">
+                                        <j:set var="link" value="${it.baseUrl}" />
+                                        <tr>
+                                          <td>
+                                                <a href="${link}/${res.getUrl()}/console"><img width="16" height="16" src="${imagesURL}/16x16/${res.buildStatusUrl}" alt="${res.iconColor.description} &gt; ${%Console Output}" tooltip="${res.iconColor.description} &gt; ${%Console Output}" /></a><st:nbsp/>
+                                                ${res.getDisplayName()}
+                                            </td>
+                                            <td style="padding-right:0">
+                                                <a class="tip model-link tl-tr" href="${link}/${res.getUrl()}">
+                                                    <i:formatDate value="${res.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </j:forEach>
+                                </table>
+                            </j:if>
+                        </f:block>
+                        <f:block>
+                            <f:submit value="${%Scan}"/>
+                        </f:block>
+                    </f:section>
+                </f:form>
+            </j:if>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

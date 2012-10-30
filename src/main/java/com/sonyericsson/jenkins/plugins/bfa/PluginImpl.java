@@ -29,6 +29,8 @@ import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
+import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
+import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import hudson.ExtensionList;
 import hudson.Plugin;
 import hudson.PluginManager;
@@ -115,6 +117,10 @@ public class PluginImpl extends Plugin {
 
     private int nrOfScanThreads;
 
+    /**
+     * ScanOnDemandVariable instance.
+     */
+    private ScanOnDemandVariables sodVariables;
 
     @Override
     public void start() throws Exception {
@@ -127,6 +133,28 @@ public class PluginImpl extends Plugin {
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         }
+        sodVariables = new ScanOnDemandVariables();
+        if (sodVariables.getMinimumSodWorkerThreads() < 1) {
+            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.
+                    DEFAULT_MINIMUM_SOD_WORKER_THREADS);
+       }
+        if (sodVariables.getMaximumSodWorkerThreads() < 1) {
+            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.
+                    DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
+       }
+        if (sodVariables.getSodThreadKeepAliveTime() < 1) {
+            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.
+                    DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
+       }
+        if (sodVariables.getSodWaitForJobShutdownTimeout() < 1) {
+            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
+                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
+        }
+        if (sodVariables.getSodCorePoolNumberOfThreads() < 1) {
+            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.
+                    DEFAULT_SOD_COREPOOL_THREADS);
+        }
+
         if (knowledgeBase == null) {
             if (causes == null) {
                 knowledgeBase = new LocalFileKnowledgeBase();
@@ -148,6 +176,7 @@ public class PluginImpl extends Plugin {
     @Override
     public void stop() throws Exception {
         super.stop();
+        ScanOnDemandQueue.shutdown();
         knowledgeBase.stop();
     }
 
@@ -173,6 +202,15 @@ public class PluginImpl extends Plugin {
             }
         }
         return staticResourcesBase;
+    }
+
+    /**
+     * Getter sodVariable.
+     *
+     * @return the message.
+     */
+    public ScanOnDemandVariables getSodVariables() {
+        return sodVariables;
     }
 
     /**
@@ -394,10 +432,48 @@ public class PluginImpl extends Plugin {
         globalEnabled = o.getBoolean("globalEnabled");
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
         int scanThreads = o.getInt("nrOfScanThreads");
+        int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
+        int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
+        int thrkeepAliveTime = o.getInt("maximumNumberOfWorkerThreads");
+        int jobShutdownTimeWait = o.getInt("waitForJobShutdownTime");
+        int corePoolNumberOfThreads = o.getInt("corePoolNumberOfThreads");
         if (scanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         } else {
             nrOfScanThreads = scanThreads;
+        }
+
+        if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
+           sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
+        } else {
+           sodVariables.setSodCorePoolNumberOfThreads(corePoolNumberOfThreads);
+        }
+
+        if (jobShutdownTimeWait < ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT) {
+            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
+                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
+        } else {
+            sodVariables.setSodWaitForJobShutdownTimeout(jobShutdownTimeWait);
+        }
+        if (thrkeepAliveTime < ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME) {
+            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
+        } else {
+            sodVariables.setSodThreadKeepAliveTime(thrkeepAliveTime);
+        }
+        if (minSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS) {
+            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS);
+        } else {
+            sodVariables.setMinimumSodWorkerThreads(minSodWorkerThreads);
+        }
+        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
+            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
+        } else {
+            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
+        }
+        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
+            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
+        } else {
+            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
         }
         KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
         if (base != null && !knowledgeBase.equals(base)) {
