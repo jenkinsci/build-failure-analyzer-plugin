@@ -96,13 +96,36 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
         when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
-        JSONObject form = createForm(expectedNoCauseMessage, null);
+        JSONObject form = createForm(expectedNoCauseMessage, PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, null);
 
         PluginImpl.getInstance().configure(sreq, form);
 
 
         assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
         assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
+    }
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * with the same KnowledgeBase as before. And nrOfScanThreads set/"hacked" to -1
+     *
+     * @throws Exception if so.
+     */
+    public void testConfigureLowScanThreads() throws Exception {
+        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        String expectedNoCauseMessage = "I am blinded!";
+        StaplerRequest sreq = mock(StaplerRequest.class);
+        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
+        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
+
+        JSONObject form = createForm(expectedNoCauseMessage, -1, null);
+
+        PluginImpl.getInstance().configure(sreq, form);
+
+
+        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
+        assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
+        assertEquals(PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, PluginImpl.getInstance().getNrOfScanThreads());
     }
 
     /**
@@ -120,7 +143,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello");
         when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
-        JSONObject form = createForm("I am blinded!", true);
+        JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
 
         PluginImpl.getInstance().configure(sreq, form);
 
@@ -150,7 +173,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello Again");
         when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
-        JSONObject form = createForm("I am blinded!", true);
+        JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
 
         PluginImpl.getInstance().configure(sreq, form);
 
@@ -207,14 +230,16 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @param expectedNoCauseMessage the text for {@link PluginImpl#noCausesMessage}.
      * @param convert                if convertion should be run or not, set to null no not put the value in the form.
+     * @param nrOfScanThreads           the number of threads.
      * @return the form data.
      */
-    private JSONObject createForm(String expectedNoCauseMessage, Boolean convert) {
+    private JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
         JSONObject form = new JSONObject();
         form.put("noCausesMessage", expectedNoCauseMessage);
         form.put("globalEnabled", true);
         form.put("gerritTriggerEnabled", true);
         form.put("knowledgeBase", new JSONObject());
+        form.put("nrOfScanThreads", nrOfScanThreads);
         if (convert != null) {
             form.put("convertOldKb", convert);
         }

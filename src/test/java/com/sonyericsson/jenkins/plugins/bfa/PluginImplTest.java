@@ -79,4 +79,13 @@ public class PluginImplTest {
     public void testGetStaticImagesBase() throws Exception {
         assertEquals("/plugin/build-failure-analyzer/images", PluginImpl.getStaticImagesBase());
     }
+
+    /**
+     * Tests that you can't set {@link PluginImpl#nrOfScanThreads} to 0.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetNrOfScanThreadsZero() {
+        PluginImpl plugin = new PluginImpl();
+        plugin.setNrOfScanThreads(0);
+    }
 }

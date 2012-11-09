@@ -139,10 +139,25 @@ public class FailureReaderTest {
      */
     static class QuadrupleDupleLineReader extends BufferedReader {
 
+        /**
+         * Standard constructor
+         *
+         * @param in internal reader
+         * @param sz input buffer size.
+         *
+         * @see BufferedReader#BufferedReader(java.io.Reader, int)
+         */
         public QuadrupleDupleLineReader(BufferedReader in, int sz) {
             super(in, sz);
         }
 
+        /**
+         * Standard constructor.
+         *
+         * @param in internal reader.
+         *
+         * @see BufferedReader#BufferedReader(java.io.Reader)
+         */
         public QuadrupleDupleLineReader(BufferedReader in) {
             super(in);
         }

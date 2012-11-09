@@ -79,7 +79,7 @@ public class BuildLogFailureReader extends FailureReader {
                 logger.log(Level.FINER, "[BFA] [{0}] - [{1}] {2}ms",
                         new Object[]{build.getFullDisplayName(),
                                      indication.toString(),
-                                     String.valueOf(System.currentTimeMillis()-start)});
+                                     String.valueOf(System.currentTimeMillis() - start), });
             }
         }
         return foundIndication;

@@ -67,6 +67,11 @@ public class PluginImpl extends Plugin {
     public static final String DEFAULT_ICON_NAME = "information.png";
 
     /**
+     * Default number of concurrent scan threads.
+     */
+    public static final int DEFAULT_NR_OF_SCAN_THREADS = 3;
+
+    /**
      * The permission group for all permissions related to this plugin.
      */
     public static final PermissionGroup PERMISSION_GROUP =
@@ -91,6 +96,11 @@ public class PluginImpl extends Plugin {
 
     private static String staticResourcesBase = null;
 
+    /**
+     * Minimum allowed value for {@link #nrOfScanThreads}.
+     */
+    protected static final int MINIMUM_NR_OF_SCAN_THREADS = 1;
+
     private String noCausesMessage;
 
     private Boolean globalEnabled;
@@ -101,6 +111,8 @@ public class PluginImpl extends Plugin {
 
     private KnowledgeBase knowledgeBase;
 
+    private int nrOfScanThreads;
+
 
     @Override
     public void start() throws Exception {
@@ -109,6 +121,9 @@ public class PluginImpl extends Plugin {
         load();
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
+        }
+        if (nrOfScanThreads < 1) {
+            nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         }
         if (knowledgeBase == null) {
             if (causes == null) {
@@ -267,6 +282,33 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * The number of threads to have in the pool for each build. Used by the {@link FailureScanner}.
+     * Will return nothing less than {@link #MINIMUM_NR_OF_SCAN_THREADS}.
+     *
+     * @return the number of scan threads.
+     */
+    public int getNrOfScanThreads() {
+        if (nrOfScanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
+            nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
+        }
+        return nrOfScanThreads;
+    }
+
+
+    /**
+     * The number of threads to have in the pool for each build. Used by the {@link FailureScanner}.
+     * Will throw an {@link IllegalArgumentException} if the parameter is less than {@link #MINIMUM_NR_OF_SCAN_THREADS}.
+     *
+     * @param nrOfScanThreads the number of scan threads.
+     */
+    public void setNrOfScanThreads(int nrOfScanThreads) {
+        if (nrOfScanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
+            throw new IllegalArgumentException("Minimum nrOfScanThreads is " + MINIMUM_NR_OF_SCAN_THREADS);
+        }
+        this.nrOfScanThreads = nrOfScanThreads;
+    }
+
+    /**
      * Checks if the specified build should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
      * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty#isDoNotScan()}.
      *
@@ -307,6 +349,7 @@ public class PluginImpl extends Plugin {
 
     /**
      * Gets the KnowledgeBaseDescriptor that matches the name descString.
+     *
      * @param descString either name of a KnowledgeBaseDescriptor or the fully qualified name.
      * @return The matching KnowledgeBaseDescriptor or null if none is found.
      */
@@ -324,6 +367,12 @@ public class PluginImpl extends Plugin {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
+        int scanThreads = o.getInt("nrOfScanThreads");
+        if (scanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
+            nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
+        } else {
+            nrOfScanThreads = scanThreads;
+        }
         KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
         if (base != null && !knowledgeBase.equals(base)) {
             try {

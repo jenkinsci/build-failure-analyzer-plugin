@@ -45,10 +45,15 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +65,7 @@ import java.util.logging.Logger;
 public class FailureScanner extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(FailureScanner.class.getName());
+
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
@@ -91,36 +97,59 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
     /**
      * Finds the failure causes for this build.
      *
-     * @param causes the list of possible causes.
-     * @param build the build to analyze.
+     * @param causes   the list of possible causes.
+     * @param build    the build to analyze.
      * @param buildLog the build log.
      * @return a list of found failure causes.
      */
-    private List<FoundFailureCause> findCauses(Collection<FailureCause> causes,
-                                               AbstractBuild build, PrintStream buildLog) {
-        List<FoundFailureCause> foundFailureCauseList = new LinkedList<FoundFailureCause>();
+    private List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
+                                               final AbstractBuild build, final PrintStream buildLog) {
+        final List<FoundFailureCause> foundFailureCauseList =
+                Collections.synchronizedList(new LinkedList<FoundFailureCause>());
         long start = System.currentTimeMillis();
-        for (FailureCause cause : causes) {
-            List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
-            if (!foundIndications.isEmpty()) {
-                FoundFailureCause foundFailureCause = new FoundFailureCause(cause);
-                foundFailureCause.addIndications(foundIndications);
-                foundFailureCauseList.add(foundFailureCause);
-            }
+        ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.
+                newFixedThreadPool(PluginImpl.getInstance().getNrOfScanThreads());
+        buildLog.println("[BFA] Scanning build for known causes...");
+        for (final FailureCause cause : causes) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
+                    if (!foundIndications.isEmpty()) {
+                        FoundFailureCause foundFailureCause = new FoundFailureCause(cause);
+                        foundFailureCause.addIndications(foundIndications);
+                        foundFailureCauseList.add(foundFailureCause);
+                    }
+                }
+            });
         }
+        executor.shutdown();
+        try {
+            while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                buildLog.print('.');
+            }
+        } catch (InterruptedException e) {
+            logger.log(Level.FINE,
+                    "Got interrupted while waiting for scanner threads to finish for {0}",
+                    build.getFullDisplayName());
+            buildLog.println("[BFA] Interrupted.");
+        }
+        long time = System.currentTimeMillis() - start;
         if (logger.isLoggable(Level.FINER)) {
             logger.log(Level.FINER, "[BFA] [{0}] {1}ms", new Object[]
                     {build.getFullDisplayName(),
-                    String.valueOf(System.currentTimeMillis() - start)});
+                            String.valueOf(time), });
         }
+        buildLog.println();
+        buildLog.println("[BFA] Done. " + TimeUnit.MILLISECONDS.toSeconds(time) + "s");
         return foundFailureCauseList;
     }
 
     /**
      * Finds the indications of a failure cause.
      *
-     * @param cause the cause to find indications for.
-     * @param build the build to analyze.
+     * @param cause    the cause to find indications for.
+     * @param build    the build to analyze.
      * @param buildLog the build log.
      * @return a list of found indications for a cause.
      */
@@ -137,8 +166,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
         if (logger.isLoggable(Level.FINER)) {
             logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]
                     {build.getFullDisplayName(),
-                    cause.getName(),
-                    String.valueOf(System.currentTimeMillis() - start)});
+                            cause.getName(),
+                            String.valueOf(System.currentTimeMillis() - start), });
         }
         return foundIndicationList;
     }
@@ -147,8 +176,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * Finds out if this indication matches the build.
      *
      * @param indication the indication to look for.
-     * @param build the build to analyze.
-     * @param buildLog the build log.
+     * @param build      the build to analyze.
+     * @param buildLog   the build log.
      * @return an indication if one is found, null otherwise.
      */
     private FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {

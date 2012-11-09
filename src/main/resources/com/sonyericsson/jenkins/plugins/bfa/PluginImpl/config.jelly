@@ -56,5 +56,9 @@
                  description="${%enableGerritTriggerDescription}">
             <f:checkbox name="gerritTriggerEnabled" checked="${it.gerritTriggerEnabled}" default="true"/>
         </f:entry>
+        <f:entry title="${%Concurrent scans}"
+                 description="${%nrOfScanThreadsDescription}">
+            <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${it.nrOfScanThreads}"/>
+        </f:entry>
     </f:section>
 </j:jelly>
