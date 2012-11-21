@@ -35,21 +35,23 @@
         <developer>
             <id>rsandell</id>
             <name>Robert Sandell</name>
-            <email>robert.sandell@sonyericsson.com</email>
-            <organization>Sony Ericsson</organization>
+            <email>robert.sandell@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
             <url>http://www.linkedin.com/in/robertsandell</url>
             <roles>
+                <role>architect</role>
                 <role>developer</role>
                 <role>maintainer</role>
             </roles>
             <timezone>+1</timezone>
         </developer>
         <developer>
-            <id>twestling</id>
+            <id>t_westling</id>
             <name>Tomas Westling</name>
-            <email>thomas.westling@sonyericsson.com</email>
-            <organization>Sony Ericsson</organization>
+            <email>tomas.westling@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
             <roles>
+                <role>architect</role>
                 <role>developer</role>
                 <role>maintainer</role>
             </roles>
@@ -229,6 +231,12 @@
             </extension>
         </extensions>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>http://maven.jenkins-ci.org:8081/content/repositories/releases</url>
+        </repository>
+    </distributionManagement>
     <reporting>
         <plugins>
             <plugin>
