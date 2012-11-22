@@ -238,6 +238,11 @@
             <url>http://maven.jenkins-ci.org:8081/content/repositories/releases</url>
         </repository>
     </distributionManagement>
+    <scm>
+        <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
+    </scm>
     <reporting>
         <plugins>
             <plugin>
