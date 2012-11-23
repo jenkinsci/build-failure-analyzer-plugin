@@ -24,10 +24,12 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.util.FormValidation;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
@@ -63,5 +65,28 @@ public class BuildLogIndicationTest extends HudsonTestCase {
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
         FoundIndication found = reader.scan(build, System.out);
         assertNull(found);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string matches the pattern.
+     */
+    public void testDoMatchTextOk() {
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+              new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*", "hello");
+        assertEquals(formValidation.getMessage(), Messages.StringMatchesPattern());
+        assertEquals(formValidation.kind, FormValidation.Kind.OK);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string does not
+     * match the pattern.
+     */
+    public void testDoMatchTextWarning() {
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", "hello");
+        assertEquals(formValidation.getMessage(), Messages.StringDoesNotMatchPattern());
+        assertEquals(formValidation.kind, FormValidation.Kind.WARNING);
     }
 }

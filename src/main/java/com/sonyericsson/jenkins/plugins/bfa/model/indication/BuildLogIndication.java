@@ -29,7 +29,10 @@ import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
 import hudson.model.Hudson;
+import hudson.util.FormValidation;
+import java.util.regex.PatternSyntaxException;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Indication that parses the build log file for a pattern.
@@ -73,6 +76,29 @@ public class BuildLogIndication extends Indication {
         @Override
         public String getDisplayName() {
             return Messages.BuildLogIndication_DisplayName();
+        }
+
+        /**
+         * Tests if a string matches a pattern.
+         * @param testPattern the pattern.
+         * @param testText the string.
+         * @return {@link FormValidation#ok(java.lang.String) } if the pattern is valid and
+         *         the string matches the pattern,
+         *         {@link FormValidation#warning(java.lang.String) } if the pattern is valid and
+         *         the string does not match the pattern,
+         *         {@link FormValidation#error(java.lang.String) } otherwise.
+         */
+        public FormValidation doMatchText(
+                @QueryParameter("pattern") final String testPattern,
+                @QueryParameter("testText") final String testText) {
+            try {
+                if (testText.matches(testPattern)) {
+                    return FormValidation.ok(Messages.StringMatchesPattern());
+                }
+                return FormValidation.warning(Messages.StringDoesNotMatchPattern());
+            } catch (PatternSyntaxException e) {
+                return FormValidation.error(Messages.InvalidPattern_Error());
+            }
         }
     }
 }

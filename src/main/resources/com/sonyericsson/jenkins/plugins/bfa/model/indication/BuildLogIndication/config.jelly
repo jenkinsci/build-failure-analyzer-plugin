@@ -26,4 +26,13 @@
     <f:entry title="${%Pattern}" field="pattern">
         <f:textbox/>
     </f:entry>
+    <f:advanced>
+        <f:entry title="${%Test text}" field="testText">
+            <f:textbox name="testText"/>
+        </f:entry>
+        <f:validateButton title="${%Match Text}"
+                          progress="${%Matching...}"
+                          method="matchText"
+                          with="pattern,testText"/>
+    </f:advanced>
 </j:jelly>
