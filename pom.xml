@@ -1,12 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
+    <url>http://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer</url>
 
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -237,6 +237,11 @@
             <url>http://maven.jenkins-ci.org:8081/content/repositories/releases</url>
         </repository>
     </distributionManagement>
+    <scm>
+        <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
+    </scm>
     <reporting>
         <plugins>
             <plugin>
