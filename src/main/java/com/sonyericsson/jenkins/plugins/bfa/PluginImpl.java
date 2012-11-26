@@ -192,7 +192,7 @@ public class PluginImpl extends Plugin {
      * @return a URL to the image.
      */
     public static String getImageUrl(String size, String name) {
-        return getStaticImagesBase() + "/" + size + "/" + name;
+        return Hudson.getInstance().getRootUrl() + getStaticImagesBase() + "/" + size + "/" + name;
     }
 
     /**
@@ -216,7 +216,7 @@ public class PluginImpl extends Plugin {
      * @see #getImageUrl(String, String)
      */
     public static String getDefaultIcon() {
-        return getImageUrl(DEFAULT_ICON_NAME);
+        return getStaticImagesBase() + "/" + DEFAULT_ICON_SIZE + "/" + DEFAULT_ICON_NAME;
     }
 
     /**
