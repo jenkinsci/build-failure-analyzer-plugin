@@ -41,6 +41,7 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
@@ -192,7 +193,26 @@ public class PluginImpl extends Plugin {
      * @return a URL to the image.
      */
     public static String getImageUrl(String size, String name) {
-        return Hudson.getInstance().getRootUrl() + getStaticImagesBase() + "/" + size + "/" + name;
+        return getStaticImagesBase() + "/" + size + "/" + name;
+    }
+
+    /**
+     * Get the full url to an image, including rootUrl and context path.
+     *
+     * @param size the size of the image (the sub directory of images).
+     * @param name the name of the image file.
+     * @return a URL to the image.
+     */
+    public static String getFullImageUrl(String size, String name) {
+        String contextPath = "";
+        StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        if (currentRequest != null) {
+            contextPath = currentRequest.getContextPath();
+        }
+        if (contextPath.startsWith("/")) {
+            contextPath = contextPath.substring(1);
+        }
+        return Hudson.getInstance().getRootUrl() + contextPath + getImageUrl(size, name);
     }
 
     /**
@@ -216,7 +236,7 @@ public class PluginImpl extends Plugin {
      * @see #getImageUrl(String, String)
      */
     public static String getDefaultIcon() {
-        return getStaticImagesBase() + "/" + DEFAULT_ICON_SIZE + "/" + DEFAULT_ICON_NAME;
+        return getImageUrl(DEFAULT_ICON_NAME);
     }
 
     /**

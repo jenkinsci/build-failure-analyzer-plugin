@@ -37,8 +37,8 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
-  def bgImageUrl = PluginImpl.getImageUrl("256x256", "information.png");
-  def newImageUrl = PluginImpl.getImageUrl("24x24", "newinformation.png");
+  def bgImageUrl = PluginImpl.getFullImageUrl("256x256", "information.png");
+  def newImageUrl = PluginImpl.getFullImageUrl("24x24", "newinformation.png");
 
   l.side_panel() {
     if (!management.isUnderTest()) {
