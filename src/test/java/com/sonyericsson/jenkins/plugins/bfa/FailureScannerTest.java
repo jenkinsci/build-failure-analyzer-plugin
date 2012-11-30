@@ -34,6 +34,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
@@ -51,6 +52,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -90,21 +92,83 @@ public class FailureScannerTest extends HudsonTestCase {
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         assertBuildStatus(Result.FAILURE, build);
+
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, failureCause));
 
         WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + build.getUrl() + action.getUrlName() + "/1/1");
+        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
         HtmlElement document = page.getDocumentElement();
-        HtmlElement focus = document.getElementById("focusLine");
-        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "class", "errorLine");
+
+        FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
+        String id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        HtmlElement focus = document.getElementById(id);
+        assertNotNull(focus);
+
+        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
         assertNotNull(errorElements);
         HtmlElement error = errorElements.get(0);
-        assertNotNull(focus);
+
         assertNotNull(error);
-        assertEquals("Error message not found: ", error.getTextContent(), TO_PRINT);
+        assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
+    }
+
+    /**
+     * Happy test that should find one failure indication in the build.
+     *
+     * @throws Exception if so.
+     */
+    public void testTwoIndicationsSameLine() throws Exception {
+        FreeStyleProject project = createProject();
+
+        FailureCause failureCause = configureCauseAndIndication();
+
+        Indication indication = new BuildLogIndication(".*ERROR.*");
+        FailureCause failureCause2 = configureCauseAndIndication("Other cause", "Other description", indication);
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, failureCause));
+        assertTrue(findCauseInList(causeListFromAction, failureCause2));
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+
+        HtmlElement document = page.getDocumentElement();
+
+        FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
+        String id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        HtmlElement focus = document.getElementById(id);
+        assertNotNull(focus);
+
+        foundFailureCause = causeListFromAction.get(0);
+        foundIndication = foundFailureCause.getIndications().get(0);
+        id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        focus = document.getElementById(id);
+        assertNotNull(focus);
+
+        String title = failureCause.getName() + "\n" + failureCause2.getName();
+
+        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", title);
+        //The titles could be in any given order, trying both orders before failing.
+        if (errorElements.size() < 1) {
+            title = failureCause2.getName() + "\n" + failureCause.getName();
+            errorElements = document.getElementsByAttribute("span", "title", title);
+        }
+        assertTrue("Title not found in annotated text", errorElements.size() > 0);
+        HtmlElement error = errorElements.get(0);
+        assertNotNull(error);
+        assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
     }
 
     /**
@@ -279,11 +343,12 @@ public class FailureScannerTest extends HudsonTestCase {
      * Convenience method for a standard cause that finds {@link #TO_PRINT} in the build log.
      *
      * @return the configured cause that was added to the global config.
+     * @throws Exception if something goes wrong in handling the causes.
      *
      * @see #configureCauseAndIndication(com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication() {
+    private FailureCause configureCauseAndIndication() throws Exception {
         return configureCauseAndIndication(new BuildLogIndication(".*ERROR.*"));
     }
 
@@ -294,10 +359,11 @@ public class FailureScannerTest extends HudsonTestCase {
      *
      * @param indication the indication for the cause.
      * @return the configured cause that was added to the global config.
+     * @throws Exception if something goes wrong in handling the causes.
      *
      * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication(Indication indication) {
+    private FailureCause configureCauseAndIndication(Indication indication) throws Exception {
         return configureCauseAndIndication("Error", "This is an error", indication);
     }
 
@@ -307,8 +373,10 @@ public class FailureScannerTest extends HudsonTestCase {
      * @param description the description of the cause.
      * @param indication the indication.
      * @return the configured cause that was added to the global config.
+     * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, Indication indication) {
+    private FailureCause configureCauseAndIndication(String name, String description, Indication indication)
+            throws Exception {
         return configureCauseAndIndication(name, description, "category", indication);
     }
 
@@ -320,13 +388,19 @@ public class FailureScannerTest extends HudsonTestCase {
      * @param category the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
+     * @throws Exception if something goes wrong in handling the causes.
      */
     private FailureCause configureCauseAndIndication(String name, String description, String category,
-                                                     Indication indication) {
+                                                     Indication indication) throws Exception {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
         FailureCause failureCause = new FailureCause(name, name, description, category, indicationList);
+
+        Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
+
+
         List<FailureCause> causeList = new LinkedList<FailureCause>();
+        causeList.addAll(causes);
         causeList.add(failureCause);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(causeList));
         return failureCause;

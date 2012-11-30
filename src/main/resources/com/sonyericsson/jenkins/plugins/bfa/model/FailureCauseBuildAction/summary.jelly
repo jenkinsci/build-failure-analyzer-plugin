@@ -71,7 +71,7 @@
                 <td/>
                 <td>
                     <j:forEach var="indication" items="${cause.getIndications()}" indexVar="indicationNumber">
-                        <a href="bfa/${causeNumber+1}/${indicationNumber+1}#focusLine">
+                        <a href="console#${indication.matchingLine}${cause.id}">
                             ${%Indication} ${indicationNumber+1}
                         </a>
                         <st:nbsp/>

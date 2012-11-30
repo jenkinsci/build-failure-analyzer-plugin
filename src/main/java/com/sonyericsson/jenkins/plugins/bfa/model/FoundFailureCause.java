@@ -25,13 +25,9 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Found Failure Cause of a build.
@@ -44,8 +40,6 @@ public class FoundFailureCause {
     private String description;
     private List<String> categories;
     private List<FoundIndication> indications;
-    private static final Logger logger = Logger.getLogger(FoundFailureCause.class.getName());
-
 
     /**
      * Standard constructor.
@@ -128,27 +122,5 @@ public class FoundFailureCause {
             indications = new LinkedList<FoundIndication>();
         }
         indications.addAll(foundIndications);
-    }
-
-    /**
-     * Used when we are directed to a FoundIndication beneath this FoundFailureCause, when looking at
-     * an indication.
-     * @param token the indication number of this FoundFailureCause.
-     * @param req the stapler request.
-     * @param resp the stapler response.
-     * @return the correct FoundIndication.
-     */
-    public FoundIndication getDynamic(String token, StaplerRequest req, StaplerResponse resp) {
-        try {
-            int indicationNumber = Integer.parseInt(token) - 1;
-            if (indicationNumber >= 0 && indicationNumber < indications.size()) {
-                return indications.get(indicationNumber);
-            }
-        } catch (NumberFormatException nfe) {
-            logger.log(Level.WARNING, "[BFA] Failed to parse token for getDynamic: " + token);
-            return null;
-        }
-        logger.log(Level.WARNING, "[BFA] Unable to navigate to the Indication: " + token);
-        return null;
     }
 }

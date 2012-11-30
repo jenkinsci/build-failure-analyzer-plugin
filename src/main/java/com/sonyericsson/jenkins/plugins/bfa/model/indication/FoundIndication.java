@@ -24,17 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
-import hudson.MarkupText;
 import hudson.model.AbstractBuild;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Found Indication of an unsuccessful build.
@@ -51,11 +41,6 @@ public class FoundIndication {
     private int matchingLine;
     private String pattern;
     private AbstractBuild build;
-    /**
-     * The number of lines to show above the found Indication
-     */
-    private static final int CONTEXT = 10;
-    private static final Logger logger = Logger.getLogger(FoundIndication.class.getName());
 
     /**
      * Standard constructor.
@@ -106,68 +91,5 @@ public class FoundIndication {
      */
     public AbstractBuild getBuild() {
         return build;
-    }
-
-    /**
-     * Adds extra information to the log and presents it.
-     *
-     * @return the log file of this indication, with extra information.
-     */
-    public String getModifiedLog() {
-        StringBuilder builder = new StringBuilder("<pre>");
-        String currentLine;
-        int currentLineNumber = 1;
-        int focusLine;
-        if (matchingLine < CONTEXT) {
-            focusLine = 1;
-        } else {
-            focusLine = matchingLine - CONTEXT;
-        }
-        File rootDir = build.getRootDir();
-        File inputFile = new File(rootDir, matchingFile);
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), FILE_ENCODING));
-            while ((currentLine = br.readLine()) != null) {
-                MarkupText markup = new MarkupText(currentLine);
-                currentLine = markup.toString(true);
-                if (currentLineNumber == focusLine) {
-                    //if focusLine and matchingLine both are equal to the first line.
-                    if (currentLineNumber == matchingLine) {
-                        builder.append("<span class=\"errorLine\" id=\"focusLine\">");
-                        builder.append(currentLine);
-                        builder.append("</span>\n");
-                    } else {
-                        builder.append("<span id=\"focusLine\">");
-                        builder.append(currentLine);
-                        builder.append("</span>\n");
-                    }
-                } else if (currentLineNumber == matchingLine) {
-                    builder.append("<span class=\"errorLine\">");
-                    builder.append(currentLine);
-                    builder.append("</span>\n");
-                } else if (currentLineNumber != focusLine && currentLineNumber != matchingLine) {
-                    builder.append(currentLine);
-                    builder.append("\n");
-                }
-                currentLineNumber++;
-            }
-        } catch (FileNotFoundException e) {
-            logger.log(Level.SEVERE, "[BFA] Could not open reader for build: " + build.getDisplayName()
-                    + " and Indication: " + pattern, e);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "[BFA] I/O problems during build log modification for build:"
-                    + build.getDisplayName() + " and Indication: " + pattern, e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
-                }
-            }
-        }
-        builder.append("</pre>");
-        return builder.toString();
     }
 }
