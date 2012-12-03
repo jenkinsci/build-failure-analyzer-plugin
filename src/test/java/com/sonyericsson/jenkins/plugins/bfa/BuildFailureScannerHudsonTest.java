@@ -27,12 +27,13 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
@@ -43,6 +44,7 @@ import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.model.listeners.RunListener;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
 import org.mockito.ArgumentMatcher;
@@ -58,10 +60,10 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
@@ -72,7 +74,7 @@ import static org.mockito.Mockito.when;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 
-public class FailureScannerTest extends HudsonTestCase {
+public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
     private static final String TO_PRINT = "ERROR";
 
@@ -172,8 +174,7 @@ public class FailureScannerTest extends HudsonTestCase {
     }
 
     /**
-     * One indication should be found and a correct looking Gerrit-Trigger-Plugin
-     * message can be constructed.
+     * One indication should be found and a correct looking Gerrit-Trigger-Plugin message can be constructed.
      *
      * @throws Exception if so.
      */
@@ -192,14 +193,14 @@ public class FailureScannerTest extends HudsonTestCase {
         GerritMessageProviderExtension messageProvider = new GerritMessageProviderExtension();
 
         assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
-                + " extension would not return the expected message." ,
+                + " extension would not return the expected message.",
                 "This is an error",
                 messageProvider.getBuildCompletedMessage(build));
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);
 
         assertNull("The " + GerritMessageProviderExtension.class.getSimpleName()
-                + " extension would not return null." ,
+                + " extension would not return null.",
                 messageProvider.getBuildCompletedMessage(build));
     }
 
@@ -257,14 +258,16 @@ public class FailureScannerTest extends HudsonTestCase {
     }
 
     /**
-     * Tests that there is no scanner result when the property {@link ScannerOffJobProperty} is set to true.
+     * Tests that there is no scanner result when the property
+     * {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty}
+     * is set to true.
      *
      * @throws Exception if so.
      */
     public void testDoNotScanSpecific() throws Exception {
         PluginImpl.getInstance().setGlobalEnabled(true);
         FreeStyleProject project = createProject();
-        project.addProperty(new ScannerOffJobProperty(true));
+        project.addProperty(new ScannerJobProperty(true));
         configureCauseAndIndication();
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -314,6 +317,31 @@ public class FailureScannerTest extends HudsonTestCase {
     }
 
     /**
+     * Tests that {@link BuildFailureScanner} is found before
+     * {@link com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener}.
+     */
+    public void testOrdinal() {
+        int counter = 0;
+        int bfaPlacement = 0;
+        int gtPlacement = 0;
+        boolean bfaFound = false;
+        boolean gtFound = false;
+
+        for (RunListener listener : RunListener.all()) {
+            if (listener instanceof BuildFailureScanner) {
+                bfaFound = true;
+                bfaPlacement = (counter++);
+            } else if (listener instanceof ToGerritRunListener) {
+                gtFound = true;
+                gtPlacement = (counter++);
+            }
+        }
+        assertTrue(gtFound);
+        assertTrue(bfaFound);
+        assertTrue("BFA (" + bfaPlacement + ") should list before GT (" + gtPlacement + ")", bfaPlacement < gtPlacement);
+    }
+
+    /**
      * ArgumentMatcher for a Statistics object.
      */
     public static class IsValidStatisticsObject extends ArgumentMatcher<Statistics> {
@@ -324,9 +352,9 @@ public class FailureScannerTest extends HudsonTestCase {
             }
             Statistics stat = (Statistics)o;
             if (stat.getBuildNumber() != 1) {
-                return  false;
+                return false;
             }
-            List<FailureCauseStatistics> failureCauseStatisticsList =  stat.getFailureCauseStatisticsList();
+            List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
             if (failureCauseStatisticsList == null || failureCauseStatisticsList.size() != 1) {
                 return false;
             }
@@ -369,9 +397,10 @@ public class FailureScannerTest extends HudsonTestCase {
 
     /**
      * Convenience method for a standard cause with a category and the provided indication.
-     * @param name the name of the cause.
+     *
+     * @param name        the name of the cause.
      * @param description the description of the cause.
-     * @param indication the indication.
+     * @param indication  the indication.
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      */
@@ -385,7 +414,7 @@ public class FailureScannerTest extends HudsonTestCase {
      *
      * @param name        the name of the cause.
      * @param description the description of the cause.
-     * @param category the category of the cause.
+     * @param category    the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
@@ -430,7 +459,7 @@ public class FailureScannerTest extends HudsonTestCase {
     private boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
         for (FoundFailureCause cause : causeListFromAction) {
             if (failureCause.getName().equals(cause.getName())
-                && failureCause.getDescription().equals(cause.getDescription())
+                    && failureCause.getDescription().equals(cause.getDescription())
                     && failureCause.getCategories().equals(cause.getCategories())) {
                 return true;
             }

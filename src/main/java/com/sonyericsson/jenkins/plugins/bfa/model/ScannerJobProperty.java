@@ -24,34 +24,44 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.sonyericsson.jenkins.plugins.bfa.FailureCauseMatrixAggregator;
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import hudson.Extension;
+import hudson.Launcher;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.JobProperty;
+import hudson.model.JobPropertyDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 
 /**
- * A JobProperty that flags a job that should not be scanned.
+ * A JobProperty that flags a job that should not be scanned. Also works as the {@link MatrixAggregatable}
  *
- * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
- * @deprecated {@link ScannerJobProperty} is used instead, but this is kept to be able to de-serialize old jobs.
+ * @author Robert Sandell &lt;robert.sandell@sonymobile.com&gt;
  */
-@Deprecated
-public class ScannerOffJobProperty extends JobProperty<AbstractProject<?, ?>> implements Serializable {
+public class ScannerJobProperty extends JobProperty<AbstractProject<?, ?>> implements MatrixAggregatable, Serializable {
+
     private boolean doNotScan;
 
     /**
-     * Standard Constructor.
+     * Standard DataBound Constructor.
      *
      * @param doNotScan signal that builds of this job should not be scanned.
      */
-    public ScannerOffJobProperty(boolean doNotScan) {
+    @DataBoundConstructor
+    public ScannerJobProperty(boolean doNotScan) {
         this.doNotScan = doNotScan;
     }
 
     /**
      * Default Constructor. <strong>Do not use unless you are a serializer!</strong>
      */
-    public ScannerOffJobProperty() {
+    public ScannerJobProperty() {
     }
 
     /**
@@ -63,12 +73,20 @@ public class ScannerOffJobProperty extends JobProperty<AbstractProject<?, ?>> im
         return doNotScan;
     }
 
+    @Override
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        return new FailureCauseMatrixAggregator(build, launcher, listener);
+    }
+
     /**
-     * De-serialize this object to a {@link ScannerJobProperty}.
-     *
-     * @return an instance of {@link ScannerJobProperty} with the same data.
+     * Descriptor for {@link ScannerJobProperty}.
      */
-    public Object readResolve() {
-        return new ScannerJobProperty(doNotScan);
+    @Extension
+    public static class ScannerJobPropertyDescriptor extends JobPropertyDescriptor {
+
+        @Override
+        public String getDisplayName() {
+            return Messages.ScannerJobProperty_DisplayName();
+        }
     }
 }

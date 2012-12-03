@@ -28,7 +28,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import hudson.ExtensionList;
 import hudson.Plugin;
 import hudson.PluginManager;
@@ -302,7 +302,7 @@ public class PluginImpl extends Plugin {
     }
 
     /**
-     * The number of threads to have in the pool for each build. Used by the {@link FailureScanner}.
+     * The number of threads to have in the pool for each build. Used by the {@link BuildFailureScanner}.
      * Will return nothing less than {@link #MINIMUM_NR_OF_SCAN_THREADS}.
      *
      * @return the number of scan threads.
@@ -316,7 +316,7 @@ public class PluginImpl extends Plugin {
 
 
     /**
-     * The number of threads to have in the pool for each build. Used by the {@link FailureScanner}.
+     * The number of threads to have in the pool for each build. Used by the {@link BuildFailureScanner}.
      * Will throw an {@link IllegalArgumentException} if the parameter is less than {@link #MINIMUM_NR_OF_SCAN_THREADS}.
      *
      * @param nrOfScanThreads the number of scan threads.
@@ -330,7 +330,7 @@ public class PluginImpl extends Plugin {
 
     /**
      * Checks if the specified build should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
-     * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerOffJobProperty#isDoNotScan()}.
+     * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty#isDoNotScan()}.
      *
      * @param build the build
      * @return true if it should be scanned.
@@ -338,7 +338,7 @@ public class PluginImpl extends Plugin {
     public static boolean shouldScan(AbstractBuild build) {
         if (getInstance().isGlobalEnabled()) {
             AbstractProject project = build.getProject();
-            ScannerOffJobProperty property = (ScannerOffJobProperty)project.getProperty(ScannerOffJobProperty.class);
+            ScannerJobProperty property = (ScannerJobProperty)project.getProperty(ScannerJobProperty.class);
             if (property != null) {
                 return !property.isDoNotScan();
             } else {

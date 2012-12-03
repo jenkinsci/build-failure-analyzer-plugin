@@ -29,23 +29,18 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
-import hudson.Launcher;
-import hudson.matrix.MatrixAggregatable;
-import hudson.matrix.MatrixAggregator;
-import hudson.matrix.MatrixBuild;
+import hudson.Extension;
+import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
 import hudson.model.Result;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Notifier;
-import hudson.tasks.Publisher;
+import hudson.model.TaskListener;
+import hudson.model.listeners.RunListener;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,36 +57,55 @@ import java.util.logging.Logger;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureScanner extends Notifier implements MatrixAggregatable {
+@Extension(ordinal = BuildFailureScanner.ORDINAL)
+public class BuildFailureScanner extends RunListener<AbstractBuild> {
 
-    private static final Logger logger = Logger.getLogger(FailureScanner.class.getName());
-
-    @Override
-    public boolean needsToRunAfterFinalized() {
-        return true;
-    }
-
-    @Override
-    public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.NONE;
-    }
+    /**
+     * The ordinal of this extension, one thousand below the GerritTrigger plugin.
+     */
+    public static final int ORDINAL = 11003;
+    private static final Logger logger = Logger.getLogger(BuildFailureScanner.class.getName());
 
     @Override
-    public boolean perform(AbstractBuild build, final Launcher launcher, final BuildListener buildListener) {
-        if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
+    public void onStarted(AbstractBuild build, TaskListener listener) {
+        if (PluginImpl.shouldScan(build)
+                && build.getProject().getProperty(ScannerJobProperty.class) == null) {
             try {
-                PrintStream buildLog = buildListener.getLogger();
-                Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-                List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
-                FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
-                build.addAction(buildAction);
-                StatisticsLogger.getInstance().log(build, foundCauseList);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
-                return false;
+                build.getProject().addProperty(new ScannerJobProperty(false));
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to add a ScannerJobProperty to "
+                        + build.getProject().getFullDisplayName(), e);
+                listener.getLogger().println("[BFA] WARNING! Failed to add the scanner property to this job.");
             }
         }
-        return true;
+    }
+
+    @Override
+    public void onCompleted(AbstractBuild build, TaskListener listener) {
+        logger.entering(getClass().getName(), "onCompleted");
+        if (build.getResult().isWorseThan(Result.SUCCESS) && PluginImpl.shouldScan(build)
+                && !(build.getProject() instanceof MatrixProject)) {
+            scan(build, listener.getLogger());
+        }
+    }
+
+    /**
+     * Performs a scan of the build, adds the {@link FailureCauseBuildAction} and reports to the
+     * {@link StatisticsLogger}.
+     *
+     * @param build    the build to scan
+     * @param buildLog log to write information to.
+     */
+    public static void scan(AbstractBuild build, PrintStream buildLog) {
+        try {
+            Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
+            List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
+            FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
+            build.addAction(buildAction);
+            StatisticsLogger.getInstance().log(build, foundCauseList);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not scan build " + build, e);
+        }
     }
 
     /**
@@ -102,8 +116,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param buildLog the build log.
      * @return a list of found failure causes.
      */
-    private List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
-                                               final AbstractBuild build, final PrintStream buildLog) {
+    private static List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
+                                                      final AbstractBuild build, final PrintStream buildLog) {
         final List<FoundFailureCause> foundFailureCauseList =
                 Collections.synchronizedList(new LinkedList<FoundFailureCause>());
         long start = System.currentTimeMillis();
@@ -153,7 +167,7 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param buildLog the build log.
      * @return a list of found indications for a cause.
      */
-    private List<FoundIndication> findIndications(FailureCause cause, AbstractBuild build, PrintStream buildLog) {
+    private static List<FoundIndication> findIndications(FailureCause cause, AbstractBuild build, PrintStream buildLog) {
         long start = System.currentTimeMillis();
         List<Indication> indicationList = cause.getIndications();
         List<FoundIndication> foundIndicationList = new LinkedList<FoundIndication>();
@@ -180,34 +194,8 @@ public class FailureScanner extends Notifier implements MatrixAggregatable {
      * @param buildLog   the build log.
      * @return an indication if one is found, null otherwise.
      */
-    private FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
+    private static FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
         FailureReader failureReader = indication.getReader();
         return failureReader.scan(build, buildLog);
-    }
-
-    @Override
-    public FailureScannerDescriptor getDescriptor() {
-        return Hudson.getInstance().getDescriptorByType(FailureScannerDescriptor.class);
-    }
-
-    @Override
-    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
-        return new FailureCauseMatrixAggregator(build, launcher, listener);
-    }
-
-    /**
-     * Descriptor, apparently needed for the FailureScannerTest in order to add this notifier to the build.
-     */
-    public static final class FailureScannerDescriptor extends BuildStepDescriptor<Publisher> {
-
-        @Override
-        public String getDisplayName() {
-            return "";
-        }
-
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            return true;
-        }
     }
 }
