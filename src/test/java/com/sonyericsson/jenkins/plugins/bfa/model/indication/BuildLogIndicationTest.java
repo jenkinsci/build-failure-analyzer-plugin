@@ -70,23 +70,76 @@ public class BuildLogIndicationTest extends HudsonTestCase {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string matches the pattern.
      */
-    public void testDoMatchTextOk() {
+    public void testDoMatchTextPlainTextOk() {
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
               new BuildLogIndication.BuildLogIndicationDescriptor();
-        FormValidation formValidation = indicationDescriptor.doMatchText(".*", "hello");
-        assertEquals(formValidation.getMessage(), Messages.StringMatchesPattern());
-        assertEquals(formValidation.kind, FormValidation.Kind.OK);
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*", "hello", false);
+        assertEquals(Messages.StringMatchesPattern(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
     }
 
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string does not
      * match the pattern.
      */
-    public void testDoMatchTextWarning() {
+    public void testDoMatchTextPlainTextWarning() {
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
                 new BuildLogIndication.BuildLogIndicationDescriptor();
-        FormValidation formValidation = indicationDescriptor.doMatchText("hi", "hello");
-        assertEquals(formValidation.getMessage(), Messages.StringDoesNotMatchPattern());
-        assertEquals(formValidation.kind, FormValidation.Kind.WARNING);
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", "hello", false);
+        assertEquals(Messages.StringDoesNotMatchPattern(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    public void testDoMatchTextUrlValidOk() throws Exception {
+        FreeStyleProject freeStyleProject = createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = buildAndAssertSuccess(freeStyleProject);
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        assertEquals("teststring", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        // TODO Test that doMatchText correctly handles builds whose url ends with lastBuild,
+        // lastSuccessfulBuild etc., and that doMatchText correctly handles matrix builds
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a build whose log does not contain any line that matches the pattern.
+     * @throws Exception if so.
+     */
+    public void testDoMatchTextUrlValidWarning() throws Exception {
+        FreeStyleProject freeStyleProject = createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = buildAndAssertSuccess(freeStyleProject);
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        String buildUrl = getURL() + freeStyleBuild.getUrl();
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", buildUrl, true);
+        assertEquals(Messages.StringDoesNotMatchPattern(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid but the string is an invalid url,
+     * i.e. a malformed url or a url which does not refer to any Jenkins build.
+     */
+    public void testDoMatchTextUrlInvalid() {
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", "this_url_is_malformed", true);
+        assertEquals(Messages.InvalidURL_Error(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
+        formValidation = indicationDescriptor.doMatchText("hi",
+                "localhost/job/this_url_is_well_formed_but_does_not_refer_to_any_jenkins_job/1/", true);
+        assertEquals(Messages.InvalidURL_Error(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
     }
 }

@@ -29,11 +29,13 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
+import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -369,19 +371,21 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     /**
      * Finds the {@link CauseManagement} ancestor of the {@link Stapler#getCurrentRequest() current request}.
      *
-     * @return the management action or a derivative of it.
+     * @return the management action or a derivative of it, or null if no management action is found.
      *
      * @throws IllegalStateException if no ancestor is found.
      */
     @JsonIgnore
     public CauseManagement getAncestorCauseManagement() {
-        CauseManagement ancestorObject = Stapler.getCurrentRequest().findAncestorObject(CauseManagement.class);
-        if (ancestorObject != null) {
-            return ancestorObject;
-        } else {
-            throw new IllegalStateException("getAncestorCauseManagement must be called within the scope of a "
-                    + "StaplerRequest with a CauseManagement ancestor!");
+        StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        if (currentRequest == null) {
+            return null;
         }
+        CauseManagement ancestorObject = currentRequest.findAncestorObject(CauseManagement.class);
+        if (ancestorObject == null) {
+            return null;
+        }
+        return ancestorObject;
     }
 
     @Override
@@ -414,6 +418,45 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     @Extension
     @JsonIgnoreType
     public static final class FailureCauseDescriptor extends Descriptor<FailureCause> {
+
+        /**
+         * The name of a session attribute which stores the url to the last failed build of the project from
+         * whose page the Failure Cause Management page was entered.
+         */
+        private static final String LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME = "BFA_LAST_FAILED_BUILD_URL";
+
+        /**
+         * @return the URL to the last failed build of the project from whose page the Failure Cause Management
+         * page was entered.
+         */
+        public String getLastFailedBuildUrl() {
+            StaplerRequest staplerRequest = Stapler.getCurrentRequest();
+            if (staplerRequest != null) {
+                String answer = (String)staplerRequest.getSession(true)
+                        .getAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME);
+                if (answer != null) {
+                    return answer;
+                }
+            }
+            return "";
+        }
+
+        /**
+         * Set the URL of the last failed build of the project from whose page the Failure Cause Management
+         * page was entered.
+         */
+        public void setLastFailedBuildUrl() {
+            StaplerRequest staplerRequest = Stapler.getCurrentRequest();
+            if (staplerRequest != null) {
+                AbstractProject project = staplerRequest.findAncestorObject(AbstractProject.class);
+                if (project != null && project.getLastFailedBuild() != null) {
+                    staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME,
+                        Hudson.getInstance().getRootUrl() + project.getLastFailedBuild().getUrl());
+                } else {
+                    staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME, "");
+                }
+            }
+        }
 
         @Override
         public String getDisplayName() {

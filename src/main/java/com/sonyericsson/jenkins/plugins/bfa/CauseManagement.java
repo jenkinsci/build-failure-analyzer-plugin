@@ -294,4 +294,5 @@ public class CauseManagement implements RootAction {
         }
         throw new IllegalStateException("We seem to not have been initialized!");
     }
+
 }

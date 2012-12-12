@@ -28,9 +28,19 @@ import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixProject;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -40,6 +50,7 @@ import org.kohsuke.stapler.QueryParameter;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 public class BuildLogIndication extends Indication {
+
     /**
      * Standard constructor.
      *
@@ -73,15 +84,148 @@ public class BuildLogIndication extends Indication {
     @Extension
     public static class BuildLogIndicationDescriptor extends IndicationDescriptor {
 
+        /**
+         * A pattern matched by all Jenkins job URL:s.
+         */
+        private static final Pattern URL_PATTERN = Pattern.compile("^.*/([^/]+)/([^/]+)/([^/]+)/?$");
+
+        /**
+         * The number of groups in URL_PATTERN.
+         */
+        private static final int NUM_OF_URL_PARTS = 3;
+
+        /**
+         * An identifier for a non-numeric build for a given project,
+         * like "last build" and "last failed build".
+         */
+        public enum StringBuildId {
+            /**
+             * Last build.
+             */
+            LAST_BUILD("lastBuild") {
+                /**
+                 * @param project a project.
+                 * @return the build of the given project based on this StringBuildId.
+                 *
+                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 */
+                @Override
+                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
+                                        ? extends AbstractBuild<?, ?>> project) {
+                    return project.getLastBuild();
+                }
+            },
+            /**
+             * Last failed build.
+             */
+            LAST_FAILED_BUILD("lastFailedBuild") {
+                /**
+                 * @param project a project.
+                 * @return the build of the given project based on this StringBuildId.
+                 *
+                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 */
+                @Override
+                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
+                        ? extends AbstractBuild<?, ?>> project) {
+                    return project.getLastFailedBuild();
+                }
+            },
+            /**
+             * Last unsuccessful build.
+             */
+            LAST_UNSUCCESSFUL_BUILD("lastUnsuccessfulBuild") {
+                /**
+                 * @param project a project.
+                 * @return the build of the given project based on this StringBuildId.
+                 *
+                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 */
+                @Override
+                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
+                        ? extends AbstractBuild<?, ?>> project) {
+                    return project.getLastUnsuccessfulBuild();
+                }
+            },
+            /**
+             * Last successful build.
+             */
+            LAST_SUCCESSFUL_BUILD("lastSuccessfulBuild") {
+                /**
+                 * @param project a project.
+                 * @return the build of the given project based on this StringBuildId.
+                 *
+                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 */
+                @Override
+                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
+                        ? extends AbstractBuild<?, ?>> project) {
+                    return project.getLastSuccessfulBuild();
+                }
+            };
+
+            /**
+             * The name of this StringBuildId.
+             */
+            private final String name;
+
+            /**
+             * Private constructor.
+             *
+             * @param name the name of this StringBuildId.
+             */
+            private StringBuildId(String name) {
+                this.name = name;
+            }
+
+            /**
+             * Returns the name of this StringBuildId.
+             *
+             * @return the name of this StringBuildId.
+             */
+            public String getName() {
+                return name;
+            }
+
+            /**
+             * Returns a StringBuildId based on a given string.
+             *
+             * @param str a string.
+             * @return the StringBuildId whose name equals str, if
+             * such a StringBuildId exists; otherwise, return null.
+             */
+            public static StringBuildId fromString(String str) {
+                if (str != null) {
+                    for (StringBuildId stringBuildId : values()) {
+                        if (str.equals(stringBuildId.getName())) {
+                            return stringBuildId;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            /**
+             * Returns a build of a given project based on this StringBuildId.
+             *
+             * @param project a project.
+             * @return the build of the given project based on this StringBuildId.
+             */
+            public abstract AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
+                    ? extends AbstractBuild<?, ?>> project);
+        }
+
         @Override
         public String getDisplayName() {
             return Messages.BuildLogIndication_DisplayName();
         }
 
         /**
-         * Tests if a string matches a pattern.
-         * @param testPattern the pattern.
-         * @param testText the string.
+         * Tests if a text matches a pattern.
+         * @param testPattern a pattern.
+         * @param testText a text.
+         * @param textSourceIsUrl a boolean indicating whether testText is a URL containing the text to be matched
+         *                        against pattern or a text that should be matched directly against pattern.
          * @return {@link FormValidation#ok(java.lang.String) } if the pattern is valid and
          *         the string matches the pattern,
          *         {@link FormValidation#warning(java.lang.String) } if the pattern is valid and
@@ -90,15 +234,98 @@ public class BuildLogIndication extends Indication {
          */
         public FormValidation doMatchText(
                 @QueryParameter("pattern") final String testPattern,
-                @QueryParameter("testText") final String testText) {
-            try {
-                if (testText.matches(testPattern)) {
-                    return FormValidation.ok(Messages.StringMatchesPattern());
+                @QueryParameter("testText") final String testText,
+                @QueryParameter("textSourceIsUrl") final boolean textSourceIsUrl) {
+            if (textSourceIsUrl) {
+                Matcher urlMatcher = URL_PATTERN.matcher(testText);
+                if (urlMatcher.matches()) {
+                    String[] urlParts = new String[NUM_OF_URL_PARTS];
+                    for (int i = 0; i < urlParts.length; i++) {
+                        urlParts[i] = urlMatcher.group(i + 1);
+                    }
+                    AbstractBuild build = null;
+                    /*
+                       Find out which of the following url types testText matches, if any,
+                       and assign to build accordingly. The url types are checked in the
+                       given order.
+                       Type 1: .../<job>/<buildNumber>/
+                       Type 2: .../<job>/<matrixInfo>/<buildNumber>/
+                       Type 3: .../<job>/<buildNumber>/<matrixInfo>/
+                     */
+                    if (Jenkins.getInstance().getItem(urlParts[1]) instanceof AbstractProject
+                            && isValidBuildId(urlParts[2])) {
+                        AbstractProject project = (AbstractProject)Jenkins.getInstance().getItem(urlParts[1]);
+                        build = getBuildById(project, urlParts[2]);
+                    } else if (Jenkins.getInstance().getItem(urlParts[0]) instanceof MatrixProject
+                            && isValidBuildId(urlParts[2])) {
+                        MatrixProject project = (MatrixProject)Jenkins.getInstance().getItem(urlParts[0]);
+                        MatrixConfiguration configuration = project.getItem(urlParts[1]);
+                        build = getBuildById(configuration, urlParts[2]);
+                    } else if (Jenkins.getInstance().getItem(urlParts[0]) instanceof MatrixProject
+                            && isValidBuildId(urlParts[1])) {
+                        MatrixProject matrixProject = (MatrixProject)Jenkins.getInstance().getItem(urlParts[0]);
+                        MatrixConfiguration configuration = matrixProject.getItem(urlParts[2]);
+                        build = getBuildById(configuration, urlParts[1]);
+                    }
+                    if (build != null) {
+                        try {
+                            BuildLogFailureReader buildLogFailureReader =
+                                    new BuildLogFailureReader(new BuildLogIndication(testPattern));
+                            FoundIndication foundIndication = buildLogFailureReader.scan(build);
+                            if (foundIndication == null) {
+                                return FormValidation.warning(Messages.StringDoesNotMatchPattern());
+                            }
+                            int matchingLine = foundIndication.getMatchingLine();
+                            return FormValidation.okWithMarkup(
+                                    (String)build.getLog(Integer.MAX_VALUE).get(matchingLine - 1));
+                        } catch (IOException e) {
+                            return FormValidation.error(Messages.FailedToScanFile_Error());
+                        }
+                    }
                 }
-                return FormValidation.warning(Messages.StringDoesNotMatchPattern());
-            } catch (PatternSyntaxException e) {
-                return FormValidation.error(Messages.InvalidPattern_Error());
+                return FormValidation.error(Messages.InvalidURL_Error());
+            } else {
+                try {
+                    if (testText.matches(testPattern)) {
+                        return FormValidation.ok(Messages.StringMatchesPattern());
+                    }
+                    return FormValidation.warning(Messages.StringDoesNotMatchPattern());
+                } catch (PatternSyntaxException e) {
+                    return FormValidation.error(Messages.InvalidPattern_Error());
+                }
             }
         }
+
+        /**
+         * Return whether a given string is a valid build id.
+         *
+         * @param id a string.
+         * @return true if the string is a valid build id; false otherwise.
+         */
+        private boolean isValidBuildId(String id) {
+            return id.matches("\\d+") || StringBuildId.fromString(id) != null;
+        }
+
+        /**
+         * Return the build defined by a given project and id.
+         *
+         * @param project a project.
+         * @param id a build id.
+         * @return the build defined by the given project and id, or null if no build can be
+         * found for the given project and id.
+         */
+        private AbstractBuild getBuildById(AbstractProject<? extends AbstractProject<?, ?>,
+                ? extends AbstractBuild<?, ?>> project, String id) {
+            if (id.matches("\\d+")) {
+                return project.getBuildByNumber(Integer.parseInt(id));
+            } else {
+                StringBuildId stringBuildId = StringBuildId.fromString(id);
+                if (stringBuildId != null) {
+                    return stringBuildId.getBuild(project);
+                }
+                return null;
+            }
+        }
+
     }
 }
