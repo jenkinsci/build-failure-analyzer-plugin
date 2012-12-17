@@ -46,6 +46,10 @@ public class IndicationAnnotatorFactory extends ConsoleAnnotatorFactory {
     @Override
     public ConsoleAnnotator newInstance(Object context) {
         StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        if (currentRequest == null) {
+            //Accessed through some other means than http, so lets assume it is not a human.
+            return null;
+        }
         Ancestor ancestor = currentRequest.findAncestor(AbstractBuild.class);
         if (ancestor == null) {
             return null;
