@@ -23,12 +23,14 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import java.io.Serializable;
+
 /**
  * Helper for annotating the lines, creates the strings to annotate with.
  *
  * @author Tomas Westling&lt;tomas.westling@sonymobile.com&gt;
  */
-public class AnnotationHelper {
+public class AnnotationHelper implements Serializable {
 
     private String before = "";
     private String after = "";

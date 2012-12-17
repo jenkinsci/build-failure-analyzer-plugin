@@ -212,6 +212,7 @@
                 <version>2.4.0</version>
                 <configuration>
                     <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
                     <!-- Optional directory to put findbugs xdoc xml report -->
                     <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
                 </configuration>
@@ -264,6 +265,7 @@
                 <version>2.4.0</version>
                 <configuration>
                     <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
                     <!-- Optional directory to put findbugs xdoc xml report -->
                     <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
                 </configuration>

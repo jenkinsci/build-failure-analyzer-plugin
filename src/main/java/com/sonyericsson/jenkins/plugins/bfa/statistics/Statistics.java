@@ -65,7 +65,10 @@ public class Statistics {
      * @return the starting time.
      */
     public Date getStartingTime() {
-        return startingTime;
+        if (startingTime == null) {
+            return null;
+        }
+        return new Date(startingTime.getTime());
     }
 
      /**
@@ -150,7 +153,11 @@ public class Statistics {
                       List<FailureCauseStatistics> failureCauseStatistics) {
         this.projectName = projectName;
         this.buildNumber = buildNumber;
-        this.startingTime = startingTime;
+        if (startingTime == null) {
+            this.startingTime = null;
+        } else {
+            this.startingTime = new Date(startingTime.getTime());
+        }
         this.duration = duration;
         this.triggerCauses = triggerCauses;
         this.slave = nodeName;

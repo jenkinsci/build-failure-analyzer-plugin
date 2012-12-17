@@ -93,7 +93,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
 
     //Main FailureCauses table
     table(cellpadding: "2", cellspacing: "0", border: "1", class: "sortable pane bigtable", width: "90%",
-                   style: "width: 90%", id: "failureCausesTable") {
+                   style: "width: 90%; white-space: normal", id: "failureCausesTable") {
       tr {
         th{text(_("Name"))}
         th{text(_("Categories"))}
