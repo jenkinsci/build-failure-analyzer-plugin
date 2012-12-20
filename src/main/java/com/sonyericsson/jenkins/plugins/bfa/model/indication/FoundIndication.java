@@ -24,7 +24,12 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.utils.FoundIndicationConverter;
 import hudson.model.AbstractBuild;
+
+import java.util.List;
+
+import static java.lang.Math.max;
 
 /**
  * Found Indication of an unsuccessful build.
@@ -38,9 +43,11 @@ public class FoundIndication {
      */
     protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
-    private int matchingLine;
+    @Deprecated
+    private transient Integer matchingLine;
     private String pattern;
     private AbstractBuild build;
+    private String matchingString;
 
     /**
      * Standard constructor.
@@ -48,13 +55,14 @@ public class FoundIndication {
      * @param build           the build of this indication.
      * @param originalPattern the original pattern we used to match.
      * @param matchingFile    the path to the file in which we found the match.
-     * @param matchingLine    the line on which we found the match.
+     * @param matchingString  the String that makes up the matching line.
      */
-    public FoundIndication(AbstractBuild build, String originalPattern, String matchingFile, int matchingLine) {
+    public FoundIndication(AbstractBuild build, String originalPattern,
+                           String matchingFile, String matchingString) {
         this.pattern = originalPattern;
         this.matchingFile = matchingFile;
-        this.matchingLine = matchingLine;
         this.build = build;
+        this.matchingString = matchingString;
     }
 
     /**
@@ -64,15 +72,6 @@ public class FoundIndication {
      */
     public String getMatchingFile() {
         return matchingFile;
-    }
-
-    /**
-     * Getter for the matching line.
-     *
-     * @return the line on which we found the match.
-     */
-    public int getMatchingLine() {
-        return matchingLine;
     }
 
     /**
@@ -91,5 +90,69 @@ public class FoundIndication {
      */
     public AbstractBuild getBuild() {
         return build;
+    }
+
+    /**
+     * Getter for the matching String.
+     *
+     * @return the matching String.
+     */
+    public String getMatchingString() {
+        return matchingString;
+    }
+
+    /**
+     * Replaces {@link #matchingLine} with {@link #matchingString} from the text in the list at
+     * {@link #matchingLine}s position. But only if {@link #matchingLine} is non null.
+     *
+     * @param log the build-log.
+     */
+    public void convertFromLineNumber(List<String> log) {
+        if (matchingLine != null && log.size() >= matchingLine) {
+            matchingString = log.get(max(0, matchingLine - 1)); //Log line numbering starts on 1
+        }
+    }
+
+    /**
+     * Called after deserialization.
+     * Will schedule this indication for conversion via {@link FoundIndicationConverter}
+     * from {@link #matchingLine} to {@link #matchingString} if {@link #matchingLine} is non null.
+     *
+     * @return this
+     */
+    public Object readResolve() {
+        if (matchingLine != null && (matchingString == null || matchingString.isEmpty())) {
+            FoundIndicationConverter.getInstance().convert(this.build);
+        }
+        return this;
+    }
+
+    /**
+     * The old matching line number.
+     *
+     * @return the matching line number.
+     * @deprecated since 1.3.2, 1.4.0 replaced with {@link #getMatchingString()}.
+     */
+    @Deprecated
+    public int getMatchingLine() {
+        if (matchingLine != null) {
+            return matchingLine;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * The hash-code of the {@link #matchingString}.
+     * Convenience method mostly for jelly.
+     *
+     * @return the hash of the line of text.
+     */
+    public int getMatchingHash() {
+        if (matchingString != null) {
+            return matchingString.hashCode();
+        } else {
+            return 0;
+        }
     }
 }

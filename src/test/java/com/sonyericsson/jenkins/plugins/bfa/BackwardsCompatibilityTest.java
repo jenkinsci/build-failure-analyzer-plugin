@@ -28,7 +28,9 @@ import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.utils.FoundIndicationConverter;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -37,6 +39,8 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static hudson.Util.fixEmpty;
 
@@ -91,5 +95,27 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
         }
         assertNotNull("Missing a cause!", indication);
         assertEquals(".+wrong.*", Whitebox.getInternalState(indication, "pattern").toString());
+    }
+
+    /**
+     * Tests that a legacy FoundFailureCause can be loaded by the annotator.
+     *
+     * @throws Exception if so.
+     */
+    @LocalData
+    public void testLoadOldFailureCauseWithOnlyLineNumbers() throws Exception {
+        TimeUnit.SECONDS.sleep(FoundIndicationConverter.SCHEDULE_DELAY + 1);
+        FreeStyleProject job = (FreeStyleProject)Jenkins.getInstance().getItem("MyProject");
+        assertNotNull(job);
+        FailureCauseBuildAction action = job.getBuilds().getFirstBuild().getAction(FailureCauseBuildAction.class);
+        List<FoundFailureCause> foundFailureCauses = Whitebox.getInternalState(action, "foundFailureCauses");
+        FoundFailureCause foundFailureCause = foundFailureCauses.get(0);
+        FoundIndication indication = foundFailureCause.getIndications().get(0);
+        assertTrue(indication.getMatchingString().matches(indication.getPattern()));
+        IndicationAnnotator annotator = new IndicationAnnotator(foundFailureCauses);
+        Map<String, AnnotationHelper> helperMap = Whitebox.getInternalState(annotator, "helperMap");
+        //since the old FoundIndication doesn't contain a matchingString from the start, we check it.
+        AnnotationHelper annotationHelper = helperMap.get(indication.getMatchingString());
+        assertNotNull(annotationHelper);
     }
 }

@@ -480,7 +480,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 DBObject foundIndicationObject = new BasicDBObject();
                 foundIndicationObject.put("pattern", foundIndication.getPattern());
                 foundIndicationObject.put("matchingFile", foundIndication.getMatchingFile());
-                foundIndicationObject.put("matchingLine", foundIndication.getMatchingLine());
+                foundIndicationObject.put("matchingString", foundIndication.getMatchingString());
                 foundIndicationObjects.add(foundIndicationObject);
             }
             object.put("indications", foundIndicationObjects);

@@ -50,7 +50,7 @@
                         ${failureCause.name}
                         <j:forEach var="indication" items="${failureCause.getIndications()}"
                                    indexVar="indicationNumber">
-                        <a href="${run.getParent().getCombination().toString()}/console#${indication.matchingLine}${failureCause.id}">
+                        <a href="${run.getParent().getCombination().toString()}/console#${indication.getMatchingHash()}${failureCause.id}">
                             (${%Indication} ${indicationNumber+1})
                         </a>
                         <st:nbsp/>

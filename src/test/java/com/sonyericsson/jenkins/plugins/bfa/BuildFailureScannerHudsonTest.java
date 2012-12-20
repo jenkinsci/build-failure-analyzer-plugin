@@ -106,7 +106,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
-        String id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         HtmlElement focus = document.getElementById(id);
         assertNotNull(focus);
 
@@ -149,13 +149,13 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
-        String id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         HtmlElement focus = document.getElementById(id);
         assertNotNull(focus);
 
         foundFailureCause = causeListFromAction.get(0);
         foundIndication = foundFailureCause.getIndications().get(0);
-        id = foundIndication.getMatchingLine() + foundFailureCause.getId();
+        id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         focus = document.getElementById(id);
         assertNotNull(focus);
 

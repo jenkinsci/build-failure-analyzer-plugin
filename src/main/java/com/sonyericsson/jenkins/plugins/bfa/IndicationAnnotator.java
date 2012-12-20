@@ -33,19 +33,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Annotates the build log so that we can create links to it and mark found
- * indications.
+ * Annotates the build log so that we can create links to it and mark found indications.
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
 public class IndicationAnnotator extends ConsoleAnnotator<Object> {
 
-    private int currentLine;
-    /**
-     * The number of lines to show above the found Indication
-     */
-    private static final int CONTEXT = 10;
-    private Map<Integer, AnnotationHelper> helperMap;
+    private Map<String, AnnotationHelper> helperMap;
+
 
     /**
      * Standard constructor.
@@ -53,11 +48,10 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
      * @param foundFailureCauses the {@link FoundFailureCause}s to add annotation for.
      */
     public IndicationAnnotator(List<FoundFailureCause> foundFailureCauses) {
-        helperMap = new HashMap<Integer, AnnotationHelper>();
+        helperMap = new HashMap<String, AnnotationHelper>();
         for (FoundFailureCause foundFailureCause : foundFailureCauses) {
             addToHelperMap(foundFailureCause);
         }
-        currentLine = 0;
     }
 
     /**
@@ -67,32 +61,24 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
      */
     private void addToHelperMap(FoundFailureCause cause) {
         for (FoundIndication indication : cause.getIndications()) {
-            int matchingLine = indication.getMatchingLine();
-            int focusLine = matchingLine - CONTEXT;
-            if (focusLine < 1) {
-                focusLine = 1;
-            }
-            AnnotationHelper matchingHelper = helperMap.get(matchingLine);
-            if (matchingHelper == null) {
-                matchingHelper = new AnnotationHelper();
+            String matchingString = indication.getMatchingString();
+            if (matchingString != null && !matchingString.isEmpty()) {
+                AnnotationHelper matchingHelper = helperMap.get(matchingString);
+                if (matchingHelper == null) {
+                    matchingHelper = new AnnotationHelper();
+                    matchingHelper.addAfter("</span>");
+                }
+                matchingHelper.addTitle(cause.getName());
+                matchingHelper.addFocus(indication.getMatchingHash() + cause.getId());
                 matchingHelper.addAfter("</span>");
+                helperMap.put(matchingString, matchingHelper);
             }
-            matchingHelper.addTitle(cause.getName());
-            helperMap.put(matchingLine, matchingHelper);
-            AnnotationHelper focusHelper = helperMap.get(focusLine);
-            if (focusHelper == null) {
-                focusHelper = new AnnotationHelper();
-            }
-            focusHelper.addFocus(matchingLine + cause.getId());
-            focusHelper.addAfter("</span>");
-            helperMap.put(focusLine, focusHelper);
         }
     }
 
     @Override
     public ConsoleAnnotator annotate(Object context, MarkupText text) {
-        currentLine++;
-        AnnotationHelper match = helperMap.get(currentLine);
+        AnnotationHelper match = helperMap.get(text.getText().trim());
         if (match != null) {
             text.wrapBy(match.getBefore(), match.getAfter());
         }

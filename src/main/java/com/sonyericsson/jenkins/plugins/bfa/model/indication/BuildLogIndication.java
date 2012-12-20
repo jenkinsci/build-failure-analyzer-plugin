@@ -276,9 +276,7 @@ public class BuildLogIndication extends Indication {
                             if (foundIndication == null) {
                                 return FormValidation.warning(Messages.StringDoesNotMatchPattern());
                             }
-                            int matchingLine = foundIndication.getMatchingLine();
-                            return FormValidation.okWithMarkup(
-                                    (String)build.getLog(Integer.MAX_VALUE).get(matchingLine - 1));
+                            return FormValidation.okWithMarkup(foundIndication.getMatchingString());
                         } catch (IOException e) {
                             return FormValidation.error(Messages.FailedToScanFile_Error());
                         }

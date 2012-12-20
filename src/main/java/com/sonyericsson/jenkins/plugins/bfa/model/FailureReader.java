@@ -26,6 +26,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.console.ConsoleNote;
 import hudson.model.AbstractBuild;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 
@@ -111,7 +112,8 @@ public abstract class FailureReader {
                 }
             }
             if (found) {
-                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, currentLine);
+                String cleanLine = ConsoleNote.removeNotes(line);
+                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
             }
             return foundIndication;
         } finally {
