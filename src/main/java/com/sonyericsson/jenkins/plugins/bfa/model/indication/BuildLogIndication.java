@@ -234,9 +234,10 @@ public class BuildLogIndication extends Indication {
          */
         public FormValidation doMatchText(
                 @QueryParameter("pattern") final String testPattern,
-                @QueryParameter("testText") final String testText,
+                @QueryParameter("testText") String testText,
                 @QueryParameter("textSourceIsUrl") final boolean textSourceIsUrl) {
             if (textSourceIsUrl) {
+                testText = testText.replaceAll("/\\./", "/");
                 Matcher urlMatcher = URL_PATTERN.matcher(testText);
                 if (urlMatcher.matches()) {
                     String[] urlParts = new String[NUM_OF_URL_PARTS];

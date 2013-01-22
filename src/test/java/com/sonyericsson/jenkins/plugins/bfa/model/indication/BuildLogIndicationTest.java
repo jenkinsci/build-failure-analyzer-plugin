@@ -27,10 +27,22 @@ package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+import hudson.matrix.Axis;
+import hudson.matrix.AxisList;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixRun;
+import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.util.FormValidation;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.MockBuilder;
+
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for the BuildLogIndication.
@@ -38,6 +50,8 @@ import org.jvnet.hudson.test.HudsonTestCase;
 public class BuildLogIndicationTest extends HudsonTestCase {
 
     private static final String TEST_STRING = "teststring";
+
+    private static final long WAIT_TIME_IN_SECONDS = 10;
 
     /**
      * Tests that the BuildLogFailureReader can find the string in the build log.
@@ -92,22 +106,68 @@ public class BuildLogIndicationTest extends HudsonTestCase {
 
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
-     * to a build whose log contains a line that matches the pattern.
+     * to a freestyle build whose log contains a line that matches the pattern.
      * @throws Exception if so.
      */
-    public void testDoMatchTextUrlValidOk() throws Exception {
+    public void testDoMatchTextUrlValidOkFreestyleProject() throws Exception {
         FreeStyleProject freeStyleProject = createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = buildAndAssertSuccess(freeStyleProject);
+        String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
                 new BuildLogIndication.BuildLogIndicationDescriptor();
-        String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
         FormValidation formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
-        assertEquals("teststring", formValidation.getMessage());
+        assertEquals(TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
-        // TODO Test that doMatchText correctly handles builds whose url ends with lastBuild,
-        // lastSuccessfulBuild etc., and that doMatchText correctly handles matrix builds
+        buildUrl = buildUrl.replace("/1/", "/lastBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastBuild", "lastSuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a matrix build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
+        MatrixProject matrixProject = createMatrixProject();
+        Axis axis1 = new Axis("Letter", "Alfa");
+        Axis axis2 = new Axis("Number", "One", "Two");
+        matrixProject.setAxes(new AxisList(axis1, axis2));
+        matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
+        String buildUrl = getURL() + build.getUrl();
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("/1/", "/lastFailedBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastFailedBuild", "lastUnsuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        List<MatrixRun> matrixRuns = build.getRuns();
+        for (MatrixRun matrixRun : matrixRuns) {
+            buildUrl = getURL() + matrixRun.getUrl();
+            formValidation = indicationDescriptor.doMatchText(".*Simulating.*", buildUrl, true);
+            assertEquals("Simulating a specific result code FAILURE", formValidation.getMessage());
+            assertEquals(FormValidation.Kind.OK, formValidation.kind);
+        }
     }
 
     /**
