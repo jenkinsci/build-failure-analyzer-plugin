@@ -113,7 +113,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * @return the image url.
      */
     public String getImageUrl() {
-        return PluginImpl.getImageUrl("48x48", PluginImpl.DEFAULT_ICON_NAME);
+        return PluginImpl.getFullImageUrl("48x48", PluginImpl.DEFAULT_ICON_NAME);
     }
 
     /**
@@ -122,7 +122,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * @return the image url.
      */
     public String getBadgeImageUrl() {
-        return PluginImpl.getImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+        return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
     }
 
     /**

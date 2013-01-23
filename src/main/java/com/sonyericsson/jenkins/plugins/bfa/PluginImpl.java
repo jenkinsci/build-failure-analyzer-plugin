@@ -203,8 +203,8 @@ public class PluginImpl extends Plugin {
      * @return a URL to the image.
      */
     public static String getFullImageUrl(String size, String name) {
-        return Hudson.getInstance().getRootUrlFromRequest() + getStaticImagesBase() 
-            + "/" + size + "/" + name;
+        return Hudson.getInstance().getRootUrlFromRequest() + getStaticImagesBase()
+                + "/" + size + "/" + name;
     }
 
     /**
