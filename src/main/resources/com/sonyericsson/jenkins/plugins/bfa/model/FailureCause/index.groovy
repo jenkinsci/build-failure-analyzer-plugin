@@ -37,6 +37,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   def imageUrl = PluginImpl.getImageUrl("256x256", "information.png");
 
   context.setVariable("descriptor", my.getDescriptor());
+  descriptor.setLastFailedBuildUrl();
 
   l.side_panel() {
     if (!management.isUnderTest()) {

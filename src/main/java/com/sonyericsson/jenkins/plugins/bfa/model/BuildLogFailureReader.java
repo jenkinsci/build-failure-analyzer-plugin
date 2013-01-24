@@ -52,6 +52,40 @@ public class BuildLogFailureReader extends FailureReader {
         super(indication);
     }
 
+    /**
+     * Scans a build log.
+     *
+     * @param build - the build whose log should be scanned.
+     * @return a FoundIndication if the pattern given by this BuildLogFailureReader
+     * is found in the log of the given build; return null otherwise.
+     * @throws IOException if so.
+     */
+    public FoundIndication scan(AbstractBuild build) throws IOException {
+        String currentfile = build.getLogFile().getName();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(build.getLogReader());
+            return scanOneFile(build, reader, currentfile);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Scans for indications of a failure cause in a build log. Note: If an exception
+     * occurs during the scanning, information about the exception is appended to
+     * the build log.
+     *
+     * @param build the build to scan for indications.
+     * @param buildLog the log of the build.
+     * @return a FoundIndication if something was found, null if not.
+     */
     @Override
     public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
         FoundIndication foundIndication = null;
