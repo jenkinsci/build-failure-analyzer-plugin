@@ -27,10 +27,14 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
-import com.sonyericsson.jenkins.plugins.bfa.utils.FoundIndicationConverter;
+import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixRun;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -44,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import static hudson.Util.fixEmpty;
 
-//CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData
+//CS IGNORE MagicNumber FOR NEXT 160 LINES. REASON: TestData
 
 /**
  * Tests that the plugin can upgrade existing old data.
@@ -79,6 +83,7 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
     /**
      * Tests that legacy causes in {@link PluginImpl#causes} gets converted during startup to a {@link
      * com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase}.
+     *
      * @throws Exception if so.
      */
     @LocalData
@@ -104,7 +109,7 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
      */
     @LocalData
     public void testLoadOldFailureCauseWithOnlyLineNumbers() throws Exception {
-        TimeUnit.SECONDS.sleep(FoundIndicationConverter.SCHEDULE_DELAY + 1);
+        TimeUnit.SECONDS.sleep(OldDataConverter.SCHEDULE_DELAY + 1);
         FreeStyleProject job = (FreeStyleProject)Jenkins.getInstance().getItem("MyProject");
         assertNotNull(job);
         FailureCauseBuildAction action = job.getBuilds().getFirstBuild().getAction(FailureCauseBuildAction.class);
@@ -117,5 +122,36 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
         //since the old FoundIndication doesn't contain a matchingString from the start, we check it.
         AnnotationHelper annotationHelper = helperMap.get(indication.getMatchingString());
         assertNotNull(annotationHelper);
+    }
+
+    /**
+     * Tests if a {@link MatrixBuild} gets loaded and converted correctly from a version 1.2.0 save.
+     *
+     * @throws InterruptedException if it is not allowed to sleep in the beginning.
+     */
+    @LocalData
+    public void testMatrix120() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(6);
+        MatrixProject project = (MatrixProject)jenkins.getItem("mymatrix");
+        MatrixBuild build = project.getBuildByNumber(1);
+        FailureCauseMatrixBuildAction matrixBuildAction = build.getAction(FailureCauseMatrixBuildAction.class);
+        assertNotNull(matrixBuildAction);
+        List<MatrixRun> runs = Whitebox.getInternalState(matrixBuildAction, "runs");
+        assertNotNull(runs);
+        List<String> runIds = null;
+
+        runIds = Whitebox.getInternalState(matrixBuildAction, "runIds");
+
+        assertEquals(runs.size(), runIds.size());
+        assertNotNull(runs.get(3).getProject());
+        assertEquals(runs.get(3).getProject().getCombination().toString(), runIds.get(3));
+        assertNotNull(Whitebox.getInternalState(matrixBuildAction, "build"));
+
+        MatrixBuild build2 = project.getBuildByNumber(2);
+        List<MatrixRun> aggregatedRuns2 = FailureCauseMatrixAggregator.getRuns(build2);
+        FailureCauseMatrixBuildAction matrixBuildAction2 = build2.getAction(FailureCauseMatrixBuildAction.class);
+        assertNotNull(matrixBuildAction2);
+        List<MatrixRun> runs2 = Whitebox.getInternalState(matrixBuildAction2, "runs");
+        assertSame(aggregatedRuns2.get(5), runs2.get(5));
     }
 }

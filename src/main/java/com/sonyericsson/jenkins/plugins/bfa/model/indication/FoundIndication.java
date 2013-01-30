@@ -24,7 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
-import com.sonyericsson.jenkins.plugins.bfa.utils.FoundIndicationConverter;
+import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 import hudson.model.AbstractBuild;
 
 import java.util.List;
@@ -115,14 +115,15 @@ public class FoundIndication {
 
     /**
      * Called after deserialization.
-     * Will schedule this indication for conversion via {@link FoundIndicationConverter}
+     * Will schedule this indication for conversion via
+     * {@link com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter}
      * from {@link #matchingLine} to {@link #matchingString} if {@link #matchingLine} is non null.
      *
      * @return this
      */
     public Object readResolve() {
         if (matchingLine != null && (matchingString == null || matchingString.isEmpty())) {
-            FoundIndicationConverter.getInstance().convert(this.build);
+            OldDataConverter.getInstance().convertFoundIndications(this.build);
         }
         return this;
     }

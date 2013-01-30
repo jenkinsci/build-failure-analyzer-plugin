@@ -56,15 +56,26 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
     @Override
     public boolean endBuild() {
         if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
-            List<MatrixRun> runs = build.getRuns();
-            List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
-            for (MatrixRun run : runs) {
-                if (run.getNumber() == build.getNumber()) {
-                    runsWithCorrectNumber.add(run);
-                }
-            }
-            build.addAction(new FailureCauseMatrixBuildAction(runsWithCorrectNumber));
+            List<MatrixRun> runsWithCorrectNumber = getRuns(build);
+            build.addAction(new FailureCauseMatrixBuildAction(build, runsWithCorrectNumber));
         }
         return true;
+    }
+
+    /**
+     * Gets the runs that has the same number as the build.
+     *
+     * @param matrixBuild the build.
+     * @return the list of runs.
+     */
+    public static List<MatrixRun> getRuns(MatrixBuild matrixBuild) {
+        List<MatrixRun> runs = matrixBuild.getRuns();
+        List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
+        for (MatrixRun run : runs) {
+            if (run.getNumber() == matrixBuild.getNumber()) {
+                runsWithCorrectNumber.add(run);
+            }
+        }
+        return runsWithCorrectNumber;
     }
 }

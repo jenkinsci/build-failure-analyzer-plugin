@@ -25,14 +25,20 @@
 package com.sonyericsson.jenkins.plugins.bfa.utils;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.listeners.ItemListener;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,7 +52,8 @@ import java.util.logging.Logger;
  *
  * @author Robert Sandell &lt;robert.sandell@sonymobile.com&gt;
  */
-public final class FoundIndicationConverter {
+@Extension
+public final class OldDataConverter extends ItemListener {
 
     /**
      * The size of the thread pool.
@@ -62,51 +69,122 @@ public final class FoundIndicationConverter {
      */
     public static final int SCHEDULE_DELAY = 3;
 
-    private static final Logger logger = Logger.getLogger(FoundIndicationConverter.class.getName());
-    private static FoundIndicationConverter instance;
+    private static final Logger logger = Logger.getLogger(OldDataConverter.class.getName());
+    private static OldDataConverter instance;
 
 
     private Set<AbstractBuild> performedBuilds;
+    private Map<String, List<FailureCauseMatrixBuildAction>> actionsToConvert;
     private ScheduledExecutorService executor;
+    //Has the call from Jenkins arrived that all items are loaded?
+    private boolean itemsLoaded = false;
 
     /**
-     * Retrieves the singleton instance, creates one if it is the first to execute.
+     * Retrieves the singleton instance from {@link hudson.model.listeners.ItemListener#all()}. If it is not found there
+     * an {@link IllegalStateException} will be thrown.
      *
      * @return the converter.
      */
-    public static synchronized FoundIndicationConverter getInstance() {
+    public static synchronized OldDataConverter getInstance() {
         if (instance == null) {
-            instance = new FoundIndicationConverter();
+            instance = ItemListener.all().get(OldDataConverter.class);
+            if (instance == null) {
+                throw new IllegalStateException("ItemListeners has not been loaded yet!");
+            }
         }
         return instance;
     }
 
     /**
-     * Default utility Constructor.
+     * Default Constructor. <strong>Should only be instantiated by Jenkins</strong>
      */
-    private FoundIndicationConverter() {
+    public OldDataConverter() {
         performedBuilds = Collections.synchronizedSet(new HashSet<AbstractBuild>());
+        actionsToConvert = Collections.synchronizedMap(new HashMap<String, List<FailureCauseMatrixBuildAction>>());
         executor = Executors.newScheduledThreadPool(POOL_SIZE);
     }
 
     /**
-     * Adds the provided build to the queue of builds to convert, unless the conversion for that build is already in
-     * progress.
+     * Adds the provided build to the queue of builds to convert {@link FoundIndication}s in, unless the conversion for
+     * that build is already in progress.
      *
      * @param build the build to convert.
      */
-    public void convert(AbstractBuild build) {
+    public void convertFoundIndications(AbstractBuild build) {
         //Just a convenience first check, because of the delay in scheduling
         // we will still get the same build multiple times in the executor, but the run method takes care of that.
         if (!performedBuilds.contains(build)) {
-            executor.schedule(new Work(build, performedBuilds), SCHEDULE_DELAY, TimeUnit.SECONDS);
+            executor.schedule(new FoundIndicationWork(build, performedBuilds), SCHEDULE_DELAY, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Convert {@link FailureCauseMatrixBuildAction}s to use {@link FailureCauseMatrixBuildAction#runIds} instead of run
+     * instances during serialization.
+     * Will schedule the conversion until all items in Jenkins has been loaded.
+     *
+     * @param action            the action to fix.
+     * @param matrixProjectName the name of the matrix project.
+     */
+    public synchronized void convertMatrixBuildAction(String matrixProjectName, FailureCauseMatrixBuildAction action) {
+        if (itemsLoaded) {
+            executor.schedule(new MatrixBuildActionWork(matrixProjectName, action), SCHEDULE_DELAY, TimeUnit.SECONDS);
+        } else {
+            List<FailureCauseMatrixBuildAction> actions = actionsToConvert.get(matrixProjectName);
+            if (actions == null) {
+                actions = new LinkedList<FailureCauseMatrixBuildAction>();
+                actionsToConvert.put(matrixProjectName, actions);
+            }
+            actions.add(action);
+        }
+
+    }
+
+    @Override
+    public synchronized void onLoaded() {
+        //Release the hounds!!!
+        itemsLoaded = true;
+        for (String project : actionsToConvert.keySet()) {
+            List<FailureCauseMatrixBuildAction> actions = actionsToConvert.get(project);
+            logger.log(Level.FINE, "Scheduling conversion of {1} build actions for project {2}.",
+                    new Object[]{actions.size(), project});
+            for (FailureCauseMatrixBuildAction action : actions) {
+                executor.schedule(new MatrixBuildActionWork(project, action), SCHEDULE_DELAY, TimeUnit.SECONDS);
+            }
+        }
+        actionsToConvert.clear();
+    }
+
+    /**
+     * Work to convert {@link FailureCauseMatrixBuildAction}s to use {@link FailureCauseMatrixBuildAction#runIds}
+     * instead of run instances during serialization.
+     */
+    public static class MatrixBuildActionWork implements Runnable {
+        String project;
+        FailureCauseMatrixBuildAction action;
+
+        /**
+         * Standard Constructor.
+         *
+         * @param action  the action to fix.
+         * @param project the name of the matrix project
+         */
+        public MatrixBuildActionWork(String project, FailureCauseMatrixBuildAction action) {
+            this.project = project;
+            this.action = action;
+        }
+
+        @Override
+        public void run() {
+            logger.log(Level.FINE, "Calling conversion of {0}", project);
+            action.convertOldData();
         }
     }
 
     /**
      * A work task that does the actual conversion in an executor thread.
      */
-    public static class Work implements Runnable {
+    public static class FoundIndicationWork implements Runnable {
         private AbstractBuild build;
         private Set<AbstractBuild> performedBuilds;
 
@@ -116,7 +194,7 @@ public final class FoundIndicationConverter {
          * @param build           the build to convert.
          * @param performedBuilds the list of in-progress or already converted builds.
          */
-        public Work(AbstractBuild build, Set<AbstractBuild> performedBuilds) {
+        public FoundIndicationWork(AbstractBuild build, Set<AbstractBuild> performedBuilds) {
             this.build = build;
             this.performedBuilds = performedBuilds;
         }
