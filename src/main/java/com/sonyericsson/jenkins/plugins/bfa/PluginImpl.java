@@ -41,6 +41,8 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
 import net.sf.json.JSONObject;
+import hudson.tasks.Mailer;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
@@ -203,6 +205,18 @@ public class PluginImpl extends Plugin {
      * @return a URL to the image.
      */
     public static String getFullImageUrl(String size, String name) {
+        String url = Mailer.descriptor().getUrl();
+        if (url != null) {
+            String contextPath = "";
+            StaplerRequest currentRequest = Stapler.getCurrentRequest();
+            if (currentRequest != null) {
+                contextPath = currentRequest.getContextPath();
+            }
+            if (contextPath.startsWith("/")) {
+                contextPath = contextPath.substring(1);
+            }
+            return Hudson.getInstance().getRootUrl() + contextPath + getImageUrl(size, name);
+        }
         return Hudson.getInstance().getRootUrlFromRequest() + getStaticImagesBase()
                 + "/" + size + "/" + name;
     }
