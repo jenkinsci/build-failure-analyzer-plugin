@@ -31,6 +31,7 @@ import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.*;
 
 import java.util.LinkedList;
 import java.io.IOException;
@@ -43,6 +44,7 @@ import java.util.logging.Logger;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@ExportedBean
 public class FailureCauseBuildAction implements BuildBadgeAction {
     private transient List<FailureCause> failureCauses;
     private List<FoundFailureCause> foundFailureCauses;
@@ -87,6 +89,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      *
      * @return the FoundFailureCauses.
      */
+    @Exported
     public List<FoundFailureCause> getFoundFailureCauses() {
         return foundFailureCauses;
     }

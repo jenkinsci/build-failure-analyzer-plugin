@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import org.kohsuke.stapler.export.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.List;
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@ExportedBean
 public class FoundFailureCause {
     private String id;
     private String name;
@@ -59,6 +61,7 @@ public class FoundFailureCause {
      *
      * @return the id.
      */
+    @Exported
     public String getId() {
         return id;
     }
@@ -68,6 +71,7 @@ public class FoundFailureCause {
      *
      * @return the name.
      */
+    @Exported
     public String getName() {
         return name;
     }
@@ -77,6 +81,7 @@ public class FoundFailureCause {
      *
      * @return the description.
      */
+    @Exported
     public String getDescription() {
         return description;
     }
@@ -86,6 +91,7 @@ public class FoundFailureCause {
      *
      * @return the categories.
      */
+    @Exported
     public List<String> getCategories() {
         return categories;
     }
