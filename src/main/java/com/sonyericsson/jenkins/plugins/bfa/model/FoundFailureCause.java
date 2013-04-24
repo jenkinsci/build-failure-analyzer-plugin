@@ -25,7 +25,8 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import org.kohsuke.stapler.export.*;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.LinkedList;
 import java.util.List;

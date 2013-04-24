@@ -31,7 +31,8 @@ import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.export.*;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.LinkedList;
 import java.io.IOException;
