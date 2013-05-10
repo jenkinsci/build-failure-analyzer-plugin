@@ -26,8 +26,11 @@ package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 import hudson.model.AbstractBuild;
+import jregex.Pattern;
+import jregex.Replacer;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.Math.max;
 
@@ -155,5 +158,11 @@ public class FoundIndication {
         } else {
             return 0;
         }
+    }
+
+    public String getReplacement(String text) {
+        Pattern p = new Pattern(this.pattern);
+        Replacer r = p.replacer(text);
+        return r.replace(this.getMatchingString());
     }
 }
