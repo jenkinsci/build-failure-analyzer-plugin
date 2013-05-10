@@ -90,8 +90,8 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
             assertNotNull("It should have an id!", next.getId());
             assertEquals(oldCause.getName(), next.getName());
             assertEquals(oldCause.getDescription(), next.getDescription());
-            assertEquals(oldCause.getIndications().get(0).getPattern().pattern(),
-                    next.getIndications().get(0).getPattern().pattern());
+            assertEquals(oldCause.getIndications().get(0).getPattern().toString(),
+                    next.getIndications().get(0).getPattern().toString());
         }
     }
 
@@ -122,7 +122,7 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
         FailureCause newCause = newList.iterator().next();
         assertEquals(cause.getName(), newCause.getName());
         assertEquals(cause.getDescription(), newCause.getDescription());
-        assertEquals(cause.getIndications().get(0).getPattern().pattern(),
-                newCause.getIndications().get(0).getPattern().pattern());
+        assertEquals(cause.getIndications().get(0).getPattern().toString(),
+                newCause.getIndications().get(0).getPattern().toString());
     }
 }

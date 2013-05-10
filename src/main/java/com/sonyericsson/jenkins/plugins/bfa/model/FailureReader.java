@@ -28,13 +28,13 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.console.ConsoleNote;
 import hudson.model.AbstractBuild;
+import jregex.Pattern;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Reader used to find indications of a failure cause.
@@ -90,7 +90,7 @@ public abstract class FailureReader {
             long startTime = System.currentTimeMillis();
             while ((line = reader.readLine()) != null) {
                 try {
-                    if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
+                    if (pattern.matcher(line).matches()) {
                         found = true;
                         break;
                     }

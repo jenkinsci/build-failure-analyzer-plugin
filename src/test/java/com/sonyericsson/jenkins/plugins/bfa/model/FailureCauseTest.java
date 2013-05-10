@@ -327,7 +327,7 @@ public class FailureCauseTest {
         assertEquals(description, cause.getDescription());
         assertEquals(category, cause.getCategoriesAsString());
         assertEquals(1, cause.getIndications().size());
-        assertEquals(pattern, cause.getIndications().get(0).getPattern().pattern());
+        assertEquals(pattern, cause.getIndications().get(0).getPattern().toString());
         verify(response).sendRedirect2(any(String.class));
     }
 
@@ -362,7 +362,7 @@ public class FailureCauseTest {
         assertEquals(name, cause.getName());
         assertEquals(description, cause.getDescription());
         assertEquals(1, cause.getIndications().size());
-        assertEquals(pattern, cause.getIndications().get(0).getPattern().pattern());
+        assertEquals(pattern, cause.getIndications().get(0).getPattern().toString());
         verify(response).sendRedirect2(any(String.class));
     }
 

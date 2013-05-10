@@ -179,7 +179,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         if (!expectedCause.getIndications().isEmpty()) {
             HtmlElement indicationsDiv = form.getOneHtmlElementByAttribute("div", "name", "indications");
             HtmlInput patternInput = indicationsDiv.getOneHtmlElementByAttribute("input", "name", "pattern");
-            assertEquals(expectedCause.getIndications().get(0).getPattern().pattern(), patternInput.getValueAttribute());
+            assertEquals(expectedCause.getIndications().get(0).getPattern().toString(), patternInput.getValueAttribute());
         }
     }
 

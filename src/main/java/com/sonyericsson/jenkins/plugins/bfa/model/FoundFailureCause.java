@@ -53,6 +53,7 @@ public class FoundFailureCause {
         this.id = originalCause.getId();
         this.name = originalCause.getName();
         this.description = originalCause.getDescription();
+
         this.categories = originalCause.getCategories();
         this.indications = new LinkedList<FoundIndication>();
     }
