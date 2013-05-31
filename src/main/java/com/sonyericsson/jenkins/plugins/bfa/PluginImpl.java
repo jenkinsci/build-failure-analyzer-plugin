@@ -204,22 +204,9 @@ public class PluginImpl extends Plugin {
      * @param name the name of the image file.
      * @return a URL to the image.
      */
-    public static String getFullImageUrl(String size, String name) {
-        String url = Mailer.descriptor().getUrl();
-        if (url != null) {
-            String contextPath = "";
-            StaplerRequest currentRequest = Stapler.getCurrentRequest();
-            if (currentRequest != null) {
-                contextPath = currentRequest.getContextPath();
-            }
-            if (contextPath.startsWith("/")) {
-                contextPath = contextPath.substring(1);
-            }
-            return Hudson.getInstance().getRootUrl() + contextPath + getImageUrl(size, name);
-        }
-        return Hudson.getInstance().getRootUrlFromRequest() + getStaticImagesBase()
-                + "/" + size + "/" + name;
-    }
+	public static String getFullImageUrl(String size, String name) {
+		return Hudson.getInstance().getRootUrl() + getImageUrl(size, name);
+	}
 
     /**
      * Provides a Jenkins relative url to a plugin internal image of {@link #DEFAULT_ICON_SIZE} size.
