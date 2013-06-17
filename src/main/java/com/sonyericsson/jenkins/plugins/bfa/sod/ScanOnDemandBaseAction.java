@@ -27,14 +27,18 @@ import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Result;
+import hudson.util.RunList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -47,6 +51,18 @@ public class ScanOnDemandBaseAction implements Action {
 
     /** The project. */
     private AbstractProject project;
+    /**
+     * javascript file location.
+     */
+    public static final String PLUGIN_JS_URL = "/plugin/build-failure-analyzer/js/";
+
+    /**
+     * nonscanned build constant.
+     */
+    public static final String NON_SCANNED = "nonscanned";
+
+     /** The scan build type. */
+    private String buildType;
 
     /**
      * SODBaseAction constructor.
@@ -57,6 +73,18 @@ public class ScanOnDemandBaseAction implements Action {
         this.project = project;
     }
 
+    /**
+     * Gets the full path to the provided javascript file.
+     * For use by jelly files to give to the client browser.
+     *
+     * @param jsName the javascript filename.
+     * @return the full path from the web-context root.
+     */
+    @SuppressWarnings("unused")
+    //called from jelly
+    public String getJsUrl(String jsName) {
+        return PLUGIN_JS_URL + jsName;
+    }
     @Override
     public String getIconFileName() {
         return PluginImpl.getDefaultIcon();
@@ -82,6 +110,57 @@ public class ScanOnDemandBaseAction implements Action {
     }
 
     /**
+     * Method for finding all failed builds.
+     *
+     * @return sodbuilds.
+     */
+    public List<AbstractBuild> getAllBuilds() {
+        AbstractProject currentProject = (AbstractProject)project;
+        List<AbstractBuild> sodbuilds = new ArrayList<AbstractBuild>();
+        if (currentProject != null) {
+            RunList builds = currentProject.getBuilds();
+            for (Object build : builds) {
+                if (((AbstractBuild)build).getResult().isWorseThan(Result.SUCCESS)) {
+                    sodbuilds.add((AbstractBuild)build);
+                }
+            }
+        }
+        return sodbuilds;
+    }
+
+    /**
+     * This method will set the buildType
+     * while calling getBuilds from index.jelly.
+     *
+     * @param scanTarget String.
+     * @return builds.
+     */
+    public List<AbstractBuild> getBuilds(String scanTarget) {
+        if (scanTarget != null) {
+            setBuildType(scanTarget);
+        }
+        return getBuilds();
+    }
+    /**
+     * Method for returning builds as
+     * per buildtype.
+     *
+     * @return builds.
+     */
+    public List<AbstractBuild> getBuilds() {
+        buildType = getBuildType();
+        if (buildType != null) {
+            if (buildType.length() == 0 | buildType.equals(NON_SCANNED)) {
+                return getNotScannedBuilds();
+            } else {
+                return getAllBuilds();
+            }
+        } else {
+            return getNotScannedBuilds();
+        }
+    }
+
+    /**
      * Method for finding sodbuilds.
      *
      * @return sodbuilds.
@@ -102,23 +181,98 @@ public class ScanOnDemandBaseAction implements Action {
     }
 
     /**
+     * Method for remove matrix run actions.
+     *
+     * @param  build AbstractBuild.
+     */
+    public void removeRunActions(MatrixBuild build) {
+        List<MatrixRun> runs = ((MatrixBuild)build).getRuns();
+        for (MatrixRun run : runs) {
+            if (run.getNumber() == build.getNumber()) {
+                FailureCauseBuildAction fcba = run.getAction(FailureCauseBuildAction.class);
+                if (fcba != null) {
+                    run.getActions().remove(fcba);
+                }
+                FailureCauseMatrixBuildAction fcmba = run.getAction(FailureCauseMatrixBuildAction.class);
+                if (fcmba != null) {
+                    run.getActions().remove(fcmba);
+                }
+            }
+        }
+    }
+
+    /**
      * Submit method for running build scan.
      *
-     * @param req StaplerRequest
-     * @param rsp StaplerResponse
+     * @param request  StaplerRequest
+     * @param response StaplerResponse
      * @throws ServletException if something unfortunate happens.
      * @throws IOException if something unfortunate happens.
      * @throws InterruptedException if something unfortunate happens.
      */
-    public void doPerformScan(StaplerRequest req, StaplerResponse rsp)
+    public void doPerformScan(StaplerRequest request, StaplerResponse response)
             throws ServletException, IOException, InterruptedException {
-        List<AbstractBuild> sodbuilds = getNotScannedBuilds();
+        List<AbstractBuild> sodbuilds = getBuilds();
         if (sodbuilds.size() > 0) {
             for (AbstractBuild sodbuild : sodbuilds) {
+                FailureCauseBuildAction fcba = sodbuild.getAction(FailureCauseBuildAction.class);
+                if (fcba != null) {
+                    sodbuild.getActions().remove(fcba);
+                }
+                FailureCauseMatrixBuildAction fcmba = sodbuild.getAction(FailureCauseMatrixBuildAction.class);
+                if (sodbuild instanceof MatrixBuild
+                        && fcmba != null) {
+                    sodbuild.getActions().remove(fcmba);
+                    removeRunActions((MatrixBuild)sodbuild);
+                }
                 ScanOnDemandTask task = new ScanOnDemandTask(sodbuild);
                 ScanOnDemandQueue.queue(task);
             }
         }
-        rsp.sendRedirect("../");
+        response.sendRedirect("../");
+    }
+    /**
+     * Returns the buildType.
+     *
+     * @return buildType String.
+     */
+    public String getBuildType() {
+        return buildType;
+    }
+
+    /**
+     * Set buildType.
+     *
+     * @param buildType String.
+     */
+    public void setBuildType(String buildType) {
+        this.buildType = buildType;
+    }
+    /**
+     * Select buildType.
+     *
+     * @param scanTarget QueryParameter.
+     * @param req StaplerRequest.
+     * @param rsp StaplerResponse.
+     * @throws ServletException if something unfortunate happens.
+     * @throws IOException if something unfortunate happens.
+     * @throws InterruptedException if something unfortunate happens.
+     */
+    public void doSelectBuildType(@QueryParameter("build") String scanTarget,
+            StaplerRequest req, StaplerResponse rsp) throws ServletException,
+            IOException, InterruptedException {
+        if (scanTarget == null) {
+            if (req.getSession() != null
+                    && req.getSession().getAttribute("buildType") != null) {
+                scanTarget = (String)req.getSession().getAttribute("buildType");
+            } else {
+                scanTarget = NON_SCANNED;
+            }
+        }
+        setBuildType(scanTarget);
+        if (req.getSession() != null) {
+            req.getSession(true).setAttribute("buildType", buildType);
+        }
+        rsp.sendRedirect2(".");
     }
 }

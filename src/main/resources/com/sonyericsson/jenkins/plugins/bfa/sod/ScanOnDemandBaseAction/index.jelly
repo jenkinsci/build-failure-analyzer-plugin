@@ -24,70 +24,63 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-    <l:layout title="${%Failure Scan Options}">
+    <l:layout title="${%Failure Scan Options}" norefresh="true" permission="${it.requiredPermission}">
+        <l:header>
+            <script src="${rootURL}${it.getJsUrl('bfa-sod.js')}" type="text/javascript"></script>
+            <style type="text/css">
+                tr.disablehover:hover {
+                background-color: white;
+                }
+            </style>
+        </l:header>
         <st:include it="${it.project}" page="sidepanel.jelly" />
-        <l:main-panel>
-            <j:set var="nonScanBuilds" value="${it.getNotScannedBuilds()}"/>
-            <j:if test="${empty(nonScanBuilds)}">
-                <table width="100%" border="0" cellpadding="2" cellspacing="0"
-                       class="pane bigtable"
-                       style="margin-top: 0">
-                    <tr>
-                        <td/>
-                        <td>
-                            <b>
-                                ${%All builds are already scanned.}
-                            </b>
-                        </td>
-                    </tr>
-                </table>
-            </j:if>
-            <j:if test="${!empty(nonScanBuilds)}">
-                <f:form method="get" action="performScan">
-                    <f:section title="${%Scan non-scanned builds}">
-                        <f:description>
-                            ${%Builds to be scanned}
-                        </f:description>
-                        <f:block>
-                            <j:if test="${!empty(nonScanBuilds)}">
-                                <table width="100%" border="1" cellpadding="2" cellspacing="0"
+        <body onload = "initialLoading('${request.session.getAttribute('buildType')}')">
+            <l:main-panel>
+                <f:form method="get" action="selectBuildType" id="">
+                    <f:section title="${%Select the option and scan the builds}">
+                        <f:entry help="/plugin/build-failure-analyzer/help/help-SearchOption.html">
+                            <input type="hidden" id="build" name="build" value="nonscanned"/>
+                            <input type="radio" name="buildType" value="Only non-scanned builds" id="nonscanned_builds"
+                                   onClick= "selectBuildType('nonscanned','nonscanned_builds');this.form.submit()" />
+                            Scan non-scanned builds<br/>
+                            <input type="radio" name="buildType" value="All builds"  id= "all_builds"
+                                   onClick="selectBuildType('all','all_builds');this.form.submit()" />Scan/Rescan all the builds<br/>
+                        </f:entry>
+                        <br/>
+                    </f:section>
+                </f:form>
+                <j:set var="scanTarget" value="${request.session.getAttribute('buildType')}"/>
+                <j:set var="scanBuilds" value="${it.getBuilds(scanTarget)}"/>
+                <j:if test="${empty(scanBuilds)}">
+                    <f:form method="get" action="performScan" name="config">
+                        <f:section title="${%No build found}">
+                            <f:block>
+                                <table width="100%" border="0" cellpadding="2" cellspacing="0"
                                        class="pane bigtable"
                                        style="margin-top: 0">
                                     <tr>
-                                       <td>
-                                            <b>
-                                                ${%Build Name}
-                                            </b>
-                                        </td>
+                                        <td/>
                                         <td>
                                             <b>
-                                                ${%Build Timestamp}
+                                                ${%No build found for scanning}
                                             </b>
                                         </td>
                                     </tr>
-                                    <j:forEach var="res" items="${nonScanBuilds}">
-                                        <j:set var="link" value="${it.baseUrl}" />
-                                        <tr>
-                                          <td>
-                                                <a href="${link}/${res.getUrl()}/console"><img width="16" height="16" src="${imagesURL}/16x16/${res.buildStatusUrl}" alt="${res.iconColor.description} &gt; ${%Console Output}" tooltip="${res.iconColor.description} &gt; ${%Console Output}" /></a><st:nbsp/>
-                                                ${res.getDisplayName()}
-                                            </td>
-                                            <td style="padding-right:0">
-                                                <a class="tip model-link tl-tr" href="${link}/${res.getUrl()}">
-                                                    <i:formatDate value="${res.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    </j:forEach>
                                 </table>
-                            </j:if>
-                        </f:block>
-                        <f:block>
-                            <f:submit value="${%Scan}"/>
-                        </f:block>
-                    </f:section>
-                </f:form>
-            </j:if>
-        </l:main-panel>
+                            </f:block>
+                        </f:section>
+                    </f:form>
+                </j:if>
+                <j:if test="${!empty(scanBuilds)}">
+                    <f:form method="get" action="performScan">
+                        <f:section>
+                            <f:block>
+                                <f:submit value="${%Scan}"/>
+                            </f:block>
+                        </f:section>
+                    </f:form>
+                </j:if>
+            </l:main-panel>
+        </body>
     </l:layout>
 </j:jelly>

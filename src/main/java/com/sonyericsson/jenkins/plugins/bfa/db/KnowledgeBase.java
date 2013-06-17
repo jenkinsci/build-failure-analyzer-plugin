@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.ExtensionList;
+import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
@@ -180,6 +181,13 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
     public abstract void saveStatistics(Statistics stat) throws Exception;
+
+    /**
+     * Removes the build failure cause of particular build.
+     * @param build the AbstractBuild.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     */
+    public abstract void removeBuildfailurecause(AbstractBuild build) throws Exception;
     /**
      * Descriptor for {@link KnowledgeBase}s.
      */

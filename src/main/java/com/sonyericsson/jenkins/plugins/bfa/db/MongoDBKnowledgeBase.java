@@ -37,9 +37,12 @@ import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import java.io.IOException;
+import java.net.URL;
 import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -54,6 +57,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -441,6 +445,31 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         addFailureCausesToDBObject(object, failureCauseStatisticsList);
 
         getStatisticsCollection().insert(object);
+       }
+
+    @Override
+    public void removeBuildfailurecause(AbstractBuild build) throws Exception {
+        BasicDBObject searchObj = new BasicDBObject();
+        searchObj.put("projectName", build.getProject().getFullName());
+        searchObj.put("buildNumber", build.getNumber());
+        String master = "";
+        try {
+            String masterString = Jenkins.getInstance().getRootUrl();
+            master = new URL(masterString).getHost();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Couldn't get name of master: ", e);
+        }
+        searchObj.put("master", master);
+        com.mongodb.DBCursor dbcursor = getStatisticsCollection().find(searchObj);
+        if (dbcursor != null && dbcursor.size() > 0) {
+            while (dbcursor.hasNext()) {
+                getStatisticsCollection().remove(dbcursor.next());
+                logger.log(Level.INFO, build.getDisplayName() + " build failure cause removed");
+            }
+        } else {
+            logger.log(Level.INFO, build.getDisplayName() + " build failure cause "
+                    + "value is null or initial scanning ");
+        }
     }
 
     /**

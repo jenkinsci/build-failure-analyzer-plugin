@@ -47,10 +47,12 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         RunList sodbuilds = new RunList();
         sodbuilds.add(build);
         ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
+        sodbaseaction.setBuildType("nonscanned");
         StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
         StaplerResponse mockresponse = PowerMockito.mock(StaplerResponse.class);
         sodbaseaction.doPerformScan(mockrequest, mockresponse);
         assertNotNull(build.getAction(FailureCauseBuildAction.class));
+
     }
 
     /**
@@ -71,6 +73,7 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         RunList sodbuilds = new RunList();
         sodbuilds.add(build);
         ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
+        sodbaseaction.setBuildType("nonscanned");
         StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
         StaplerResponse mockresponse = PowerMockito.mock(StaplerResponse.class);
         sodbaseaction.doPerformScan(mockrequest, mockresponse);

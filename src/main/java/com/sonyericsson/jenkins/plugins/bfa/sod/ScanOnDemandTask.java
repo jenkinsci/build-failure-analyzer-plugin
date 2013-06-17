@@ -26,6 +26,7 @@ package com.sonyericsson.jenkins.plugins.bfa.sod;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScanner;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
@@ -67,13 +68,13 @@ public class ScanOnDemandTask implements Runnable {
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
                             && run.getResult().isWorseThan(Result.SUCCESS)) {
                         if (run.getNumber() == build.getNumber()) {
-                            scanOldBuilds(run);
+                            scanBuild(run);
                         }
                     }
                 }
                 endMatrixBuildScan();
             } else {
-                scanOldBuilds(build);
+                scanBuild(build);
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to add a FailureScanner to "
@@ -102,12 +103,13 @@ public class ScanOnDemandTask implements Runnable {
     /**
      * Scan the non scanned old build.
      *
-     * @param abstractBuild the old non scanned build to scan.
+     * @param abstractBuild the non-scanned/scanned build to scan/rescan.
      */
-    public void scanOldBuilds(AbstractBuild abstractBuild) {
+    public void scanBuild(AbstractBuild abstractBuild) {
         try {
             FileOutputStream fos = new FileOutputStream(abstractBuild.getLogFile(), true);
             PrintStream buildLog = new PrintStream(fos, true, "UTF8");
+            PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(abstractBuild);
             BuildFailureScanner.scan(abstractBuild, buildLog);
             abstractBuild.save();
         } catch (Exception e) {
