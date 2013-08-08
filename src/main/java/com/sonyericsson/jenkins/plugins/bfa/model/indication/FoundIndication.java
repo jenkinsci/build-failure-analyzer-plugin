@@ -29,6 +29,10 @@ import hudson.model.AbstractBuild;
 
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import static java.lang.Math.max;
 
 /**
@@ -36,6 +40,7 @@ import static java.lang.Math.max;
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FoundIndication {
 
     /**
@@ -62,6 +67,22 @@ public class FoundIndication {
         this.pattern = originalPattern;
         this.matchingFile = matchingFile;
         this.build = build;
+        this.matchingString = matchingString;
+    }
+
+    /**
+     * JSON Constructor.
+     *
+     * @param pattern the pattern we used to match.
+     * @param matchingFile the path to the file in which we found the match.
+     * @param matchingString the String that makes up the matching line.
+     */
+    @JsonCreator
+    public FoundIndication(@JsonProperty("pattern") String pattern,
+            @JsonProperty("matchingFile") String matchingFile,
+            @JsonProperty("matchingString") String matchingString) {
+        this.pattern = pattern;
+        this.matchingFile = matchingFile;
         this.matchingString = matchingString;
     }
 

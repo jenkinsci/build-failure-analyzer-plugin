@@ -27,12 +27,11 @@ package com.sonyericsson.jenkins.plugins.bfa.statistics;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
+
 import hudson.model.AbstractBuild;
 import hudson.model.Node;
-import jenkins.model.Jenkins;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -134,12 +133,7 @@ public final class StatisticsLogger {
                 failureCauseStatistics.add(stats);
             }
 
-            try {
-                String masterString = Jenkins.getInstance().getRootUrl();
-                master = new URL(masterString).getHost();
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Couldn't get name of master: ", e);
-            }
+            master = BfaUtils.getMasterName();
             Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses,
                     nodeName, master, timeZoneOffset, result, failureCauseStatistics);
             try {

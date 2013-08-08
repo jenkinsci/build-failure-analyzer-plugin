@@ -35,14 +35,13 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import java.io.IOException;
-import java.net.URL;
 import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -86,6 +85,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private transient DBCollection collection;
     private transient DBCollection statisticsCollection;
     private transient JacksonDBCollection<FailureCause, String> jacksonCollection;
+    private transient JacksonDBCollection<Statistics, String> jacksonStatisticsCollection;
     private transient MongoDBKnowledgeBaseCache cache;
 
     private String host;
@@ -448,18 +448,31 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
        }
 
     @Override
+    public List<Statistics> getStatistics(String masterName, String slaveHostName, String projectName, int limit)
+            throws UnknownHostException, AuthenticationException {
+        DBObject query = new BasicDBObject();
+        if (masterName != null) {
+            query.put("master", masterName);
+        }
+        if (slaveHostName != null) {
+            query.put("slaveHostName", slaveHostName);
+        }
+        if (projectName != null) {
+            query.put("projectName", projectName);
+        }
+        DBCursor<Statistics> dbCursor = getJacksonStatisticsCollection().find(query);
+        BasicDBObject buildNumberDescending = new BasicDBObject("buildNumber", -1);
+        dbCursor = dbCursor.sort(buildNumberDescending);
+        dbCursor = dbCursor.limit(limit);
+        return dbCursor.toArray();
+    }
+
+    @Override
     public void removeBuildfailurecause(AbstractBuild build) throws Exception {
         BasicDBObject searchObj = new BasicDBObject();
         searchObj.put("projectName", build.getProject().getFullName());
         searchObj.put("buildNumber", build.getNumber());
-        String master = "";
-        try {
-            String masterString = Jenkins.getInstance().getRootUrl();
-            master = new URL(masterString).getHost();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Couldn't get name of master: ", e);
-        }
-        searchObj.put("master", master);
+        searchObj.put("master", BfaUtils.getMasterName());
         com.mongodb.DBCursor dbcursor = getStatisticsCollection().find(searchObj);
         if (dbcursor != null && dbcursor.size() > 0) {
             while (dbcursor.hasNext()) {
@@ -579,7 +592,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * Gets the JacksonDBCollection.
+     * Gets the JacksonDBCollection for FailureCauses.
      * @return The jackson db collection.
      * @throws UnknownHostException if the host cannot be found.
      * @throws AuthenticationException if we cannot authenticate towards the database.
@@ -593,6 +606,23 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             jacksonCollection = JacksonDBCollection.wrap(collection, FailureCause.class, String.class);
         }
         return jacksonCollection;
+    }
+
+    /**
+     * Gets the JacksonDBCollection for Statistics.
+     * @return The jackson db collection.
+     * @throws UnknownHostException if the host cannot be found.
+     * @throws AuthenticationException if we cannot authenticate towards the database.
+     */
+    private synchronized JacksonDBCollection<Statistics, String> getJacksonStatisticsCollection()
+            throws UnknownHostException, AuthenticationException {
+        if (jacksonStatisticsCollection == null) {
+            if (statisticsCollection == null) {
+                statisticsCollection = getStatisticsCollection();
+            }
+            jacksonStatisticsCollection = JacksonDBCollection.wrap(statisticsCollection, Statistics.class, String.class);
+        }
+        return jacksonStatisticsCollection;
     }
 
     /**

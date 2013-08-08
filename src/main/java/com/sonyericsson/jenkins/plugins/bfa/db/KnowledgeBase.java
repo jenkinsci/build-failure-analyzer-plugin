@@ -183,6 +183,20 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     public abstract void saveStatistics(Statistics stat) throws Exception;
 
     /**
+     * Gets Statistics data.
+     * @param masterName from master name, null selects all
+     * @param slaveHostName from slave host name, null selects all
+     * @param projectName from project name, null selects all
+     * @param limit number of statistics items to fetch
+     * @return the list of statistics.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     */
+    public List<Statistics> getStatistics(String masterName, String slaveHostName, String projectName, int limit)
+            throws Exception {
+        return null;
+    }
+
+    /**
      * Removes the build failure cause of particular build.
      * @param build the AbstractBuild.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
