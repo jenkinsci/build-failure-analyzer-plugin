@@ -173,7 +173,7 @@ public class MongoDBKnowledgeBaseTest {
         when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
         when(cursor.toArray()).thenReturn(list);
 
-        List<Statistics> fetchedStatistics = kb.getStatistics("masterName", "slaveHostName", "projectName", 1);
+        List<Statistics> fetchedStatistics = kb.getStatistics(null, 1);
         assertNotNull("The fetched statistics should not be null", fetchedStatistics);
         assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
         assertSame(mockedStatistics, fetchedStatistics.get(0));

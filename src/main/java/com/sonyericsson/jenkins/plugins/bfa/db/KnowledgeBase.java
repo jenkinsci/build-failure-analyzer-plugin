@@ -24,6 +24,8 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.ExtensionList;
@@ -35,6 +37,8 @@ import jenkins.model.Jenkins;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
@@ -184,15 +188,83 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Gets Statistics data.
-     * @param masterName from master name, null selects all
-     * @param slaveHostName from slave host name, null selects all
-     * @param projectName from project name, null selects all
-     * @param limit number of statistics items to fetch
+     * @param filter the filter to use when fetching data
+     * @param limit number of statistics items to fetch, set to nonpositive value to fetch all
      * @return the list of statistics.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public List<Statistics> getStatistics(String masterName, String slaveHostName, String projectName, int limit)
-            throws Exception {
+    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) throws Exception {
+        return null;
+    }
+
+    /**
+     * Gets a list of entries where each entry contains a FailureCause as key
+     * and the number of times that failure cause was triggered as value.
+     *
+     * @param filter the filter to use when fetching data
+     * @return list of entries
+     */
+    public List<Entry<FailureCause, Integer>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
+        return null;
+    }
+
+    /**
+     * Counts how many statistics posts there are without FailureCause for a given filter.
+     * @param filter the filter to use when fetching data
+     * @return number of statistics posts without FailureCause
+     */
+    public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
+        return -1;
+    }
+
+    /**
+     * Gets a list of entries where each entry contains a failure category string as key and the
+     * number of times that failure cause category was triggered as value.
+     *
+     * @param filter the filter to use when fetching data
+     * @param limit the number of categories to fetch, set to nonpositive value to fetch all
+     * @return list of entries
+     */
+    public List<Entry<String, Integer>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
+        return null;
+    }
+
+    /**
+     * Gets a map where a lists of failure causes are mapped
+     * by the build number for which they were triggered.
+     *
+     * @param filter the filter to use when fetching data
+     * @return map of failure causes
+     */
+    public Map<Integer, List<FailureCause>> getFailureCausesPerBuild(GraphFilterBuilder filter) {
+        return null;
+    }
+
+    /**
+     * Fetches failure causes grouped in time intervals. The returned list does not have to be sorted,
+     * and one list element is created for each FailureCause for each time interval there exist data.
+     *
+     * @param intervalSize the interval sizes in which the data is grouped.
+     * Should be set to Calendar.DATE or Calendar.HOUR_OF_DAY.
+     * @param filter the filter to use when fetching data
+     * @param byCategories set to true in order to group failure causes by their categories
+     * @return list of FailureCauseTimeIntervals
+     */
+    public List<FailureCauseTimeInterval> getFailureCausesPerTime(int intervalSize, GraphFilterBuilder filter,
+            boolean byCategories) {
+        return null;
+    }
+
+    /**
+     * Gets a list of entries, where each entry contains a string with
+     * FailureCause id and a belonging Integer value for how many times
+     * that FailureCause was triggered.
+     *
+     * @param filter the filter to use when fetching data
+     * @param limit the number of items to fetch, set to nonpositive value to fetch all
+     * @return list of entries
+     */
+    public List<Entry<String, Integer>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
         return null;
     }
 

@@ -23,6 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -31,6 +33,8 @@ import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
@@ -46,16 +50,29 @@ import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
+
+import org.apache.commons.collections.keyvalue.MultiKey;
 import org.bson.types.ObjectId;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.naming.AuthenticationException;
 import java.net.UnknownHostException;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -448,23 +465,314 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
        }
 
     @Override
-    public List<Statistics> getStatistics(String masterName, String slaveHostName, String projectName, int limit)
+    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit)
             throws UnknownHostException, AuthenticationException {
-        DBObject query = new BasicDBObject();
-        if (masterName != null) {
-            query.put("master", masterName);
-        }
-        if (slaveHostName != null) {
-            query.put("slaveHostName", slaveHostName);
-        }
-        if (projectName != null) {
-            query.put("projectName", projectName);
-        }
-        DBCursor<Statistics> dbCursor = getJacksonStatisticsCollection().find(query);
+        DBObject matchFields = generateMatchFields(filter);
+        DBCursor<Statistics> dbCursor = getJacksonStatisticsCollection().find(matchFields);
         BasicDBObject buildNumberDescending = new BasicDBObject("buildNumber", -1);
         dbCursor = dbCursor.sort(buildNumberDescending);
-        dbCursor = dbCursor.limit(limit);
+        if (limit > 0) {
+            dbCursor = dbCursor.limit(limit);
+        }
         return dbCursor.toArray();
+    }
+
+    @Override
+    public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
+        DBObject matchFields = generateMatchFields(filter);
+        matchFields.put("failureCauses", null);
+
+        try {
+            return getStatisticsCollection().count(matchFields);
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    @Override
+    public List<Entry<String, Integer>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int maxNbr) {
+        List<Entry<String, Integer>> nbrOfFailureCausesPerId = new ArrayList<Entry<String, Integer>>();
+        DBObject matchFields = generateMatchFields(filter);
+        DBObject match = new BasicDBObject("$match", matchFields);
+
+        DBObject unwind = new BasicDBObject("$unwind", "$failureCauses");
+
+        DBObject groupFields = new BasicDBObject();
+        groupFields.put("_id", "$failureCauses.failureCause");
+        groupFields.put("number", new BasicDBObject("$sum", 1));
+        DBObject group = new BasicDBObject("$group", groupFields);
+
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("number", -1));
+
+        DBObject limit = null;
+        if (maxNbr > 0) {
+            limit = new BasicDBObject("$limit", maxNbr);
+        }
+
+        //TODO: Include the posts that have no failureCauses.
+
+        AggregationOutput output;
+        try {
+            if (limit == null) {
+                output = getStatisticsCollection().aggregate(match, unwind, group, sort);
+            } else {
+                output = getStatisticsCollection().aggregate(match, unwind, group, sort, limit);
+            }
+            for (DBObject result : output.results()) {
+                DBRef failureCauseRef = (DBRef)result.get("_id");
+                if (failureCauseRef != null) {
+                    Integer number = (Integer)result.get("number");
+                    String id = failureCauseRef.getId().toString();
+                    nbrOfFailureCausesPerId.add(new SimpleEntry<String, Integer>(id, number));
+                }
+            }
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return nbrOfFailureCausesPerId;
+    }
+
+    /**
+     * Generates a DBObject used for matching data as part of a MongoDb
+     * aggregation query.
+     *
+     * @param filter the filter to create match fields for
+     * @return DBObject containing fields to match
+     */
+    private static DBObject generateMatchFields(GraphFilterBuilder filter) {
+        DBObject matchFields = new BasicDBObject();
+        if (filter != null) {
+            if (filter.getMasterName() != null) {
+                matchFields.put("master", filter.getMasterName());
+            }
+            if (filter.getSlaveName() != null) {
+                matchFields.put("slaveHostName", filter.getSlaveName());
+            }
+            if (filter.getProjectName() != null) {
+                matchFields.put("projectName", filter.getProjectName());
+            }
+            if (filter.getBuildNumbers() != null) {
+                matchFields.put("buildNumber", new BasicDBObject("$in", filter.getBuildNumbers()));
+            }
+            if (filter.getSince() != null) {
+                matchFields.put("startingTime", new BasicDBObject("$gte", filter.getSince()));
+            }
+            if (filter.getResult() != null) {
+                matchFields.put("result", filter.getResult());
+            }
+            if (filter.getExcludeResult() != null) {
+                matchFields.put("result", new BasicDBObject("$ne", filter.getExcludeResult()));
+            }
+        }
+        return matchFields;
+    }
+
+    @Override
+    public List<Entry<FailureCause, Integer>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
+
+        List<Entry<String, Integer>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
+        List<Entry<FailureCause, Integer>> nbrOfFailureCauses = new ArrayList<Entry<FailureCause, Integer>>();
+        try {
+            for (Entry<String, Integer> entry : nbrOfFailureCausesPerId) {
+                String id = entry.getKey();
+                int number = entry.getValue();
+                FailureCause failureCause = getCause(id);
+                if (failureCause != null) {
+                    nbrOfFailureCauses.add(new SimpleEntry<FailureCause, Integer>(failureCause, number));
+                }
+            }
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return nbrOfFailureCauses;
+    }
+
+    @Override
+    public Map<Integer, List<FailureCause>> getFailureCausesPerBuild(GraphFilterBuilder filter) {
+        Map<Integer, List<FailureCause>> nbrOfFailureCausesPerBuild = new HashMap<Integer, List<FailureCause>>();
+        DBObject matchFields = generateMatchFields(filter);
+        DBObject match = new BasicDBObject("$match", matchFields);
+
+        DBObject unwind = new BasicDBObject("$unwind", "$failureCauses");
+
+        DBObject groupFields = new BasicDBObject("_id", "$buildNumber");
+        groupFields.put("failureCauses", new BasicDBObject("$addToSet", "$failureCauses.failureCause"));
+        DBObject group = new BasicDBObject("$group", groupFields);
+
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("_id", 1));
+
+        // TODO: Include the posts that have no failureCauses.
+
+
+        AggregationOutput output;
+        try {
+            output = getStatisticsCollection().aggregate(match, unwind, group, sort);
+            for (DBObject result : output.results()) {
+                List<FailureCause> failureCauses = new ArrayList<FailureCause>();
+                Integer buildNumber = (Integer)result.get("_id");
+                BasicDBList failureCauseRefs = (BasicDBList)result.get("failureCauses");
+                for (Object o : failureCauseRefs) {
+                    DBRef failureRef = (DBRef)o;
+                    String id = failureRef.getId().toString();
+                    FailureCause failureCause = getCause(id);
+                    failureCauses.add(failureCause);
+                }
+
+                nbrOfFailureCausesPerBuild.put(buildNumber, failureCauses);
+            }
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return nbrOfFailureCausesPerBuild;
+    }
+
+    @Override
+    public List<FailureCauseTimeInterval> getFailureCausesPerTime(int intervalSize, GraphFilterBuilder filter,
+            boolean byCategories) {
+        List<FailureCauseTimeInterval> failureCauseIntervals = new ArrayList<FailureCauseTimeInterval>();
+        Map<MultiKey, FailureCauseTimeInterval> categoryTable = new HashMap<MultiKey, FailureCauseTimeInterval>();
+
+        DBObject matchFields = generateMatchFields(filter);
+        DBObject match = new BasicDBObject("$match", matchFields);
+
+        DBObject unwind = new BasicDBObject("$unwind", "$failureCauses");
+
+        DBObject idFields = new BasicDBObject();
+        if (intervalSize == Calendar.HOUR_OF_DAY) {
+            idFields.put("hour", new BasicDBObject("$hour", "$startingTime"));
+        }
+        idFields.put("dayOfMonth", new BasicDBObject("$dayOfMonth", "$startingTime"));
+        idFields.put("month", new BasicDBObject("$month", "$startingTime"));
+        idFields.put("year", new BasicDBObject("$year", "$startingTime"));
+        idFields.put("failureCause", "$failureCauses.failureCause");
+        DBObject groupFields = new BasicDBObject();
+        groupFields.put("_id", idFields);
+        groupFields.put("number", new BasicDBObject("$sum", 1));
+        DBObject group = new BasicDBObject("$group", groupFields);
+
+        // TODO: Include the posts that have no failureCauses.
+
+        AggregationOutput output;
+        try {
+            output = getStatisticsCollection().aggregate(match, unwind, group);
+            for (DBObject result : output.results()) {
+                BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
+                int number = (Integer)result.get("number");
+
+                int dayOfMonth = groupedAttrs.getInt("dayOfMonth");
+                int month = groupedAttrs.getInt("month");
+                int year = groupedAttrs.getInt("year");
+
+                Calendar c = Calendar.getInstance();
+                c.set(year, month - 1, dayOfMonth);
+                TimePeriod period = null;
+                if (intervalSize == Calendar.HOUR_OF_DAY) {
+                    int hour = groupedAttrs.getInt("hour");
+                    c.set(Calendar.HOUR_OF_DAY, hour);
+                    period = new Hour(c.getTime());
+                } else {
+                    period = new Day(c.getTime());
+                }
+
+                DBRef failureRef = (DBRef)groupedAttrs.get("failureCause");
+                String id = failureRef.getId().toString();
+                FailureCause failureCause = getCause(id);
+
+                if (byCategories) {
+                    if (failureCause.getCategories() != null) {
+                        for (String category : failureCause.getCategories()) {
+                            MultiKey multiKey = new MultiKey(category, period);
+                            FailureCauseTimeInterval interval = categoryTable.get(multiKey);
+                            if (interval == null) {
+                                interval = new FailureCauseTimeInterval(period, category, number);
+                                categoryTable.put(multiKey, interval);
+                                failureCauseIntervals.add(interval);
+                            } else {
+                                interval.addNumber(number);
+                            }
+                        }
+                    }
+                } else {
+                    FailureCauseTimeInterval timeInterval = new FailureCauseTimeInterval(period, failureCause.getName(),
+                            failureCause.getId(), number);
+                    failureCauseIntervals.add(timeInterval);
+                }
+            }
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return failureCauseIntervals;
+    }
+
+    @Override
+    public List<Entry<String, Integer>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
+
+        List<Entry<String, Integer>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
+        Map<String, Integer> nbrOfFailureCategoriesPerName = new HashMap<String, Integer>();
+
+        for (Entry<String, Integer> entry : nbrOfFailureCausesPerId) {
+            String id = entry.getKey();
+            int number = entry.getValue();
+            FailureCause failureCause = null;
+            try {
+                failureCause = getCause(id);
+            } catch (AuthenticationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            if (failureCause != null && failureCause.getCategories() != null) {
+                for (String category : failureCause.getCategories()) {
+                    Integer currentNbr = nbrOfFailureCategoriesPerName.get(category);
+                    if (currentNbr == null) {
+                        currentNbr = 0;
+                    }
+                    currentNbr += number;
+                    nbrOfFailureCategoriesPerName.put(category, number);
+                }
+            }
+        }
+        List<Entry<String, Integer>> list = new ArrayList<Entry<String, Integer>>();
+        for (Entry<String, Integer> entry : nbrOfFailureCategoriesPerName.entrySet()) {
+            list.add(entry);
+        }
+        Collections.sort(list, new Comparator<Entry<String, Integer>>() {
+            @Override
+            public int compare(Entry<String, Integer> e1, Entry<String, Integer> e2) {
+                return e2.getValue() - e1.getValue();
+            }
+        });
+        if (limit > 0) {
+            list = list.subList(0, limit);
+        }
+
+        return list;
     }
 
     @Override

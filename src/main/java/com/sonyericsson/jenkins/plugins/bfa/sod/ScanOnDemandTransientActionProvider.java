@@ -28,8 +28,10 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.TransientProjectActionFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+
+import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 
 /**
  * Extension point for inserting SOD Transient Actions
@@ -43,6 +45,8 @@ public class ScanOnDemandTransientActionProvider extends TransientProjectActionF
     @Override
     public Collection<? extends Action> createFor(AbstractProject target) {
         final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-        return Collections.singletonList(sodBaseAction);
+        final ProjectGraphAction graphAction = new ProjectGraphAction(target);
+
+        return Arrays.asList(sodBaseAction, graphAction);
     }
 }
