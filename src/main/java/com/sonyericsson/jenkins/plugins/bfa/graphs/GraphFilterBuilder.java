@@ -82,7 +82,9 @@ public class GraphFilterBuilder {
      * @param since first date to allow
      */
     public void setSince(Date since) {
-        this.since = new Date(since.getTime());
+        if (since != null) {
+            this.since = new Date(since.getTime());
+        }
     }
 
     /**
@@ -138,6 +140,9 @@ public class GraphFilterBuilder {
      * @return first date that is allowed
      */
     public Date getSince() {
+        if (since == null) {
+            return null;
+        }
         return new Date(since.getTime());
     }
 

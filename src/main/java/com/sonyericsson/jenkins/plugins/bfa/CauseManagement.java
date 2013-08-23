@@ -34,15 +34,15 @@ import hudson.model.Action;
 import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.ModelObject;
-import hudson.model.RootAction;
 import hudson.security.Permission;
+import hudson.util.Graph;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.Logger;
 
 /**
@@ -51,7 +51,7 @@ import java.util.logging.Logger;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 @Extension
-public class CauseManagement implements RootAction {
+public class CauseManagement extends BfaGraphAction {
 
     private static final Logger logger = Logger.getLogger(CauseManagement.class.getName());
 
@@ -293,6 +293,24 @@ public class CauseManagement implements RootAction {
             }
         }
         throw new IllegalStateException("We seem to not have been initialized!");
+    }
+
+    @Override
+    public int[] getGraphNumbers() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGraphsPageTitle() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
