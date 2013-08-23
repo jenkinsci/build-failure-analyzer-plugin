@@ -25,11 +25,17 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import jregex.MatchResult;
+import jregex.Pattern;
+import jregex.Substitution;
+import jregex.TextBuffer;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Found Failure Cause of a build.
@@ -38,6 +44,9 @@ import java.util.List;
  */
 @ExportedBean
 public class FoundFailureCause {
+    private static final Pattern replaceGroupPattern = new Pattern("\\{(.+?)\\}");
+
+    private String formattedDescription = null;
     private String id;
     private String name;
     private String description;
@@ -53,6 +62,7 @@ public class FoundFailureCause {
         this.id = originalCause.getId();
         this.name = originalCause.getName();
         this.description = originalCause.getDescription();
+
         this.categories = originalCause.getCategories();
         this.indications = new LinkedList<FoundIndication>();
     }
@@ -95,6 +105,42 @@ public class FoundFailureCause {
     @Exported
     public List<String> getCategories() {
         return categories;
+    }
+
+    @Exported
+    public String getFormattedDescription() {
+        if (formattedDescription == null) {
+            formattedDescription = buildFormattedDescription();
+        }
+
+        return formattedDescription;
+    }
+
+    private String buildFormattedDescription() {
+        return replaceGroupPattern.replacer(new Substitution() {
+            @Override
+            public void appendSubstitution(MatchResult matchResult, TextBuffer textBuffer) {
+                String groupName = matchResult.group(1);
+
+                for (FoundIndication indication : indications) {
+                    String g = "${" + groupName + "}";
+
+                    String replacement;
+                    try {
+                        replacement = indication.getReplacement(g);
+                    } catch (NullPointerException e) {
+                        replacement = g;
+                    }
+
+                    if (!replacement.equals(g)) {
+                        textBuffer.append(replacement);
+                        return;
+                    }
+                }
+
+                textBuffer.append(matchResult.group(0));
+            }
+        }).replace(this.description);
     }
 
     /**

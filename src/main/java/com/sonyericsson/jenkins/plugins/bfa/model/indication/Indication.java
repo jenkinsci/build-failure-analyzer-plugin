@@ -30,6 +30,8 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
+import jregex.Pattern;
+import jregex.PatternSyntaxException;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -37,8 +39,6 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import java.io.Serializable;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Indication that can match a search string for a specific reader.
@@ -91,7 +91,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      */
     public Pattern getPattern() {
         if (compiled == null) {
-            compiled = Pattern.compile(pattern);
+            compiled = new Pattern(this.pattern);
         }
         return compiled;
     }
@@ -127,7 +127,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
                 return FormValidation.error("Please provide a pattern!");
             }
             try {
-                Pattern.compile(value);
+                new Pattern(value);
                 return FormValidation.ok();
             } catch (PatternSyntaxException e) {
                 return FormValidation.error("Bad syntax! " + e.getMessage());

@@ -64,7 +64,7 @@
             <tr>
                 <td/>
                 <td>
-                    ${cause.description}
+                    ${cause.formattedDescription}
                 </td>
             </tr>
             <tr>
