@@ -59,10 +59,11 @@ public abstract class StackedBarChart extends BFAGraph {
      * @param defaultH height of the graph in pixels
      * @param project the parent project of this graph
      * @param filter the filter used when fetching data for this graph
+     * @param graphTitle The title of the graph
      */
-    protected StackedBarChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
-            GraphFilterBuilder filter) {
-        super(timestamp, defaultW, defaultH, project, filter);
+    public StackedBarChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
+            GraphFilterBuilder filter, String graphTitle) {
+        super(timestamp, defaultW, defaultH, project, filter, graphTitle);
     }
 
     @Override

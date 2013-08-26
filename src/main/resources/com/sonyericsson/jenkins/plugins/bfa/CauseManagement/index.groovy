@@ -74,7 +74,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
     }
 
     //The New Cause link
-    div(style: "margin-top: 10px; margin-bottom: 10px;") {
+    div(style: "margin-top: 10px; margin-bottom: 10px; width: 90%;") {
       a(style:  "font-weight: bold; "
                 + "font-size: larger; "
                 + "padding-left: 30px; "
@@ -86,7 +86,15 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
                 + "background-repeat: no-repeat;",
         href: "new",
         alt: _("New")) {text(_("Create new"))}
-      }
+
+        a(style:  "font-weight: bold; "
+                + "font-size: larger; "
+                + "padding-top: 5px; "
+                + "padding-bottom: 5px; "
+                + "float: right;",
+        href: "detailedgraphs",
+        alt: _("Graphs/statistics")) {text(_("Graphs/Statistics"))}
+    }
 
     //One time check so we don't do it for every iteration below
     def canRemove = Jenkins.getInstance().hasPermission(PluginImpl.REMOVE_PERMISSION)

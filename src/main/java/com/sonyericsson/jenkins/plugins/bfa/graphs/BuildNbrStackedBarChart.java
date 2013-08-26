@@ -43,8 +43,6 @@ import hudson.model.AbstractProject;
  *
  */
 public class BuildNbrStackedBarChart extends StackedBarChart {
-
-    private static final String TITLE = "Failure causes per build for this project";
     private static final String X_AXIS_TITLE = "Build number";
     private static final String Y_AXIS_TITLE = "Number of failures";
 
@@ -59,10 +57,12 @@ public class BuildNbrStackedBarChart extends StackedBarChart {
      * @param project the parent project of this graph, set to null for non-project graphs
      * @param filter the filter used when fetching data for this graph
      * @param nbrOfBuildsToShow maximum number of builds to show
+     * @param graphTitle The title of the graph
      */
-    protected BuildNbrStackedBarChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
-            GraphFilterBuilder filter, int nbrOfBuildsToShow) {
-        super(timestamp, defaultW, defaultH, project, filter);
+    protected BuildNbrStackedBarChart(long timestamp, int defaultW,
+            int defaultH, AbstractProject project, GraphFilterBuilder filter,
+            int nbrOfBuildsToShow, String graphTitle) {
+        super(timestamp, defaultW, defaultH, project, filter, graphTitle);
         this.nbrOfBuildsToShow = nbrOfBuildsToShow;
     }
 
@@ -100,7 +100,7 @@ public class BuildNbrStackedBarChart extends StackedBarChart {
 
     @Override
     protected String getTitle() {
-        return TITLE;
+        return graphTitle;
     }
 
     @Override

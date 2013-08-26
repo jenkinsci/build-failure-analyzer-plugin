@@ -28,6 +28,46 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final String URL_PARAM_SHOW_ABORTED = "showAborted";
 
     /**
+     * Default width for graphs on detail pages.
+     */
+    protected static final int DEFAULT_GRAPH_WIDTH = 700;
+
+    /**
+     * Default height for graphs on detail pages.
+     */
+    protected static final int DEFAULT_GRAPH_HEIGHT = 500;
+
+    /**
+     * Constant for small bar chart.
+     */
+    protected static final int BAR_CHART_CAUSES_SMALL = 1;
+
+    /**
+     * Constant for bar chart with failure causes.
+     */
+    protected static final int BAR_CHART_CAUSES = 2;
+
+    /**
+     * Constant for bar chart with categories.
+     */
+    protected static final int BAR_CHART_CATEGORIES = 3;
+
+    /**
+     * Constant for bar chart with build numbers.
+     */
+    protected static final int BAR_CHART_BUILD_NBRS = 4;
+
+    /**
+     * Constant for pie chart with failure causes.
+     */
+    protected static final int PIE_CHART_CAUSES = 5;
+
+    /**
+     * Constant for pie chart with categories.
+     */
+    protected static final int PIE_CHART_CATEGORIES = 6;
+
+    /**
      * Get the owner.
      * @return The owner
      */
@@ -84,7 +124,23 @@ public abstract class BfaGraphAction implements RootAction {
     }
 
     /**
-     * Get a Date object corresponding to the specified string
+     * Helper for groovy-views; Get the default width of graphs on detailed pages.
+     * @return The default height of graphs on the detailed graphs-page
+     */
+    public int getDefaultGraphWidth() {
+        return DEFAULT_GRAPH_WIDTH;
+    }
+
+    /**
+     * Helper for groovy-views; Get the default height of graphs on detailed pages.
+     * @return The default height of graphs on the detailed graphs-page
+     */
+    public int getDefaultGraphHeight() {
+        return DEFAULT_GRAPH_HEIGHT;
+    }
+
+    /**
+     * Get a Date object corresponding to the specified string.
      * (today|month|all).
      * @param str The String
      * @return A Date

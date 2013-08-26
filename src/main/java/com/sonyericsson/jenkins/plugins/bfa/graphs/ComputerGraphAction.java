@@ -4,6 +4,8 @@ import java.util.Date;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
+
 import hudson.model.ModelObject;
 import hudson.model.Computer;
 import hudson.model.Hudson;
@@ -16,6 +18,9 @@ import hudson.util.Graph;
  *
  */
 public class ComputerGraphAction extends BfaGraphAction {
+    private static final String GRAPH_TITLE_CAUSES = "Total failure causes for this node";
+    private static final String GRAPH_TITLE_CATEGORIES = "Total failure categories for this node";
+
     /**
      * The url-name of the Action
      */
@@ -84,7 +89,7 @@ public class ComputerGraphAction extends BfaGraphAction {
 
     @Override
     public int[] getGraphNumbers() {
-        return new int[]{1};
+        return new int[]{ BAR_CHART_CAUSES, BAR_CHART_CATEGORIES, PIE_CHART_CAUSES, PIE_CHART_CATEGORIES };
     }
 
     @Override
@@ -94,7 +99,64 @@ public class ComputerGraphAction extends BfaGraphAction {
 
     @Override
     public Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
-        // TODO Auto-generated method stub
-        return null;
+        switch (which) {
+        case BAR_CHART_CAUSES: return getBarChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case BAR_CHART_CATEGORIES: return getBarChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+        case PIE_CHART_CAUSES: return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case PIE_CHART_CATEGORIES: return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+        default: return null;
+        }
+    }
+
+    /**
+     * Get a pie chart according to the specified arguments.
+     * @param byCauses True to display causes, or false to display categories
+     * @param period The time period
+     * @param hideAborted Hide manually aborted
+     * @param title The title of the graph
+     * @return A graph
+     */
+    private Graph getPieChart(boolean byCauses, Date period,
+            boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                null, filter, title);
+    }
+
+    /**
+     * Get a bar chart according to the specified arguments.
+     * @param byCauses True to display causes, or false to display categories
+     * @param period The time period
+     * @param hideAborted Hide manually aborted
+     * @param title The title of the graph
+     * @return A graph
+     */
+    private Graph getBarChart(boolean byCauses, Date period, boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title);
+    }
+
+    /**
+     * Get a GraphFilterBuilder with the specified arguments, and
+     * the slave- or master-name set.
+     * @param hideAborted Hide manually aborted
+     * @param period The time period
+     * @return A graphFilterBuilder
+     */
+    private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
+        GraphFilterBuilder filter = new GraphFilterBuilder();
+        if (hideAborted) {
+            filter.setExcludeResult("ABORTED");
+        }
+        filter.setSince(period);
+        String nodeName = getNodeName();
+        if (isSlave()) {
+            filter.setSlaveName(nodeName);
+        } else {
+            // Computer.getName() returns empty string for master,
+            // so let's get the name the other way
+            filter.setMasterName(BfaUtils.getMasterName());
+        }
+        return filter;
     }
 }

@@ -83,10 +83,12 @@ public class TimeSeriesChart extends BFAGraph {
      * @param filter the filter used when fetching data for this graph
      * @param intervalSize the interval sizes in which the data is grouped
      * @param groupByCategories set to true in order to group failure causes by their categories
+     * @param graphTitle The title of the graph
      */
-    protected TimeSeriesChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
-            GraphFilterBuilder filter, int intervalSize, boolean groupByCategories) {
-        super(timestamp, defaultW, defaultH, project, filter);
+    public TimeSeriesChart(long timestamp, int defaultW, int defaultH,
+            AbstractProject project, GraphFilterBuilder filter,
+            int intervalSize, boolean groupByCategories, String graphTitle) {
+        super(timestamp, defaultW, defaultH, project, filter, graphTitle);
         this.intervalSize = intervalSize;
         this.groupByCategories = groupByCategories;
     }

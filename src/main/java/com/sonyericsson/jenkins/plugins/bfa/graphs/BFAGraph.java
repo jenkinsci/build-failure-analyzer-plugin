@@ -51,18 +51,45 @@ public abstract class BFAGraph extends Graph {
     protected GraphFilterBuilder filter;
 
     /**
+     * The title of the graph.
+     */
+    protected String graphTitle;
+
+    /**
+     * Max number of causes or categories to show in graphs.
+     */
+    protected static final int MAX_GRAPH_ELEMENTS = 10;
+
+    /**
+     * The name of the cause/category of all non-displayed elements.
+     */
+    protected static final String GRAPH_CAT_OTHERS = "Others";
+
+    /**
      * Default constructor.
      *
-     * @param timestamp timestamp for this project graph, used for HTTP caching. Set to -1 if timestamp is not needed
-     * @param defaultW width of the graph in pixels
-     * @param defaultH height of the graph in pixels
-     * @param project the parent project of this graph, set to null for non-project graphs
-     * @param filter the filter used when fetching data for this graph
+     * @param timestamp
+     *            timestamp for this project graph, used for HTTP caching. Set
+     *            to -1 if timestamp is not needed.
+     * @param defaultW
+     *            width of the graph in pixels
+     * @param defaultH
+     *            height of the graph in pixels
+     * @param project
+     *            the parent project of this graph, set to null for non-project
+     *            graphs
+     * @param filter
+     *            the filter used when fetching data for this graph
+     * @param graphTitle
+     *            The title of the graph
      */
-    protected BFAGraph(long timestamp, int defaultW, int defaultH, AbstractProject project, GraphFilterBuilder filter) {
+    protected BFAGraph(long timestamp, int defaultW, int defaultH,
+            AbstractProject project, GraphFilterBuilder filter,
+            String graphTitle) {
         super(timestamp, defaultW, defaultH);
         this.project = project;
         this.filter = filter;
+        this.graphTitle = graphTitle;
     }
 
     /**

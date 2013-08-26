@@ -30,10 +30,6 @@ import hudson.Functions
 /* 
  * Displays a page to show graphs. Displays links for changing time-period
  * (today/month/all) and whether aborted builds should be showed or not. 
- * It assumes that the following variables are defined and accessible: 
- * - titleVar : The header-title
- * - sidePanelContext : The context for the sidepanel (e.g. CauseManagement.getOwner())
- * - imageSrcsArr : A vector of image-paths (src)
 */
 
 def f = namespace(lib.FormTagLib)
@@ -43,16 +39,16 @@ def j = namespace(lib.JenkinsTagLib)
 def management = CauseManagement.getInstance();
 def bgImageUrl = PluginImpl.getFullImageUrl("256x256", "information.png");
 def timePeriod = request.getParameter("time");
-if(timePeriod == null || !timePeriod.matches("today|month|all")) {
+if (timePeriod == null || !timePeriod.matches("today|month|all")) {
   timePeriod = "today";
 }
 def showAborted = request.getParameter("showAborted");
-if(showAborted == null || !showAborted.matches("1|0")) {
+if (showAborted == null || !showAborted.matches("1|0")) {
   showAborted = 1;
 }
 def switchAborted = 0;
 def switchAbortedText = "Hide aborted builds";
-if(showAborted == "0") {
+if (showAborted == "0") {
   switchAborted = 1;
   switchAbortedText = "Show aborted builds";
 }
@@ -122,9 +118,12 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
       }
     }
     
-    div(style: "text-align: center;") {
-      for(imgSrc in my.graphNumbers) {
-        img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams) {}
+    div() {
+      for (imgSrc in my.graphNumbers) {
+        div(style: "width: " + my.defaultGraphWidth + "px; height: "
+                + my.defaultGraphHeight + "px; margin: 10px auto;") {
+          img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams) {}
+        }
       }
     }
   }

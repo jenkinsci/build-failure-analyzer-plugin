@@ -45,8 +45,6 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  */
 public class PieChart extends BFAGraph {
 
-    private static final String TITLE = "Total failure causes for this project";
-
     /**
      * Default constructor.
      *
@@ -55,15 +53,18 @@ public class PieChart extends BFAGraph {
      * @param defaultH height of the graph in pixels
      * @param project the parent project of this graph
      * @param filter the filter used when fetching data for this graph
+     * @param graphTitle The title of the graph
      */
-    protected PieChart(long timestamp, int defaultW, int defaultH, AbstractProject project, GraphFilterBuilder filter) {
-        super(timestamp, defaultW, defaultH, project, filter);
+    public PieChart(long timestamp, int defaultW, int defaultH,
+            AbstractProject project, GraphFilterBuilder filter,
+            String graphTitle) {
+        super(timestamp, defaultW, defaultH, project, filter, graphTitle);
     }
 
     @Override
     protected JFreeChart createGraph() {
         PieDataset dataset = createDataset();
-        return ChartFactory.createPieChart(TITLE, dataset, true, true, false);
+        return ChartFactory.createPieChart(graphTitle, dataset, true, true, false);
     }
 
     /**
@@ -75,8 +76,17 @@ public class PieChart extends BFAGraph {
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
 
-        for (ObjectCountPair<FailureCause> countPair : nbrOfFailureCauses) {
-            dataset.setValue(countPair.getObject().getName(), countPair.getCount());
+        int othersCount = 0;
+        for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
+            ObjectCountPair<FailureCause> countPair = nbrOfFailureCauses.get(i);
+            if (i < MAX_GRAPH_ELEMENTS) {
+                dataset.setValue(countPair.getObject().getName(), countPair.getCount());
+            } else {
+                othersCount += countPair.getCount();
+            }
+        }
+        if (othersCount > 0) {
+            dataset.setValue(GRAPH_CAT_OTHERS, othersCount);
         }
         return dataset;
     }

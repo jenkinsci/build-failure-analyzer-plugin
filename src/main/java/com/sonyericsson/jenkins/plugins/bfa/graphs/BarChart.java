@@ -56,17 +56,18 @@ public class BarChart extends BFAGraph {
      * @param defaultH height of the graph in pixels
      * @param project the parent project of this graph
      * @param filter the filter used when fetching data for this graph
+     * @param graphTitle The title of the graph
      */
-    protected BarChart(long timestamp, int defaultW, int defaultH, AbstractProject project, GraphFilterBuilder filter) {
-        super(timestamp, defaultW, defaultH, project, filter);
+    public BarChart(long timestamp, int defaultW, int defaultH,
+            AbstractProject project, GraphFilterBuilder filter,
+            String graphTitle) {
+        super(timestamp, defaultW, defaultH, project, filter, graphTitle);
     }
-
-    private static final String TITLE = "Total failure causes for this project";
 
     @Override
     protected JFreeChart createGraph() {
         CategoryDataset dataset = createDataset();
-        JFreeChart chart = ChartFactory.createBarChart(TITLE, "", "Number of failures", dataset,
+        JFreeChart chart = ChartFactory.createBarChart(graphTitle, "", "Number of failures", dataset,
                 PlotOrientation.HORIZONTAL, false, false, false);
 
         NumberAxis domainAxis = new NumberAxis();
@@ -86,9 +87,19 @@ public class BarChart extends BFAGraph {
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
 
-        for (ObjectCountPair<FailureCause> countPair : nbrOfFailureCauses) {
-            dataset.setValue(countPair.getCount(), "", countPair.getObject().getName());
+        int othersCount = 0;
+        for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
+            ObjectCountPair<FailureCause> countPair = nbrOfFailureCauses.get(i);
+            if (i < MAX_GRAPH_ELEMENTS) {
+                dataset.setValue(countPair.getCount(), "", countPair.getObject().getName());
+            } else {
+                othersCount += countPair.getCount();
+            }
         }
+        if (othersCount > 0) {
+            dataset.setValue(othersCount, "", GRAPH_CAT_OTHERS);
+        }
+
         long nullFailureCauses = knowledgeBase.getNbrOfNullFailureCauses(filter);
         if (nullFailureCauses > 0) {
             dataset.addValue(nullFailureCauses, "", "NO FAILURE CAUSE");

@@ -25,6 +25,9 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.graphs.BarChart;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.PieChart;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
@@ -84,6 +87,14 @@ public class CauseManagement extends BfaGraphAction {
      * displays it.
      */
     public static final String SESSION_REMOVED_FAILURE_CAUSE = "removed-failureCause";
+
+    /**
+     * Title for the page displaying the graphs.
+     */
+    public static final String GRAPH_PAGE_TITLE = "Global statistics";
+
+    private static final String GRAPH_TITLE_CAUSES = "Total failure causes for all nodes";
+    private static final String GRAPH_TITLE_CATEGORIES = "Total failure categories for all nodes";
 
     @Override
     public String getIconFileName() {
@@ -297,20 +308,71 @@ public class CauseManagement extends BfaGraphAction {
 
     @Override
     public int[] getGraphNumbers() {
-        // TODO Auto-generated method stub
-        return null;
+        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES,
+                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, };
     }
 
     @Override
     public String getGraphsPageTitle() {
-        // TODO Auto-generated method stub
-        return null;
+        return GRAPH_PAGE_TITLE;
     }
 
     @Override
     protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
-        // TODO Auto-generated method stub
+        switch (which) {
+        case BAR_CHART_CAUSES:
+            return getBarChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case BAR_CHART_CATEGORIES:
+            return getBarChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+        case PIE_CHART_CAUSES:
+            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case PIE_CHART_CATEGORIES:
+            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+        default:
+            break;
+        }
         return null;
+    }
+
+    /**
+     * Get a bar chart corresponding to the specified arguments.
+     * @param byCauses True to display causes, false for categories
+     * @param period The time period
+     * @param hideAborted Hide manually aborted
+     * @param title The title of the graph
+     * @return A graph
+     */
+    private Graph getBarChart(boolean byCauses, Date period, boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title);
+    }
+
+    /**
+     * Get a pie chart corresponding to the specified arguments.
+     * @param byCauses True to display causes, or false for categories
+     * @param period The time period
+     * @param hideAborted Hide manually aborted
+     * @param title The title of the graph
+     * @return A graph
+     */
+    private Graph getPieChart(boolean byCauses, Date period, boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title);
+    }
+
+    /**
+     * Get a GraphFilterBuilder corresponding to the specified arguments.
+     * @param hideAborted Hide manually aborted
+     * @param period The time period
+     * @return A GraphFilterBuilder
+     */
+    private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
+        GraphFilterBuilder filter = new GraphFilterBuilder();
+        if (hideAborted) {
+            filter.setExcludeResult("ABORTED");
+        }
+        filter.setSince(period);
+        return filter;
     }
 
 }

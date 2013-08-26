@@ -26,7 +26,6 @@ package com.sonyericsson.jenkins.plugins.bfa.graphs;
 import java.util.Date;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
-
 import hudson.model.AbstractProject;
 import hudson.model.ModelObject;
 import hudson.util.Graph;
@@ -39,20 +38,13 @@ import hudson.util.Graph;
 public class ProjectGraphAction extends BfaGraphAction {
     private static final int GRAPH_WIDTH_SMALL = 500;
     private static final int GRAPH_HEIGHT_SMALL = 200;
-//    private static final int GRAPH_WIDTH = 700;
-//    private static final int GRAPH_HEIGHT = 500;
-//
-    private static final int BAR_CHART_CAUSES_SMALL = 1;
-//    private static final int BAR_CHART_CAUSES = 2;
-//    private static final int BAR_CHART_CATEGORIES = 3;
-//    private static final int BAR_CHART_BUILD_NBRS = 4;
-//    private static final int PIE_CHART_CAUSES = 5;
-//    private static final int PIE_CHART_CATEGORIES = 6;
+    private static final int NBR_OF_BUILDS = 25;
+
+    private static final String GRAPH_TITLE_CAUSES = "Total failure causes for this project";
+    private static final String GRAPH_TITLE_CATEGORIES = "Total failure categories for this project";
+    private static final String BUILD_NBR_TITLE = "Failure causes per build for this project";
 
     private AbstractProject project;
-
-    // private static final int GRAPH_WIDTH = 500;
-    // private static final int GRAPH_HEIGHT = 200;
 
     /**
      * Standard constructor.
@@ -84,7 +76,8 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     @Override
     public int[] getGraphNumbers() {
-        return new int[] {BAR_CHART_CAUSES_SMALL};
+        return new int[] { BAR_CHART_CAUSES, BAR_CHART_CATEGORIES,
+                PIE_CHART_CAUSES, PIE_CHART_CATEGORIES, BAR_CHART_BUILD_NBRS, };
     }
 
     @Override
@@ -94,113 +87,82 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     @Override
     protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
-        switch(which) {
+        switch (which) {
         case BAR_CHART_CAUSES_SMALL:
             return getBarChart(true, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
-                    timePeriod, hideManAborted);
-//        case BAR_CHART_CAUSES: return getGraph1();
-//        case BAR_CHART_CATEGORIES: return getGraph2();
-//        case BAR_CHART_BUILD_NBRS: return getGraph3();
-//        case PIE_CHART_CAUSES: return getGraph4();
-//        case PIE_CHART_CATEGORIES: return getGraph5();
-        default: break;
+                    timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case BAR_CHART_CAUSES:
+            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
+                    hideManAborted, GRAPH_TITLE_CAUSES);
+        case BAR_CHART_CATEGORIES:
+            return getBarChart(false, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
+                    hideManAborted, GRAPH_TITLE_CATEGORIES);
+        case BAR_CHART_BUILD_NBRS:
+            return getBuildNbrChart(hideManAborted);
+        case PIE_CHART_CAUSES:
+            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+        case PIE_CHART_CATEGORIES:
+            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+        default:
+            break;
         }
         return null;
     }
 
     /**
-     * Get a bar chart according to the arguments
+     * Get a bar chart according to the arguments.
      * @param byCauses Display causes (true) or categories (false)
      * @param width The with of the graph
      * @param height The height of the graph
      * @param period The time period
      * @param hideAborted Hide aborted
+     * @param title The title of the graph
      * @return A graph
      */
-    private Graph getBarChart(boolean byCauses, int width, int height, Date period, boolean hideAborted) {
+    private Graph getBarChart(boolean byCauses, int width, int height, Date period, boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new BarChart(-1, width, height, project, filter, title);
+    }
+
+    /**
+     * Get a pie chart according to the specified arguments.
+     * @param byCauses True for causes, false for categories
+     * @param period The time period
+     * @param hideAborted Hide manually aborted
+     * @param title The title of the graph
+     * @return A graph
+     */
+    private Graph getPieChart(boolean byCauses, Date period, boolean hideAborted, String title) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, project, filter, title);
+    }
+
+    /**
+     * Get a build number chart.
+     * @param hideAborted Hide manually aborted
+     * @return A graph
+     */
+    private Graph getBuildNbrChart(boolean hideAborted) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, null);
+        return new BuildNbrStackedBarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                project, filter, NBR_OF_BUILDS, BUILD_NBR_TITLE);
+    }
+
+    /**
+     * Get a GraphFilterBuilder corresponding to the specified arguments, and the
+     * project name set.
+     * @param hideAborted Hide manually aborted
+     * @param period The time period
+     * @return A GraphFilterBuilder
+     */
+    private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
         GraphFilterBuilder filter = new GraphFilterBuilder();
         filter.setProjectName(project.getFullName());
         if (hideAborted) {
             filter.setExcludeResult("ABORTED");
         }
         filter.setSince(period);
-        return new BarChart(-1, width, height, project, filter);
+//        filter.setMasterName(BfaUtils.getMasterName());
+        return filter;
     }
-    // /**
-    // * Gets the first project graph.
-    // * @return project graph
-    // */
-    // public Graph getGraph() {
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // filter.setProjectName(project.getFullName());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new PieChart(-1, GRAPH_WIDTH, GRAPH_HEIGHT, project, filter);
-    // }
-    //
-    // /**
-    // * Gets the second project graph.
-    // * @return project graph
-    // */
-    // public Graph getGraph2() {
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // filter.setProjectName(project.getFullName());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new BarChart(-1, GRAPH_WIDTH, GRAPH_HEIGHT, project, filter);
-    // }
-    //
-    // /**
-    // * Gets the third project graph.
-    // * @return project graph
-    // */
-    // public Graph getGraph3() {
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // filter.setProjectName(project.getFullName());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new BuildNbrStackedBarChart(-1, GRAPH_WIDTH, GRAPH_HEIGHT,
-    // project, filter, 25);
-    // }
-    //
-    // public Graph getGraph4() {
-    // Calendar yesterday = Calendar.getInstance();
-    // yesterday.add(Calendar.DATE, -11);
-    //
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // // filter.setProjectName(project.getFullName());
-    // filter.setSince(yesterday.getTime());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new TimeSeriesChart(-1, 800, 700, project, filter,
-    // Calendar.HOUR_OF_DAY, true);
-    // }
-    //
-    // public Graph getGraph5() {
-    // Calendar yesterday = Calendar.getInstance();
-    // yesterday.add(Calendar.DATE, -11);
-    //
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // // filter.setProjectName(project.getFullName());
-    // filter.setSince(yesterday.getTime());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new TimeSeriesChart(-1, 800, 700, project, filter,
-    // Calendar.HOUR_OF_DAY, false);
-    // }
-    //
-    // public Graph getGraph6() {
-    // Calendar yesterday = Calendar.getInstance();
-    // yesterday.add(Calendar.DATE, -41);
-    //
-    // GraphFilterBuilder filter = new GraphFilterBuilder();
-    // // filter.setProjectName(project.getFullName());
-    // filter.setSince(yesterday.getTime());
-    // filter.setExcludeResult("ABORTED");
-    // // filter.setMasterName(BfaUtils.getMasterName());
-    // return new TimeSeriesChart(-1, 800, 700, project, filter, Calendar.DATE,
-    // false);
-    // }
-
-
 }
