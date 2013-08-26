@@ -26,7 +26,6 @@ package com.sonyericsson.jenkins.plugins.bfa.graphs;
 import hudson.model.AbstractProject;
 
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -36,6 +35,7 @@ import org.jfree.data.general.PieDataset;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
  * Pie chart displaying the distribution of failure causes for a project.
@@ -73,10 +73,10 @@ public class PieChart extends BFAGraph {
     private PieDataset createDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<Entry<FailureCause, Integer>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
+        List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
 
-        for (Entry<FailureCause, Integer> entry : nbrOfFailureCauses) {
-            dataset.setValue(entry.getKey().getName(), entry.getValue());
+        for (ObjectCountPair<FailureCause> countPair : nbrOfFailureCauses) {
+            dataset.setValue(countPair.getObject().getName(), countPair.getCount());
         }
         return dataset;
     }

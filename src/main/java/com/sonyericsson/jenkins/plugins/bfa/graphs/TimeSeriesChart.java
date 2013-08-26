@@ -54,6 +54,7 @@ import org.jfree.data.xy.XYDataset;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
  * Bar chart displaying the number of different failure causes for a project.
@@ -157,7 +158,7 @@ public class TimeSeriesChart extends BFAGraph {
 
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
 
-        List<Entry<String, Integer>> topEntries;
+        List<ObjectCountPair<String>> topEntries;
         if (groupByCategories) {
             topEntries = knowledgeBase.getNbrOfFailureCategoriesPerName(filter, LIMIT_BEFORE_GROUPING);
         } else {
@@ -165,8 +166,8 @@ public class TimeSeriesChart extends BFAGraph {
         }
 
         if (topEntries != null) {
-            for (Entry<String, Integer> entry : topEntries) {
-                topItems.add(entry.getKey());
+            for (ObjectCountPair<String> countPair : topEntries) {
+                topItems.add(countPair.getObject());
             }
         }
 

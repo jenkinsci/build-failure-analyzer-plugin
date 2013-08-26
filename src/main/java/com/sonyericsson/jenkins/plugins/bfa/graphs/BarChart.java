@@ -26,7 +26,6 @@ package com.sonyericsson.jenkins.plugins.bfa.graphs;
 import hudson.model.AbstractProject;
 
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -39,6 +38,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
  * Bar chart displaying the number of different failure causes for a project.
@@ -84,10 +84,10 @@ public class BarChart extends BFAGraph {
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<Entry<FailureCause, Integer>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
+        List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
 
-        for (Entry<FailureCause, Integer> entry : nbrOfFailureCauses) {
-            dataset.setValue(entry.getValue(), "", entry.getKey().getName());
+        for (ObjectCountPair<FailureCause> countPair : nbrOfFailureCauses) {
+            dataset.setValue(countPair.getCount(), "", countPair.getObject().getName());
         }
         long nullFailureCauses = knowledgeBase.getNbrOfNullFailureCauses(filter);
         if (nullFailureCauses > 0) {

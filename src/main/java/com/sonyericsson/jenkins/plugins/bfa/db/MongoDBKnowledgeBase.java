@@ -40,6 +40,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -61,12 +63,10 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.naming.AuthenticationException;
 import java.net.UnknownHostException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -495,8 +495,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public List<Entry<String, Integer>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int maxNbr) {
-        List<Entry<String, Integer>> nbrOfFailureCausesPerId = new ArrayList<Entry<String, Integer>>();
+    public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int maxNbr) {
+        List<ObjectCountPair<String>> nbrOfFailureCausesPerId = new ArrayList<ObjectCountPair<String>>();
         DBObject matchFields = generateMatchFields(filter);
         DBObject match = new BasicDBObject("$match", matchFields);
 
@@ -528,7 +528,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 if (failureCauseRef != null) {
                     Integer number = (Integer)result.get("number");
                     String id = failureCauseRef.getId().toString();
-                    nbrOfFailureCausesPerId.add(new SimpleEntry<String, Integer>(id, number));
+                    nbrOfFailureCausesPerId.add(new ObjectCountPair<String>(id, number));
                 }
             }
         } catch (AuthenticationException e) {
@@ -578,17 +578,17 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public List<Entry<FailureCause, Integer>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
+    public List<ObjectCountPair<FailureCause>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
 
-        List<Entry<String, Integer>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
-        List<Entry<FailureCause, Integer>> nbrOfFailureCauses = new ArrayList<Entry<FailureCause, Integer>>();
+        List<ObjectCountPair<String>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
+        List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = new ArrayList<ObjectCountPair<FailureCause>>();
         try {
-            for (Entry<String, Integer> entry : nbrOfFailureCausesPerId) {
-                String id = entry.getKey();
-                int number = entry.getValue();
+            for (ObjectCountPair<String> countPair : nbrOfFailureCausesPerId) {
+                String id = countPair.getObject();
+                int count = countPair.getCount();
                 FailureCause failureCause = getCause(id);
                 if (failureCause != null) {
-                    nbrOfFailureCauses.add(new SimpleEntry<FailureCause, Integer>(failureCause, number));
+                    nbrOfFailureCauses.add(new ObjectCountPair<FailureCause>(failureCause, count));
                 }
             }
         } catch (AuthenticationException e) {
@@ -729,14 +729,14 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public List<Entry<String, Integer>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
+    public List<ObjectCountPair<String>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
 
-        List<Entry<String, Integer>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
+        List<ObjectCountPair<String>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
         Map<String, Integer> nbrOfFailureCategoriesPerName = new HashMap<String, Integer>();
 
-        for (Entry<String, Integer> entry : nbrOfFailureCausesPerId) {
-            String id = entry.getKey();
-            int number = entry.getValue();
+        for (ObjectCountPair<String> countPair : nbrOfFailureCausesPerId) {
+            String id = countPair.getObject();
+            int count = countPair.getCount();
             FailureCause failureCause = null;
             try {
                 failureCause = getCause(id);
@@ -753,26 +753,23 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     if (currentNbr == null) {
                         currentNbr = 0;
                     }
-                    currentNbr += number;
-                    nbrOfFailureCategoriesPerName.put(category, number);
+                    currentNbr += count;
+                    nbrOfFailureCategoriesPerName.put(category, count);
                 }
             }
         }
-        List<Entry<String, Integer>> list = new ArrayList<Entry<String, Integer>>();
+        List<ObjectCountPair<String>> countList = new ArrayList<ObjectCountPair<String>>();
         for (Entry<String, Integer> entry : nbrOfFailureCategoriesPerName.entrySet()) {
-            list.add(entry);
+            String name = entry.getKey();
+            int count = entry.getValue();
+            countList.add(new ObjectCountPair<String>(name, count));
         }
-        Collections.sort(list, new Comparator<Entry<String, Integer>>() {
-            @Override
-            public int compare(Entry<String, Integer> e1, Entry<String, Integer> e2) {
-                return e2.getValue() - e1.getValue();
-            }
-        });
+        Collections.sort(countList, ObjectCountPair.countComparator());
         if (limit > 0) {
-            list = list.subList(0, limit);
+            countList = countList.subList(0, limit);
         }
 
-        return list;
+        return countList;
     }
 
     @Override

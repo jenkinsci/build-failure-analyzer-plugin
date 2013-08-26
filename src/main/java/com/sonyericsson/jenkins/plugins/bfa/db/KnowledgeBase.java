@@ -28,6 +28,8 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+
 import hudson.ExtensionList;
 import hudson.model.AbstractBuild;
 import hudson.model.Describable;
@@ -38,7 +40,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
@@ -198,18 +199,19 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
-     * Gets a list of entries where each entry contains a FailureCause as key
-     * and the number of times that failure cause was triggered as value.
+     * Gets a list of {@link ObjectCountPair} where each pair contains a unique {@link FailureCause} as key
+     * and the number of times that failure cause was triggered as count.
+     * The list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
      *
      * @param filter the filter to use when fetching data
-     * @return list of entries
+     * @return list of ObjectCountPairs.
      */
-    public List<Entry<FailureCause, Integer>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
+    public List<ObjectCountPair<FailureCause>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
         return null;
     }
 
     /**
-     * Counts how many statistics posts there are without FailureCause for a given filter.
+     * Counts how many statistics posts there are without FailureCause (null) for a given filter.
      * @param filter the filter to use when fetching data
      * @return number of statistics posts without FailureCause
      */
@@ -218,14 +220,15 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
-     * Gets a list of entries where each entry contains a failure category string as key and the
-     * number of times that failure cause category was triggered as value.
+     * Gets a list of {@link ObjectCountPair} where each pair contains a unique failure category string as key
+     * and the number of times that the failure cause category was triggered as count.
+     * The list is sorted by counts, meaning that the Category that has been triggered the most comes first.
      *
      * @param filter the filter to use when fetching data
      * @param limit the number of categories to fetch, set to nonpositive value to fetch all
-     * @return list of entries
+     * @return list of ObjectCountPairs
      */
-    public List<Entry<String, Integer>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
+    public List<ObjectCountPair<String>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
         return null;
     }
 
@@ -256,15 +259,14 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
-     * Gets a list of entries, where each entry contains a string with
-     * FailureCause id and a belonging Integer value for how many times
-     * that FailureCause was triggered.
+     * Gets a list of {@link ObjectCountPair} where each pair contains a unique FailureCause id as key
+     * and a belonging count value for how many times that FailureCause was triggered.
      *
      * @param filter the filter to use when fetching data
      * @param limit the number of items to fetch, set to nonpositive value to fetch all
-     * @return list of entries
+     * @return list of ObjectCountPairs
      */
-    public List<Entry<String, Integer>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
+    public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
         return null;
     }
 
