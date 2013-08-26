@@ -41,7 +41,7 @@ public class ProjectGraphAction extends BfaGraphAction {
     private static final int NBR_OF_BUILDS = 25;
 
     private static final String GRAPH_TITLE_CAUSES = "Total failure causes for this project";
-    private static final String GRAPH_TITLE_CATEGORIES = "Total failure categories for this project";
+    private static final String GRAPH_TITLE_CATEGORIES = "Failures per category for this project";
     private static final String BUILD_NBR_TITLE = "Failure causes per build for this project";
 
     private AbstractProject project;
@@ -76,8 +76,9 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     @Override
     public int[] getGraphNumbers() {
-        return new int[] { BAR_CHART_CAUSES, BAR_CHART_CATEGORIES,
-                PIE_CHART_CAUSES, PIE_CHART_CATEGORIES, BAR_CHART_BUILD_NBRS, };
+        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES,
+                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES,
+                BAR_CHART_BUILD_NBRS, };
     }
 
     @Override
@@ -89,20 +90,20 @@ public class ProjectGraphAction extends BfaGraphAction {
     protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
         switch (which) {
         case BAR_CHART_CAUSES_SMALL:
-            return getBarChart(true, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
+            return getBarChart(false, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
                     timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
         case BAR_CHART_CAUSES:
-            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
+            return getBarChart(false, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
                     hideManAborted, GRAPH_TITLE_CAUSES);
         case BAR_CHART_CATEGORIES:
-            return getBarChart(false, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
+            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
                     hideManAborted, GRAPH_TITLE_CATEGORIES);
         case BAR_CHART_BUILD_NBRS:
             return getBuildNbrChart(hideManAborted);
         case PIE_CHART_CAUSES:
-            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
         case PIE_CHART_CATEGORIES:
-            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
         default:
             break;
         }
@@ -111,7 +112,7 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     /**
      * Get a bar chart according to the arguments.
-     * @param byCauses Display causes (true) or categories (false)
+     * @param byCategories Display categories (true) or causes (false)
      * @param width The with of the graph
      * @param height The height of the graph
      * @param period The time period
@@ -119,22 +120,24 @@ public class ProjectGraphAction extends BfaGraphAction {
      * @param title The title of the graph
      * @return A graph
      */
-    private Graph getBarChart(boolean byCauses, int width, int height, Date period, boolean hideAborted, String title) {
+    private Graph getBarChart(boolean byCategories, int width, int height,
+            Date period, boolean hideAborted, String title) {
         GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
-        return new BarChart(-1, width, height, project, filter, title);
+        return new BarChart(-1, width, height, project, filter, title,
+                byCategories);
     }
 
     /**
      * Get a pie chart according to the specified arguments.
-     * @param byCauses True for causes, false for categories
+     * @param byCategories True to display categories, false for causes
      * @param period The time period
      * @param hideAborted Hide manually aborted
      * @param title The title of the graph
      * @return A graph
      */
-    private Graph getPieChart(boolean byCauses, Date period, boolean hideAborted, String title) {
+    private Graph getPieChart(boolean byCategories, Date period, boolean hideAborted, String title) {
         GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
-        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, project, filter, title);
+        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, project, filter, title, byCategories);
     }
 
     /**

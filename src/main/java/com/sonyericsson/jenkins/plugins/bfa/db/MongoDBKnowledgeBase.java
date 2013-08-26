@@ -602,6 +602,29 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public List<ObjectCountPair<String>> getFailureCauseNames(GraphFilterBuilder filter) {
+        List<ObjectCountPair<String>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
+        List<ObjectCountPair<String>> nbrOfFailureCauses = new ArrayList<ObjectCountPair<String>>();
+        try {
+            for (ObjectCountPair<String> countPair : nbrOfFailureCausesPerId) {
+                String id = countPair.getObject();
+                int count = countPair.getCount();
+                FailureCause failureCause = getCause(id);
+                if (failureCause != null) {
+                    nbrOfFailureCauses.add(new ObjectCountPair<String>(failureCause.getName(), count));
+                }
+            }
+        } catch (AuthenticationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return nbrOfFailureCauses;
+    }
+
+    @Override
     public Map<Integer, List<FailureCause>> getFailureCausesPerBuild(GraphFilterBuilder filter) {
         Map<Integer, List<FailureCause>> nbrOfFailureCausesPerBuild = new HashMap<Integer, List<FailureCause>>();
         DBObject matchFields = generateMatchFields(filter);

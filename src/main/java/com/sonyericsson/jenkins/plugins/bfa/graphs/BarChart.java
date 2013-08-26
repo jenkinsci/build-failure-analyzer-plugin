@@ -37,7 +37,6 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
@@ -47,6 +46,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  *
  */
 public class BarChart extends BFAGraph {
+    private boolean byCategories;
 
     /**
      * Default constructor.
@@ -57,11 +57,13 @@ public class BarChart extends BFAGraph {
      * @param project the parent project of this graph
      * @param filter the filter used when fetching data for this graph
      * @param graphTitle The title of the graph
+     * @param byCategories True to display categories, or false to display failure causes
      */
     public BarChart(long timestamp, int defaultW, int defaultH,
             AbstractProject project, GraphFilterBuilder filter,
-            String graphTitle) {
+            String graphTitle, boolean byCategories) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
+        this.byCategories = byCategories;
     }
 
     @Override
@@ -85,24 +87,33 @@ public class BarChart extends BFAGraph {
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
+        List<ObjectCountPair<String>> failureItems = null;
+        long nullFailureItems = 0;
+        String nullFailuteItemsName = null;
+        if (byCategories) {
+            failureItems = knowledgeBase.getNbrOfFailureCategoriesPerName(filter, -1);
+            nullFailuteItemsName = GRAPH_UNCATEGORIZED;
+        } else {
+            failureItems = knowledgeBase.getFailureCauseNames(filter);
+            nullFailureItems = knowledgeBase.getNbrOfNullFailureCauses(filter);
+            nullFailuteItemsName = GRAPH_UNKNOWN;
+        }
 
         int othersCount = 0;
-        for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
-            ObjectCountPair<FailureCause> countPair = nbrOfFailureCauses.get(i);
+        for (int i = 0; i < failureItems.size(); i++) {
+            ObjectCountPair<String> countPair = failureItems.get(i);
             if (i < MAX_GRAPH_ELEMENTS) {
-                dataset.setValue(countPair.getCount(), "", countPair.getObject().getName());
+                dataset.setValue(countPair.getCount(), "", countPair.getObject());
             } else {
                 othersCount += countPair.getCount();
             }
         }
         if (othersCount > 0) {
-            dataset.setValue(othersCount, "", GRAPH_CAT_OTHERS);
+            dataset.setValue(othersCount, "", GRAPH_OTHERS);
         }
 
-        long nullFailureCauses = knowledgeBase.getNbrOfNullFailureCauses(filter);
-        if (nullFailureCauses > 0) {
-            dataset.addValue(nullFailureCauses, "", "NO FAILURE CAUSE");
+        if (nullFailureItems > 0) {
+            dataset.addValue(nullFailureItems, "", nullFailuteItemsName);
         }
         return dataset;
     }

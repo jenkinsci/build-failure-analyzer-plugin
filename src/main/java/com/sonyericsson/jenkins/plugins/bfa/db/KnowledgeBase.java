@@ -211,6 +211,18 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
+     * Gets a list of {@link ObjectCountPair}s where each pair contains a unique {@link FailureCause}-name as key
+     * and the number of times that failure cause was triggered as count.
+     * This list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
+     *
+     * @param filter The filter to use when fetching the data
+     * @return List of ObjectCountPairs that consist of a name and count
+     */
+    public List<ObjectCountPair<String>> getFailureCauseNames(GraphFilterBuilder filter) {
+        return null;
+    }
+
+    /**
      * Counts how many statistics posts there are without FailureCause (null) for a given filter.
      * @param filter the filter to use when fetching data
      * @return number of statistics posts without FailureCause

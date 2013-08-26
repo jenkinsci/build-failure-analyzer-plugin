@@ -63,7 +63,17 @@ public abstract class BFAGraph extends Graph {
     /**
      * The name of the cause/category of all non-displayed elements.
      */
-    protected static final String GRAPH_CAT_OTHERS = "Others";
+    protected static final String GRAPH_OTHERS = "Others";
+
+    /**
+     * Name for the category for failures without category.
+     */
+    protected static final String GRAPH_UNCATEGORIZED = "Uncategorized";
+
+    /**
+     * Name for the failures without a corresponding failure cause.
+     */
+    protected static final String GRAPH_UNKNOWN = "Unknown";
 
     /**
      * Default constructor.

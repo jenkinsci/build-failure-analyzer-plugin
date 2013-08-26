@@ -34,7 +34,6 @@ import org.jfree.data.general.PieDataset;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
@@ -44,6 +43,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  *
  */
 public class PieChart extends BFAGraph {
+    private boolean byCategories;
 
     /**
      * Default constructor.
@@ -54,11 +54,13 @@ public class PieChart extends BFAGraph {
      * @param project the parent project of this graph
      * @param filter the filter used when fetching data for this graph
      * @param graphTitle The title of the graph
+     * @param byCategories True to display categories, or false for failure causes
      */
     public PieChart(long timestamp, int defaultW, int defaultH,
             AbstractProject project, GraphFilterBuilder filter,
-            String graphTitle) {
+            String graphTitle, boolean byCategories) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
+        this.byCategories = byCategories;
     }
 
     @Override
@@ -74,19 +76,24 @@ public class PieChart extends BFAGraph {
     private PieDataset createDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<ObjectCountPair<FailureCause>> nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCauses(filter);
+        List<ObjectCountPair<String>> nbrOfFailureCauses = null;
+        if (byCategories) {
+            nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCategoriesPerName(filter, -1);
+        } else {
+            nbrOfFailureCauses = knowledgeBase.getFailureCauseNames(filter);
+        }
 
         int othersCount = 0;
         for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
-            ObjectCountPair<FailureCause> countPair = nbrOfFailureCauses.get(i);
+            ObjectCountPair<String> countPair = nbrOfFailureCauses.get(i);
             if (i < MAX_GRAPH_ELEMENTS) {
-                dataset.setValue(countPair.getObject().getName(), countPair.getCount());
+                dataset.setValue(countPair.getObject(), countPair.getCount());
             } else {
                 othersCount += countPair.getCount();
             }
         }
         if (othersCount > 0) {
-            dataset.setValue(GRAPH_CAT_OTHERS, othersCount);
+            dataset.setValue(GRAPH_OTHERS, othersCount);
         }
         return dataset;
     }
