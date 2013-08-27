@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -156,7 +156,8 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
       for (imgSrc in my.graphNumbers) {
         div(style: "width: " + my.defaultGraphWidth + "px; height: "
                 + my.defaultGraphHeight + "px; margin: 10px auto;") {
-          img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams) {}
+          img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams,
+                lazymap: "graph/map?which=" + imgSrc + trailingImageUrlParams) {}
         }
       }
     }

@@ -2,6 +2,8 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.kohsuke.stapler.StaplerRequest;
 import hudson.model.ModelObject;
@@ -33,6 +35,16 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final String URL_PARAM_ALL_MASTERS = "allMasters";
 
     /**
+     * Url-parameter value for 'today'.
+     */
+    protected static final String URL_PARAM_VALUE_TODAY = "today";
+
+    /**
+     * Url-parameter value for 'month'.
+     */
+    protected static final String URL_PARAM_VALUE_MONTH = "month";
+
+    /**
      * Default width for graphs on detail pages.
      */
     protected static final int DEFAULT_GRAPH_WIDTH = 700;
@@ -48,7 +60,7 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int BAR_CHART_CAUSES_SMALL = 1;
 
     /**
-     * Constant for bar chart with failure causes.
+     * Constant for bar chart with {@link FailureCause}s.
      */
     protected static final int BAR_CHART_CAUSES = 2;
 
@@ -63,7 +75,7 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int BAR_CHART_BUILD_NBRS = 4;
 
     /**
-     * Constant for pie chart with failure causes.
+     * Constant for pie chart with {@link FailureCause}s.
      */
     protected static final int PIE_CHART_CAUSES = 5;
 
@@ -73,6 +85,20 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int PIE_CHART_CATEGORIES = 6;
 
     /**
+     * Constant for time series chart with {@link FailureCause}s.
+     */
+    protected static final int TIME_SERIES_CHART_CAUSES = 7;
+
+    /**
+     * Constant for time series chart with categories.
+     */
+    protected static final int TIME_SERIES_CHART_CATEGORIES = 8;
+
+    /**
+     * Constant for "ABORTED"-cause (used to exclude such {@link FailureCause}s).
+     */
+    protected static final String EXCLUDE_ABORTED = "ABORTED";
+    /**
      * Get the owner.
      * @return The owner
      */
@@ -81,9 +107,9 @@ public abstract class BfaGraphAction implements RootAction {
     /**
      * Returns an array of numbers, where each number represents
      * a graph. These are the numbers used to display the graphs/images
-     * on the detailed graphs page, that is, they will be parameters
+     * on the detailed graphs page, that is, they will be the 'which'-parameter
      * to getGraph(int which, Date ...).
-     * The graphs are displayed in same order as the numbers in the array.
+     * The graphs are displayed in the same order as the numbers in the array.
      * @return An array of integers where each integer represents a graph to
      * display
      */
@@ -100,10 +126,13 @@ public abstract class BfaGraphAction implements RootAction {
      * @param which Which graph to display
      * @param timePeriod How old statistics should be included in the graph
      * @param hideManAborted Hide manually aborted causes
-     * @param allMasters Show for alla masters
+     * @param allMasters Show for all masters
+     * @param rawReqParams The url parameters that came with the request
      * @return A Graph
      */
-    protected abstract Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean allMasters);
+    protected abstract Graph getGraph(int which, Date timePeriod,
+            boolean hideManAborted, boolean allMasters,
+            Map<String, String> rawReqParams);
 
     /**
      * Get the Graph corresponding to the url-parameters.
@@ -116,10 +145,20 @@ public abstract class BfaGraphAction implements RootAction {
      * @return A graph
      */
     public Graph getGraph(StaplerRequest req) {
+        Map<String, String> rawReqParams = new HashMap<String, String>();
+
         String reqTimePeriod = req.getParameter(URL_PARAM_TIME_PERIOD);
+        rawReqParams.put(URL_PARAM_TIME_PERIOD, reqTimePeriod);
+
         String reqWhich = req.getParameter(URL_PARAM_WHICH_GRAPH);
+        rawReqParams.put(URL_PARAM_WHICH_GRAPH, reqWhich);
+
         String showAborted = req.getParameter(URL_PARAM_SHOW_ABORTED);
+        rawReqParams.put(URL_PARAM_SHOW_ABORTED, showAborted);
+
         String allMasters = req.getParameter(URL_PARAM_ALL_MASTERS);
+        rawReqParams.put(URL_PARAM_ALL_MASTERS, allMasters);
+
         Date sinceDate = getDateForUrlStr(reqTimePeriod);
         int whichGraph =  -1;
         try {
@@ -130,7 +169,7 @@ public abstract class BfaGraphAction implements RootAction {
         boolean hideAborted = "0".equals(showAborted);
         boolean forAllMasters = "1".equals(allMasters);
         // TODO: check cache
-        return getGraph(whichGraph, sinceDate, hideAborted, forAllMasters);
+        return getGraph(whichGraph, sinceDate, hideAborted, forAllMasters, rawReqParams);
     }
 
     /**
@@ -161,20 +200,20 @@ public abstract class BfaGraphAction implements RootAction {
 
     /**
      * Get a Date object corresponding to the specified string.
-     * (today|month|all).
+     * (today|month).
      * @param str The String
-     * @return A Date
+     * @return A Date, or null if not equal to "today" or "month"
      */
     private Date getDateForUrlStr(String str) {
         Calendar cal = Calendar.getInstance();
         Date date = null;
-        if ("today".equals(str)) {
+        if (URL_PARAM_VALUE_TODAY.equals(str)) {
            cal.add(Calendar.DAY_OF_YEAR, -1);
            date = cal.getTime();
-        } else if ("month".equals(str)) {
+        } else if (URL_PARAM_VALUE_MONTH.equals(str)) {
             cal.add(Calendar.MONTH, -1);
             date = cal.getTime();
-        } // all-time => pass in null
+        } // all time => return null
         return date;
      }
 }

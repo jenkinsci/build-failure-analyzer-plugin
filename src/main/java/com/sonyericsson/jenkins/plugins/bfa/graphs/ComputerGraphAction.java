@@ -1,6 +1,31 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
@@ -13,7 +38,7 @@ import hudson.model.Slave;
 import hudson.util.Graph;
 
 /**
- * Class for displaying graphs for node, slave/master.
+ * Class for displaying graphs for nodes - slaves/masters.
  * @author Christoffer Lauri &lt;christoffer.lauri@sonymobile.com&gt;
  *
  */
@@ -50,7 +75,6 @@ public class ComputerGraphAction extends BfaGraphAction {
 
     @Override
     public String getIconFileName() {
-        // TODO: Return an other icon?
         if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
         } else {
@@ -87,7 +111,6 @@ public class ComputerGraphAction extends BfaGraphAction {
         if (computer == null) {
             return false;
         }
-        // TODO: reliable check?
         return (computer.getNode() instanceof Slave);
     }
 
@@ -99,7 +122,8 @@ public class ComputerGraphAction extends BfaGraphAction {
     @Override
     public int[] getGraphNumbers() {
         return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES,
-                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, };
+                TIME_SERIES_CHART_CAUSES, BAR_CHART_CATEGORIES,
+                PIE_CHART_CATEGORIES, TIME_SERIES_CHART_CATEGORIES, };
     }
 
     @Override
@@ -108,55 +132,91 @@ public class ComputerGraphAction extends BfaGraphAction {
     }
 
     @Override
-    public Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
+    protected Graph getGraph(int which, Date timePeriod,
+            boolean hideManAborted, boolean forAllMasters,
+            Map<String, String> rawReqParams) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideManAborted,
+                timePeriod);
         switch (which) {
-        case BAR_CHART_CAUSES: return getBarChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
-        case BAR_CHART_CATEGORIES: return getBarChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
-        case PIE_CHART_CAUSES: return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
-        case PIE_CHART_CATEGORIES: return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
-        default: return null;
+        case BAR_CHART_CAUSES:
+            return getBarChart(false, GRAPH_TITLE_CAUSES, filter);
+        case BAR_CHART_CATEGORIES:
+            return getBarChart(true, GRAPH_TITLE_CATEGORIES, filter);
+        case PIE_CHART_CAUSES:
+            return getPieChart(false, GRAPH_TITLE_CAUSES, filter);
+        case PIE_CHART_CATEGORIES:
+            return getPieChart(true, GRAPH_TITLE_CATEGORIES, filter);
+        case TIME_SERIES_CHART_CAUSES:
+            return getTimeSeriesChart(false, GRAPH_TITLE_CAUSES, filter,
+                    rawReqParams);
+        case TIME_SERIES_CHART_CATEGORIES:
+            return getTimeSeriesChart(true, GRAPH_TITLE_CATEGORIES, filter,
+                    rawReqParams);
+        default:
+            break;
         }
+        return null;
     }
 
     /**
-     * Get a pie chart according to the specified arguments.
-     * @param byCategories True to display categories, or false to display causes
-     * @param period The time period
-     * @param hideAborted Hide manually aborted
+     * Get a time series chart corresponding to the specified arguments.
+     * @param byCategories True to group by categories, or false causes
      * @param title The title of the graph
-     * @return A graph
+     * @param filter GraphFilterBuilder to specify data to use
+     * @param rawReqParams A map with the url-parameters from the request
+     * @return A time series graph
      */
-    private Graph getPieChart(boolean byCategories, Date period,
-            boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
-        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
-                null, filter, title, byCategories);
+    private Graph getTimeSeriesChart(boolean byCategories, String title,
+            GraphFilterBuilder filter, Map<String, String> rawReqParams) {
+        String date = rawReqParams.get(URL_PARAM_TIME_PERIOD);
+
+        int interval = 0;
+        Calendar cal = Calendar.getInstance();
+        if (URL_PARAM_VALUE_TODAY.equals(date)) {
+            interval = Calendar.HOUR_OF_DAY;
+            cal.add(Calendar.DAY_OF_YEAR, -1);
+        } else {
+            interval = Calendar.DATE;
+            cal.add(Calendar.MONTH, -1);
+        }
+        filter.setSince(cal.getTime());
+        return new TimeSeriesChart(-1, DEFAULT_GRAPH_WIDTH,
+                DEFAULT_GRAPH_HEIGHT, null, filter, interval, byCategories,
+                title);
     }
 
     /**
-     * Get a bar chart according to the specified arguments.
-     * @param byCategories True to display categories, or false to display causes
-     * @param period The time period
-     * @param hideAborted Hide manually aborted
+     * Get a bar chart corresponding to the specified arguments.
+     * @param byCategories True to display categories, false for causes
      * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
      * @return A graph
      */
-    private Graph getBarChart(boolean byCategories, Date period, boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+    private Graph getBarChart(boolean byCategories, String title, GraphFilterBuilder filter) {
         return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
     }
 
     /**
-     * Get a GraphFilterBuilder with the specified arguments, and
-     * the slave- or master-name set.
+     * Get a pie chart corresponding to the specified arguments.
+     * @param byCategories True to display categories, or false for causes
+     * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
+     * @return A graph
+     */
+    private Graph getPieChart(boolean byCategories, String title, GraphFilterBuilder filter) {
+        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
+    }
+
+    /**
+     * Get a GraphFilterBuilder corresponding to the specified arguments.
      * @param hideAborted Hide manually aborted
      * @param period The time period
-     * @return A graphFilterBuilder
+     * @return A GraphFilterBuilder
      */
     private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
         GraphFilterBuilder filter = new GraphFilterBuilder();
         if (hideAborted) {
-            filter.setExcludeResult("ABORTED");
+            filter.setExcludeResult(EXCLUDE_ABORTED);
         }
         filter.setSince(period);
         String nodeName = getNodeName();

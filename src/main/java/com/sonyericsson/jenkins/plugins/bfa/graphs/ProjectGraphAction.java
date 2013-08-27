@@ -23,12 +23,15 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
+import hudson.model.ModelObject;
+import hudson.model.AbstractProject;
+import hudson.util.Graph;
+
 import java.util.Date;
+import java.util.Map;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
-import hudson.model.AbstractProject;
-import hudson.model.ModelObject;
-import hudson.util.Graph;
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 
 /**
  * Action class for displaying graphs on the project page.
@@ -87,23 +90,28 @@ public class ProjectGraphAction extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
+    protected Graph getGraph(int which, Date timePeriod,
+            boolean hideManAborted, boolean forAllMasters,
+            Map<String, String> rawReqParams) {
         switch (which) {
         case BAR_CHART_CAUSES_SMALL:
             return getBarChart(false, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
                     timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
         case BAR_CHART_CAUSES:
-            return getBarChart(false, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
-                    hideManAborted, GRAPH_TITLE_CAUSES);
+            return getBarChart(false, DEFAULT_GRAPH_WIDTH,
+                    DEFAULT_GRAPH_HEIGHT, timePeriod, hideManAborted,
+                    GRAPH_TITLE_CAUSES);
         case BAR_CHART_CATEGORIES:
-            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, timePeriod,
-                    hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
         case BAR_CHART_BUILD_NBRS:
             return getBuildNbrChart(hideManAborted);
         case PIE_CHART_CAUSES:
-            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+            return getPieChart(false, timePeriod, hideManAborted,
+                    GRAPH_TITLE_CAUSES);
         case PIE_CHART_CATEGORIES:
-            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return getPieChart(true, timePeriod, hideManAborted,
+                    GRAPH_TITLE_CATEGORIES);
         default:
             break;
         }
@@ -162,10 +170,10 @@ public class ProjectGraphAction extends BfaGraphAction {
         GraphFilterBuilder filter = new GraphFilterBuilder();
         filter.setProjectName(project.getFullName());
         if (hideAborted) {
-            filter.setExcludeResult("ABORTED");
+            filter.setExcludeResult(EXCLUDE_ABORTED);
         }
         filter.setSince(period);
-//        filter.setMasterName(BfaUtils.getMasterName());
+        filter.setMasterName(BfaUtils.getMasterName());
         return filter;
     }
 }

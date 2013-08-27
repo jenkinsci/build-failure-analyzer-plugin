@@ -28,6 +28,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.BarChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.PieChart;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.TimeSeriesChart;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
@@ -47,7 +48,9 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -317,8 +320,8 @@ public class CauseManagement extends BfaGraphAction {
 
     @Override
     public int[] getGraphNumbers() {
-        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES,
-                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, };
+        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES, TIME_SERIES_CHART_CAUSES,
+                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, TIME_SERIES_CHART_CATEGORIES, };
     }
 
     @Override
@@ -332,8 +335,11 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideManAborted, timePeriod, forAllMasters);
+    protected Graph getGraph(int which, Date timePeriod,
+            boolean hideManAborted, boolean forAllMasters,
+            Map<String, String> rawReqParams) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideManAborted,
+                timePeriod, forAllMasters);
         switch (which) {
         case BAR_CHART_CAUSES:
             return getBarChart(false, GRAPH_TITLE_CAUSES, filter);
@@ -343,10 +349,43 @@ public class CauseManagement extends BfaGraphAction {
             return getPieChart(false, GRAPH_TITLE_CAUSES, filter);
         case PIE_CHART_CATEGORIES:
             return getPieChart(true, GRAPH_TITLE_CATEGORIES, filter);
+        case TIME_SERIES_CHART_CAUSES:
+            return getTimeSeriesChart(false, GRAPH_TITLE_CAUSES, filter,
+                    rawReqParams);
+        case TIME_SERIES_CHART_CATEGORIES:
+            return getTimeSeriesChart(true, GRAPH_TITLE_CATEGORIES, filter,
+                    rawReqParams);
         default:
             break;
         }
         return null;
+    }
+
+    /**
+     * Get a time series chart corresponding to the specified arguments.
+     * @param byCategories True to group by categories, or false causes
+     * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
+     * @param rawReqParams A map with the url-parameters from the request
+     * @return A time series graph
+     */
+    private Graph getTimeSeriesChart(boolean byCategories, String title,
+            GraphFilterBuilder filter, Map<String, String> rawReqParams) {
+        String date = rawReqParams.get(URL_PARAM_TIME_PERIOD);
+
+        int interval = 0;
+        Calendar cal = Calendar.getInstance();
+        if (URL_PARAM_VALUE_TODAY.equals(date)) {
+            interval = Calendar.HOUR_OF_DAY;
+            cal.add(Calendar.DAY_OF_YEAR, -1);
+        } else {
+            interval = Calendar.DATE;
+            cal.add(Calendar.MONTH, -1);
+        }
+        filter.setSince(cal.getTime());
+        return new TimeSeriesChart(-1, DEFAULT_GRAPH_WIDTH,
+                DEFAULT_GRAPH_HEIGHT, null, filter, interval, byCategories,
+                title);
     }
 
     /**
@@ -381,7 +420,7 @@ public class CauseManagement extends BfaGraphAction {
     private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period, boolean forAllMasters) {
         GraphFilterBuilder filter = new GraphFilterBuilder();
         if (hideAborted) {
-            filter.setExcludeResult("ABORTED");
+            filter.setExcludeResult(EXCLUDE_ABORTED);
         }
         if (!forAllMasters) {
             filter.setMasterName(BfaUtils.getMasterName());

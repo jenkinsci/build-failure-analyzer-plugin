@@ -64,8 +64,6 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  */
 public class TimeSeriesChart extends BFAGraph {
 
-    private static final String TITLE = "Failure causes over time for all projects";
-    private static final String OTHERS = "Others";
     private static final String Y_AXIS_LABEL = "Number";
     private static final int LIMIT_BEFORE_GROUPING = 8;
 
@@ -109,7 +107,7 @@ public class TimeSeriesChart extends BFAGraph {
                 String seriesKey = dataset.getSeriesKey(series).toString();
                 StringBuilder sb = new StringBuilder();
 
-                if (seriesKey.equals(OTHERS)) {
+                if (seriesKey.equals(GRAPH_OTHERS)) {
                     long timeInMillis = dataset.getX(series, item).longValue();
                     Date time = new Date(timeInMillis);
 
@@ -144,7 +142,7 @@ public class TimeSeriesChart extends BFAGraph {
 
         plot.setRangeAxis(yAxis);
 
-        JFreeChart chart = new JFreeChart(TITLE, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+        JFreeChart chart = new JFreeChart(graphTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
 
         return chart;
     }
@@ -203,7 +201,7 @@ public class TimeSeriesChart extends BFAGraph {
             for (FailureCauseTimeInterval excludedData : list) {
                 sum += excludedData.getNumber();
             }
-            dataset.add(period, sum, OTHERS);
+            dataset.add(period, sum, GRAPH_OTHERS);
         }
         return dataset;
     }

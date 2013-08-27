@@ -797,7 +797,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             countList.add(new ObjectCountPair<String>(name, count));
         }
         Collections.sort(countList, ObjectCountPair.countComparator());
-        if (limit > 0) {
+        if (limit > 0 && countList.size() > limit) {
             countList = countList.subList(0, limit);
         }
 
