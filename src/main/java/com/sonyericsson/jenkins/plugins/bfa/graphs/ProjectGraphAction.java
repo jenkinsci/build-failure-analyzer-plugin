@@ -87,7 +87,7 @@ public class ProjectGraphAction extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
+    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
         switch (which) {
         case BAR_CHART_CAUSES_SMALL:
             return getBarChart(false, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,

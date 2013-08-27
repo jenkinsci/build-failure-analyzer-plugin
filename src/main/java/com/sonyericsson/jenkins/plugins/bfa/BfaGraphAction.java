@@ -28,6 +28,11 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final String URL_PARAM_SHOW_ABORTED = "showAborted";
 
     /**
+     * Url-parameter for indicating whether to show for all masters or not.
+     */
+    protected static final String URL_PARAM_ALL_MASTERS = "allMasters";
+
+    /**
      * Default width for graphs on detail pages.
      */
     protected static final int DEFAULT_GRAPH_WIDTH = 700;
@@ -95,15 +100,18 @@ public abstract class BfaGraphAction implements RootAction {
      * @param which Which graph to display
      * @param timePeriod How old statistics should be included in the graph
      * @param hideManAborted Hide manually aborted causes
+     * @param allMasters Show for alla masters
      * @return A Graph
      */
-    protected abstract Graph getGraph(int which, Date timePeriod, boolean hideManAborted);
+    protected abstract Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean allMasters);
 
     /**
-     * Get the Graph corresponding to the url-parameters;
+     * Get the Graph corresponding to the url-parameters.
+     * Parameters:
      * - time : how far back should statistics be included
      * - which : which graph to display
-     * - showAborted : show manually aborted.
+     * - showAborted : show manually aborted
+     * - allMasters : show for all masters
      * @param req The StaplerRequest
      * @return A graph
      */
@@ -111,6 +119,7 @@ public abstract class BfaGraphAction implements RootAction {
         String reqTimePeriod = req.getParameter(URL_PARAM_TIME_PERIOD);
         String reqWhich = req.getParameter(URL_PARAM_WHICH_GRAPH);
         String showAborted = req.getParameter(URL_PARAM_SHOW_ABORTED);
+        String allMasters = req.getParameter(URL_PARAM_ALL_MASTERS);
         Date sinceDate = getDateForUrlStr(reqTimePeriod);
         int whichGraph =  -1;
         try {
@@ -119,8 +128,9 @@ public abstract class BfaGraphAction implements RootAction {
             e.printStackTrace();
         }
         boolean hideAborted = "0".equals(showAborted);
+        boolean forAllMasters = "1".equals(allMasters);
         // TODO: check cache
-        return getGraph(whichGraph, sinceDate, hideAborted);
+        return getGraph(whichGraph, sinceDate, hideAborted, forAllMasters);
     }
 
     /**
@@ -137,6 +147,16 @@ public abstract class BfaGraphAction implements RootAction {
      */
     public int getDefaultGraphHeight() {
         return DEFAULT_GRAPH_HEIGHT;
+    }
+
+    /**
+     * Helper for the groovy-views; show/hide Masters-switch.
+     * Whether to show links for switching between all masters
+     * and the own master.
+     * @return True to show the switch, otherwise false
+     */
+    public boolean showMasterSwitch() {
+        return false;
     }
 
     /**

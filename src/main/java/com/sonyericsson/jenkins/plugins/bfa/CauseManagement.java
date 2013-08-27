@@ -30,6 +30,8 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.PieChart;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
@@ -325,16 +327,22 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
+    public boolean showMasterSwitch() {
+        return true;
+    }
+
+    @Override
+    protected Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideManAborted, timePeriod, forAllMasters);
         switch (which) {
         case BAR_CHART_CAUSES:
-            return getBarChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+            return getBarChart(false, GRAPH_TITLE_CAUSES, filter);
         case BAR_CHART_CATEGORIES:
-            return getBarChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return getBarChart(true, GRAPH_TITLE_CATEGORIES, filter);
         case PIE_CHART_CAUSES:
-            return getPieChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+            return getPieChart(false, GRAPH_TITLE_CAUSES, filter);
         case PIE_CHART_CATEGORIES:
-            return getPieChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return getPieChart(true, GRAPH_TITLE_CATEGORIES, filter);
         default:
             break;
         }
@@ -344,26 +352,22 @@ public class CauseManagement extends BfaGraphAction {
     /**
      * Get a bar chart corresponding to the specified arguments.
      * @param byCategories True to display categories, false for causes
-     * @param period The time period
-     * @param hideAborted Hide manually aborted
      * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
      * @return A graph
      */
-    private Graph getBarChart(boolean byCategories, Date period, boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+    private Graph getBarChart(boolean byCategories, String title, GraphFilterBuilder filter) {
         return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
     }
 
     /**
      * Get a pie chart corresponding to the specified arguments.
      * @param byCategories True to display categories, or false for causes
-     * @param period The time period
-     * @param hideAborted Hide manually aborted
      * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
      * @return A graph
      */
-    private Graph getPieChart(boolean byCategories, Date period, boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
+    private Graph getPieChart(boolean byCategories, String title, GraphFilterBuilder filter) {
         return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
     }
 
@@ -371,12 +375,16 @@ public class CauseManagement extends BfaGraphAction {
      * Get a GraphFilterBuilder corresponding to the specified arguments.
      * @param hideAborted Hide manually aborted
      * @param period The time period
+     * @param forAllMasters Show for all masters
      * @return A GraphFilterBuilder
      */
-    private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
+    private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period, boolean forAllMasters) {
         GraphFilterBuilder filter = new GraphFilterBuilder();
         if (hideAborted) {
             filter.setExcludeResult("ABORTED");
+        }
+        if (!forAllMasters) {
+            filter.setMasterName(BfaUtils.getMasterName());
         }
         filter.setSince(period);
         return filter;

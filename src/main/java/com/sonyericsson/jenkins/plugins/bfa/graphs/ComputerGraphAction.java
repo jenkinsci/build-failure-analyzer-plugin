@@ -108,7 +108,7 @@ public class ComputerGraphAction extends BfaGraphAction {
     }
 
     @Override
-    public Graph getGraph(int which, Date timePeriod, boolean hideManAborted) {
+    public Graph getGraph(int which, Date timePeriod, boolean hideManAborted, boolean forAllMasters) {
         switch (which) {
         case BAR_CHART_CAUSES: return getBarChart(false, timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
         case BAR_CHART_CATEGORIES: return getBarChart(true, timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);

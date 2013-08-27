@@ -44,7 +44,7 @@ if (timePeriod == null || !timePeriod.matches("today|month|all")) {
 }
 def showAborted = request.getParameter("showAborted");
 if (showAborted == null || !showAborted.matches("1|0")) {
-  showAborted = 1;
+  showAborted = 0;
 }
 def switchAborted = 0;
 def switchAbortedText = "Hide aborted builds";
@@ -52,14 +52,27 @@ if (showAborted == "0") {
   switchAborted = 1;
   switchAbortedText = "Show aborted builds";
 }
-def trailingImageUrlParams = "&time=" + timePeriod + "&showAborted=" + showAborted;
+
+def linkBoxWidth = "50%";
+def masterValue = "";
+if (my.showMasterSwitch()) {
+  masterValue = request.getParameter("allMasters");
+  if (masterValue == null || !masterValue.matches("0|1")) {
+    masterValue = "0";
+  }
+  linkBoxWidth = "33%";
+}
+
+def trailingImageUrlParams = "&time=" + timePeriod + "&showAborted=" + showAborted + "&allMasters=" + masterValue;
 
 l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   l.header() {
     style(type: "text/css") {
-      raw("div.bfaSwitchLinks { margin: 10px; font-size: larger; }")
-      raw("a#" + timePeriod + "-link, a#aborted-" + showAborted + " { text-decoration: underline; }")
-      raw("div.bfaSwitchLinks a { margin: 5px 0; padding: 5px; text-decoration: none; color: #204a87; } ")
+      raw("div.bfaSwitchLinks { margin: 20px 0; font-size: larger; }")
+      raw("div.bfaSwitchLinks > div { float: left; width: " + linkBoxWidth + "; }")
+      raw("a#" + timePeriod + "-link, a#aborted-" + showAborted + ", a#masters-" + masterValue + " { background-color: #dddddd; }")
+      raw("div.bfaSwitchLinks a { padding: 2px 4px; text-decoration: none; color: #204a87; line-height: 140%;}")
+      raw("div.bfaSwitchLinks span { font-weight: bold; }")
     }
   }
 
@@ -82,40 +95,61 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
     h1(_(my.graphsPageTitle))
     
     div(class: "bfaSwitchLinks") {
-      div(style: "float: right;") {
-        span(style: "font-weight: bold; margin: 5px;") {
-          text(_("Aborted builds"))
-        }
-        raw("<br />")
-        a(href: "?time=" + timePeriod + "&showAborted=1",
-            id: "aborted-1") {
-          text(_("Show"))
-        }
-        a(href: "?time=" + timePeriod + "&showAborted=0",
-            id: "aborted-0") {
-          text(_("Hide"))
-        }
-      }
-  
-      div(style: "padding: 10px;") {
-        span(style: "font-weight: bold; margin: 5px;") {
+      div(style: "text-align: center;") {
+        span() {
           text(_("Time period"))
         }
         div() {
-          a(href: "?time=today&showAborted=" + showAborted,
+          def trailingUrl = "&showAborted=" + showAborted + "&allMasters=" + masterValue;
+          a(href: "?time=today" + trailingUrl,
             id: "today-link") {
             text(_("Today"))
           }
-          a(href: "?time=month&showAborted=" + showAborted,
+          a(href: "?time=month" + trailingUrl,
              id: "month-link") {
              text(_("Month"))
           }
-          a(href: "?time=all&showAborted=" + showAborted,
+          a(href: "?time=all" + trailingUrl,
              id: "all-link") {
              text(_("All"))
           }
         }
       }
+
+      if (my.showMasterSwitch()) {
+        div(style: "text-align: center;") {
+          span() {
+            text(_("Masters"))
+          }
+          raw("<br />")
+          a(href: "?time=" + timePeriod + "&showAborted=" + showAborted + "&allMasters=0",
+              id: "masters-0") {
+            text(_("This"))
+          }
+          raw("&nbsp;")
+          a(href: "?time=" + timePeriod + "&showAborted=" + showAborted + "&allMasters=1",
+              id: "masters-1") {
+            text(_("All"))
+          }
+        }
+      }
+
+      div(style: "text-align: center;") {
+        span() {
+          text(_("Aborted builds"))
+        }
+        raw("<br />")
+        a(href: "?time=" + timePeriod + "&showAborted=0&allMasters=" + masterValue,
+            id: "aborted-0") {
+          text(_("Hide"))
+        }
+        a(href: "?time=" + timePeriod + "&showAborted=1&allMasters=" + masterValue,
+            id: "aborted-1") {
+          text(_("Show"))
+        }
+      }
+
+      br(style: "clear: both;") {}
     }
     
     div() {
