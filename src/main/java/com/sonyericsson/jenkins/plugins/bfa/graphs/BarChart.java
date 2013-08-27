@@ -102,7 +102,9 @@ public class BarChart extends BFAGraph {
         int othersCount = 0;
         for (int i = 0; i < failureItems.size(); i++) {
             ObjectCountPair<String> countPair = failureItems.get(i);
-            if (i < MAX_GRAPH_ELEMENTS) {
+            if (countPair.getObject() == null) {
+                nullFailureItems += countPair.getCount();
+            } else if (i < MAX_GRAPH_ELEMENTS) {
                 dataset.setValue(countPair.getCount(), "", countPair.getObject());
             } else {
                 othersCount += countPair.getCount();

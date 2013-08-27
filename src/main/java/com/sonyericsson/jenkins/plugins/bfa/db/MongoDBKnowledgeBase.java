@@ -770,14 +770,23 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            if (failureCause != null && failureCause.getCategories() != null) {
-                for (String category : failureCause.getCategories()) {
-                    Integer currentNbr = nbrOfFailureCategoriesPerName.get(category);
+            if (failureCause != null) {
+                if (failureCause.getCategories() == null) {
+                    Integer currentNbr = nbrOfFailureCategoriesPerName.get(null);
                     if (currentNbr == null) {
                         currentNbr = 0;
                     }
                     currentNbr += count;
-                    nbrOfFailureCategoriesPerName.put(category, count);
+                    nbrOfFailureCategoriesPerName.put(null, count);
+                } else {
+                    for (String category : failureCause.getCategories()) {
+                        Integer currentNbr = nbrOfFailureCategoriesPerName.get(category);
+                        if (currentNbr == null) {
+                            currentNbr = 0;
+                        }
+                        currentNbr += count;
+                        nbrOfFailureCategoriesPerName.put(category, count);
+                    }
                 }
             }
         }
