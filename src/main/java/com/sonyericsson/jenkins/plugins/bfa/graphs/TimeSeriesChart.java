@@ -97,7 +97,15 @@ public class TimeSeriesChart extends BFAGraph {
         ValueAxis xAxis = new DateAxis();
         xAxis.setLowerMargin(0.0);
         xAxis.setUpperMargin(0.0);
+        Calendar lowerBound = Calendar.getInstance();
+        if (intervalSize == Calendar.DATE) {
+            lowerBound.add(Calendar.MONTH, -1);
+        } else if (intervalSize == Calendar.HOUR_OF_DAY) {
+            lowerBound.add(Calendar.DATE, -1);
+        }
+        xAxis.setRange(lowerBound.getTimeInMillis(), Calendar.getInstance().getTimeInMillis());
         NumberAxis yAxis = new NumberAxis(Y_AXIS_LABEL);
+        yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
 

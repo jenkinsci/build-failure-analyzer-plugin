@@ -213,7 +213,7 @@ public abstract class BfaGraphAction implements RootAction {
         } else if (URL_PARAM_VALUE_MONTH.equals(str)) {
             cal.add(Calendar.MONTH, -1);
             date = cal.getTime();
-        } // all time => return null
+        } // max time => return null
         return date;
      }
 }

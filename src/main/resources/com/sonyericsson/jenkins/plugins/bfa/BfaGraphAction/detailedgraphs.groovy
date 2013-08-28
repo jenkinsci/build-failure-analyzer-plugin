@@ -39,7 +39,7 @@ def j = namespace(lib.JenkinsTagLib)
 def management = CauseManagement.getInstance();
 def bgImageUrl = PluginImpl.getFullImageUrl("256x256", "information.png");
 def timePeriod = request.getParameter("time");
-if (timePeriod == null || !timePeriod.matches("today|month|all")) {
+if (timePeriod == null || !timePeriod.matches("today|month|max")) {
   timePeriod = "today";
 }
 def showAborted = request.getParameter("showAborted");
@@ -109,9 +109,9 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
              id: "month-link") {
              text(_("Month"))
           }
-          a(href: "?time=all" + trailingUrl,
-             id: "all-link") {
-             text(_("All"))
+          a(href: "?time=max" + trailingUrl,
+             id: "max-link") {
+             text(_("Max"))
           }
         }
       }
