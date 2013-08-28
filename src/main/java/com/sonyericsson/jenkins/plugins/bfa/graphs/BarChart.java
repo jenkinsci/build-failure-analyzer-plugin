@@ -32,6 +32,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 
@@ -47,6 +48,10 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  */
 public class BarChart extends BFAGraph {
     private boolean byCategories;
+    /**
+     * Maximum bar size (quota of available space in graph).
+     */
+    private static final double MAX_BAR_WIDTH = 0.15;
 
     /**
      * Default constructor.
@@ -77,6 +82,10 @@ public class BarChart extends BFAGraph {
 
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
         plot.setRangeAxis(domainAxis);
+
+        BarRenderer renderer = (BarRenderer)plot.getRenderer();
+        renderer.setMaximumBarWidth(MAX_BAR_WIDTH);
+
         return chart;
     }
 
