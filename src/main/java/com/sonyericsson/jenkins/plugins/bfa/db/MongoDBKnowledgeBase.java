@@ -73,6 +73,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SimpleTimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -692,8 +693,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         groupFields.put("number", new BasicDBObject("$sum", 1));
         DBObject group = new BasicDBObject("$group", groupFields);
 
-        // TODO: Include the posts that have no failureCauses.
-
         AggregationOutput output;
         try {
             output = getStatisticsCollection().aggregate(match, unwind, group);
@@ -707,6 +706,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
                 Calendar c = Calendar.getInstance();
                 c.set(year, month - 1, dayOfMonth);
+                // MongoDB timezone is UTC:
+                c.setTimeZone(new SimpleTimeZone(0, "UTC"));
+
                 TimePeriod period = null;
                 if (intervalSize == Calendar.HOUR_OF_DAY) {
                     int hour = groupedAttrs.getInt("hour");
