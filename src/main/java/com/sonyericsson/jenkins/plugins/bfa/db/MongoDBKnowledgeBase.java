@@ -485,11 +485,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
         try {
             return getStatisticsCollection().count(matchFields);
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
+            logger.fine("Unable to get number of null failure causes");
             e.printStackTrace();
         }
         return -1;
@@ -515,8 +512,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             limit = new BasicDBObject("$limit", maxNbr);
         }
 
-        //TODO: Include the posts that have no failureCauses.
-
         AggregationOutput output;
         try {
             if (limit == null) {
@@ -532,11 +527,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     nbrOfFailureCausesPerId.add(new ObjectCountPair<String>(id, number));
                 }
             }
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
+            logger.fine("Unable to get failure causes per id");
             e.printStackTrace();
         }
 
@@ -592,11 +584,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     nbrOfFailureCauses.add(new ObjectCountPair<FailureCause>(failureCause, count));
                 }
             }
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
+            logger.fine("Unable to count failure causes");
             e.printStackTrace();
         }
         return nbrOfFailureCauses;
@@ -615,11 +604,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     nbrOfFailureCauses.add(new ObjectCountPair<String>(failureCause.getName(), count));
                 }
             }
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
+            logger.fine("Unable to count failure causes by name");
             e.printStackTrace();
         }
         return nbrOfFailureCauses;
@@ -639,9 +625,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
         DBObject sort = new BasicDBObject("$sort", new BasicDBObject("_id", 1));
 
-        // TODO: Include the posts that have no failureCauses.
-
-
         AggregationOutput output;
         try {
             output = getStatisticsCollection().aggregate(match, unwind, group, sort);
@@ -658,11 +641,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
                 nbrOfFailureCausesPerBuild.put(buildNumber, failureCauses);
             }
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
+            logger.fine("Unable to count failure causes by build");
             e.printStackTrace();
         }
 
@@ -742,11 +722,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     failureCauseIntervals.add(timeInterval);
                 }
             }
-        } catch (AuthenticationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
+            logger.fine("Unable to get failure causes by time");
+            e.printStackTrace();
+        } catch (AuthenticationException e) {
+            logger.fine("Unable to get failure causes by time");
             e.printStackTrace();
         }
 
@@ -765,11 +745,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             FailureCause failureCause = null;
             try {
                 failureCause = getCause(id);
-            } catch (AuthenticationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
+            } catch (Exception e) {
+                logger.fine("Unable to count failure causes by name");
                 e.printStackTrace();
             }
             if (failureCause != null) {
