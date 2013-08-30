@@ -861,7 +861,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                         currentNbr = 0;
                     }
                     currentNbr += count;
-                    nbrOfFailureCategoriesPerName.put(null, count);
+                    nbrOfFailureCategoriesPerName.put(null, currentNbr);
                 } else {
                     for (String category : failureCause.getCategories()) {
                         Integer currentNbr = nbrOfFailureCategoriesPerName.get(category);
@@ -869,7 +869,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                             currentNbr = 0;
                         }
                         currentNbr += count;
-                        nbrOfFailureCategoriesPerName.put(category, count);
+                        nbrOfFailureCategoriesPerName.put(category, currentNbr);
                     }
                 }
             }
