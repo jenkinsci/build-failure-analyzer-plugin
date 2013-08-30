@@ -116,17 +116,17 @@ public class BuildLogIndicationTest extends HudsonTestCase {
         String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
                 new BuildLogIndication.BuildLogIndicationDescriptor();
-        FormValidation formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
         assertEquals(TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("/1/", "/lastBuild");
-        formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
         assertEquals(TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("lastBuild", "lastSuccessfulBuild");
-        formValidation = indicationDescriptor.doMatchText(".*test.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
         assertEquals(TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
     }
