@@ -104,6 +104,11 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int TIME_SERIES_CHART_CATEGORIES = 8;
 
     /**
+     * Constant for time series chart displaying unknown failure causes.
+     */
+    protected static final int TIME_SERIES_UNKNOWN_FAILURES = 9;
+
+    /**
      * Constant for "ABORTED"-cause (used to exclude such {@link FailureCause}s).
      */
     protected static final String EXCLUDE_ABORTED = "ABORTED";

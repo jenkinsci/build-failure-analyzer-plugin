@@ -41,6 +41,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.jfree.data.time.TimePeriod;
+
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
  * the descriptor to provide your own.
@@ -211,6 +213,17 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     }
 
     /**
+     * Gets the quota of unknown failure causes mapped by time periods.
+     * @param intervalSize the interval sizes in which the data is grouped.
+     * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
+     * @param filter The filter to use when fetching the data
+     * @return failure cause quotas
+     */
+    public Map<TimePeriod, Double> getUnknownFailureCauseQuotaPerTime(int intervalSize, GraphFilterBuilder filter) {
+        return null;
+    }
+
+    /**
      * Gets a list of {@link ObjectCountPair}s where each pair contains a unique {@link FailureCause}-name as key
      * and the number of times that failure cause was triggered as count.
      * This list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
@@ -260,7 +273,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * and one list element is created for each FailureCause for each time interval there exist data.
      *
      * @param intervalSize the interval sizes in which the data is grouped.
-     * Should be set to Calendar.DATE or Calendar.HOUR_OF_DAY.
+     * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
      * @param filter the filter to use when fetching data
      * @param byCategories set to true in order to group failure causes by their categories
      * @return list of FailureCauseTimeIntervals

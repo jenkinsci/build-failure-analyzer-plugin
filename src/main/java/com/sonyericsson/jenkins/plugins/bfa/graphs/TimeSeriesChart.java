@@ -48,6 +48,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StackedXYBarRenderer;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.Hour;
+import org.jfree.data.time.Month;
 import org.jfree.data.time.TimePeriod;
 import org.jfree.data.time.TimeTableXYDataset;
 import org.jfree.data.xy.XYDataset;
@@ -67,7 +68,11 @@ public class TimeSeriesChart extends BFAGraph {
     private static final String Y_AXIS_LABEL = "Number";
     private static final int LIMIT_BEFORE_GROUPING = 8;
 
-    private int intervalSize;
+    /**
+     * Time interval size, should be set to Calendar.HOUR_OF_DAY, Calendar.DATE or
+     * Calendar.MONTH.
+     */
+    protected int intervalSize;
     private boolean groupByCategories;
     private Map<TimePeriod, List<FailureCauseTimeInterval>> excludedDataForPeriod;
 
@@ -97,18 +102,13 @@ public class TimeSeriesChart extends BFAGraph {
         ValueAxis xAxis = new DateAxis();
         xAxis.setLowerMargin(0.0);
         xAxis.setUpperMargin(0.0);
-        Calendar lowerBound = Calendar.getInstance();
-        if (intervalSize == Calendar.DATE) {
-            lowerBound.add(Calendar.MONTH, -1);
-        } else if (intervalSize == Calendar.HOUR_OF_DAY) {
-            lowerBound.add(Calendar.DATE, -1);
-        }
+        Calendar lowerBound = getLowerGraphBound();
         xAxis.setRange(lowerBound.getTimeInMillis(), Calendar.getInstance().getTimeInMillis());
+
         NumberAxis yAxis = new NumberAxis(Y_AXIS_LABEL);
         yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
-
         renderer.setBaseToolTipGenerator(new XYToolTipGenerator() {
             @Override
             public String generateToolTip(XYDataset dataset, int series, int item) {
@@ -124,18 +124,21 @@ public class TimeSeriesChart extends BFAGraph {
                         period = new Day(time);
                     } else if (intervalSize == Calendar.HOUR_OF_DAY) {
                         period = new Hour(time);
+                    } else if (intervalSize == Calendar.MONTH) {
+                        period = new Month(time);
                     }
                     List<FailureCauseTimeInterval> excludedDataList = excludedDataForPeriod.get(period);
-                    Collections.sort(excludedDataList, new Comparator<FailureCauseTimeInterval>() {
+                    if (excludedDataList != null) {
+                        Collections.sort(excludedDataList, new Comparator<FailureCauseTimeInterval>() {
 
-                        @Override
-                        public int compare(FailureCauseTimeInterval o1, FailureCauseTimeInterval o2) {
-                            return o2.getNumber() - o1.getNumber();
+                            @Override
+                            public int compare(FailureCauseTimeInterval o1, FailureCauseTimeInterval o2) {
+                                return o2.getNumber() - o1.getNumber();
+                            }
+                        });
+                        for (FailureCauseTimeInterval excludedData : excludedDataList) {
+                            sb.append(excludedData).append(" \n");
                         }
-                    });
-
-                    for (FailureCauseTimeInterval excludedData : excludedDataList) {
-                        sb.append(excludedData).append(" \n");
                     }
                 } else {
                     int number = dataset.getY(series, item).intValue();
@@ -153,6 +156,22 @@ public class TimeSeriesChart extends BFAGraph {
         JFreeChart chart = new JFreeChart(graphTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
 
         return chart;
+    }
+
+    /**
+     * Gets lower graph bound (minimum x-value), which depends on the intervalSize.
+     * @return lower graph bound
+     */
+    protected Calendar getLowerGraphBound() {
+        Calendar lowerBound = Calendar.getInstance();
+        if (intervalSize == Calendar.DATE) {
+            lowerBound.add(Calendar.MONTH, -1);
+        } else if (intervalSize == Calendar.HOUR_OF_DAY) {
+            lowerBound.add(Calendar.DATE, -1);
+        } else {
+            lowerBound.add(Calendar.YEAR, -MAX_YEARS_FOR_TIME_GRAPH);
+        }
+        return lowerBound;
     }
 
     /**

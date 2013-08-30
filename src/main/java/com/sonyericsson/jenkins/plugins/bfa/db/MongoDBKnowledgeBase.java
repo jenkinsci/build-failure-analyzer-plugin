@@ -57,6 +57,7 @@ import org.apache.commons.collections.keyvalue.MultiKey;
 import org.bson.types.ObjectId;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.Hour;
+import org.jfree.data.time.Month;
 import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -69,15 +70,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.SimpleTimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.Arrays.asList;
 
 /**
  * Handling of the MongoDB way of saving the knowledge base.
@@ -493,6 +498,72 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public Map<TimePeriod, Double> getUnknownFailureCauseQuotaPerTime(int intervalSize, GraphFilterBuilder filter) {
+        Map<TimePeriod, Integer> unknownFailures = new HashMap<TimePeriod, Integer>();
+        Map<TimePeriod, Integer> knownFailures = new HashMap<TimePeriod, Integer>();
+        Set<TimePeriod> periods = new HashSet<TimePeriod>();
+
+        DBObject matchFields = generateMatchFields(filter);
+        DBObject match = new BasicDBObject("$match", matchFields);
+
+        // Use $project to change all null failurecauses to 'false' since
+        // it's not possible to group by 'null':
+        DBObject projectFields = new BasicDBObject();
+        projectFields.put("startingTime", 1);
+        DBObject nullToFalse = new BasicDBObject("$ifNull", asList("$failureCauses", false));
+        projectFields.put("failureCauses", nullToFalse);
+        DBObject project = new BasicDBObject("$project", projectFields);
+
+        // Group by date and false/non false failure causes:
+        DBObject idFields = generateTimeGrouping(intervalSize);
+        DBObject checkNullFailureCause = new BasicDBObject("$eq", asList("$failureCauses", false));
+        idFields.put("isNullFailureCause", checkNullFailureCause);
+        DBObject groupFields = new BasicDBObject();
+        groupFields.put("_id", idFields);
+        groupFields.put("number", new BasicDBObject("$sum", 1));
+        DBObject group = new BasicDBObject("$group", groupFields);
+
+        AggregationOutput output;
+        try {
+            output = getStatisticsCollection().aggregate(match, project, group);
+            for (DBObject result : output.results()) {
+                DBObject groupedAttrs = (DBObject)result.get("_id");
+                TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
+                periods.add(period);
+                int number = (Integer)result.get("number");
+                boolean isNullFailureCause = (Boolean)groupedAttrs.get("isNullFailureCause");
+                if (isNullFailureCause) {
+                    unknownFailures.put(period, number);
+                } else {
+                    knownFailures.put(period, number);
+                }
+            }
+        } catch (Exception e) {
+            logger.fine("Unable to get unknown failure cause quota per time");
+            e.printStackTrace();
+        }
+        Map<TimePeriod, Double> nullFailureCauseQuotas = new HashMap<TimePeriod, Double>();
+        for (TimePeriod timePeriod : periods) {
+            int unknownFailureCount = 0;
+            int knownFailureCount = 0;
+            if (unknownFailures.containsKey(timePeriod)) {
+                unknownFailureCount = unknownFailures.get(timePeriod);
+            }
+            if (knownFailures.containsKey(timePeriod)) {
+                knownFailureCount = knownFailures.get(timePeriod);
+            }
+            double quota;
+            if (unknownFailureCount == 0) {
+                quota = 0d;
+            } else {
+                quota = ((double)unknownFailureCount) / (unknownFailureCount + knownFailureCount);
+            }
+            nullFailureCauseQuotas.put(timePeriod, quota);
+        }
+        return nullFailureCauseQuotas;
+    }
+
+    @Override
     public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int maxNbr) {
         List<ObjectCountPair<String>> nbrOfFailureCausesPerId = new ArrayList<ObjectCountPair<String>>();
         DBObject matchFields = generateMatchFields(filter);
@@ -649,6 +720,62 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         return nbrOfFailureCausesPerBuild;
     }
 
+    /**
+     * Generates a {@link DBObject} used for grouping data into time intervals
+     * @param intervalSize the interval size, should be set to Calendar.HOUR_OF_DAY,
+     * Calendar.DATE or Calendar.MONTH.
+     * @return DBObject to be used for time grouping
+     */
+    private DBObject generateTimeGrouping(int intervalSize) {
+        DBObject timeFields = new BasicDBObject();
+        if (intervalSize == Calendar.HOUR_OF_DAY) {
+            timeFields.put("hour", new BasicDBObject("$hour", "$startingTime"));
+        }
+        if (intervalSize == Calendar.HOUR_OF_DAY || intervalSize == Calendar.DATE) {
+            timeFields.put("dayOfMonth", new BasicDBObject("$dayOfMonth", "$startingTime"));
+        }
+        timeFields.put("month", new BasicDBObject("$month", "$startingTime"));
+        timeFields.put("year", new BasicDBObject("$year", "$startingTime"));
+        return timeFields;
+    }
+
+    /**
+     * Generates a {@link TimePeriod} based on a MongoDB grouping aggregation result.
+     * @param result the result to interpret
+     * @param intervalSize the interval size, should be set to Calendar.HOUR_OF_DAY,
+     * Calendar.DATE or Calendar.MONTH.
+     * @return TimePeriod
+     */
+    private TimePeriod generateTimePeriodFromResult(DBObject result, int intervalSize) {
+        BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
+        int month = groupedAttrs.getInt("month");
+        int year = groupedAttrs.getInt("year");
+
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, month - 1);
+        // MongoDB timezone is UTC:
+        c.setTimeZone(new SimpleTimeZone(0, "UTC"));
+
+        TimePeriod period = null;
+        if (intervalSize == Calendar.HOUR_OF_DAY) {
+            int dayOfMonth = groupedAttrs.getInt("dayOfMonth");
+            c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            int hour = groupedAttrs.getInt("hour");
+            c.set(Calendar.HOUR_OF_DAY, hour);
+
+            period = new Hour(c.getTime());
+        } else if (intervalSize == Calendar.DATE) {
+            int dayOfMonth = groupedAttrs.getInt("dayOfMonth");
+            c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+            period = new Day(c.getTime());
+        } else {
+            period = new Month(c.getTime());
+        }
+        return period;
+    }
+
     @Override
     public List<FailureCauseTimeInterval> getFailureCausesPerTime(int intervalSize, GraphFilterBuilder filter,
             boolean byCategories) {
@@ -660,13 +787,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
         DBObject unwind = new BasicDBObject("$unwind", "$failureCauses");
 
-        DBObject idFields = new BasicDBObject();
-        if (intervalSize == Calendar.HOUR_OF_DAY) {
-            idFields.put("hour", new BasicDBObject("$hour", "$startingTime"));
-        }
-        idFields.put("dayOfMonth", new BasicDBObject("$dayOfMonth", "$startingTime"));
-        idFields.put("month", new BasicDBObject("$month", "$startingTime"));
-        idFields.put("year", new BasicDBObject("$year", "$startingTime"));
+        DBObject idFields = generateTimeGrouping(intervalSize);
         idFields.put("failureCause", "$failureCauses.failureCause");
         DBObject groupFields = new BasicDBObject();
         groupFields.put("_id", idFields);
@@ -677,27 +798,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         try {
             output = getStatisticsCollection().aggregate(match, unwind, group);
             for (DBObject result : output.results()) {
-                BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
                 int number = (Integer)result.get("number");
 
-                int dayOfMonth = groupedAttrs.getInt("dayOfMonth");
-                int month = groupedAttrs.getInt("month");
-                int year = groupedAttrs.getInt("year");
+                TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
 
-                Calendar c = Calendar.getInstance();
-                c.set(year, month - 1, dayOfMonth);
-                // MongoDB timezone is UTC:
-                c.setTimeZone(new SimpleTimeZone(0, "UTC"));
-
-                TimePeriod period = null;
-                if (intervalSize == Calendar.HOUR_OF_DAY) {
-                    int hour = groupedAttrs.getInt("hour");
-                    c.set(Calendar.HOUR_OF_DAY, hour);
-                    period = new Hour(c.getTime());
-                } else {
-                    period = new Day(c.getTime());
-                }
-
+                BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
                 DBRef failureRef = (DBRef)groupedAttrs.get("failureCause");
                 String id = failureRef.getId().toString();
                 FailureCause failureCause = getCause(id);

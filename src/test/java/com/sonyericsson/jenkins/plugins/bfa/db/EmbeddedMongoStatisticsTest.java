@@ -57,7 +57,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  *
  */
 public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
-    // CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: Test data.
+    // CS IGNORE MagicNumber FOR NEXT 400 LINES. REASON: Test data.
 
     private static final String ID1 = "111111111111111111111111";
     private static final String ID2 = "222222222222222222222222";
@@ -260,7 +260,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
      * @throws Exception if something goes wrong
      */
     @Test
-    public void testGetFailureCausesPerTimeDatePeriod() throws Exception {
+    public void testGetFailureCausesPerTimeDayPeriod() throws Exception {
         setUpTwoCauses();
 
         List<FailureCauseTimeInterval> result = knowledgeBase.getFailureCausesPerTime(Calendar.DATE, null, false);
@@ -275,6 +275,35 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         assertEquals(ID1, result.get(1).getId());
         assertEquals(new Day(), result.get(1).getPeriod());
         assertEquals(2, result.get(1).getNumber());
+    }
+
+    /**
+     * Tests {@link MongoDBKnowledgeBase#getUnknownFailureCauseQuotaPerTime(int, GraphFilterBuilder)}.
+     * Sets up statistics for one day where 50% are without failure causes.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testGetUnknownFailureCauseQuotaPerTimeOneDay() throws Exception {
+        FailureCause cause = new FailureCause(ID1, null, null, CAT1, null);
+        knowledgeBase.saveCause(cause);
+
+        FailureCauseStatistics causeStats = new FailureCauseStatistics(ID1, null);
+        List<FailureCauseStatistics> statList = new ArrayList<FailureCauseStatistics>();
+        statList.add(causeStats);
+
+        Statistics statistics1 = new Statistics(null, 1, new Date(), 1L, null, null, null, 0, null, statList);
+        Statistics statistics2 = new Statistics(null, 2, new Date(), 1L, null, null, null, 0, null, null);
+
+        knowledgeBase.saveStatistics(statistics1);
+        knowledgeBase.saveStatistics(statistics2);
+
+        TimePeriod today = new Day();
+
+        Map<TimePeriod, Double> result = knowledgeBase.getUnknownFailureCauseQuotaPerTime(Calendar.DATE, null);
+
+        assertEquals(1, result.keySet().size());
+        assertEquals(0, Double.compare(result.values().iterator().next(), 0.5));
+        assertEquals(today, result.keySet().iterator().next());
     }
 
     /**

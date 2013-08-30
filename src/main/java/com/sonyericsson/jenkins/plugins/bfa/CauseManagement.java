@@ -25,10 +25,12 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.sonyericsson.jenkins.plugins.bfa.graphs.BFAGraph;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.BarChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.PieChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.TimeSeriesChart;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.TimeSeriesUnkownFailuresChart;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
@@ -107,6 +109,8 @@ public class CauseManagement extends BfaGraphAction {
      * Title for graphs with categories.
      */
     private static final String GRAPH_TITLE_CATEGORIES = "Failures causes for all nodes grouped by categories";
+
+    private static final String GRAPH_TITLE_UNKNOWN_PERCENTAGE = "Unknown failure causes";
 
     @Override
     public String getIconFileName() {
@@ -244,6 +248,7 @@ public class CauseManagement extends BfaGraphAction {
      *
      * @return the holder of the beer.
      */
+    @Override
     public ModelObject getOwner() {
         return Hudson.getInstance();
     }
@@ -321,7 +326,8 @@ public class CauseManagement extends BfaGraphAction {
     @Override
     public int[] getGraphNumbers() {
         return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES, TIME_SERIES_CHART_CAUSES,
-                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, TIME_SERIES_CHART_CATEGORIES, };
+                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, TIME_SERIES_CHART_CATEGORIES,
+                TIME_SERIES_UNKNOWN_FAILURES, };
     }
 
     @Override
@@ -359,10 +365,52 @@ public class CauseManagement extends BfaGraphAction {
         case TIME_SERIES_CHART_CATEGORIES:
             return getTimeSeriesChart(true, GRAPH_TITLE_CATEGORIES, filter,
                     rawReqParams);
+        case TIME_SERIES_UNKNOWN_FAILURES:
+            return getTimeSeriesUnknownFailuresChart(GRAPH_TITLE_UNKNOWN_PERCENTAGE, filter, rawReqParams);
         default:
             break;
         }
         return null;
+    }
+
+    /**
+     * Adds time strains to filter, depending on the time frame selected by the user.
+     * @param filter filter to add time strains for
+     * @param rawReqParams raw request params
+     * @return time interval to use for grouping data. This will be {@link Calendar}.HOUR_OF_DAY for the today-view,
+     * {@link Calendar}.DATE for monthly view and {@link Calendar}.MONTH for max view.
+     */
+    private int addTimeIntervalToFilter(GraphFilterBuilder filter, Map<String, String> rawReqParams) {
+        String date = rawReqParams.get(URL_PARAM_TIME_PERIOD);
+
+        int interval = 0;
+        Calendar cal = Calendar.getInstance();
+        if (URL_PARAM_VALUE_TODAY.equals(date)) {
+            interval = Calendar.HOUR_OF_DAY;
+            cal.add(Calendar.DAY_OF_YEAR, -1);
+        } else if (URL_PARAM_VALUE_MONTH.equals(date)) {
+            interval = Calendar.DATE;
+            cal.add(Calendar.MONTH, -1);
+        } else {
+            interval = Calendar.MONTH;
+            cal.add(Calendar.YEAR, -BFAGraph.MAX_YEARS_FOR_TIME_GRAPH);
+        }
+        filter.setSince(cal.getTime());
+        return interval;
+    }
+
+    /**
+     * Get a time series chart that displays unknown failure causes in percent.
+     * @param title The title of the graph
+     * @param filter GraphFilterBuilder to specify data to use
+     * @param rawReqParams A map with the url-parameters from the request
+     * @return Requested graph
+     */
+    private Graph getTimeSeriesUnknownFailuresChart(String title, GraphFilterBuilder filter,
+            Map<String, String> rawReqParams) {
+        int interval = addTimeIntervalToFilter(filter, rawReqParams);
+        return new TimeSeriesUnkownFailuresChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, interval,
+                title);
     }
 
     /**
@@ -373,22 +421,10 @@ public class CauseManagement extends BfaGraphAction {
      * @param rawReqParams A map with the url-parameters from the request
      * @return A time series graph
      */
-    private Graph getTimeSeriesChart(boolean byCategories, String title,
-            GraphFilterBuilder filter, Map<String, String> rawReqParams) {
-        String date = rawReqParams.get(URL_PARAM_TIME_PERIOD);
-
-        int interval = 0;
-        Calendar cal = Calendar.getInstance();
-        if (URL_PARAM_VALUE_TODAY.equals(date)) {
-            interval = Calendar.HOUR_OF_DAY;
-            cal.add(Calendar.DAY_OF_YEAR, -1);
-        } else {
-            interval = Calendar.DATE;
-            cal.add(Calendar.MONTH, -1);
-        }
-        filter.setSince(cal.getTime());
-        return new TimeSeriesChart(-1, DEFAULT_GRAPH_WIDTH,
-                DEFAULT_GRAPH_HEIGHT, null, filter, interval, byCategories,
+    private Graph getTimeSeriesChart(boolean byCategories, String title, GraphFilterBuilder filter,
+            Map<String, String> rawReqParams) {
+        int interval = addTimeIntervalToFilter(filter, rawReqParams);
+        return new TimeSeriesChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, interval, byCategories,
                 title);
     }
 

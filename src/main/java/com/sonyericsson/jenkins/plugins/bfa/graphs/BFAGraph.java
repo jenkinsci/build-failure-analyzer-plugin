@@ -76,6 +76,11 @@ public abstract class BFAGraph extends Graph {
     protected static final String GRAPH_UNKNOWN = "Unknown";
 
     /**
+     * Max number of years to display in time graphs.
+     */
+    public static final int MAX_YEARS_FOR_TIME_GRAPH = 3;
+
+    /**
      * Default constructor.
      *
      * @param timestamp
