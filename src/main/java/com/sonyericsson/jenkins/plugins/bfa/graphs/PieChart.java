@@ -83,19 +83,21 @@ public class PieChart extends BFAGraph {
             nbrOfFailureCauses = knowledgeBase.getFailureCauseNames(filter);
         }
 
-        int othersCount = 0;
-        for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
-            ObjectCountPair<String> countPair = nbrOfFailureCauses.get(i);
-            if (i < MAX_GRAPH_ELEMENTS) {
-                if (countPair.getObject() != null) {
-                    dataset.setValue(countPair.getObject(), countPair.getCount());
+        if (nbrOfFailureCauses != null) {
+            int othersCount = 0;
+            for (int i = 0; i < nbrOfFailureCauses.size(); i++) {
+                ObjectCountPair<String> countPair = nbrOfFailureCauses.get(i);
+                if (i < MAX_GRAPH_ELEMENTS) {
+                    if (countPair.getObject() != null) {
+                        dataset.setValue(countPair.getObject(), countPair.getCount());
+                    }
+                } else {
+                    othersCount += countPair.getCount();
                 }
-            } else {
-                othersCount += countPair.getCount();
             }
-        }
-        if (othersCount > 0) {
-            dataset.setValue(GRAPH_OTHERS, othersCount);
+            if (othersCount > 0) {
+                dataset.setValue(GRAPH_OTHERS, othersCount);
+            }
         }
         return dataset;
     }

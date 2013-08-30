@@ -84,14 +84,16 @@ public class BuildNbrStackedBarChart extends StackedBarChart {
 
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         Map<Integer, List<FailureCause>> map = knowledgeBase.getFailureCausesPerBuild(filter);
-        for (int buildNumber : latestBuildNumbers) {
-            String buildNumberString = "#" + buildNumber;
-            List<FailureCause> failureCauses = map.get(buildNumber);
-            if (failureCauses == null) {
-                dataset.addValue(0, NO_FAILURE, buildNumberString);
-            } else {
-                for (FailureCause cause : failureCauses) {
-                    dataset.addValue(1, cause.getName(), buildNumberString);
+        if (map != null) {
+            for (int buildNumber : latestBuildNumbers) {
+                String buildNumberString = "#" + buildNumber;
+                List<FailureCause> failureCauses = map.get(buildNumber);
+                if (failureCauses == null) {
+                    dataset.addValue(0, NO_FAILURE, buildNumberString);
+                } else {
+                    for (FailureCause cause : failureCauses) {
+                        dataset.addValue(1, cause.getName(), buildNumberString);
+                    }
                 }
             }
         }

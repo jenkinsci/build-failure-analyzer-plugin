@@ -107,24 +107,25 @@ public class BarChart extends BFAGraph {
             nullFailureItems = knowledgeBase.getNbrOfNullFailureCauses(filter);
             nullFailuteItemsName = GRAPH_UNKNOWN;
         }
-
-        int othersCount = 0;
-        for (int i = 0; i < failureItems.size(); i++) {
-            ObjectCountPair<String> countPair = failureItems.get(i);
-            if (countPair.getObject() == null) {
-                nullFailureItems += countPair.getCount();
-            } else if (i < MAX_GRAPH_ELEMENTS) {
-                dataset.setValue(countPair.getCount(), "", countPair.getObject());
-            } else {
-                othersCount += countPair.getCount();
+        if (failureItems != null) {
+            int othersCount = 0;
+            for (int i = 0; i < failureItems.size(); i++) {
+                ObjectCountPair<String> countPair = failureItems.get(i);
+                if (countPair.getObject() == null) {
+                    nullFailureItems += countPair.getCount();
+                } else if (i < MAX_GRAPH_ELEMENTS) {
+                    dataset.setValue(countPair.getCount(), "", countPair.getObject());
+                } else {
+                    othersCount += countPair.getCount();
+                }
             }
-        }
-        if (othersCount > 0) {
-            dataset.setValue(othersCount, "", GRAPH_OTHERS);
-        }
+            if (othersCount > 0) {
+                dataset.setValue(othersCount, "", GRAPH_OTHERS);
+            }
 
-        if (nullFailureItems > 0) {
-            dataset.addValue(nullFailureItems, "", nullFailuteItemsName);
+            if (nullFailureItems > 0) {
+                dataset.addValue(nullFailureItems, "", nullFailuteItemsName);
+            }
         }
         return dataset;
     }

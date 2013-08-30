@@ -201,34 +201,35 @@ public class TimeSeriesChart extends BFAGraph {
         Collection<FailureCauseTimeInterval> intervals = knowledgeBase.getFailureCausesPerTime(intervalSize, filter,
                 groupByCategories);
 
-        for (FailureCauseTimeInterval failureInterval : intervals) {
-            TimePeriod period = failureInterval.getPeriod();
-            String name = failureInterval.getName();
-            int number = failureInterval.getNumber();
+        if (intervals != null) {
+            for (FailureCauseTimeInterval failureInterval : intervals) {
+                TimePeriod period = failureInterval.getPeriod();
+                String name = failureInterval.getName();
+                int number = failureInterval.getNumber();
 
-
-            if (topItems.contains(failureInterval.getId()) || topItems.contains(name)) {
-                dataset.add(period, number, name);
-            } else {
-                // Smaller, needs grouping
-                List<FailureCauseTimeInterval> list = excludedDataForPeriod.get(period);
-                if (list == null) {
-                    list = new ArrayList<FailureCauseTimeInterval>();
-                    excludedDataForPeriod.put(period, list);
+                if (topItems.contains(failureInterval.getId()) || topItems.contains(name)) {
+                    dataset.add(period, number, name);
+                } else {
+                    // Smaller, needs grouping
+                    List<FailureCauseTimeInterval> list = excludedDataForPeriod.get(period);
+                    if (list == null) {
+                        list = new ArrayList<FailureCauseTimeInterval>();
+                        excludedDataForPeriod.put(period, list);
+                    }
+                    list.add(new FailureCauseTimeInterval(period, name, number));
                 }
-                list.add(new FailureCauseTimeInterval(period, name, number));
-            }
 
-        }
-        // Create OTHERS-bars for all excluded data
-        for (Entry<TimePeriod, List<FailureCauseTimeInterval>> entry : excludedDataForPeriod.entrySet()) {
-            TimePeriod period = entry.getKey();
-            List<FailureCauseTimeInterval> list = entry.getValue();
-            int sum = 0;
-            for (FailureCauseTimeInterval excludedData : list) {
-                sum += excludedData.getNumber();
             }
-            dataset.add(period, sum, GRAPH_OTHERS);
+            // Create OTHERS-bars for all excluded data
+            for (Entry<TimePeriod, List<FailureCauseTimeInterval>> entry : excludedDataForPeriod.entrySet()) {
+                TimePeriod period = entry.getKey();
+                List<FailureCauseTimeInterval> list = entry.getValue();
+                int sum = 0;
+                for (FailureCauseTimeInterval excludedData : list) {
+                    sum += excludedData.getNumber();
+                }
+                dataset.add(period, sum, GRAPH_OTHERS);
+            }
         }
         return dataset;
     }
