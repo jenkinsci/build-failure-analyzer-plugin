@@ -43,8 +43,10 @@ public class ProjectGraphAction extends BfaGraphAction {
     private static final int GRAPH_HEIGHT_SMALL = 200;
     private static final int NBR_OF_BUILDS = 25;
 
-    private static final String GRAPH_TITLE_CAUSES = "Total failure causes for this project";
-    private static final String GRAPH_TITLE_CATEGORIES = "Failures per category for this project";
+    private static final String URL_NAME = "bfa-proj-graphs";
+    private static final String PAGE_TITLE = "Statistics for project";
+    private static final String GRAPH_TITLE_CAUSES = "Failure causes for this project";
+    private static final String GRAPH_TITLE_CATEGORIES = "Failures grouped by categories for this project";
     private static final String BUILD_NBR_TITLE = "Failure causes per build for this project";
 
     private AbstractProject project;
@@ -69,7 +71,7 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     @Override
     public String getUrlName() {
-        return "bfa-proj-graphs";
+        return URL_NAME;
     }
 
     @Override
@@ -86,77 +88,45 @@ public class ProjectGraphAction extends BfaGraphAction {
 
     @Override
     public String getGraphsPageTitle() {
-        return "Statistics for project";
+        return PAGE_TITLE;
     }
 
     @Override
     protected Graph getGraph(int which, Date timePeriod,
             boolean hideManAborted, boolean forAllMasters,
             Map<String, String> rawReqParams) {
+        GraphFilterBuilder filter = getDefaultBuilder(hideManAborted,
+                timePeriod);
         switch (which) {
         case BAR_CHART_CAUSES_SMALL:
-            return getBarChart(false, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
-                    timePeriod, hideManAborted, GRAPH_TITLE_CAUSES);
+            return new BarChart(-1, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
+                    project, filter, GRAPH_TITLE_CAUSES, false);
+
         case BAR_CHART_CAUSES:
-            return getBarChart(false, DEFAULT_GRAPH_WIDTH,
-                    DEFAULT_GRAPH_HEIGHT, timePeriod, hideManAborted,
-                    GRAPH_TITLE_CAUSES);
+            return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    project, filter, GRAPH_TITLE_CAUSES, false);
+
         case BAR_CHART_CATEGORIES:
-            return getBarChart(true, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
-                    timePeriod, hideManAborted, GRAPH_TITLE_CATEGORIES);
+            return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    project, filter, GRAPH_TITLE_CATEGORIES, true);
+
         case BAR_CHART_BUILD_NBRS:
-            return getBuildNbrChart(hideManAborted);
+            return new BuildNbrStackedBarChart(-1, DEFAULT_GRAPH_WIDTH,
+                    DEFAULT_GRAPH_HEIGHT, project, filter, NBR_OF_BUILDS,
+                    BUILD_NBR_TITLE);
+
         case PIE_CHART_CAUSES:
-            return getPieChart(false, timePeriod, hideManAborted,
-                    GRAPH_TITLE_CAUSES);
+            return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    project, filter, GRAPH_TITLE_CAUSES, false);
+
         case PIE_CHART_CATEGORIES:
-            return getPieChart(true, timePeriod, hideManAborted,
-                    GRAPH_TITLE_CATEGORIES);
+            return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    project, filter, GRAPH_TITLE_CATEGORIES, true);
+
         default:
             break;
         }
         return null;
-    }
-
-    /**
-     * Get a bar chart according to the arguments.
-     * @param byCategories Display categories (true) or causes (false)
-     * @param width The with of the graph
-     * @param height The height of the graph
-     * @param period The time period
-     * @param hideAborted Hide aborted
-     * @param title The title of the graph
-     * @return A graph
-     */
-    private Graph getBarChart(boolean byCategories, int width, int height,
-            Date period, boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
-        return new BarChart(-1, width, height, project, filter, title,
-                byCategories);
-    }
-
-    /**
-     * Get a pie chart according to the specified arguments.
-     * @param byCategories True to display categories, false for causes
-     * @param period The time period
-     * @param hideAborted Hide manually aborted
-     * @param title The title of the graph
-     * @return A graph
-     */
-    private Graph getPieChart(boolean byCategories, Date period, boolean hideAborted, String title) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, period);
-        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, project, filter, title, byCategories);
-    }
-
-    /**
-     * Get a build number chart.
-     * @param hideAborted Hide manually aborted
-     * @return A graph
-     */
-    private Graph getBuildNbrChart(boolean hideAborted) {
-        GraphFilterBuilder filter = getDefaultBuilder(hideAborted, null);
-        return new BuildNbrStackedBarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
-                project, filter, NBR_OF_BUILDS, BUILD_NBR_TITLE);
     }
 
     /**
@@ -168,12 +138,53 @@ public class ProjectGraphAction extends BfaGraphAction {
      */
     private GraphFilterBuilder getDefaultBuilder(boolean hideAborted, Date period) {
         GraphFilterBuilder filter = new GraphFilterBuilder();
-        filter.setProjectName(project.getFullName());
+        filter.setProjectName(getProjectName());
         if (hideAborted) {
             filter.setExcludeResult(EXCLUDE_ABORTED);
         }
         filter.setSince(period);
         filter.setMasterName(BfaUtils.getMasterName());
         return filter;
+    }
+
+    @Override
+    protected String getGraphCacheId(int whichGraph, String reqTimePeriod,
+            boolean hideAborted, boolean forAllMasters) {
+        String id = null;
+        if (whichGraph == BAR_CHART_BUILD_NBRS) {
+            id = getCacheIdForBuildNbrs(getProjectName());
+        } else {
+            id = getClass().getSimpleName() + whichGraph + getProjectName()
+                    + reqTimePeriod + String.valueOf(hideAborted);
+        }
+        return id;
+    }
+
+    /**
+     * Get the cache-id for a {@link BfaGraphAction#BAR_CHART_BUILD_NBRS} for the project name.
+     * @param projectName The name of the project
+     * @return The id
+     */
+    private static String getCacheIdForBuildNbrs(String projectName) {
+        return ProjectGraphAction.class.getSimpleName() + projectName + BAR_CHART_BUILD_NBRS;
+    }
+
+    /**
+     * Get the name of the belonging project
+     * @return The project name, or an empty string if the project is null
+     */
+    private String getProjectName() {
+        if (project == null) {
+            return "";
+        }
+        return project.getFullName();
+    }
+
+    /**
+     * Invalidate the cache for the build number graph for the specified project.
+     * @param project The project whose build number graph to invalidate
+     */
+    public static void invalidateBuildNbrGraphCache(AbstractProject project) {
+        GraphCache.getInstance().invalidate(ProjectGraphAction.getCacheIdForBuildNbrs(project.getFullName()));
     }
 }

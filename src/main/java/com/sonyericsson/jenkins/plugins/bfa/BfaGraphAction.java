@@ -4,11 +4,15 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import org.kohsuke.stapler.StaplerRequest;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphCache;
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.util.Graph;
+
 
 /**
  * Abstract class to handle the detailed graphs pages.
@@ -43,6 +47,11 @@ public abstract class BfaGraphAction implements RootAction {
      * Url-parameter value for 'month'.
      */
     protected static final String URL_PARAM_VALUE_MONTH = "month";
+
+    /**
+     * Url-parameter value for 'max'.
+     */
+    protected static final String URL_PARAM_VALUE_MAX = "max";
 
     /**
      * Default width for graphs on detail pages.
@@ -98,6 +107,7 @@ public abstract class BfaGraphAction implements RootAction {
      * Constant for "ABORTED"-cause (used to exclude such {@link FailureCause}s).
      */
     protected static final String EXCLUDE_ABORTED = "ABORTED";
+
     /**
      * Get the owner.
      * @return The owner
@@ -145,9 +155,12 @@ public abstract class BfaGraphAction implements RootAction {
      * @return A graph
      */
     public Graph getGraph(StaplerRequest req) {
-        Map<String, String> rawReqParams = new HashMap<String, String>();
+        final Map<String, String> rawReqParams = new HashMap<String, String>();
 
         String reqTimePeriod = req.getParameter(URL_PARAM_TIME_PERIOD);
+        if (reqTimePeriod == null || !reqTimePeriod.matches(URL_PARAM_VALUE_MONTH + "|" + URL_PARAM_VALUE_MAX)) {
+            reqTimePeriod = URL_PARAM_VALUE_TODAY; // The default value
+        }
         rawReqParams.put(URL_PARAM_TIME_PERIOD, reqTimePeriod);
 
         String reqWhich = req.getParameter(URL_PARAM_WHICH_GRAPH);
@@ -159,18 +172,50 @@ public abstract class BfaGraphAction implements RootAction {
         String allMasters = req.getParameter(URL_PARAM_ALL_MASTERS);
         rawReqParams.put(URL_PARAM_ALL_MASTERS, allMasters);
 
-        Date sinceDate = getDateForUrlStr(reqTimePeriod);
-        int whichGraph =  -1;
+        final Date sinceDate = getDateForUrlStr(reqTimePeriod);
+        int tmpWhichGraph =  -1;
         try {
-            whichGraph = Integer.parseInt(reqWhich);
+            tmpWhichGraph = Integer.parseInt(reqWhich);
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        boolean hideAborted = "0".equals(showAborted);
-        boolean forAllMasters = "1".equals(allMasters);
-        // TODO: check cache
-        return getGraph(whichGraph, sinceDate, hideAborted, forAllMasters, rawReqParams);
+        final int whichGraph = tmpWhichGraph;
+        final boolean hideAborted = "0".equals(showAborted);
+        final boolean forAllMasters = "1".equals(allMasters);
+
+        String id = getGraphCacheId(whichGraph, reqTimePeriod, hideAborted, forAllMasters);
+        Graph graphToReturn = null;
+        try {
+            graphToReturn = GraphCache.getInstance().get(id, new Callable<Graph>() {
+                @Override
+                public Graph call() throws Exception {
+                    // The requested graph isn't cached, so create a new one.
+                    Graph g = getGraph(whichGraph, sinceDate, hideAborted, forAllMasters, rawReqParams);
+                    if (g != null) {
+                        return g;
+                    }
+                    // According to documentation, null must not be returned; either
+                    // a non-null value must be returned, or an an exception thrown
+                    throw new ExecutionException("Graph-parameters not valid", null);
+                } });
+        } catch (ExecutionException e) {
+            // An exception will occur when a graph cannot be generated,
+            // e.g. when erroneous url-parameters have been specified
+            e.printStackTrace();
+        }
+        return graphToReturn;
     }
+
+    /**
+     * Get a unique id used in the caching of the graph.
+     * @param whichGraph Which graph
+     * @param reqTimePeriod The selected time period
+     * @param hideAborted Hide aborted builds
+     * @param forAllMasters For all masters
+     * @return An id corresponding to the specified arguments
+     */
+    protected abstract String getGraphCacheId(int whichGraph,
+            String reqTimePeriod, boolean hideAborted, boolean forAllMasters);
 
     /**
      * Helper for groovy-views; Get the default width of graphs on detailed pages.

@@ -22,10 +22,8 @@
  * THE SOFTWARE.
  */
 package com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
-import hudson.Functions
 
 /* 
  * Displays a page to show graphs. Displays links for changing time-period
@@ -65,7 +63,7 @@ if (my.showMasterSwitch()) {
 
 def trailingImageUrlParams = "&time=" + timePeriod + "&showAborted=" + showAborted + "&allMasters=" + masterValue;
 
-l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
+l.layout() {
   l.header() {
     style(type: "text/css") {
       raw("div.bfaSwitchLinks { margin: 20px 0; font-size: larger; }")
@@ -155,7 +153,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
     div() {
       for (imgSrc in my.graphNumbers) {
         div(style: "width: " + my.defaultGraphWidth + "px; height: "
-                + my.defaultGraphHeight + "px; margin: 10px auto;") {
+                + my.defaultGraphHeight + "px; margin: 10px auto; border: 1px solid #000000;") {
           img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams,
                 lazymap: "graph/map?which=" + imgSrc + trailingImageUrlParams) {}
         }

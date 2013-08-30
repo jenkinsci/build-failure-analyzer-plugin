@@ -46,12 +46,12 @@ public class ComputerGraphAction extends BfaGraphAction {
     /**
      * Title for graphs with failure causes
      */
-    private static final String GRAPH_TITLE_CAUSES = "Total failure causes for this node";
+    private static final String GRAPH_TITLE_CAUSES = "Failure causes for this node";
 
     /**
      * Title for graphs with categories
      */
-    private static final String GRAPH_TITLE_CATEGORIES = "Failures per category for this node";
+    private static final String GRAPH_TITLE_CATEGORIES = "Failures grouped by categories for this node";
 
     /**
      * The url-name of the Action
@@ -139,13 +139,17 @@ public class ComputerGraphAction extends BfaGraphAction {
                 timePeriod);
         switch (which) {
         case BAR_CHART_CAUSES:
-            return getBarChart(false, GRAPH_TITLE_CAUSES, filter);
+            return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    null, filter, GRAPH_TITLE_CAUSES, false);
         case BAR_CHART_CATEGORIES:
-            return getBarChart(true, GRAPH_TITLE_CATEGORIES, filter);
+            return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    null, filter, GRAPH_TITLE_CATEGORIES, true);
         case PIE_CHART_CAUSES:
-            return getPieChart(false, GRAPH_TITLE_CAUSES, filter);
+            return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    null, filter, GRAPH_TITLE_CAUSES, false);
         case PIE_CHART_CATEGORIES:
-            return getPieChart(true, GRAPH_TITLE_CATEGORIES, filter);
+            return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
+                    null, filter, GRAPH_TITLE_CATEGORIES, true);
         case TIME_SERIES_CHART_CAUSES:
             return getTimeSeriesChart(false, GRAPH_TITLE_CAUSES, filter,
                     rawReqParams);
@@ -186,28 +190,6 @@ public class ComputerGraphAction extends BfaGraphAction {
     }
 
     /**
-     * Get a bar chart corresponding to the specified arguments.
-     * @param byCategories True to display categories, false for causes
-     * @param title The title of the graph
-     * @param filter GraphFilterBuilder to specify data to use
-     * @return A graph
-     */
-    private Graph getBarChart(boolean byCategories, String title, GraphFilterBuilder filter) {
-        return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
-    }
-
-    /**
-     * Get a pie chart corresponding to the specified arguments.
-     * @param byCategories True to display categories, or false for causes
-     * @param title The title of the graph
-     * @param filter GraphFilterBuilder to specify data to use
-     * @return A graph
-     */
-    private Graph getPieChart(boolean byCategories, String title, GraphFilterBuilder filter) {
-        return new PieChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT, null, filter, title, byCategories);
-    }
-
-    /**
      * Get a GraphFilterBuilder corresponding to the specified arguments.
      * @param hideAborted Hide manually aborted
      * @param period The time period
@@ -228,5 +210,11 @@ public class ComputerGraphAction extends BfaGraphAction {
             filter.setMasterName(BfaUtils.getMasterName());
         }
         return filter;
+    }
+
+    @Override
+    protected String getGraphCacheId(int whichGraph, String reqTimePeriod,
+            boolean hideAborted, boolean forAllMasters) {
+        return getClass().getSimpleName() + whichGraph + reqTimePeriod + String.valueOf(hideAborted);
     }
 }
