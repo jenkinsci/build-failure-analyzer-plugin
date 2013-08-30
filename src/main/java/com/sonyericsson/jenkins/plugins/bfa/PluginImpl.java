@@ -117,6 +117,7 @@ public class PluginImpl extends Plugin {
 
     private int nrOfScanThreads;
 
+    private Boolean graphsEnabled;
     /**
      * ScanOnDemandVariable instance.
      */
@@ -315,6 +316,18 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * If graphs are enabled or not. Links to graphs and graphs will not be displayed when disabled.
+     * @return True if enabled.
+     */
+    public boolean isGraphsEnabled() {
+        if (graphsEnabled == null) {
+            return true;
+        } else {
+            return graphsEnabled;
+        }
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
      *
      * @param globalEnabled on or off. null == on.
@@ -431,6 +444,7 @@ public class PluginImpl extends Plugin {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
+        graphsEnabled = o.getBoolean("graphsEnabled");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");

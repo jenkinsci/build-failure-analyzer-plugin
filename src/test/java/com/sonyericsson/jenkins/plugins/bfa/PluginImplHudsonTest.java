@@ -238,6 +238,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         JSONObject form = new JSONObject();
         form.put("noCausesMessage", expectedNoCauseMessage);
         form.put("globalEnabled", true);
+        form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);

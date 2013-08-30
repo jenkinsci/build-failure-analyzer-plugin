@@ -75,7 +75,8 @@ public class ComputerGraphAction extends BfaGraphAction {
 
     @Override
     public String getIconFileName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)
+                && PluginImpl.getInstance().isGraphsEnabled()) {
             return PluginImpl.getDefaultIcon();
         } else {
             return null;
@@ -84,7 +85,10 @@ public class ComputerGraphAction extends BfaGraphAction {
 
     @Override
     public String getDisplayName() {
-        return DISPLAY_NAME;
+        if (PluginImpl.getInstance().isGraphsEnabled()) {
+            return DISPLAY_NAME;
+        }
+        return null;
     }
 
     @Override

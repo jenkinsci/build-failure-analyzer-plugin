@@ -87,13 +87,15 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
         href: "new",
         alt: _("New")) {text(_("Create new"))}
 
+      if (PluginImpl.getInstance().isGraphsEnabled()) {
         a(style:  "font-weight: bold; "
                 + "font-size: larger; "
                 + "padding-top: 5px; "
                 + "padding-bottom: 5px; "
                 + "float: right;",
-        href: "detailedgraphs",
-        alt: _("Graphs/statistics")) {text(_("Graphs/Statistics"))}
+          href: "detailedgraphs",
+          alt: _("Graphs/statistics")) {text(_("Graphs/Statistics"))}
+      }
     }
 
     //One time check so we don't do it for every iteration below

@@ -22,12 +22,14 @@
  * THE SOFTWARE.
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 
-div(style: "text-align: right; margin: 10px;") {
-    img(src: "bfa-proj-graphs/graph/png?which=1") {};
-    br()
-    a(href: "bfa-proj-graphs/detailedgraphs", style: "text-decoration: none; color: #204a87; font-size: larger;") {
-        text(_("More graphs"));
-    }
+if (PluginImpl.getInstance().isGraphsEnabled()) {
+  div(style: "text-align: right; margin: 10px;") {
+      img(src: "bfa-proj-graphs/graph/png?which=1") {};
+      br()
+      a(href: "bfa-proj-graphs/detailedgraphs", style: "text-decoration: none; color: #204a87; font-size: larger;") {
+          text(_("More graphs"));
+      }
+  }
 }
-        
