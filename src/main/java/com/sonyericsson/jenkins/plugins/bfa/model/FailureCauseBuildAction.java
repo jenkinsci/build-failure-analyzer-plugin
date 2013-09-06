@@ -27,6 +27,8 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.StaplerRequest;
@@ -34,9 +36,11 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import java.util.LinkedList;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,9 +53,13 @@ import java.util.logging.Logger;
 public class FailureCauseBuildAction implements BuildBadgeAction {
     private transient List<FailureCause> failureCauses;
     private List<FoundFailureCause> foundFailureCauses;
-    /** The url of this action. */
+    /**
+     * The url of this action.
+     */
     public static final String URL_NAME = "bfa";
     private static final Logger logger = Logger.getLogger(FailureCauseBuildAction.class.getName());
+
+    private AbstractBuild build;
 
     /**
      * Standard constructor.
@@ -138,8 +146,10 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         }
         return this;
     }
-     /**
+
+    /**
      * Used when we are directed to a FoundFailureCause beneath the build action.
+     *
      * @param token the FoundFailureCause number of this build action we are trying to navigate to.
      * @param req the stapler request.
      * @param resp the stapler response.
@@ -147,7 +157,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      */
     public FoundFailureCause getDynamic(String token, StaplerRequest req, StaplerResponse resp) {
         try {
-        int causeNumber = Integer.parseInt(token) - 1;
+            int causeNumber = Integer.parseInt(token) - 1;
             if (causeNumber >= 0 && causeNumber < foundFailureCauses.size()) {
                 return foundFailureCauses.get(causeNumber);
             }
@@ -161,11 +171,114 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     /**
      * Used for the link to the failure cause management page.
+     *
      * @param req the stapler request.
      * @param resp the stapler response
      * @throws IOException if so.
      */
     public void doIndex(StaplerRequest req, StaplerResponse resp) throws IOException {
         resp.sendRedirect2("../../failure-cause-management");
+    }
+
+    /**
+     * Setter for the build triggering this object.
+     *
+     * @param build - the build corresponding to this action
+     */
+    public void setBuild(AbstractBuild build) {
+        this.build = build;
+    }
+
+    /**
+     * Getter for the build.
+     *
+     * @return the build corresponding to this action
+     */
+    public AbstractBuild getBuild() {
+        return build;
+    }
+
+    /**
+     * Getter for the FailureCauseDisplayData.
+     *
+     * @return the FailureCauseDisplayData.
+     */
+    @Exported
+    public FailureCauseDisplayData getFailureCauseDisplayData() {
+        FailureCauseDisplayData failureCauseDisplayData
+                = getDownstreamData(this, 0);
+
+        // Fallback, if no build is stored in in build action,
+        if (failureCauseDisplayData == null) {
+            failureCauseDisplayData = new FailureCauseDisplayData();
+            failureCauseDisplayData.setFoundFailureCauses(
+                    this.getFoundFailureCauses());
+        }
+
+        return failureCauseDisplayData;
+    }
+
+
+    /**
+     * Populates the supplied FailureCauseDisplayData with FailureCause from the
+     * build and then recursively collect data from downstream builds. If
+     * buildAction doesn't have a connected build null is returned.
+     *
+     * @param buildAction the action to retrieve data from
+     * @param depth recursive depth
+     * @return FailureCauseDisplayData
+     */
+    private static FailureCauseDisplayData getDownstreamData(
+            final FailureCauseBuildAction buildAction, final int depth) {
+
+        final int maxDepth = 10;
+
+        FailureCauseDisplayData displayData = null;
+
+
+        // Preventing us to get into a recursive loop
+        if (depth < maxDepth && buildAction.getBuild() != null) {
+            displayData = new FailureCauseDisplayData(buildAction.getBuild());
+
+            // Add causes from this build
+            displayData.setFoundFailureCauses(
+                    buildAction.getFoundFailureCauses());
+
+            if (buildAction.getBuild() != null) {
+                for (AbstractBuild build1
+                        : getDownstreamBuilds(buildAction.getBuild())) {
+                    FailureCauseBuildAction subAction =
+                            build1.getAction(FailureCauseBuildAction.class);
+                    if (subAction != null) {
+                        FailureCauseDisplayData subDisplayData =
+                                getDownstreamData(subAction, depth + 1);
+                        if (subDisplayData != null) {
+                            displayData.addDownstreamFailureCause(
+                                    subDisplayData);
+                        }
+                    }
+                }
+            }
+        }
+        return displayData;
+    }
+
+    /**
+     * Returns a set with downstream builds. Add more or change to alternative
+     * ways of collecting downstream builds.
+     *
+     * @param build collect downstream builds from this
+     * @return a set of downstream builds
+     */
+    private static Set<AbstractBuild<?, ?>> getDownstreamBuilds(
+            final AbstractBuild build) {
+
+        Set<AbstractBuild<?, ?>> foundDbf = new TreeSet<AbstractBuild<?, ?>>();
+
+        for (DownstreamBuildFinder dbf : DownstreamBuildFinder.getAll()) {
+
+            foundDbf.addAll(dbf.getDownstreamBuilds(build));
+        }
+        return foundDbf;
     }
 }

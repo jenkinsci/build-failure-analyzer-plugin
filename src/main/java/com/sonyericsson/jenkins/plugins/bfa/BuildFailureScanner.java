@@ -101,6 +101,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
+            buildAction.setBuild(build);
             build.addAction(buildAction);
             StatisticsLogger.getInstance().log(build, foundCauseList);
         } catch (Exception e) {
