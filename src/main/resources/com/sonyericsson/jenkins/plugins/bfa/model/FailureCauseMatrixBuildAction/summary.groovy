@@ -31,6 +31,8 @@ def f = namespace(lib.FormTagLib)
 def j = namespace(lib.JenkinsTagLib)
 def l = namespace(lib.LayoutTagLib)
 
+index = 1
+
 tr {
     td {
         img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
@@ -74,8 +76,12 @@ def displayData(failureCauseDisplayData, run, linkTree, indent) {
         }
     }
 
+    if (!failureCauseDisplayData.getFoundFailureCauses().empty && indent > 0) {
+        displayLinkTree(linkTree)
+    }
+
     failureCauseDisplayData.getFoundFailureCauses().each { cause ->
-        displayCauses(cause, run, indent, linkTree)
+        displayCauses(cause, run, indent, failureCauseDisplayData.links)
     }
     failureCauseDisplayData.getDownstreamFailureCauses().each { subFailureCauseDisplayData ->
         linkTree.add(subFailureCauseDisplayData.links)
@@ -108,11 +114,7 @@ def displayLinkTree(linkTree) {
     }
 }
 
-def displayCauses(cause, run, indent, linkTree) {
-
-    if (indent > 0) {
-        displayLinkTree(linkTree)
-    }
+def displayCauses(cause, run, indent, links) {
 
     tr {
         td {}
@@ -125,10 +127,10 @@ def displayCauses(cause, run, indent, linkTree) {
                     text(cause.description)
                 }
                 br {}
-                cause.getIndications().eachWithIndex { indication, indicationNumber ->
-                    a(href: run.getParent().getCombination().toString() +
-                                    "/console#" + indication.getMatchingHash() + cause.id) {
-                        text(_("Indication") + " " + (indicationNumber + 1))
+                cause.getIndications().each { indication ->
+                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull"
+                                , class: "model-link") {
+                            text(_("Indication") + " " + (index++))
                     }
                 }
                 br {}

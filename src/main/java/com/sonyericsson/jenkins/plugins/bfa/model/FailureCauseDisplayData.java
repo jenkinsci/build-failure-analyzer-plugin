@@ -138,12 +138,30 @@ public class FailureCauseDisplayData {
         }
 
         /**
+         * Set the project url.
+         *
+         * @param projectUrl the new url
+         */
+        public void setProjectUrl(final String projectUrl) {
+            this.projectUrl =  projectUrl;
+        }
+
+        /**
          * Getting the build url.
          *
          * @return link to build
          */
         public String getBuildUrl() {
             return buildUrl;
+        }
+
+        /**
+         * Set the build url.
+         *
+         * @param buildUrl the new url
+         */
+        public void setBuildUrl(final String buildUrl) {
+            this.buildUrl = buildUrl;
         }
 
         /**
@@ -156,12 +174,30 @@ public class FailureCauseDisplayData {
         }
 
         /**
+         * Set the text to be displayed for the project link.
+         *
+         * @param projectDisplayName the text to show
+         */
+        public void setProjectDisplayName(final String projectDisplayName) {
+            this.projectDisplayName = projectDisplayName;
+        }
+
+        /**
          * Getting the text to be displayed for the build link.
          *
          * @return text to show for the build link
          */
         public String getBuildDisplayName() {
             return buildDisplayName;
+        }
+
+        /**
+         * Set the text to be displayed for the build link.
+         *
+         * @param buildDisplayName the text to show
+         */
+        public void setBuildDisplayName(final String buildDisplayName) {
+            this.buildDisplayName = buildDisplayName;
         }
     }
 

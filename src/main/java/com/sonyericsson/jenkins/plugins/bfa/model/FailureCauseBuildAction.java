@@ -28,6 +28,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
@@ -234,8 +235,6 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         final int maxDepth = 10;
 
         FailureCauseDisplayData displayData = null;
-
-
         // Preventing us to get into a recursive loop
         if (depth < maxDepth && buildAction.getBuild() != null) {
             displayData = new FailureCauseDisplayData(buildAction.getBuild());
@@ -243,24 +242,90 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
             // Add causes from this build
             displayData.setFoundFailureCauses(
                     buildAction.getFoundFailureCauses());
+            for (AbstractBuild abstractBuild
+                    : getDownstreamBuilds(buildAction.getBuild())) {
 
-            if (buildAction.getBuild() != null) {
-                for (AbstractBuild build1
-                        : getDownstreamBuilds(buildAction.getBuild())) {
-                    FailureCauseBuildAction subAction =
-                            build1.getAction(FailureCauseBuildAction.class);
-                    if (subAction != null) {
+                checkSubFailureCauseBuildAction(
+                        abstractBuild, displayData, depth);
+            }
+        }
+        return displayData;
+    }
+
+    /**
+     * Check if the build has the action FailureCauseBuildAction. If so, add
+     * information to the display data.
+     *
+     * @param abstractBuild the build under investigation
+     * @param displayData object holding display information
+     * @param depth recursive depth
+     */
+    private static void checkSubFailureCauseBuildAction(
+            final AbstractBuild abstractBuild,
+            final FailureCauseDisplayData displayData,
+            final int depth) {
+        FailureCauseBuildAction subAction =
+                abstractBuild.getAction(FailureCauseBuildAction.class);
+        if (subAction != null) {
+            setSubDisplayData(subAction, displayData, depth);
+        } else {
+            // Nested matrix build
+            FailureCauseMatrixBuildAction subMatrixAction =
+                    abstractBuild.getAction(
+                            FailureCauseMatrixBuildAction.class);
+            if (subMatrixAction != null) {
+                for (MatrixRun matrixRun
+                        : subMatrixAction.getRunsWithAction()) {
+                    FailureCauseBuildAction action = matrixRun.getAction(
+                            FailureCauseBuildAction.class);
+                    if (action != null) {
                         FailureCauseDisplayData subDisplayData =
-                                getDownstreamData(subAction, depth + 1);
-                        if (subDisplayData != null) {
-                            displayData.addDownstreamFailureCause(
-                                    subDisplayData);
-                        }
+                                setSubDisplayData(action, displayData, depth);
+                        adjustProjectDisplayName(abstractBuild, subDisplayData);
                     }
                 }
             }
         }
-        return displayData;
+    }
+
+    /**
+     * Add display data from the action.
+     *
+     * @param subAction the action under investigation
+     * @param displayData object holding display information
+     * @param depth recursive depth
+     * @return the added display data object
+     */
+    private static FailureCauseDisplayData setSubDisplayData(
+            final FailureCauseBuildAction subAction,
+            final FailureCauseDisplayData displayData,
+            final int depth) {
+        FailureCauseDisplayData subDisplayData =
+                getDownstreamData(subAction, depth + 1);
+        if (subDisplayData != null) {
+            displayData.addDownstreamFailureCause(
+                    subDisplayData);
+        }
+        return subDisplayData;
+    }
+
+    /**
+     * A matrix project returns for each run a project display name on the form
+     * PROJECT » CONFIGURATION #NBR".
+     * When nested there is one link to the project and one to the build. The
+     * build nbr is removed from the name.
+     *
+     * @param abstractBuild the build generating the build failure
+     * @param subDisplayData the data object to update
+     */
+    private static void adjustProjectDisplayName(
+            final AbstractBuild abstractBuild,
+            final FailureCauseDisplayData subDisplayData) {
+        if (subDisplayData != null) {
+            subDisplayData.getLinks().setProjectDisplayName(
+                    abstractBuild.getParent().getFullName() + " » "
+                    + subDisplayData.getLinks().getProjectDisplayName());
+        }
     }
 
     /**
