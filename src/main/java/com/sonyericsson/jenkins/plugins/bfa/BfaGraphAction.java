@@ -32,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.kohsuke.stapler.StaplerRequest;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphCache;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphType;
+
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.util.Graph;
@@ -87,51 +89,6 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int DEFAULT_GRAPH_HEIGHT = 500;
 
     /**
-     * Constant for small bar chart.
-     */
-    protected static final int BAR_CHART_CAUSES_SMALL = 1;
-
-    /**
-     * Constant for bar chart with {@link FailureCause}s.
-     */
-    protected static final int BAR_CHART_CAUSES = 2;
-
-    /**
-     * Constant for bar chart with categories.
-     */
-    protected static final int BAR_CHART_CATEGORIES = 3;
-
-    /**
-     * Constant for bar chart with build numbers.
-     */
-    protected static final int BAR_CHART_BUILD_NBRS = 4;
-
-    /**
-     * Constant for pie chart with {@link FailureCause}s.
-     */
-    protected static final int PIE_CHART_CAUSES = 5;
-
-    /**
-     * Constant for pie chart with categories.
-     */
-    protected static final int PIE_CHART_CATEGORIES = 6;
-
-    /**
-     * Constant for time series chart with {@link FailureCause}s.
-     */
-    protected static final int TIME_SERIES_CHART_CAUSES = 7;
-
-    /**
-     * Constant for time series chart with categories.
-     */
-    protected static final int TIME_SERIES_CHART_CATEGORIES = 8;
-
-    /**
-     * Constant for time series chart displaying unknown failure causes.
-     */
-    protected static final int TIME_SERIES_UNKNOWN_FAILURES = 9;
-
-    /**
      * Constant for "ABORTED"-cause (used to exclude such {@link FailureCause}s).
      */
     protected static final String EXCLUDE_ABORTED = "ABORTED";
@@ -143,15 +100,15 @@ public abstract class BfaGraphAction implements RootAction {
     public abstract ModelObject getOwner();
 
     /**
-     * Returns an array of numbers, where each number represents
-     * a graph. These are the numbers used to display the graphs/images
+     * Returns an array of {@link GraphType}s, where each element represents
+     * a graph. These are the types used to display the graphs/images
      * on the detailed graphs page, that is, they will be the 'which'-parameter
-     * to getGraph(int which, Date ...).
+     * to getGraph(GraphType which, Date ...).
      * The graphs are displayed in the same order as the numbers in the array.
-     * @return An array of integers where each integer represents a graph to
-     * display
+     * @return An array of {@link GraphType}s where each element
+     * represents a graph to display
      */
-    public abstract int[] getGraphNumbers();
+    public abstract GraphType[] getGraphTypes();
 
     /**
      * Get the title to display in the top of the detailed graphs page.
@@ -168,7 +125,7 @@ public abstract class BfaGraphAction implements RootAction {
      * @param rawReqParams The url parameters that came with the request
      * @return A Graph
      */
-    protected abstract Graph getGraph(int which, Date timePeriod,
+    protected abstract Graph getGraph(GraphType which, Date timePeriod,
             boolean hideManAborted, boolean allMasters,
             Map<String, String> rawReqParams);
 
@@ -207,7 +164,7 @@ public abstract class BfaGraphAction implements RootAction {
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        final int whichGraph = tmpWhichGraph;
+        final GraphType whichGraph = GraphType.toEnum(tmpWhichGraph);
         final boolean hideAborted = "0".equals(showAborted);
         final boolean forAllMasters = "1".equals(allMasters);
 
@@ -242,7 +199,7 @@ public abstract class BfaGraphAction implements RootAction {
      * @param forAllMasters For all masters
      * @return An id corresponding to the specified arguments
      */
-    protected abstract String getGraphCacheId(int whichGraph,
+    protected abstract String getGraphCacheId(GraphType whichGraph,
             String reqTimePeriod, boolean hideAborted, boolean forAllMasters);
 
     /**

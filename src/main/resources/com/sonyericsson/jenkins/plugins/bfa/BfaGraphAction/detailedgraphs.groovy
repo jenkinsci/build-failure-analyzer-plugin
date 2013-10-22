@@ -145,7 +145,8 @@ l.layout() {
     }
     
     div() {
-      for (imgSrc in my.graphNumbers) {
+      for (graphType in my.graphTypes) {
+        def imgSrc = graphType.getValue();
         div(style: "width: " + my.defaultGraphWidth + "px; height: "
                 + my.defaultGraphHeight + "px; margin: 10px auto; border: 1px solid #000000;") {
           img(src: "graph/png?which=" + imgSrc + trailingImageUrlParams,

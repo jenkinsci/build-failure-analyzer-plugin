@@ -56,7 +56,7 @@ public class ProjectGraphAction extends BfaGraphAction {
      * @param project the parent project of this action
      */
     public ProjectGraphAction(AbstractProject project) {
-         this.project = project;
+        this.project = project;
     }
 
     @Override
@@ -80,10 +80,10 @@ public class ProjectGraphAction extends BfaGraphAction {
     }
 
     @Override
-    public int[] getGraphNumbers() {
-        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES,
-                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES,
-                BAR_CHART_BUILD_NBRS, };
+    public GraphType[] getGraphTypes() {
+        return new GraphType[] {GraphType.BAR_CHART_CAUSES, GraphType.PIE_CHART_CAUSES,
+                GraphType.BAR_CHART_CATEGORIES, GraphType.PIE_CHART_CATEGORIES,
+                GraphType.BAR_CHART_BUILD_NBRS, };
     }
 
     @Override
@@ -92,7 +92,7 @@ public class ProjectGraphAction extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod,
+    protected Graph getGraph(GraphType which, Date timePeriod,
             boolean hideManAborted, boolean forAllMasters,
             Map<String, String> rawReqParams) {
         GraphFilterBuilder filter = getDefaultBuilder(hideManAborted,
@@ -148,13 +148,13 @@ public class ProjectGraphAction extends BfaGraphAction {
     }
 
     @Override
-    protected String getGraphCacheId(int whichGraph, String reqTimePeriod,
+    protected String getGraphCacheId(GraphType whichGraph, String reqTimePeriod,
             boolean hideAborted, boolean forAllMasters) {
         String id = null;
-        if (whichGraph == BAR_CHART_BUILD_NBRS) {
+        if (whichGraph == GraphType.BAR_CHART_BUILD_NBRS) {
             id = getCacheIdForBuildNbrs(getProjectName());
         } else {
-            id = getClass().getSimpleName() + whichGraph + getProjectName()
+            id = getClass().getSimpleName() + whichGraph.getValue() + getProjectName()
                     + reqTimePeriod + String.valueOf(hideAborted);
         }
         return id;
@@ -166,7 +166,7 @@ public class ProjectGraphAction extends BfaGraphAction {
      * @return The id
      */
     private static String getCacheIdForBuildNbrs(String projectName) {
-        return ProjectGraphAction.class.getSimpleName() + projectName + BAR_CHART_BUILD_NBRS;
+        return ProjectGraphAction.class.getSimpleName() + projectName + GraphType.BAR_CHART_BUILD_NBRS.getValue();
     }
 
     /**

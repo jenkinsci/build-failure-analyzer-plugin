@@ -28,6 +28,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.BFAGraph;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.BarChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphType;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.PieChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.TimeSeriesChart;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.TimeSeriesUnkownFailuresChart;
@@ -324,10 +325,11 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
-    public int[] getGraphNumbers() {
-        return new int[] { BAR_CHART_CAUSES, PIE_CHART_CAUSES, TIME_SERIES_CHART_CAUSES,
-                BAR_CHART_CATEGORIES, PIE_CHART_CATEGORIES, TIME_SERIES_CHART_CATEGORIES,
-                TIME_SERIES_UNKNOWN_FAILURES, };
+    public GraphType[] getGraphTypes() {
+        return new GraphType[] { GraphType.BAR_CHART_CAUSES, GraphType.PIE_CHART_CAUSES,
+                GraphType.TIME_SERIES_CHART_CAUSES, GraphType.BAR_CHART_CATEGORIES,
+                GraphType.PIE_CHART_CATEGORIES, GraphType.TIME_SERIES_CHART_CATEGORIES,
+                GraphType.TIME_SERIES_UNKNOWN_FAILURES, };
     }
 
     @Override
@@ -341,7 +343,7 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
-    protected Graph getGraph(int which, Date timePeriod,
+    protected Graph getGraph(GraphType which, Date timePeriod,
             boolean hideManAborted, boolean forAllMasters,
             Map<String, String> rawReqParams) {
         GraphFilterBuilder filter = getDefaultBuilder(hideManAborted,
@@ -448,9 +450,9 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
-    protected String getGraphCacheId(int whichGraph, String reqTimePeriod,
+    protected String getGraphCacheId(GraphType whichGraph, String reqTimePeriod,
             boolean hideAborted, boolean forAllMasters) {
-        return getClass().getSimpleName() + whichGraph + reqTimePeriod
+        return getClass().getSimpleName() + whichGraph.getValue() + reqTimePeriod
                 + String.valueOf(hideAborted) + String.valueOf(forAllMasters);
     }
 
