@@ -44,12 +44,6 @@ def showAborted = request.getParameter("showAborted");
 if (showAborted == null || !showAborted.matches("1|0")) {
   showAborted = 0;
 }
-def switchAborted = 0;
-def switchAbortedText = "Hide aborted builds";
-if (showAborted == "0") {
-  switchAborted = 1;
-  switchAbortedText = "Show aborted builds";
-}
 
 def linkBoxWidth = "50%";
 def masterValue = "";
