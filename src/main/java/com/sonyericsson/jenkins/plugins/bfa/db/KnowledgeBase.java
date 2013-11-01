@@ -190,7 +190,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     public abstract void saveStatistics(Statistics stat) throws Exception;
 
     /**
-     * Gets Statistics data.
+     * Gets Statistics data. This method needs to be implemented in subclass for graph support.
      * @param filter the filter to use when fetching data
      * @param limit number of statistics items to fetch, set to nonpositive value to fetch all
      * @return the list of statistics.
@@ -204,6 +204,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * Gets a list of {@link ObjectCountPair} where each pair contains a unique {@link FailureCause} as key
      * and the number of times that failure cause was triggered as count.
      * The list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param filter the filter to use when fetching data
      * @return list of ObjectCountPairs.
@@ -214,6 +215,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Gets the quota of unknown failure causes mapped by time periods.
+     * This method needs to be implemented in subclass for graph support.
      * @param intervalSize the interval sizes in which the data is grouped.
      * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
      * @param filter The filter to use when fetching the data
@@ -227,6 +229,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * Gets a list of {@link ObjectCountPair}s where each pair contains a unique {@link FailureCause}-name as key
      * and the number of times that failure cause was triggered as count.
      * This list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param filter The filter to use when fetching the data
      * @return List of ObjectCountPairs that consist of a name and count
@@ -237,6 +240,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Counts how many statistics posts there are without FailureCause (null) for a given filter.
+     * This method needs to be implemented in subclass for graph support.
      * @param filter the filter to use when fetching data
      * @return number of statistics posts without FailureCause
      */
@@ -248,6 +252,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * Gets a list of {@link ObjectCountPair} where each pair contains a unique failure category string as key
      * and the number of times that the failure cause category was triggered as count.
      * The list is sorted by counts, meaning that the Category that has been triggered the most comes first.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param filter the filter to use when fetching data
      * @param limit the number of categories to fetch, set to nonpositive value to fetch all
@@ -260,6 +265,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     /**
      * Gets a map where a lists of failure causes are mapped
      * by the build number for which they were triggered.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param filter the filter to use when fetching data
      * @return map of failure causes
@@ -271,6 +277,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     /**
      * Fetches failure causes grouped in time intervals. The returned list does not have to be sorted,
      * and one list element is created for each FailureCause for each time interval there exist data.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param intervalSize the interval sizes in which the data is grouped.
      * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
@@ -286,6 +293,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     /**
      * Gets a list of {@link ObjectCountPair} where each pair contains a unique FailureCause id as key
      * and a belonging count value for how many times that FailureCause was triggered.
+     * This method needs to be implemented in subclass for graph support.
      *
      * @param filter the filter to use when fetching data
      * @param limit the number of items to fetch, set to nonpositive value to fetch all
