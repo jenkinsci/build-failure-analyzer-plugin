@@ -32,11 +32,11 @@ import java.util.Comparator;
  *
  * @author Fredrik Persson &lt;fredrik6.persson@sonyericsson.com&gt;
  *
- * @param <O> the object type that we count
+ * @param <T> the object type that we count
  */
-public class ObjectCountPair<O> {
+public class ObjectCountPair<T> {
 
-    private O object;
+    private T object;
     private int count;
 
     /**
@@ -44,7 +44,7 @@ public class ObjectCountPair<O> {
      * @param object the object we are counting
      * @param count the number of copies we have of the object
      */
-    public ObjectCountPair(O object, int count) {
+    public ObjectCountPair(T object, int count) {
         this.object = object;
         this.count = count;
     }
@@ -53,7 +53,7 @@ public class ObjectCountPair<O> {
      * Getter for the object we are counting.
      * @return the object we are counting
      */
-    public O getObject() {
+    public T getObject() {
         return object;
     }
 
