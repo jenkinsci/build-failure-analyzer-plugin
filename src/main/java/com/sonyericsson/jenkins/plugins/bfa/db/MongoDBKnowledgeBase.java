@@ -678,22 +678,14 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public List<ObjectCountPair<String>> getFailureCauseNames(GraphFilterBuilder filter) {
-        List<ObjectCountPair<String>> nbrOfFailureCausesPerId = getNbrOfFailureCausesPerId(filter, 0);
-        List<ObjectCountPair<String>> nbrOfFailureCauses = new ArrayList<ObjectCountPair<String>>();
-        try {
-            for (ObjectCountPair<String> countPair : nbrOfFailureCausesPerId) {
-                String id = countPair.getObject();
-                int count = countPair.getCount();
-                FailureCause failureCause = getCause(id);
-                if (failureCause != null) {
-                    nbrOfFailureCauses.add(new ObjectCountPair<String>(failureCause.getName(), count));
-                }
+        List<ObjectCountPair<String>> nbrOfFailureCauseNames = new ArrayList<ObjectCountPair<String>>();
+        for (ObjectCountPair<FailureCause> countPair : getNbrOfFailureCauses(filter)) {
+            FailureCause failureCause = countPair.getObject();
+            if (failureCause.getName() != null) {
+                nbrOfFailureCauseNames.add(new ObjectCountPair<String>(failureCause.getName(), countPair.getCount()));
             }
-        } catch (Exception e) {
-            logger.fine("Unable to count failure causes by name");
-            e.printStackTrace();
         }
-        return nbrOfFailureCauses;
+        return nbrOfFailureCauseNames;
     }
 
     @Override
