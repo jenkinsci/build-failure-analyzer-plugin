@@ -616,29 +616,43 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private static DBObject generateMatchFields(GraphFilterBuilder filter) {
         DBObject matchFields = new BasicDBObject();
         if (filter != null) {
-            if (filter.getMasterName() != null) {
-                matchFields.put("master", filter.getMasterName());
-            }
-            if (filter.getSlaveName() != null) {
-                matchFields.put("slaveHostName", filter.getSlaveName());
-            }
-            if (filter.getProjectName() != null) {
-                matchFields.put("projectName", filter.getProjectName());
-            }
-            if (filter.getBuildNumbers() != null) {
-                matchFields.put("buildNumber", new BasicDBObject("$in", filter.getBuildNumbers()));
-            }
-            if (filter.getSince() != null) {
-                matchFields.put("startingTime", new BasicDBObject("$gte", filter.getSince()));
-            }
-            if (filter.getResult() != null) {
-                matchFields.put("result", filter.getResult());
-            }
-            if (filter.getExcludeResult() != null) {
-                matchFields.put("result", new BasicDBObject("$ne", filter.getExcludeResult()));
-            }
+            putNonNullStringValue(matchFields, "master", filter.getMasterName());
+            putNonNullStringValue(matchFields, "slaveHostName", filter.getSlaveName());
+            putNonNullStringValue(matchFields, "projectName", filter.getProjectName());
+            putNonNullStringValue(matchFields, "result", filter.getResult());
+
+            putNonNullBasicDBObject(matchFields, "buildNumber", "$in", filter.getBuildNumbers());
+            putNonNullBasicDBObject(matchFields, "startingTime", "$gte", filter.getSince());
+            putNonNullBasicDBObject(matchFields, "result", "$ne", filter.getExcludeResult());
         }
         return matchFields;
+    }
+
+    /**
+     * Puts argument value to the dbObject if the value is non-null.
+     * @param dbObject object to put value to.
+     * @param key the key to map the value to.
+     * @param value the value to set.
+     */
+    private static void putNonNullStringValue(DBObject dbObject, String key, String value) {
+        if (value != null) {
+            dbObject.put(key, value);
+        }
+    }
+
+    /**
+     * Puts argument value to the dbObject if the value is non-null.
+     * The value will be added with an MongoDB operator, for example "$in" or "$gte".
+     * @param dbObject object to put value to.
+     * @param key the key to map the value to.
+     * @param operator the MongoDB operator to add together with the value.
+     * @param value the value to set.
+     */
+    private static void putNonNullBasicDBObject(DBObject dbObject, String key,
+            String operator, Object value) {
+        if (value != null) {
+            dbObject.put(key, new BasicDBObject(operator, value));
+        }
     }
 
     @Override
