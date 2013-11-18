@@ -88,7 +88,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         if (build.getResult().isWorseThan(Result.SUCCESS) && PluginImpl.shouldScan(build)
                 && !(build.getProject() instanceof MatrixProject)) {
             scan(build, listener.getLogger());
-            ProjectGraphAction.invalidateBuildNbrGraphCache(build.getProject());
+            ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
         }
     }
 

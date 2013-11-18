@@ -23,9 +23,15 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.util.Graph;
@@ -57,7 +63,7 @@ public final class GraphCache {
      * Get the singleton-instance.
      * @return {@link GraphCache}-instance
      */
-    public static GraphCache getInstance() {
+    public static synchronized GraphCache getInstance() {
         if (instance == null) {
             instance = new GraphCache();
         }
@@ -70,6 +76,35 @@ public final class GraphCache {
      */
     public void invalidate(String key) {
         cache.invalidate(key);
+    }
+
+    /**
+     * Invalidates all graphs matching argument pattern.
+     * @param pattern the pattern to match for graph ids
+     */
+    public void invalidateMatching(Pattern pattern) {
+        for (String key : getMatchingCacheKeys(pattern)) {
+            invalidate(key);
+        }
+    }
+
+    /**
+     * Gets all matching graph cache ids/keys.
+     * @param pattern the pattern to match for graph ids
+     * @return list of matching ids
+     */
+    public List<String> getMatchingCacheKeys(Pattern pattern) {
+        List<String> keys = new ArrayList<String>();
+        if (cache != null) {
+            Set<String> keySet = cache.asMap().keySet();
+            for (String key : keySet) {
+                Matcher keyMatcher = pattern.matcher(key);
+                if (keyMatcher.matches()) {
+                    keys.add(key);
+                }
+            }
+        }
+        return keys;
     }
 
     /**
