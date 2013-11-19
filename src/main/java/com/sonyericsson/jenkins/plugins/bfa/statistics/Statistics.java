@@ -27,10 +27,15 @@ package com.sonyericsson.jenkins.plugins.bfa.statistics;
 import java.util.Date;
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /**
  * The statistics object which will be logged.
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Statistics {
 
     private String projectName;
@@ -127,9 +132,8 @@ public class Statistics {
         return failureCauseStatisticsList;
     }
 
-
     /**
-     * Standard constructor.
+     * Standard/JSON constructor.
      * @param projectName the project name.
      * @param buildNumber the build number.
      * @param startingTime the starting time.
@@ -141,16 +145,17 @@ public class Statistics {
      * @param result the result of the build.
      * @param failureCauseStatistics the statistics for the FailureCauses.
      */
-    public Statistics(String projectName,
-                      int buildNumber,
-                      Date startingTime,
-                      long duration,
-                      List<String> triggerCauses,
-                      String nodeName,
-                      String master,
-                      int timeZoneOffset,
-                      String result,
-                      List<FailureCauseStatistics> failureCauseStatistics) {
+    @JsonCreator
+    public Statistics(@JsonProperty("projectName")    String projectName,
+                      @JsonProperty("buildNumber")    int buildNumber,
+                      @JsonProperty("startingTime")   Date startingTime,
+                      @JsonProperty("duration")       long duration,
+                      @JsonProperty("triggerCauses")  List<String> triggerCauses,
+                      @JsonProperty("slaveHostName")  String nodeName,
+                      @JsonProperty("master")         String master,
+                      @JsonProperty("timeZoneOffset") int timeZoneOffset,
+                      @JsonProperty("result")         String result,
+                      @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics) {
         this.projectName = projectName;
         this.buildNumber = buildNumber;
         if (startingTime == null) {
@@ -166,8 +171,5 @@ public class Statistics {
         this.result = result;
         this.failureCauseStatisticsList = failureCauseStatistics;
     }
-
-
-
 
 }

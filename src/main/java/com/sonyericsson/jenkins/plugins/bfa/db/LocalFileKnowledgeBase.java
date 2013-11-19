@@ -29,6 +29,7 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.Extension;
+import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.util.CopyOnWriteList;
 import jenkins.model.Jenkins;
@@ -219,6 +220,11 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(LocalFileKnowledgeBaseDescriptor.class);
+    }
+
+    @Override
+    public void removeBuildfailurecause(AbstractBuild build) throws Exception {
+        //Not implemented
     }
 
     /**

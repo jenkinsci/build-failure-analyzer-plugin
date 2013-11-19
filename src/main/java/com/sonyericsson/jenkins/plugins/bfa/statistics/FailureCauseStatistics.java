@@ -24,15 +24,23 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.statistics;
 
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 
 import java.util.List;
+
+import net.vz.mongodb.jackson.DBRef;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * The FailureCause statistics object.
  * Contains the id of a FailureCause and its found indications.
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FailureCauseStatistics {
     private String id;
     private List<FoundIndication> foundIndications;
@@ -60,6 +68,25 @@ public class FailureCauseStatistics {
      */
     public FailureCauseStatistics(String id, List<FoundIndication> indications) {
         this.id = id;
+        this.foundIndications = indications;
+    }
+
+    /**
+     * JSON constructor.
+     *
+     * @param failureCause database reference to the FailureCause.
+     * @param indications the list of indications.
+     * @throws Exception if the database reference is invalid
+     */
+    @JsonCreator
+    public FailureCauseStatistics(
+            @JsonProperty("failureCause") DBRef<FailureCause, ?> failureCause,
+            @JsonProperty("indications") List<FoundIndication> indications)
+            throws Exception {
+        if (failureCause == null) {
+            throw new Exception("Unable to resolve DBRef; failureCause mapping is null");
+        }
+        this.id = failureCause.getId().toString();
         this.foundIndications = indications;
     }
 }

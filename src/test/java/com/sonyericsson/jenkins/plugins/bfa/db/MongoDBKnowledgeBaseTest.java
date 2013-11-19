@@ -29,9 +29,12 @@ import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,10 +47,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertFalse;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -63,10 +70,12 @@ import static org.powermock.api.mockito.PowerMockito.when;
 public class MongoDBKnowledgeBaseTest {
 
     private JacksonDBCollection<FailureCause, String> collection;
+    private JacksonDBCollection<Statistics, String> statisticsCollection;
     private MongoDBKnowledgeBase kb;
     private List<Indication> indications;
     private Indication indication;
     private FailureCause mockedCause;
+    private Statistics mockedStatistics;
     private static final int PORT = 27017;
 
     /**
@@ -76,11 +85,14 @@ public class MongoDBKnowledgeBaseTest {
     public void setUp() {
         kb = new MongoDBKnowledgeBase("", PORT, "mydb", null, null, false);
         collection = mock(JacksonDBCollection.class);
-        Whitebox.setInternalState(kb, collection);
+        statisticsCollection = mock(JacksonDBCollection.class);
+        Whitebox.setInternalState(kb, "jacksonCollection", collection);
+        Whitebox.setInternalState(kb, "jacksonStatisticsCollection", statisticsCollection);
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "category", indications);
+        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result", null);
     }
 
     /**
@@ -102,7 +114,6 @@ public class MongoDBKnowledgeBaseTest {
     @Test
     public void testGetCauseNames() throws Exception {
         DBCursor<FailureCause> cursor = mock(DBCursor.class);
-        Whitebox.setInternalState(kb, collection);
         List<FailureCause> list = new LinkedList<FailureCause>();
         list.add(mockedCause);
         when(cursor.next()).thenReturn(mockedCause);
@@ -145,6 +156,27 @@ public class MongoDBKnowledgeBaseTest {
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
         assertSame(mockedCause, addedCause);
+    }
+
+    /**
+     * Tests fetching statistics.
+     * @throws Exception if unable to fetch statistics.
+     */
+    @Test
+    public void testGetStatistics() throws Exception {
+        DBCursor<Statistics> cursor = mock(DBCursor.class);
+        List<Statistics> list = new LinkedList<Statistics>();
+        list.add(mockedStatistics);
+
+        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject> any());
+        when(cursor.limit(anyInt())).thenReturn(cursor);
+        when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
+        when(cursor.toArray()).thenReturn(list);
+
+        List<Statistics> fetchedStatistics = kb.getStatistics("masterName", "slaveHostName", "projectName", 1);
+        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
+        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
+        assertSame(mockedStatistics, fetchedStatistics.get(0));
     }
 
     /**
