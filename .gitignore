@@ -5,3 +5,6 @@ bin
 *.ipr
 work
 .idea
+.classpath
+.project
+.settings

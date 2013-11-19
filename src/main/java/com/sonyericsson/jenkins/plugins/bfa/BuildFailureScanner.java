@@ -33,6 +33,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+
 import hudson.Extension;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
@@ -86,6 +88,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         if (build.getResult().isWorseThan(Result.SUCCESS) && PluginImpl.shouldScan(build)
                 && !(build.getProject() instanceof MatrixProject)) {
             scan(build, listener.getLogger());
+            ProjectGraphAction.invalidateBuildNbrGraphCache(build.getProject());
         }
     }
 
@@ -101,6 +104,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
+            buildAction.setBuild(build);
             build.addAction(buildAction);
             StatisticsLogger.getInstance().log(build, foundCauseList);
         } catch (Exception e) {

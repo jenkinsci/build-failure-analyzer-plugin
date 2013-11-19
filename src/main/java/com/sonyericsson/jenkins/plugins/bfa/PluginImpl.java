@@ -117,6 +117,7 @@ public class PluginImpl extends Plugin {
 
     private int nrOfScanThreads;
 
+    private Boolean graphsEnabled;
     /**
      * ScanOnDemandVariable instance.
      */
@@ -137,15 +138,15 @@ public class PluginImpl extends Plugin {
         if (sodVariables.getMinimumSodWorkerThreads() < 1) {
             sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.
                     DEFAULT_MINIMUM_SOD_WORKER_THREADS);
-       }
+        }
         if (sodVariables.getMaximumSodWorkerThreads() < 1) {
             sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.
                     DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-       }
+        }
         if (sodVariables.getSodThreadKeepAliveTime() < 1) {
             sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.
                     DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
-       }
+        }
         if (sodVariables.getSodWaitForJobShutdownTimeout() < 1) {
             sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
                     DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
@@ -315,6 +316,19 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * If graphs are enabled or not. Links to graphs and graphs will not be displayed when disabled.
+     * It can be enabled only if the knowledgeBase has support for it.
+     * @return True if enabled.
+     */
+    public boolean isGraphsEnabled() {
+        if (graphsEnabled == null || knowledgeBase == null) {
+            return false;
+        } else {
+            return knowledgeBase.isStatisticsEnabled() && graphsEnabled;
+        }
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
      *
      * @param globalEnabled on or off. null == on.
@@ -431,6 +445,7 @@ public class PluginImpl extends Plugin {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
+        graphsEnabled = o.getBoolean("graphsEnabled");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
@@ -444,9 +459,9 @@ public class PluginImpl extends Plugin {
         }
 
         if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
-           sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
+            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
         } else {
-           sodVariables.setSodCorePoolNumberOfThreads(corePoolNumberOfThreads);
+            sodVariables.setSodCorePoolNumberOfThreads(corePoolNumberOfThreads);
         }
 
         if (jobShutdownTimeWait < ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT) {

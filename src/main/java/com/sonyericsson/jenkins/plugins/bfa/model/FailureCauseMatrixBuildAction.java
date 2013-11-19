@@ -194,6 +194,20 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
     }
 
     /**
+     * Gets the failure causes for a specific matrix run.
+     *
+     * @param run the run to find failure causes for.
+     * @return the failure causes of the run.
+     */
+    public static FailureCauseDisplayData getFailureCauseDisplayData(MatrixRun run) {
+        FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
+        if (action != null) {
+            return action.getFailureCauseDisplayData();
+        }
+        return new FailureCauseDisplayData();
+    }
+
+    /**
      * Signal that this object is de-serialized. Will start by checking if {@link #runs} should be converted, otherwise
      * check if {@link #runIds} should be converted to {@link #runs}.
      *

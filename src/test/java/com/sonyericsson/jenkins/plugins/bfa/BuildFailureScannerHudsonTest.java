@@ -410,7 +410,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Configures the global settings with a cause that has the provided indication/
+     * Configures the global settings with a cause that has the provided indication.
      *
      * @param name        the name of the cause.
      * @param description the description of the cause.
@@ -419,7 +419,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, String category,
+    public static FailureCause configureCauseAndIndication(String name, String description, String category,
                                                      Indication indication) throws Exception {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
@@ -456,7 +456,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @param failureCause        the cause.
      * @return true if found, false if not.
      */
-    private boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
+    public static boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
         for (FoundFailureCause cause : causeListFromAction) {
             if (failureCause.getName().equals(cause.getName())
                     && failureCause.getDescription().equals(cause.getDescription())

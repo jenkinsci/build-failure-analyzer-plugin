@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.sonyericsson.jenkins.plugins.bfa.sod;
+package com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 
-import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.TransientProjectActionFactory;
-
-import java.util.Arrays;
-import java.util.Collection;
-
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
-
-/**
- * Extension point for inserting SOD Transient Actions
- * into the Abstract project.
- *
- * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
- */
-@Extension
-public class ScanOnDemandTransientActionProvider extends TransientProjectActionFactory {
-
-    @Override
-    public Collection<? extends Action> createFor(AbstractProject target) {
-        final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-        final ProjectGraphAction graphAction = new ProjectGraphAction(target);
-
-        return Arrays.asList(sodBaseAction, graphAction);
-    }
+if (PluginImpl.getInstance().isGraphsEnabled()) {
+  div(style: "text-align: right; margin: 10px;") {
+      img(src: "bfa-proj-graphs/graph/png?which=1") {};
+      br()
+      a(href: "bfa-proj-graphs/detailedgraphs", style: "text-decoration: none; color: #204a87; font-size: larger;") {
+          text(_("More graphs"));
+      }
+  }
 }

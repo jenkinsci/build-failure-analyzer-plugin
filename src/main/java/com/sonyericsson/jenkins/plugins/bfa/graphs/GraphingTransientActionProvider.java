@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.sonyericsson.jenkins.plugins.bfa.sod;
-
-import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.TransientProjectActionFactory;
+package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
 import java.util.Arrays;
 import java.util.Collection;
-
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import hudson.Extension;
+import hudson.model.Action;
+import hudson.model.TransientComputerActionFactory;
+import hudson.model.Computer;
 
 /**
- * Extension point for inserting SOD Transient Actions
- * into the Abstract project.
+ * Extension point to insert graph statistics for nodes/computers.
  *
- * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
+ * @author Christoffer Lauri &lt;christoffer.lauri@sonymobile.com&gt;
  */
 @Extension
-public class ScanOnDemandTransientActionProvider extends TransientProjectActionFactory {
+public class GraphingTransientActionProvider extends TransientComputerActionFactory {
 
     @Override
-    public Collection<? extends Action> createFor(AbstractProject target) {
-        final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-        final ProjectGraphAction graphAction = new ProjectGraphAction(target);
+    public Collection<? extends Action> createFor(Computer target) {
+        final ComputerGraphAction compGraphAction = new ComputerGraphAction(target);
 
-        return Arrays.asList(sodBaseAction, graphAction);
+        return Arrays.asList(compGraphAction);
     }
+
 }

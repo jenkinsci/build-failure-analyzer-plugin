@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.sonyericsson.jenkins.plugins.bfa.sod;
+package com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 
-import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.TransientProjectActionFactory;
-
-import java.util.Arrays;
-import java.util.Collection;
-
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
-
-/**
- * Extension point for inserting SOD Transient Actions
- * into the Abstract project.
- *
- * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
- */
-@Extension
-public class ScanOnDemandTransientActionProvider extends TransientProjectActionFactory {
-
-    @Override
-    public Collection<? extends Action> createFor(AbstractProject target) {
-        final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-        final ProjectGraphAction graphAction = new ProjectGraphAction(target);
-
-        return Arrays.asList(sodBaseAction, graphAction);
-    }
-}
+include(my, "detailedgraphs.groovy")
