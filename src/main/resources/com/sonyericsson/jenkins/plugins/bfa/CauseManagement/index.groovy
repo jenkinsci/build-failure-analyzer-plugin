@@ -110,7 +110,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
             text(cause.getCategoriesAsString())
           }
           td{
-            raw(cause.getDescription())
+            raw(app.markupFormatter.translate(cause.getDescription()))
           }
           td {
             if (canRemove) {

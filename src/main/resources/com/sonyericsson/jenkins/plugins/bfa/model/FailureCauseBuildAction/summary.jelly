@@ -64,7 +64,7 @@
             <tr>
                 <td/>
                 <td>
-                    ${cause.description}
+                    ${app.markupFormatter.translate(cause.description)}
                 </td>
             </tr>
             <tr>
