@@ -143,7 +143,7 @@ l.layout() {
 
       br(style: "clear: both;") {}
     }
-    
+
     div() {
       for (graphType in my.graphTypes) {
         def imgSrc = graphType.getValue();
@@ -154,5 +154,13 @@ l.layout() {
         }
       }
     }
+
+    if (my.showGraphDelayText()) {
+      div() {
+        text(_("graph-cache-delay-info",
+            com.sonyericsson.jenkins.plugins.bfa.graphs.GraphCache.expirationTime))
+      }
+    }
+
   }
 }

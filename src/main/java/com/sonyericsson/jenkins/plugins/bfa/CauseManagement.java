@@ -343,6 +343,11 @@ public class CauseManagement extends BfaGraphAction {
     }
 
     @Override
+    public boolean showGraphDelayText() {
+        return true;
+    }
+
+    @Override
     protected Graph getGraph(GraphType which, Date timePeriod,
             boolean hideManAborted, boolean forAllMasters,
             Map<String, String> rawReqParams) {

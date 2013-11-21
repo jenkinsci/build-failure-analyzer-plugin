@@ -229,6 +229,16 @@ public abstract class BfaGraphAction implements RootAction {
     }
 
     /**
+     * Helper for the groovy-views; show/hide info text for graph delay.
+     * The info text will inform the user about the delay for graphs
+     * because of caching.
+     * @return True to show the text, otherwise false
+     */
+    public boolean showGraphDelayText() {
+        return false;
+    }
+
+    /**
      * Get a Date object corresponding to the specified string.
      * (today|month).
      * @param str The String

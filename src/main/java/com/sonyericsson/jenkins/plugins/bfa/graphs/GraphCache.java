@@ -73,6 +73,14 @@ public final class GraphCache {
     }
 
     /**
+     * Gets the expiration time for cached objects.
+     * @return expiration time in minutes
+     */
+    public static int getExpirationTime() {
+        return EXPIRATION_TIME_MINUTES;
+    }
+
+    /**
      * Get the Graph corresponding to the specified key.
      * If there is no cached graph for the specified key
      * (or it has been invalidated) the specified
