@@ -46,6 +46,7 @@ public class ProjectGraphAction extends BfaGraphAction {
     private static final String URL_NAME = "bfa-proj-graphs";
     private static final String PAGE_TITLE = "Statistics for project";
     private static final String GRAPH_TITLE_CAUSES = "Failure causes for this project";
+    private static final String GRAPH_TITLE_CAUSES_SMALL = "Failure causes for this project last 30 days";
     private static final String GRAPH_TITLE_CATEGORIES = "Failures grouped by categories for this project";
     private static final String BUILD_NBR_TITLE = "Failure causes per build for this project";
 
@@ -100,7 +101,7 @@ public class ProjectGraphAction extends BfaGraphAction {
         switch (which) {
         case BAR_CHART_CAUSES_SMALL:
             return new BarChart(-1, GRAPH_WIDTH_SMALL, GRAPH_HEIGHT_SMALL,
-                    project, filter, GRAPH_TITLE_CAUSES, false);
+                    project, filter, GRAPH_TITLE_CAUSES_SMALL, false);
 
         case BAR_CHART_CAUSES:
             return new BarChart(-1, DEFAULT_GRAPH_WIDTH, DEFAULT_GRAPH_HEIGHT,
