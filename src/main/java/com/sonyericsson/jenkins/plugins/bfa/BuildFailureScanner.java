@@ -34,6 +34,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
 
 import hudson.Extension;
 import hudson.matrix.MatrixProject;
@@ -89,6 +90,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
                 && !(build.getProject() instanceof MatrixProject)) {
             scan(build, listener.getLogger());
             ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
+            ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
         }
     }
 

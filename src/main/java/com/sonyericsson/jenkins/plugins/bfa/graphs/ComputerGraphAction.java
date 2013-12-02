@@ -26,6 +26,7 @@ package com.sonyericsson.jenkins.plugins.bfa.graphs;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
@@ -34,6 +35,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import hudson.model.ModelObject;
 import hudson.model.Computer;
 import hudson.model.Hudson;
+import hudson.model.Node;
 import hudson.model.Slave;
 import hudson.util.Graph;
 
@@ -219,6 +221,33 @@ public class ComputerGraphAction extends BfaGraphAction {
     @Override
     protected String getGraphCacheId(GraphType whichGraph, String reqTimePeriod,
             boolean hideAborted, boolean forAllMasters) {
-        return getClass().getSimpleName() + whichGraph.getValue() + reqTimePeriod + String.valueOf(hideAborted);
+        return getClass().getSimpleName() + ID_SEPARATOR
+                + whichGraph.getValue() + ID_SEPARATOR
+                + getNodeName() + ID_SEPARATOR
+                + reqTimePeriod + ID_SEPARATOR
+                + String.valueOf(hideAborted);
+    }
+
+    /**
+     * Invalidate all graph caches for the specified computer.
+     * @param computer The computer whose graphs to invalidate
+     */
+    public static void invalidateNodeGraphCache(Computer computer) {
+        if (computer != null) {
+            Pattern projectPattern = Pattern.compile("^.*" + ID_SEPARATOR
+                    + computer.getName() + ID_SEPARATOR + ".*$");
+            GraphCache.getInstance().invalidateMatching(projectPattern);
+        }
+    }
+
+    /**
+     * Invalidate all graph caches for the specified buildNode.
+     * @param buildNode The buildNode whose graphs to invalidate
+     */
+    public static void invalidateNodeGraphCache(Node buildNode) {
+        if (buildNode != null) {
+            Computer correspondingComputer = buildNode.toComputer();
+            invalidateNodeGraphCache(correspondingComputer);
+        }
     }
 }
