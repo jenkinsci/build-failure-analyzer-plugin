@@ -38,6 +38,7 @@ import jenkins.model.Jenkins;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -197,7 +198,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
     public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) throws Exception {
-        return null;
+        return Collections.<Statistics>emptyList();
     }
 
     /**
@@ -210,7 +211,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return list of ObjectCountPairs.
      */
     public List<ObjectCountPair<FailureCause>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
-        return null;
+        return Collections.<ObjectCountPair<FailureCause>>emptyList();
     }
 
     /**
@@ -222,7 +223,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return failure cause quotas
      */
     public Map<TimePeriod, Double> getUnknownFailureCauseQuotaPerTime(int intervalSize, GraphFilterBuilder filter) {
-        return null;
+        return Collections.<TimePeriod, Double>emptyMap();
     }
 
     /**
@@ -235,7 +236,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return List of ObjectCountPairs that consist of a name and count
      */
     public List<ObjectCountPair<String>> getFailureCauseNames(GraphFilterBuilder filter) {
-        return null;
+        return Collections.<ObjectCountPair<String>>emptyList();
     }
 
     /**
@@ -245,7 +246,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return number of statistics posts without FailureCause
      */
     public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
-        return -1;
+        return 0;
     }
 
     /**
@@ -259,7 +260,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return list of ObjectCountPairs
      */
     public List<ObjectCountPair<String>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
-        return null;
+        return Collections.<ObjectCountPair<String>>emptyList();
     }
 
     /**
@@ -271,7 +272,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return map of failure causes
      */
     public Map<Integer, List<FailureCause>> getFailureCausesPerBuild(GraphFilterBuilder filter) {
-        return null;
+        return Collections.<Integer, List<FailureCause>>emptyMap();
     }
 
     /**
@@ -287,7 +288,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public List<FailureCauseTimeInterval> getFailureCausesPerTime(int intervalSize, GraphFilterBuilder filter,
             boolean byCategories) {
-        return null;
+        return Collections.<FailureCauseTimeInterval>emptyList();
     }
 
     /**
@@ -300,7 +301,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return list of ObjectCountPairs
      */
     public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
-        return null;
+        return Collections.<ObjectCountPair<String>>emptyList();
     }
 
     /**
