@@ -24,7 +24,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.views.ListViewColumnDescriptor;
 import hudson.views.ListViewColumn;
@@ -34,8 +34,19 @@ import java.util.List;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * A column that user can add to a view to display the failure cause of the last build.
+ *
+ * @author vlatombe
+ *
+ */
 public class FailureCauseColumn extends ListViewColumn {
 
+  /**
+   * The descriptor for {@link FailureCauseColumn}.
+   * @author vlatombe
+   *
+   */
   @Extension
   public static class DescriptorImpl extends ListViewColumnDescriptor {
     @Override
@@ -51,12 +62,23 @@ public class FailureCauseColumn extends ListViewColumn {
 
   private boolean showText;
 
+  /**
+   * The standard data-bound constructor.
+   *
+   * @param showText
+   *          if true, will display the text of the failure cause next to the icon
+   */
   @DataBoundConstructor
   public FailureCauseColumn(boolean showText) {
     this.showText = showText;
   }
 
-  public String getBadgeImageUrl(AbstractProject job) {
+  /**
+   * @see FailureCauseBuildAction#getBadgeImageUrl()
+   * @param job The given job we want the badge image url for
+   * @return the image url
+   */
+  public String getBadgeImageUrl(Job job) {
     FailureCauseBuildAction action = findFailureCauseBuildAction(job);
     if (action == null) {
       return null;
@@ -64,7 +86,12 @@ public class FailureCauseColumn extends ListViewColumn {
     return action.getBadgeImageUrl();
   }
 
-  public List<FoundFailureCause> getFoundFailureCauses(AbstractProject job) {
+  /**
+   * @see FailureCauseBuildAction#getFoundFailureCauses()
+   * @param job the job we want to retrieve actions for
+   * @return the list of found failure causes
+   */
+  public List<FoundFailureCause> getFoundFailureCauses(Job job) {
     FailureCauseBuildAction action = findFailureCauseBuildAction(job);
     if (action == null) {
       return Collections.emptyList();
@@ -72,15 +99,19 @@ public class FailureCauseColumn extends ListViewColumn {
     return action.getFoundFailureCauses();
   }
 
+  /**
+   * @return true if text should be displayed next to the failure cause icon
+   */
   public boolean isShowText() {
     return showText;
   }
 
-  public void setShowText(boolean showText) {
-    this.showText = showText;
-  }
-
-  private FailureCauseBuildAction findFailureCauseBuildAction(AbstractProject job) {
+  /**
+   * A helper method to retrieve the {@link FailureCauseBuildAction} from the given {@link Job}
+   * @param job the given job
+   * @return The {@link FailureCauseBuildAction} if it exists, otherwise null
+   */
+  private FailureCauseBuildAction findFailureCauseBuildAction(Job job) {
     if (job == null) {
       return null;
     }
