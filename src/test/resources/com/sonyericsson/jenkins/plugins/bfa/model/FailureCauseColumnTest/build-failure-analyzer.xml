@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.sonyericsson.jenkins.plugins.bfa.PluginImpl>
+  <noCausesMessage>No problems were identified. If you know why this problem occurred, please add a suitable Cause for it.</noCausesMessage>
+  <knowledgeBase class="com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase">
+    <causes>
+      <entry>
+        <string>fa3ad321-4f70-46da-af45-1304dca50146</string>
+        <com.sonyericsson.jenkins.plugins.bfa.model.FailureCause>
+          <id>fa3ad321-4f70-46da-af45-1304dca50146</id>
+          <name>Failure Builder</name>
+          <description>Simulating a failure</description>
+          <indications>
+            <com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication>
+              <pattern>.*Simulating a failure.*</pattern>
+            </com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication>
+          </indications>
+        </com.sonyericsson.jenkins.plugins.bfa.model.FailureCause>
+      </entry>
+    </causes>
+  </knowledgeBase>
+  <nrOfScanThreads>3</nrOfScanThreads>
+  <sodVariables>
+    <minimumSodWorkerThreads>1</minimumSodWorkerThreads>
+    <maximumSodWorkerThreads>1</maximumSodWorkerThreads>
+    <sodThreadKeepAliveTime>15</sodThreadKeepAliveTime>
+    <sodWaitForJobShutdownTimeout>30</sodWaitForJobShutdownTimeout>
+    <sodCorePoolNumberOfThreads>5</sodCorePoolNumberOfThreads>
+  </sodVariables>
+</com.sonyericsson.jenkins.plugins.bfa.PluginImpl>
