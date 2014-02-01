@@ -94,6 +94,11 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final String EXCLUDE_ABORTED = "ABORTED";
 
     /**
+     * Separator between different parts of graph IDs.
+     */
+    protected static final char ID_SEPARATOR = '-';
+
+    /**
      * Get the owner.
      * @return The owner
      */

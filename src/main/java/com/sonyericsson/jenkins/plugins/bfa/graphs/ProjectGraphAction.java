@@ -29,6 +29,7 @@ import hudson.util.Graph;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.sonyericsson.jenkins.plugins.bfa.BfaGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
@@ -155,8 +156,11 @@ public class ProjectGraphAction extends BfaGraphAction {
         if (whichGraph == GraphType.BAR_CHART_BUILD_NBRS) {
             id = getCacheIdForBuildNbrs(getProjectName());
         } else {
-            id = getClass().getSimpleName() + whichGraph.getValue() + getProjectName()
-                    + reqTimePeriod + String.valueOf(hideAborted);
+            id = getClass().getSimpleName() + ID_SEPARATOR
+                    + whichGraph.getValue() + ID_SEPARATOR
+                    + getProjectName() + ID_SEPARATOR
+                    + reqTimePeriod + ID_SEPARATOR
+                    + String.valueOf(hideAborted);
         }
         return id;
     }
@@ -167,7 +171,9 @@ public class ProjectGraphAction extends BfaGraphAction {
      * @return The id
      */
     private static String getCacheIdForBuildNbrs(String projectName) {
-        return ProjectGraphAction.class.getSimpleName() + projectName + GraphType.BAR_CHART_BUILD_NBRS.getValue();
+        return ProjectGraphAction.class.getSimpleName() + ID_SEPARATOR
+                + projectName + ID_SEPARATOR
+                + GraphType.BAR_CHART_BUILD_NBRS.getValue();
     }
 
     /**
@@ -187,5 +193,15 @@ public class ProjectGraphAction extends BfaGraphAction {
      */
     public static void invalidateBuildNbrGraphCache(AbstractProject project) {
         GraphCache.getInstance().invalidate(ProjectGraphAction.getCacheIdForBuildNbrs(project.getFullName()));
+    }
+
+    /**
+     * Invalidate all graph caches for the specified project.
+     * @param project The project whose graphs to invalidate
+     */
+    public static void invalidateProjectGraphCache(AbstractProject project) {
+        Pattern projectPattern = Pattern.compile("^.*" + ID_SEPARATOR
+                + project.getFullName() + ID_SEPARATOR + ".*$");
+        GraphCache.getInstance().invalidateMatching(projectPattern);
     }
 }
