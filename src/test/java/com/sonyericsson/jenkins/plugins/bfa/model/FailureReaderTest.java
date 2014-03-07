@@ -24,10 +24,9 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import hudson.model.AbstractBuild;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -39,9 +38,10 @@ import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import hudson.model.AbstractBuild;
+import org.junit.Test;
 
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
@@ -104,7 +104,7 @@ public class FailureReaderTest {
         FoundIndication indication = reader.scanOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= 5000);
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 5000);
         assertNotNull("Expected to find an indication", indication);
     }
 
@@ -127,7 +127,7 @@ public class FailureReaderTest {
         FoundIndication indication = reader.scanOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 12000);
         assertNull("Did not expect to find an indication", indication);
     }
 

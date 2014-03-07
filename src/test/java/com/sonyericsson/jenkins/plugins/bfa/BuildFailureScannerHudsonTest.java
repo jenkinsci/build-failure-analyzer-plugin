@@ -25,6 +25,20 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
@@ -52,19 +66,6 @@ import org.mockito.Matchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -116,6 +117,47 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         assertNotNull(error);
         assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
+    }
+
+    /**
+     * Test that looks for an indication spanning multiple lines.
+     *
+     * @throws Exception
+     */
+    public void testOneIndicationMultilineFound() throws Exception {
+        String buildLog = "ERROR\nIS FOUND";
+        FreeStyleProject project = createProject(buildLog);
+
+        Indication indication = new BuildLogIndication("(?s)ERROR.*IS");
+
+        FailureCause failureCause = configureCauseAndIndication("Other cause", "Other description", indication);
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, failureCause));
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+        HtmlElement document = page.getDocumentElement();
+
+        FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
+        String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
+        HtmlElement focus = document.getElementById(id);
+        assertNotNull(focus);
+
+        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
+        assertNotNull(errorElements);
+        HtmlElement error = errorElements.get(0);
+
+        assertNotNull(error);
+        assertEquals("Error message not found: ", new StringTokenizer(buildLog).nextToken("\n"), error.getTextContent().trim());
     }
 
     /**
@@ -443,8 +485,19 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @throws IOException if so.
      */
     private FreeStyleProject createProject() throws IOException {
+        return createProject(TO_PRINT);
+    }
+
+    /**
+     * Creates a project with an arbitrary string for its console output and fails the build.
+     *
+     * @param toPrint
+     * @return the project
+     * @throws IOException
+     */
+    private FreeStyleProject createProject(String toPrint) throws IOException {
         FreeStyleProject project = createFreeStyleProject();
-        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        project.getBuildersList().add(new PrintToLogBuilder(toPrint));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
         return project;
     }
