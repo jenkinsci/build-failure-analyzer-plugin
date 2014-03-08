@@ -23,9 +23,7 @@
  */
 
 package com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction
-
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
-import hudson.Functions
 
 def f = namespace(lib.FormTagLib)
 def j = namespace(lib.JenkinsTagLib)
@@ -87,17 +85,19 @@ def displayLinkTree(linkTree) {
             h3 {
                 text(_("Subproject build: "))
                 linkTree.eachWithIndex { link, i ->
-                    if (i > 0) {
-                        text(" / ")
+                    if (link?.buildUrl != null) {
+                        if (i > 0) {
+                            text(" / ")
+                        }
+                        a(href: "${rootURL}/${link.projectUrl}", class: "model-link") {
+                            text(link.projectDisplayName + " ")
+                        }
+                        text(" (")
+                        a(href: "${rootURL}/${link.buildUrl}", class: "model-link") {
+                            text(link.buildDisplayName)
+                        }
+                        text(") ")
                     }
-                    a(href: "${rootURL}/${link.projectUrl}", class: "model-link") {
-                        text(link.projectDisplayName + " ")
-                    }
-                    text(" (")
-                    a(href: "${rootURL}/${link.buildUrl}", class: "model-link") {
-                        text(link.buildDisplayName)
-                    }
-                    text(") ")
                 }
             }
         }
@@ -118,9 +118,11 @@ def displayCauses(cause, indent, links) {
                 }
                 br {}
                 cause.getIndications().each { indication ->
-                    a(href: "${rootURL}/${links.buildUrl}" + "consoleFull"
-                            , class: "model-link") {
-                                text(_("Indication") + " " + (index++))
+                    if (links?.buildUrl != null) {
+                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull"
+                                , class: "model-link") {
+                            text(_("Indication") + " " + (index++))
+                        }
                     }
                 }
                 br {}
