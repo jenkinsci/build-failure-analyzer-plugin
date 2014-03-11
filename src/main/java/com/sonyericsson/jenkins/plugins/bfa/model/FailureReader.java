@@ -24,17 +24,19 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.console.ConsoleNote;
 import hudson.model.AbstractBuild;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Reader used to find indications of a failure cause.
@@ -82,28 +84,35 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
         boolean found = false;
-        Pattern pattern = indication.getPattern();
-        String line;
-        int currentLine = 1;
+        Pattern pattern = Pattern.compile("^[\r\n]*?" + indication.getPattern().pattern() + "[^\r\n]*?$",
+                Pattern.MULTILINE);
+        Scanner scanner = new Scanner(reader);
+        scanner.useDelimiter(Pattern.compile("[\\r\\n]+"));
+        String firstLine = "";
         timerThread.start();
+
         try {
             long startTime = System.currentTimeMillis();
-            while ((line = reader.readLine()) != null) {
+
+            while (scanner.hasNext()) {
                 try {
-                    if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
+                    String lines = scanner.findWithinHorizon(pattern, 10000);
+                    if (lines != null) {
+                        StringTokenizer tokenizer = new StringTokenizer(lines);
+                        firstLine = tokenizer.nextToken("\n\r\f");
                         found = true;
                         break;
                     }
+                    scanner.next();
                 } catch (RuntimeException e) {
                     if (e.getCause() instanceof InterruptedException) {
                         logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
-                                + currentFile + ":" + currentLine);
+                                + currentFile);
                     } else {
                         // This is not a timeout exception
                         throw e;
                     }
                 }
-                currentLine++;
                 timerThread.touch();
                 if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
                     logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
@@ -111,10 +120,12 @@ public abstract class FailureReader {
                     break;
                 }
             }
+
             if (found) {
-                String cleanLine = ConsoleNote.removeNotes(line);
+                String cleanLine = ConsoleNote.removeNotes(firstLine);
                 foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
             }
+
             return foundIndication;
         } finally {
             timerThread.requestStop();
