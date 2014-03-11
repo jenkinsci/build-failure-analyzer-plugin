@@ -24,10 +24,9 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import hudson.model.AbstractBuild;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -39,9 +38,10 @@ import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import hudson.model.AbstractBuild;
+import org.junit.Test;
 
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
@@ -128,6 +128,65 @@ public class FailureReaderTest {
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
+        assertNull("Did not expect to find an indication", indication);
+    }
+
+    /**
+     * Happy test verifying that a scan doesn't take an exceptional amount of time.
+     * @throws Exception if so
+     */
+    @Test
+    public void testScanMultiLineOneFile() throws Exception {
+        FailureReader reader = new TestReader(".*scan for me please.*");
+        BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
+        long startTime = System.currentTimeMillis();
+        FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        br.close();
+        assertTrue("Unexpected long time to parse log: " + elapsedTime, elapsedTime <= 1000);
+        assertNotNull("Expected to find an indication", indication);
+    }
+
+    /**
+     * Test of timeout on abusive line. Should timeout on two lines
+     * each timeout between 1 and 2 seconds.
+     * @throws Exception if so
+     */
+    @Test
+    public void testScanMultiLineOneFileWithLineTimeout() throws Exception {
+        FailureReader reader = new TestReader(".*scan for me please.*");
+        InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
+        ZipInputStream zipStream = new ZipInputStream(resStream);
+        zipStream.getNextEntry();
+        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(zipStream)));
+        long startTime = System.currentTimeMillis();
+        FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        br.close();
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 5000);
+        assertNotNull("Expected to find an indication", indication);
+    }
+
+    /**
+     * Test of timeout on abusive file. Should timeout on entire scan.
+     * @throws Exception if so
+     */
+    @Test
+    public void testScanMultilineOneFileWithFileTimeout() throws Exception {
+        FailureReader reader = new TestReader(".*non existing string");
+        InputStream inStream = new ByteArrayInputStream(new byte[0]);
+        for (int i = 0; i < 10; i++) {
+            InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
+            ZipInputStream zipStream = new ZipInputStream(resStream);
+            zipStream.getNextEntry();
+            inStream = new SequenceInputStream(inStream, zipStream);
+        }
+        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(inStream)));
+        long startTime = System.currentTimeMillis();
+        FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        br.close();
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 12000);
         assertNull("Did not expect to find an indication", indication);
     }
 

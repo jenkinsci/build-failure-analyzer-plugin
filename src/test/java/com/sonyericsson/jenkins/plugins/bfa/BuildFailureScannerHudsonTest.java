@@ -25,6 +25,20 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
@@ -37,6 +51,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
@@ -52,19 +67,6 @@ import org.mockito.Matchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -116,6 +118,45 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         assertNotNull(error);
         assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
+    }
+
+    /**
+     * Happy test that should find one failure indication in the build.
+     *
+     * @throws Exception if so.
+     */
+    public void testOneMultilineIndicationFound() throws Exception {
+        String buildLog = "ERROR\nIS FOUND";
+        FreeStyleProject project = createProject(buildLog);
+
+        FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication("ERROR.*IS"));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.FAILURE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, failureCause));
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+        HtmlElement document = page.getDocumentElement();
+
+        FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
+        String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
+        HtmlElement focus = document.getElementById(id);
+        assertNotNull(focus);
+
+        List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
+        assertNotNull(errorElements);
+        HtmlElement error = errorElements.get(0);
+
+        assertNotNull(error);
+        assertEquals("Error message not found: ", new StringTokenizer(buildLog).nextToken("\n"), error.getTextContent().trim());
     }
 
     /**
@@ -443,8 +484,18 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @throws IOException if so.
      */
     private FreeStyleProject createProject() throws IOException {
+        return createProject(TO_PRINT);
+    }
+
+    /**
+     * Creates a project that prints the given log string to the console and fails the build.
+     * @param logString
+     * @return the project
+     * @throws IOException
+     */
+    private FreeStyleProject createProject(String logString) throws IOException {
         FreeStyleProject project = createFreeStyleProject();
-        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        project.getBuildersList().add(new PrintToLogBuilder(logString));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
         return project;
     }

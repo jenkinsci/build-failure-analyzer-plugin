@@ -24,17 +24,19 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.console.ConsoleNote;
 import hudson.model.AbstractBuild;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Reader used to find indications of a failure cause.
@@ -113,6 +115,73 @@ public abstract class FailureReader {
             }
             if (found) {
                 String cleanLine = ConsoleNote.removeNotes(line);
+                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
+            }
+            return foundIndication;
+        } finally {
+            timerThread.requestStop();
+            timerThread.interrupt();
+            try {
+                timerThread.join();
+                //CS IGNORE EmptyBlock FOR NEXT 2 LINES. REASON: unimportant exception
+            } catch (InterruptedException eIgnore) {
+            }
+            // reset the interrupt
+            Thread.interrupted();
+        }
+    }
+
+    /**
+     * Scans one file for the required multi-line pattern.
+     * @param build the build we are processing.
+     * @param reader the reader to read from.
+     * @param currentFile the file path of the file we want to scan.
+     * @return a FoundIndication if we find the pattern, null if not.
+     * @throws IOException if problems occur in the reader handling.
+     */
+    protected FoundIndication scanMultiLineOneFile(AbstractBuild build, BufferedReader reader, String currentFile)
+            throws IOException {
+        TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
+        FoundIndication foundIndication = null;
+        boolean found = false;
+        Pattern pattern = Pattern.compile("^[\r\n]*?" + indication.getPattern().pattern() + "[^\r\n]*?$",
+                Pattern.MULTILINE | Pattern.DOTALL);
+        Scanner scanner = new Scanner(reader);
+        scanner.useDelimiter(Pattern.compile("[\\r\\n]+"));
+        String firstLine = "";
+
+        timerThread.start();
+        try {
+            long startTime = System.currentTimeMillis();
+            while (scanner.hasNext()) {
+                try {
+                    String lines = scanner.findWithinHorizon(pattern, 10000);
+                    if (lines != null) {
+                        StringTokenizer tokenizer = new StringTokenizer(lines);
+                        firstLine = tokenizer.nextToken("\n\r\f");
+                        found = true;
+                        break;
+                    }
+                    scanner.next();
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof InterruptedException) {
+                        logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
+                                + currentFile);
+                    } else {
+                        // This is not a timeout exception
+                        throw e;
+                    }
+                }
+
+                timerThread.touch();
+                if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
+                    logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
+                            + currentFile);
+                    break;
+                }
+            }
+            if (found) {
+                String cleanLine = ConsoleNote.removeNotes(firstLine);
                 foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
             }
             return foundIndication;
