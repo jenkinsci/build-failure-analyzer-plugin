@@ -25,24 +25,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
-import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
-
-import hudson.Extension;
-import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
-import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.model.listeners.RunListener;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
@@ -54,6 +36,23 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
+import hudson.Extension;
+import hudson.matrix.MatrixProject;
+import hudson.model.AbstractBuild;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.model.listeners.RunListener;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -86,11 +85,17 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     @Override
     public void onCompleted(AbstractBuild build, TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
-        if (build.getResult().isWorseThan(Result.SUCCESS) && PluginImpl.shouldScan(build)
+        if (PluginImpl.shouldScan(build)
                 && !(build.getProject() instanceof MatrixProject)) {
-            scan(build, listener.getLogger());
-            ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
-            ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
+            if (build.getResult().isWorseThan(Result.SUCCESS)) {
+                scan(build, listener.getLogger());
+                ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
+                ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
+            } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
+                final List<FoundFailureCause> emptyCauseList =
+                        Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+                StatisticsLogger.getInstance().log(build, emptyCauseList);
+            }
         }
     }
 

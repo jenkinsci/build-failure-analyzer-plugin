@@ -88,7 +88,7 @@ public abstract class EmbeddedMongoTest {
         mongodExe.start();
 
         int port = conf.net().getPort();
-        knowledgeBase = new MongoDBKnowledgeBase(LOCALHOST, port, DB_NAME, null, null, true);
+        knowledgeBase = new MongoDBKnowledgeBase(LOCALHOST, port, DB_NAME, null, null, true, false);
     }
 
 }

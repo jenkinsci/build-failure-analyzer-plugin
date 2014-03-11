@@ -23,6 +23,28 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import static java.util.Arrays.asList;
+
+import javax.naming.AuthenticationException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SimpleTimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -41,7 +63,6 @@ import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
-
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -52,7 +73,6 @@ import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
-
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.bson.types.ObjectId;
 import org.jfree.data.time.Day;
@@ -61,28 +81,6 @@ import org.jfree.data.time.Month;
 import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import javax.naming.AuthenticationException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-import java.util.SimpleTimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static java.util.Arrays.asList;
 
 /**
  * Handling of the MongoDB way of saving the knowledge base.
@@ -117,6 +115,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private String userName;
     private Secret password;
     private boolean enableStatistics;
+    private boolean successfulLogging;
 
     /**
      * Getter for the MongoDB user name.
@@ -166,16 +165,18 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param userName the user name for the database.
      * @param password the password for the database.
      * @param enableStatistics if statistics logging should be enabled or not.
+     * @param successfulLogging if all builds should be logged to the statistics DB
      */
     @DataBoundConstructor
     public MongoDBKnowledgeBase(String host, int port, String dbName, String userName, Secret password,
-                                boolean enableStatistics) {
+                                boolean enableStatistics, boolean successfulLogging) {
         this.host = host;
         this.port = port;
         this.dbName = dbName;
         this.userName = userName;
         this.password = password;
         this.enableStatistics = enableStatistics;
+        this.successfulLogging = successfulLogging;
     }
 
     @Override
@@ -453,6 +454,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
+    public boolean isSuccessfulLoggingEnabled() {
+        return successfulLogging;
+    }
+
+    @Override
     public void saveStatistics(Statistics stat) throws UnknownHostException, AuthenticationException {
         DBObject object = new BasicDBObject();
         object.put("projectName", stat.getProjectName());
@@ -613,7 +619,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param filter the filter to create match fields for
      * @return DBObject containing fields to match
      */
-    private static DBObject generateMatchFields(GraphFilterBuilder filter) {
+    private static DBObject generateMatchFieldsBase(GraphFilterBuilder filter) {
         DBObject matchFields = new BasicDBObject();
         if (filter != null) {
             putNonNullStringValue(matchFields, "master", filter.getMasterName());
@@ -625,6 +631,19 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             putNonNullBasicDBObject(matchFields, "startingTime", "$gte", filter.getSince());
             putNonNullBasicDBObject(matchFields, "result", "$ne", filter.getExcludeResult());
         }
+        return matchFields;
+    }
+
+    /**
+     * Generates the standard DBObject for filtering, with the additional exclusion of successful builds.
+     *
+     * @param filter the filter to create match fields for
+     * @return DBObject containing fields to match
+     */
+    private static DBObject generateMatchFields(GraphFilterBuilder filter) {
+        DBObject matchFields = generateMatchFieldsBase(filter);
+        putNonNullBasicDBObject(matchFields, "result", "$ne", "SUCCESS");
+
         return matchFields;
     }
 
@@ -1139,7 +1158,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("userName") final String userName,
                 @QueryParameter("password") final String password) {
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
-                    Secret.fromString(password), false);
+                    Secret.fromString(password), false, false);
             try {
                 base.getCollection();
             } catch (Exception e) {

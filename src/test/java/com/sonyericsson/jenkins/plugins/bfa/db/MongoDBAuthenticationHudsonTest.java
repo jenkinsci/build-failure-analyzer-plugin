@@ -24,15 +24,15 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+import javax.naming.AuthenticationException;
+
 import com.mongodb.DB;
 import hudson.util.Secret;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.powermock.reflect.Whitebox;
-
-import javax.naming.AuthenticationException;
-
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
@@ -48,7 +48,7 @@ public class MongoDBAuthenticationHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
   public void testAuthenticate() throws Exception {
-      KnowledgeBase kb = new MongoDBKnowledgeBase("", 27017, "mydb", "user", Secret.fromString("password"), false);
+      KnowledgeBase kb = new MongoDBKnowledgeBase("", 27017, "mydb", "user", Secret.fromString("password"), false, false);
       DB db = mock(DB.class);
       when(db.authenticate("user", "password".toCharArray())).thenReturn(false);
       Whitebox.setInternalState(kb, db);

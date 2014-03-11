@@ -24,16 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import com.sonyericsson.jenkins.plugins.bfa.Messages;
-import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
-import hudson.Extension;
-import hudson.model.AbstractBuild;
-import hudson.model.Descriptor;
-import hudson.util.CopyOnWriteList;
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
+import static hudson.Util.fixEmpty;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -45,7 +36,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static hudson.Util.fixEmpty;
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import hudson.Extension;
+import hudson.model.AbstractBuild;
+import hudson.model.Descriptor;
+import hudson.util.CopyOnWriteList;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Handling of the list the traditional way. Local in memory and serialized with the object.
@@ -209,6 +209,12 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     @Override
     public boolean isStatisticsEnabled() {
         //Not implemented
+        return false;
+    }
+
+    @Override
+    public boolean isSuccessfulLoggingEnabled() {
+        //not implemented
         return false;
     }
 
