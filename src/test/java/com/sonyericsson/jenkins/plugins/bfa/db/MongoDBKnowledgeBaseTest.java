@@ -90,7 +90,8 @@ public class MongoDBKnowledgeBaseTest {
         indication = new BuildLogIndication("something");
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "category", indications);
-        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result", null);
+        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result",
+                                          null, null);
     }
 
     /**

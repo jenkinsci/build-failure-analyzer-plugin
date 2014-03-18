@@ -30,6 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Cause;
 import hudson.model.Node;
 
 import java.util.Date;
@@ -134,8 +135,10 @@ public final class StatisticsLogger {
             }
 
             master = BfaUtils.getMasterName();
-            Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses,
-                    nodeName, master, timeZoneOffset, result, failureCauseStatistics);
+            Cause.UpstreamCause uc = (Cause.UpstreamCause)build.getCause(Cause.UpstreamCause.class);
+            Statistics.UpstreamCause suc = new Statistics.UpstreamCause(uc);
+            Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses, nodeName,
+                                            master, timeZoneOffset, result, suc, failureCauseStatistics);
             try {
                 PluginImpl p = PluginImpl.getInstance();
                 KnowledgeBase kb = p.getKnowledgeBase();
