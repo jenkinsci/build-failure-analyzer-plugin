@@ -25,6 +25,20 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import javax.servlet.http.HttpSession;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -42,20 +56,6 @@ import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.powermock.reflect.Whitebox;
-
-import javax.servlet.http.HttpSession;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Hudson tests for {@link CauseManagement}.
@@ -147,7 +147,8 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testNoMongoDB() throws Exception {
-        KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"), false);
+        KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"),
+                false, false);
         Whitebox.setInternalState(PluginImpl.getInstance(), kb);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);

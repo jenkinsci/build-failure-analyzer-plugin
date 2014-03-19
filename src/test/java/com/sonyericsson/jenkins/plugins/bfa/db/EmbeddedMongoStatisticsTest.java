@@ -65,10 +65,13 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     private static final String CAT2 = "CAT2";
     private static final String PROJECT_A = "Project A";
     private static final String PROJECT_B = "Project B";
+    private static final String PROJECT_C = "Project C";
     private static final String MASTER_A = "Master A";
     private static final String MASTER_B = "Master B";
+    private static final String MASTER_C = "Master C";
     private static final String SUCCESS = "SUCCESS";
     private static final String ABORTED = "ABORTED";
+    private static final String UNSTABLE = "UNSTABLE";
     private TimePeriod hourPeriod1;
     private TimePeriod hourPeriod2;
     private GraphFilterBuilder filter1;
@@ -107,16 +110,22 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         List<FailureCauseStatistics> failureList2 = new ArrayList<FailureCauseStatistics>();
         failureList2.add(statCause1);
 
+        List<FailureCauseStatistics> failureList3 = new ArrayList<FailureCauseStatistics>();
+
         Calendar lastHour = Calendar.getInstance();
         lastHour.add(Calendar.HOUR_OF_DAY, -1);
 
-        Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour.getTime(), 1L, null, null, MASTER_A, 0, SUCCESS,
+        Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour.getTime(), 1L, null, null, MASTER_A, 0, UNSTABLE,
                 failureList1);
         Statistics statistics2 = new Statistics(PROJECT_B, 2, new Date(), 1L, null, null, MASTER_B, 0, ABORTED,
                 failureList2);
 
+        Statistics statistics3 = new Statistics(PROJECT_C, 3, new Date(), 1L, null, null, MASTER_C, 0, SUCCESS,
+                failureList3);
+
         knowledgeBase.saveStatistics(statistics1);
         knowledgeBase.saveStatistics(statistics2);
+        knowledgeBase.saveStatistics(statistics3);
     }
 
     /**
@@ -378,7 +387,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         filter1.setResult(SUCCESS);
         filter2.setResult(ABORTED);
 
-        doFilterAssert();
+        doFilterAssert(2, 2);
     }
 
     /**
@@ -392,25 +401,32 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         filter1.setExcludeResult(ABORTED);
         filter2.setExcludeResult(SUCCESS);
 
-        doFilterAssert();
+        doFilterAssert(2, 2);
+    }
+
+    /**
+     * Shortcut for the filter assert helper with default parameters.
+     */
+    private void doFilterAssert() {
+        doFilterAssert(2, 1);
     }
 
     /**
      * Helper for the filter tests. Verifies that the correct result is returned since
      * most filter tests have the same expected result.
      */
-    private void doFilterAssert() {
+    private void doFilterAssert(int firstSize, int secondSize) {
         List<ObjectCountPair<FailureCause>> result1 = knowledgeBase.getNbrOfFailureCauses(filter1);
         List<ObjectCountPair<FailureCause>> result2 = knowledgeBase.getNbrOfFailureCauses(filter2);
 
-        assertEquals(2, result1.size());
+        assertEquals(firstSize, result1.size());
         String resultId1 = result1.get(0).getObject().getId();
         String resultId2 = result1.get(1).getObject().getId();
         assertThat(resultId1, anyOf(equalTo(ID1), equalTo(ID2)));
         assertThat(resultId2, anyOf(equalTo(ID1), equalTo(ID2)));
         assertFalse("Both ids should not be equal", resultId1.equals(resultId2));
 
-        assertEquals(1, result2.size());
+        assertEquals(secondSize, result2.size());
         assertEquals(ID1, result2.get(0).getObject().getId());
     }
 

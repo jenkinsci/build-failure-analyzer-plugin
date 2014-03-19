@@ -24,24 +24,22 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
-import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
-
-import hudson.ExtensionList;
-import hudson.model.AbstractBuild;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+import hudson.ExtensionList;
+import hudson.model.AbstractBuild;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
 import org.jfree.data.time.TimePeriod;
 
 /**
@@ -182,6 +180,14 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return true if so. False if not or not implemented.
      */
     public abstract boolean isStatisticsEnabled();
+
+    /**
+     * If all builds should be added to statistics logging, not just unsuccessful builds.
+     * Only relevant if {@link #isStatisticsEnabled()} is true.
+     *
+     * @return true if set, false otherwise or if not implemented
+     */
+    public abstract boolean isSuccessfulLoggingEnabled();
 
     /**
      * Saves the Statistics.
