@@ -227,6 +227,16 @@
                         </goals>
                         <phase>compile</phase>
                     </execution>
+                    <execution>
+                        <id>test-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <violationSeverity>warning</violationSeverity>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
