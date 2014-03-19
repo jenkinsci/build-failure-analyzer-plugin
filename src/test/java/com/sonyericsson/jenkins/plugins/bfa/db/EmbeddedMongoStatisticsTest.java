@@ -414,6 +414,9 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     /**
      * Helper for the filter tests. Verifies that the correct result is returned since
      * most filter tests have the same expected result.
+     *
+     * @param firstSize the expected result size from {@link #filter1}.
+     * @param secondSize the expected result size from {@link #filter2}.
      */
     private void doFilterAssert(int firstSize, int secondSize) {
         List<ObjectCountPair<FailureCause>> result1 = knowledgeBase.getNbrOfFailureCauses(filter1);

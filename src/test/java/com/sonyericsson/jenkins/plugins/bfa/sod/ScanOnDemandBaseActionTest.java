@@ -51,6 +51,7 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
         StaplerResponse mockresponse = PowerMockito.mock(StaplerResponse.class);
         sodbaseaction.doPerformScan(mockrequest, mockresponse);
+        ScanOnDemandQueue.shutdown();
         assertNotNull(build.getAction(FailureCauseBuildAction.class));
 
     }

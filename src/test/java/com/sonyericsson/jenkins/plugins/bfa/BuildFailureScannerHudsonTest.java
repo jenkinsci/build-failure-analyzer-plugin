@@ -156,7 +156,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         HtmlElement error = errorElements.get(0);
 
         assertNotNull(error);
-        assertEquals("Error message not found: ", new StringTokenizer(buildLog).nextToken("\n"), error.getTextContent().trim());
+        assertEquals("Error message not found: ",
+                new StringTokenizer(buildLog).nextToken("\n"),
+                error.getTextContent().trim());
     }
 
     /**
@@ -489,9 +491,10 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
     /**
      * Creates a project that prints the given log string to the console and fails the build.
-     * @param logString
+     *
+     * @param logString the string to appear in the build log
      * @return the project
-     * @throws IOException
+     * @throws IOException if so
      */
     private FreeStyleProject createProject(String logString) throws IOException {
         FreeStyleProject project = createFreeStyleProject();

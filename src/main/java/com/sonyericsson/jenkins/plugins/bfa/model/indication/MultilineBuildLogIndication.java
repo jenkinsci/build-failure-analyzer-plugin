@@ -30,7 +30,13 @@ import hudson.Extension;
 import hudson.model.Hudson;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Build log indication that matches over multiple lines.
+ *
+ * @author Andrew Bayer
+ */
 public class MultilineBuildLogIndication extends BuildLogIndication {
+
     /**
      * Standard constructor.
      *
