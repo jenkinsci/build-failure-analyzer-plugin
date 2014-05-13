@@ -31,6 +31,7 @@ import hudson.model.TransientProjectActionFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
@@ -41,6 +42,9 @@ public class TransientActionProvider extends TransientProjectActionFactory {
 
     @Override
     public Collection<? extends Action> createFor(AbstractProject target) {
-        return Arrays.asList(new TransientCauseManagement(target));
+        return PluginImpl.shouldScan(target)
+                ? Arrays.asList(new TransientCauseManagement(target))
+                : Collections.<Action>emptyList()
+        ;
     }
 }

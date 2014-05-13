@@ -394,8 +394,11 @@ public class PluginImpl extends Plugin {
      * @return true if it should be scanned.
      */
     public static boolean shouldScan(AbstractBuild build) {
+        return shouldScan(build.getProject());
+    }
+
+    public static boolean shouldScan(AbstractProject project) {
         if (getInstance().isGlobalEnabled()) {
-            AbstractProject project = build.getProject();
             ScannerJobProperty property = (ScannerJobProperty)project.getProperty(ScannerJobProperty.class);
             if (property != null) {
                 return !property.isDoNotScan();
