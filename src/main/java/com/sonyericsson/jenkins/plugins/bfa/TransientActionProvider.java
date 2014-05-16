@@ -29,7 +29,6 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.TransientProjectActionFactory;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -42,9 +41,10 @@ public class TransientActionProvider extends TransientProjectActionFactory {
 
     @Override
     public Collection<? extends Action> createFor(AbstractProject target) {
-        return PluginImpl.shouldScan(target)
-                ? Arrays.asList(new TransientCauseManagement(target))
-                : Collections.<Action>emptyList()
-        ;
+        if (PluginImpl.shouldScan(target)) {
+            return Collections.singleton(new TransientCauseManagement(target));
+        } else {
+            return Collections.emptyList();
+        }
     }
 }

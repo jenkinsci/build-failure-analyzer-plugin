@@ -387,16 +387,23 @@ public class PluginImpl extends Plugin {
     }
 
     /**
-     * Checks if the specified build should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
-     * build's project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty#isDoNotScan()}.
+     * Checks if the specified build should be scanned or not.
      *
      * @param build the build
      * @return true if it should be scanned.
+     * @see {@link #shouldScan(AbstractProject)}
      */
     public static boolean shouldScan(AbstractBuild build) {
         return shouldScan(build.getProject());
     }
 
+    /**
+     * Checks if the specified project should be scanned or not. Determined by {@link #isGlobalEnabled()} and if the
+     * project has {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty#isDoNotScan()}.
+     *
+     * @param project the project
+     * @return true if it should be scanned.
+     */
     public static boolean shouldScan(AbstractProject project) {
         if (getInstance().isGlobalEnabled()) {
             ScannerJobProperty property = (ScannerJobProperty)project.getProperty(ScannerJobProperty.class);
