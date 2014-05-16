@@ -42,16 +42,27 @@ public class FailureCauseProjectAction extends InvisibleAction {
 
     private final AbstractProject<?, ?> job;
 
+    /**
+     * @param job A project to report.
+     */
     public FailureCauseProjectAction(@Nonnull AbstractProject<?, ?> job) {
         this.job = job;
     }
 
+    /**
+     * @return Build action to report.
+     */
     public FailureCauseBuildAction getAction() {
         AbstractBuild<?, ?> build = job.getLastCompletedBuild();
-        if (build == null) return null;
+        if (build == null) {
+            return null;
+        }
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
-        if (action == null) return null;
+        if (action == null) {
+            return null;
+        }
+
         return action;
     }
 }
