@@ -49,8 +49,10 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import hudson.Util;
+import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
@@ -217,5 +219,39 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
         //Check that the other one is still there
         assertSame(cause2, kb.getCause(cause2.getId()));
+    }
+
+    /**
+     * Test Cause Management project action hiding.
+     * @throws Exception if so.
+     */
+    public void testProjectCauseManagementActionIsHiddenWhenScanningDisabled() throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+
+        PluginImpl.getInstance().setGlobalEnabled(true);
+        doScan(project, true);
+        assertNotNull(project.getAction(TransientCauseManagement.class));
+
+        doScan(project, false);
+        assertNull(project.getAction(TransientCauseManagement.class));
+
+        PluginImpl.getInstance().setGlobalEnabled(false);
+        doScan(project, true);
+        assertNull(project.getAction(TransientCauseManagement.class));
+
+        doScan(project, false);
+        assertNull(project.getAction(TransientCauseManagement.class));
+    }
+
+    /**
+     * Turn project scanning on and off.
+     *
+     * @param project A project.
+     * @param scan Scan or not.
+     * @throws Exception if so.
+     */
+    private void doScan(FreeStyleProject project, boolean scan) throws Exception {
+        project.removeProperty(ScannerJobProperty.class);
+        project.addProperty(new ScannerJobProperty(!scan));
     }
 }
