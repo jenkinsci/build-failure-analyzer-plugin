@@ -32,12 +32,16 @@ import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * A JobProperty that flags a job that should not be scanned. Also works as the {@link MatrixAggregatable}
@@ -71,6 +75,12 @@ public class ScannerJobProperty extends JobProperty<AbstractProject<?, ?>> imple
      */
     public boolean isDoNotScan() {
         return doNotScan;
+    }
+
+    @Override
+    @Restricted(NoExternalUse.class)
+    public Action getJobAction(AbstractProject<?, ?> job) {
+        return new FailureCauseProjectAction(job);
     }
 
     @Override
