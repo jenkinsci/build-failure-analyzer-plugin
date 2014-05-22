@@ -170,9 +170,12 @@ public class ScanOnDemandBaseAction implements Action {
         if (project != null) {
             List<AbstractBuild> builds = project.getBuilds();
             for (AbstractBuild build : builds) {
-                if (build.getActions(FailureCauseBuildAction.class).isEmpty()
-                        && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
-                        && build.getResult().isWorseThan(Result.SUCCESS)) {
+                final Result result = build.getResult();
+                if (result != null
+                    && result.isWorseThan(Result.SUCCESS)
+                    && build.getActions(FailureCauseBuildAction.class).isEmpty()
+                    && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
+
                     sodbuilds.add(build);
                 }
             }
