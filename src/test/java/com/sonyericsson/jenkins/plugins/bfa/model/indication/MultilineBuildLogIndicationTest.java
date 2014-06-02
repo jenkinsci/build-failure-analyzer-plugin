@@ -117,17 +117,17 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
         String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
-        FormValidation formValidation = indicationDescriptor.doMatchText(".*teststr.*", buildUrl, true);
+        FormValidation formValidation = indicationDescriptor.doMatchText("teststring.*here", buildUrl, true);
         assertEquals(FIRST_LINE_TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("/1/", "/lastBuild");
-        formValidation = indicationDescriptor.doMatchText(".*teststr.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText("teststring.*here", buildUrl, true);
         assertEquals(FIRST_LINE_TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("lastBuild", "lastSuccessfulBuild");
-        formValidation = indicationDescriptor.doMatchText(".*teststr.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText("teststring.*here", buildUrl, true);
         assertEquals(FIRST_LINE_TEST_STRING, formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
     }
@@ -148,24 +148,24 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
         String buildUrl = getURL() + build.getUrl();
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
-        FormValidation formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        FormValidation formValidation = indicationDescriptor.doMatchText("Started by.*", buildUrl, true);
         assertEquals("Started by user SYSTEM", formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("/1/", "/lastFailedBuild");
-        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText("Started by.*", buildUrl, true);
         assertEquals("Started by user SYSTEM", formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         buildUrl = buildUrl.replace("lastFailedBuild", "lastUnsuccessfulBuild");
-        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        formValidation = indicationDescriptor.doMatchText("Started by.*", buildUrl, true);
         assertEquals("Started by user SYSTEM", formValidation.getMessage());
         assertEquals(FormValidation.Kind.OK, formValidation.kind);
 
         List<MatrixRun> matrixRuns = build.getRuns();
         for (MatrixRun matrixRun : matrixRuns) {
             buildUrl = getURL() + matrixRun.getUrl();
-            formValidation = indicationDescriptor.doMatchText(".*Simulating.*", buildUrl, true);
+            formValidation = indicationDescriptor.doMatchText("Simulating.*", buildUrl, true);
             assertEquals("Simulating a specific result code FAILURE", formValidation.getMessage());
             assertEquals(FormValidation.Kind.OK, formValidation.kind);
         }

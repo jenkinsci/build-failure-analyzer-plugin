@@ -75,5 +75,9 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
             return Messages.MultilineBuildLogIndication_DisplayName();
         }
 
+        @Override
+        protected FailureReader getFailureReader(final String testPattern) {
+            return new MultilineBuildLogFailureReader(new MultilineBuildLogIndication(testPattern));
+        }
     }
 }

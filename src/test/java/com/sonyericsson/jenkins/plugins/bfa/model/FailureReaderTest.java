@@ -67,6 +67,11 @@ public class FailureReaderTest {
         }
 
         @Override
+        public FoundIndication scan(AbstractBuild build) throws IOException {
+            return null;
+        }
+
+        @Override
         public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
             return null;
         }
