@@ -64,7 +64,6 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
         return Hudson.getInstance().getDescriptorByType(MultilineBuildLogIndicationDescriptor.class);
     }
 
-
     /**
      * The descriptor.
      */
