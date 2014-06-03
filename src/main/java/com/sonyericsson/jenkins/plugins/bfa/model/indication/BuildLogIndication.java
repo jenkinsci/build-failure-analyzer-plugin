@@ -270,9 +270,8 @@ public class BuildLogIndication extends Indication {
                     }
                     if (build != null) {
                         try {
-                            BuildLogFailureReader buildLogFailureReader =
-                                    new BuildLogFailureReader(new BuildLogIndication(testPattern));
-                            FoundIndication foundIndication = buildLogFailureReader.scan(build);
+                            final FailureReader failureReader = getFailureReader(testPattern);
+                            final FoundIndication foundIndication = failureReader.scan(build);
                             if (foundIndication == null) {
                                 return FormValidation.warning(Messages.StringDoesNotMatchPattern());
                             }
@@ -326,5 +325,12 @@ public class BuildLogIndication extends Indication {
             }
         }
 
+        /**
+         * @param testPattern the test pattern for the indication passed to the failure reader
+         * @return the failure reader corresponding to this descriptor
+         */
+        protected FailureReader getFailureReader(final String testPattern) {
+            return new BuildLogFailureReader(new BuildLogIndication(testPattern));
+        }
     }
 }

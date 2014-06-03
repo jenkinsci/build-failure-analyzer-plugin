@@ -65,6 +65,16 @@ public abstract class FailureReader {
     }
 
     /**
+     * Scans a build log.
+     *
+     * @param build - the build whose log should be scanned.
+     * @return a FoundIndication if the pattern given by this FailureReader
+     * is found in the log of the given build; return null otherwise.
+     * @throws IOException if so.
+     */
+    public abstract FoundIndication scan(AbstractBuild build) throws IOException;
+
+    /**
      * Scans for indications of a failure cause.
      * @param build the build to scan for indications.
      * @param buildLog the log of the build.
