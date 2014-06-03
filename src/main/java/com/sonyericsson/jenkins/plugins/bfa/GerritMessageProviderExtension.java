@@ -25,9 +25,13 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.GerritMessageProvider;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+
 import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.Hudson;
 
 /**
  * ExtensionPoint that allows BFA to send the failure cause description
@@ -45,12 +49,13 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
             if (build != null) {
                 FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
                 if (action != null) {
-                    for (FoundFailureCause failureCause : action.getFoundFailureCauses()) {
-                        if (customMessage.length() > 0) {
-                            customMessage.append("\n\n");
-                        }
-                        customMessage.append(failureCause.getDescription());
+                    FailureCauseDisplayData displayData = action.getFailureCauseDisplayData();
+                    
+                    addFailureCausesFromData(customMessage, displayData);
+                    for (FailureCauseDisplayData downstreamCause : displayData.getDownstreamFailureCauses()) {
+                        addFailureCausesFromData(customMessage, downstreamCause);
                     }
+                    
                     if (customMessage.length() > 0) {
                         return customMessage.toString().replaceAll("'", "\\'");
                     }
@@ -58,5 +63,22 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
             }
         }
         return null;
+    }
+
+    private void addFailureCausesFromData(StringBuilder customMessage, FailureCauseDisplayData downstreamCause) {
+        for (FoundFailureCause failureCause : downstreamCause.getFoundFailureCauses()) {
+            if (customMessage.length() > 0) {
+                customMessage.append("\n\n");
+            }
+            customMessage.append(failureCause.getDescription());
+
+            FoundIndication indication = failureCause.getIndications().get(0);
+            customMessage.append(" ( ")
+            .append("  ")
+            .append(Hudson.getInstance().getRootUrl())
+            .append('/')
+            .append(indication.getBuild().getUrl())
+            .append(" )");
+        }
     }
 }
