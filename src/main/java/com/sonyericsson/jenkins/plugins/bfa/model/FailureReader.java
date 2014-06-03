@@ -97,7 +97,7 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
         boolean found = false;
-        Pattern pattern = indication.getPattern();
+        final Pattern pattern = indication.getPattern();
         String line;
         int currentLine = 1;
         timerThread.start();
@@ -157,7 +157,7 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
         boolean found = false;
-        Pattern pattern = Pattern.compile("(?m)(?s)^[\\r\\n]*?" + indication.getPattern().pattern() + "[^\\r\\n]*?$");
+        final Pattern pattern = indication.getPattern();
         final Scanner scanner = new Scanner(reader);
         scanner.useDelimiter(Pattern.compile("[\\r\\n]+"));
         String matchingString = null;
@@ -190,7 +190,7 @@ public abstract class FailureReader {
                 }
             }
             if (found) {
-                foundIndication = new FoundIndication(build, pattern.toString(), currentFile,
+                foundIndication = new FoundIndication(build, pattern.pattern(), currentFile,
                     removeConsoleNotes(matchingString));
             }
             return foundIndication;

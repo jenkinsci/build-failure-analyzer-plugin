@@ -51,6 +51,8 @@ import org.kohsuke.stapler.QueryParameter;
  */
 public class BuildLogIndication extends Indication {
 
+    private transient Pattern compiled = null;
+
     /**
      * Standard constructor.
      *
@@ -71,6 +73,14 @@ public class BuildLogIndication extends Indication {
     @Override
     public FailureReader getReader() {
         return new BuildLogFailureReader(this);
+    }
+
+    @Override
+    public Pattern getPattern() {
+        if (compiled == null) {
+            compiled = Pattern.compile(getUserProvidedExpression());
+        }
+        return compiled;
     }
 
     @Override
