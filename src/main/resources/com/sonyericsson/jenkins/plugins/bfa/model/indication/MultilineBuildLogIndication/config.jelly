@@ -26,7 +26,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
 
-    <f:entry title="${%Pattern}" field="pattern">
+    <f:entry title="${%Pattern}" field="userProvidedExpression">
         <f:textbox name="pattern"/>
     </f:entry>
     <f:advanced>
