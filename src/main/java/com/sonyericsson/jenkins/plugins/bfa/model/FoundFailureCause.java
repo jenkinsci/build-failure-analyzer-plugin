@@ -38,23 +38,33 @@ import java.util.List;
  */
 @ExportedBean
 public class FoundFailureCause {
-    private String id;
-    private String name;
-    private String description;
-    private List<String> categories;
+    private final String id;
+    private final String name;
+    private final String description;
+    private final List<String> categories;
     private List<FoundIndication> indications;
+
+    /**
+     * Constructor used when converting old failureCauses to foundFailureCauses.
+     *
+     * @param originalCause the original FailureCause.
+     */
+    public FoundFailureCause(final FailureCause originalCause) {
+        this(originalCause, new LinkedList<FoundIndication>());
+    }
 
     /**
      * Standard constructor.
      *
      * @param originalCause the original FailureCause.
+     * @param indications the indications found that imply this cause.
      */
-    public FoundFailureCause(FailureCause originalCause) {
+    public FoundFailureCause(final FailureCause originalCause, final List<FoundIndication> indications) {
         this.id = originalCause.getId();
         this.name = originalCause.getName();
         this.description = originalCause.getDescription();
         this.categories = originalCause.getCategories();
-        this.indications = new LinkedList<FoundIndication>();
+        this.indications = new LinkedList<FoundIndication>(indications);
     }
 
     /**
@@ -107,27 +117,5 @@ public class FoundFailureCause {
             indications = new LinkedList<FoundIndication>();
         }
         return indications;
-    }
-    /**
-     * Adds a found indication to the list.
-     *
-     * @param indication the indication to add.
-     */
-    public void addIndication(FoundIndication indication) {
-        if (indications == null) {
-            indications = new LinkedList<FoundIndication>();
-        }
-        indications.add(indication);
-    }
-
-    /**
-     * Adds a list of FoundIndications to this cause.
-     * @param foundIndications the list of FoundIndications.
-     */
-    public void addIndications(List<FoundIndication> foundIndications) {
-        if (indications == null) {
-            indications = new LinkedList<FoundIndication>();
-        }
-        indications.addAll(foundIndications);
     }
 }
