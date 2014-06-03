@@ -74,7 +74,6 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
 
             FoundIndication indication = failureCause.getIndications().get(0);
             customMessage.append(" ( ")
-            .append("  ")
             .append(Hudson.getInstance().getRootUrl())
             .append('/')
             .append(indication.getBuild().getUrl())
