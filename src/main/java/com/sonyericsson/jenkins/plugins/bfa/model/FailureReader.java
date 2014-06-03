@@ -27,11 +27,13 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Joiner;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.console.ConsoleNote;
@@ -155,21 +157,17 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
         boolean found = false;
-        Pattern pattern = Pattern.compile("^[\r\n]*?" + indication.getPattern().pattern() + "[^\r\n]*?$",
-                Pattern.MULTILINE | Pattern.DOTALL);
-        Scanner scanner = new Scanner(reader);
+        Pattern pattern = Pattern.compile("(?m)(?s)^[\\r\\n]*?" + indication.getPattern().pattern() + "[^\\r\\n]*?$");
+        final Scanner scanner = new Scanner(reader);
         scanner.useDelimiter(Pattern.compile("[\\r\\n]+"));
-        String firstLine = "";
-
+        String matchingString = null;
         timerThread.start();
         try {
             long startTime = System.currentTimeMillis();
             while (scanner.hasNext()) {
                 try {
-                    String lines = scanner.findWithinHorizon(pattern, SCAN_HORIZON);
-                    if (lines != null) {
-                        StringTokenizer tokenizer = new StringTokenizer(lines);
-                        firstLine = tokenizer.nextToken("\n\r\f");
+                    matchingString = scanner.findWithinHorizon(pattern, SCAN_HORIZON);
+                    if (matchingString != null) {
                         found = true;
                         break;
                     }
@@ -192,8 +190,8 @@ public abstract class FailureReader {
                 }
             }
             if (found) {
-                String cleanLine = ConsoleNote.removeNotes(firstLine);
-                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
+                foundIndication = new FoundIndication(build, pattern.toString(), currentFile,
+                    removeConsoleNotes(matchingString));
             }
             return foundIndication;
         } finally {
@@ -207,6 +205,21 @@ public abstract class FailureReader {
             // reset the interrupt
             Thread.interrupted();
         }
+    }
+
+    /**
+     * @param input the input string from which to remove any console notes
+     * @return the input string less console notes. Note the returned string may not contain the same line endings
+     * as the input string.
+     */
+    private String removeConsoleNotes(final String input) {
+        final List<String> cleanLines = new LinkedList<String>();
+        final Scanner lineTokenizer = new Scanner(input);
+        lineTokenizer.useDelimiter(Pattern.compile("[\\n\\r]"));
+        while (lineTokenizer.hasNext()) {
+            cleanLines.add(ConsoleNote.removeNotes(lineTokenizer.next()));
+        }
+        return Joiner.on('\n').join(cleanLines);
     }
 
     /**
