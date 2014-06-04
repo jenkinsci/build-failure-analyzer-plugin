@@ -34,6 +34,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import static java.lang.Math.max;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 /**
  * Found Indication of an unsuccessful build.
@@ -60,7 +62,7 @@ public class FoundIndication {
      * @param build           the build of this indication.
      * @param originalPattern the original pattern we used to match.
      * @param matchingFile    the path to the file in which we found the match.
-     * @param matchingString  the String that makes up the matching line.
+     * @param matchingString  the String that makes up the match.
      */
     public FoundIndication(AbstractBuild build, String originalPattern,
                            String matchingFile, String matchingString) {
@@ -75,7 +77,7 @@ public class FoundIndication {
      *
      * @param pattern the pattern we used to match.
      * @param matchingFile the path to the file in which we found the match.
-     * @param matchingString the String that makes up the matching line.
+     * @param matchingString the String that makes up the match.
      */
     @JsonCreator
     public FoundIndication(@JsonProperty("pattern") String pattern,
@@ -120,6 +122,16 @@ public class FoundIndication {
      */
     public String getMatchingString() {
         return matchingString;
+    }
+
+    /**
+     * Getter for the first matching line (useful with multi-line build log indications.
+     * @return the first line from {@code getMatchingString()}.
+     */
+    public String getFirstMatchingLine() {
+        final Scanner scanner = new Scanner(matchingString);
+        scanner.useDelimiter(Pattern.compile("[\\n\\r]"));
+        return scanner.next();
     }
 
     /**

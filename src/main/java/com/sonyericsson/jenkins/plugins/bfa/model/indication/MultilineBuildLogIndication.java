@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import java.util.regex.Pattern;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.MultilineBuildLogFailureReader;
@@ -36,6 +37,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Andrew Bayer
  */
 public class MultilineBuildLogIndication extends BuildLogIndication {
+
+    private transient Pattern compiled = null;
 
     /**
      * Standard constructor.
@@ -60,10 +63,17 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
     }
 
     @Override
+    public Pattern getPattern() {
+        if (compiled == null) {
+            compiled = Pattern.compile("(?m)(?s)^[\\r\\n]*?" + getUserProvidedExpression() + "[^\\r\\n]*?$");
+        }
+        return compiled;
+    }
+
+    @Override
     public IndicationDescriptor getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(MultilineBuildLogIndicationDescriptor.class);
     }
-
 
     /**
      * The descriptor.

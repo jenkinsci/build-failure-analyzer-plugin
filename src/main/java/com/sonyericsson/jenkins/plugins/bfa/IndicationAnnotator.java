@@ -61,7 +61,7 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
      */
     private void addToHelperMap(FoundFailureCause cause) {
         for (FoundIndication indication : cause.getIndications()) {
-            String matchingString = indication.getMatchingString();
+            String matchingString = indication.getFirstMatchingLine();
             if (matchingString != null && !matchingString.isEmpty()) {
                 AnnotationHelper matchingHelper = helperMap.get(matchingString);
                 if (matchingHelper == null) {
