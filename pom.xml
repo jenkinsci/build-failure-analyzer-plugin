@@ -181,6 +181,12 @@
             <artifactId>guava</artifactId>
             <version>11.0.1</version>
         </dependency>
+        <dependency>
+        	<groupId>com.cloudbees.plugins</groupId>
+        	<artifactId>build-flow-plugin</artifactId>
+        	<version>0.10</version>
+        	<optional>true</optional>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -55,11 +55,14 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIn
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.listeners.RunListener;
+
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
 import org.mockito.ArgumentMatcher;
@@ -237,7 +240,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
                 + " extension would not return the expected message.",
-                "This is an error",
+                "This is an error ( " + Hudson.getInstance().getRootUrl() + "/job/test0/1/ )",
                 messageProvider.getBuildCompletedMessage(build));
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);
