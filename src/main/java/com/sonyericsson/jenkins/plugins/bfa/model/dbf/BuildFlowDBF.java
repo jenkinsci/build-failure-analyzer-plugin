@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 
 /**
@@ -41,6 +42,8 @@ import java.util.concurrent.ExecutionException;
 @Extension
 public class BuildFlowDBF extends DownstreamBuildFinder {
 
+    private static final Logger logger = Logger.
+            getLogger(BuildFlowDBF.class.getName());
     @Override
     public List<AbstractBuild<?, ?>> getDownstreamBuilds(
             final AbstractBuild build) {
@@ -48,28 +51,29 @@ public class BuildFlowDBF extends DownstreamBuildFinder {
         if (build == null) {
             return EMPTY;
         }
-        
+
         if (!build.getClass().getName().equals("com.cloudbees.plugins.flow.FlowRun")) {
             return EMPTY;
         }
 
-        Set<com.cloudbees.plugins.flow.JobInvocation> vertexSet = ((com.cloudbees.plugins.flow.FlowRun) build).getJobsGraph().vertexSet();
-        
-        List<AbstractBuild<?, ?>> result = new ArrayList<AbstractBuild<?,?>>(vertexSet.size());
-        
+        Set<com.cloudbees.plugins.flow.JobInvocation> vertexSet =
+                ((com.cloudbees.plugins.flow.FlowRun)build).getJobsGraph().vertexSet();
+
+        List<AbstractBuild<?, ?>> result = new ArrayList<AbstractBuild<?, ?>>(vertexSet.size());
+
+        //CS IGNORE EmptyBlock FOR NEXT 10 LINES. REASON: irrelevant exceptions.
         for (com.cloudbees.plugins.flow.JobInvocation invocation : vertexSet) {
             try {
-                result.add((AbstractBuild<?, ?>) invocation.getBuild());
+                result.add((AbstractBuild<?, ?>)invocation.getBuild());
             } catch (ExecutionException e) {
                 // skip
             } catch (InterruptedException e) {
                 // ignore
             }
         }
-        
-        result = result.subList(1, result.size()); 
-        
+
+        result = result.subList(1, result.size());
+
         return result;
     }
-
 }

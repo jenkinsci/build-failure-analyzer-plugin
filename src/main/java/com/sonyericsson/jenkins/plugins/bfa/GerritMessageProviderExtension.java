@@ -50,12 +50,12 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                 FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
                 if (action != null) {
                     FailureCauseDisplayData displayData = action.getFailureCauseDisplayData();
-                    
+
                     addFailureCausesFromData(customMessage, displayData);
                     for (FailureCauseDisplayData downstreamCause : displayData.getDownstreamFailureCauses()) {
                         addFailureCausesFromData(customMessage, downstreamCause);
                     }
-                    
+
                     if (customMessage.length() > 0) {
                         return customMessage.toString().replaceAll("'", "\\'");
                     }
@@ -65,15 +65,22 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
         return null;
     }
 
-    private void addFailureCausesFromData(StringBuilder customMessage, FailureCauseDisplayData downstreamCause) {
-        for (FoundFailureCause failureCause : downstreamCause.getFoundFailureCauses()) {
-            if (customMessage.length() > 0) {
-                customMessage.append("\n\n");
+    /**
+     * Appends FailureCause information to provided StringBuilder.
+     *
+     *
+     * @param message the StringBuilder to add to
+     * @param displayData the data of downstream failures
+     */
+    private void addFailureCausesFromData(StringBuilder message, FailureCauseDisplayData displayData) {
+        for (FoundFailureCause failureCause : displayData.getFoundFailureCauses()) {
+            if (message.length() > 0) {
+                message.append("\n\n");
             }
-            customMessage.append(failureCause.getDescription());
+            message.append(failureCause.getDescription());
 
             FoundIndication indication = failureCause.getIndications().get(0);
-            customMessage.append(" ( ")
+            message.append(" ( ")
             .append(Hudson.getInstance().getRootUrl())
             .append('/')
             .append(indication.getBuild().getUrl())
