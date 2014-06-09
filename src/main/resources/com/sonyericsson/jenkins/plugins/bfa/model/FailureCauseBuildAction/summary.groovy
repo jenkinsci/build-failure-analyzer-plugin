@@ -119,7 +119,7 @@ def displayCauses(cause, indent, links) {
                 br {}
                 cause.getIndications().each { indication ->
                     if (links?.buildUrl != null) {
-                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull"
+                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull#" + indication.matchingHash + cause.id
                                 , class: "model-link") {
                             text(_("Indication") + " " + (index++))
                         }

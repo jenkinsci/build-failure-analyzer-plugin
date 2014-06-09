@@ -64,7 +64,11 @@ public class AnnotationHelper implements Serializable {
      * @param id the id for the line, to refer to in links.
      */
     public void addFocus(String id) {
-        this.before += "<span id=\"" + id + "\">";
+        // This style should shift the anchor down below the header so that it's visible.
+        // "&nbsp;" may be required to make this work for WebKit-based browsers.
+        this.before += "<a id=\"" + id + "\" style=\""
+            + "display:block;position:relative;top:-2em;visibility:hidden"
+            + "\">&nbsp;</a>";
     }
 
     /**
