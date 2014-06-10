@@ -66,7 +66,6 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
                 AnnotationHelper matchingHelper = helperMap.get(matchingString);
                 if (matchingHelper == null) {
                     matchingHelper = new AnnotationHelper();
-                    matchingHelper.addAfter("</span>");
                 }
                 matchingHelper.addTitle(cause.getName());
                 matchingHelper.addFocus(indication.getMatchingHash() + cause.getId());
