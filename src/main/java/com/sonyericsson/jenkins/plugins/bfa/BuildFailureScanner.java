@@ -41,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
@@ -87,14 +88,17 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         logger.entering(getClass().getName(), "onCompleted");
         if (PluginImpl.shouldScan(build)
                 && !(build.getProject() instanceof MatrixProject)) {
-            if (build.getResult().isWorseThan(Result.SUCCESS)) {
-                scan(build, listener.getLogger());
-                ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
-                ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
-            } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
-                final List<FoundFailureCause> emptyCauseList =
-                        Collections.synchronizedList(new LinkedList<FoundFailureCause>());
-                StatisticsLogger.getInstance().log(build, emptyCauseList);
+            if (build.getActions(FailureCauseBuildAction.class).isEmpty()
+                    && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
+                if (build.getResult().isWorseThan(Result.SUCCESS)) {
+                    scan(build, listener.getLogger());
+                    ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
+                    ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
+                } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
+                    final List<FoundFailureCause> emptyCauseList =
+                            Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+                    StatisticsLogger.getInstance().log(build, emptyCauseList);
+                }
             }
         }
     }
