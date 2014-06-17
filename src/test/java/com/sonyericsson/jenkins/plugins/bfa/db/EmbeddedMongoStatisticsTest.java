@@ -24,10 +24,12 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics.UpstreamCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 
 /**
@@ -72,6 +75,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     private static final String SUCCESS = "SUCCESS";
     private static final String ABORTED = "ABORTED";
     private static final String UNSTABLE = "UNSTABLE";
+    private static final int BUILD_NR = 54321;
     private TimePeriod hourPeriod1;
     private TimePeriod hourPeriod2;
     private GraphFilterBuilder filter1;
@@ -116,12 +120,11 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         lastHour.add(Calendar.HOUR_OF_DAY, -1);
 
         Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour.getTime(), 1L, null, null, MASTER_A, 0, UNSTABLE,
-                failureList1);
+                                                null, failureList1);
         Statistics statistics2 = new Statistics(PROJECT_B, 2, new Date(), 1L, null, null, MASTER_B, 0, ABORTED,
-                failureList2);
-
+                                                null, failureList2);
         Statistics statistics3 = new Statistics(PROJECT_C, 3, new Date(), 1L, null, null, MASTER_C, 0, SUCCESS,
-                failureList3);
+                                                null, failureList3);
 
         knowledgeBase.saveStatistics(statistics1);
         knowledgeBase.saveStatistics(statistics2);
@@ -137,7 +140,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     public void testGetNbrOfNullFailureCauses() throws Exception {
         assertEquals(0, knowledgeBase.getNbrOfNullFailureCauses(null));
 
-        Statistics nullStatistics = new Statistics(null, 1, null, 1L, null, null, null, 1, null, null);
+        Statistics nullStatistics = new Statistics(null, 1, null, 1L, null, null, null, 1, null, null, null);
         knowledgeBase.saveStatistics(nullStatistics);
 
         assertEquals(1, knowledgeBase.getNbrOfNullFailureCauses(null));
@@ -177,6 +180,40 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         assertEquals(1, result.get(1).getCount());
         assertEquals(ID1, result.get(0).getObject().getId());
         assertEquals(ID2, result.get(1).getObject().getId());
+    }
+
+    /**
+     * Tests that {@link MongoDBKnowledgeBase#getStatistics
+     * (com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder)} with upstream cause.gets stored correctly.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testStatisticsWithUpstreamCauses() throws Exception {
+        Statistics.UpstreamCause uc = new UpstreamCause(PROJECT_B, BUILD_NR);
+        Statistics s = new Statistics(PROJECT_A, 1, null, 1L, null, null, MASTER_A, 0, UNSTABLE, uc, null);
+        knowledgeBase.saveStatistics(s);
+        List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
+        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
+        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
+        Statistics.UpstreamCause fetchedUC = fetchedStatistics.get(0).getUpstreamCause();
+        assertEquals(fetchedUC.getUpstreamBuild(), uc.getUpstreamBuild());
+        assertEquals(fetchedUC.getUpstreamProject(), uc.getUpstreamProject());
+    }
+
+    /**
+     * Tests that {@link MongoDBKnowledgeBase#getStatistics
+     * (com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder)} with no upstream cause works correctly.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testStatisticsWithNoUpstreamCauses() throws Exception {
+        Statistics s = new Statistics(PROJECT_A, 1, null, 1L, null, null, MASTER_A, 0, UNSTABLE, null, null);
+        knowledgeBase.saveStatistics(s);
+        List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
+        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
+        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
+        Statistics.UpstreamCause fetchedUC = fetchedStatistics.get(0).getUpstreamCause();
+        assertTrue("The fetched upstream cause should be null", fetchedUC == null);
     }
 
     /**
@@ -300,8 +337,8 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         List<FailureCauseStatistics> statList = new ArrayList<FailureCauseStatistics>();
         statList.add(causeStats);
 
-        Statistics statistics1 = new Statistics(null, 1, new Date(), 1L, null, null, null, 0, null, statList);
-        Statistics statistics2 = new Statistics(null, 2, new Date(), 1L, null, null, null, 0, null, null);
+        Statistics statistics1 = new Statistics(null, 1, new Date(), 1L, null, null, null, 0, null, null, statList);
+        Statistics statistics2 = new Statistics(null, 2, new Date(), 1L, null, null, null, 0, null, null, null);
 
         knowledgeBase.saveStatistics(statistics1);
         knowledgeBase.saveStatistics(statistics2);

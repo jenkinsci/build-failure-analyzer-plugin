@@ -469,6 +469,14 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         object.put("duration", stat.getDuration());
         object.put("timeZoneOffset", stat.getTimeZoneOffset());
         object.put("triggerCauses", stat.getTriggerCauses());
+        DBObject cause = null;
+        if (stat.getUpstreamCause() != null) {
+            cause = new BasicDBObject();
+            Statistics.UpstreamCause upstreamCause = stat.getUpstreamCause();
+            cause.put("project", upstreamCause.getUpstreamProject());
+            cause.put("build", upstreamCause.getUpstreamBuild());
+        }
+        object.put("upstreamCause", cause);
         object.put("result", stat.getResult());
         List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
         addFailureCausesToDBObject(object, failureCauseStatisticsList);
