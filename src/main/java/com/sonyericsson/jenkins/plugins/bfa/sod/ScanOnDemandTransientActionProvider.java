@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
@@ -30,6 +31,7 @@ import hudson.model.TransientProjectActionFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 
@@ -44,9 +46,16 @@ public class ScanOnDemandTransientActionProvider extends TransientProjectActionF
 
     @Override
     public Collection<? extends Action> createFor(AbstractProject target) {
-        final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-        final ProjectGraphAction graphAction = new ProjectGraphAction(target);
-
-        return Arrays.asList(sodBaseAction, graphAction);
+        if (PluginImpl.shouldScan(target)) {
+            final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
+            final ProjectGraphAction graphAction = new ProjectGraphAction(target);
+            if (sodBaseAction.hasPermission()) {
+                return Arrays.asList(sodBaseAction, graphAction);
+            } else {
+                return Collections.singletonList(graphAction);
+            }
+        } else {
+            return Collections.emptyList();
+        }
     }
 }
