@@ -184,7 +184,12 @@ public class Token extends DataBoundTokenMacro {
         final int nextIndentLevel = indentLevel + LIST_INCREMENT;
         if (useHtmlFormat) {
             stringBuilder.append("<li>");
-            stringBuilder.append(matrixRun.getFullDisplayName());
+            try {
+                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(
+                    matrixRun.getFullDisplayName()));
+            } catch (final IOException exception) {
+                stringBuilder.append("matrix-full-display-name");
+            }
             addFailureCauseDisplayDataRepresentation(stringBuilder, data, nextIndentLevel);
             stringBuilder.append("</li>");
         } else {
@@ -234,9 +239,17 @@ public class Token extends DataBoundTokenMacro {
         final int nextIndentLevel = indentLevel + LIST_INCREMENT;
         if (useHtmlFormat) {
             stringBuilder.append("<li>");
-            stringBuilder.append(cause.getName());
+            try {
+                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(cause.getName()));
+            } catch (final IOException exception) {
+                stringBuilder.append("cause-name");
+            }
             stringBuilder.append(": ");
-            stringBuilder.append(cause.getDescription());
+            try {
+                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(cause.getDescription()));
+            } catch (final IOException exception) {
+                stringBuilder.append("cause-description");
+            }
             if (includeIndications) {
                 addIndicationsRepresentation(stringBuilder, indicationUrlBuilder, cause.getIndications(),
                     nextIndentLevel);
