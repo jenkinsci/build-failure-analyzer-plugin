@@ -95,7 +95,7 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>token-macro</artifactId>
             <version>1.10</version>
-            <optional>false</optional>
+            <optional>true</optional>
         </dependency>
         <!-- For future optimization options
         <dependency>

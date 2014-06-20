@@ -48,7 +48,7 @@ import jenkins.model.Jenkins;
  * The Build Failure Analyzer token for TokenMacro consumers.
  * @author K. R. Walker &lt;krwalker@stellarscience.com&gt;
  */
-@Extension
+@Extension(optional=true)
 public class Token extends DataBoundTokenMacro {
     private static final int ITEM_INCREMENT = 0;
 
