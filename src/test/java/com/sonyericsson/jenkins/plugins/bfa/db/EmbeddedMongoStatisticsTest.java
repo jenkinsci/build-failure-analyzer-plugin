@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,25 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
+import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics.UpstreamCause;
+import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.TimePeriod;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,20 +50,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import org.jfree.data.time.Day;
-import org.jfree.data.time.Hour;
-import org.jfree.data.time.TimePeriod;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
-import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics.UpstreamCause;
-import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 /**
  * Test class for statistics fetching using Embedded MongoDB.
@@ -59,8 +70,11 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
  * @author Fredrik Persson &lt;fredrik6.persson@sonymobile.com&gt;
  *
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(PluginImpl.class)
+@PowerMockIgnore("javax.management.*") //Solves PowerMock issue 277
 public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
-    // CS IGNORE MagicNumber FOR NEXT 400 LINES. REASON: Test data.
+    // CS IGNORE MagicNumber FOR NEXT 600 LINES. REASON: Test data.
 
     private static final String ID1 = "111111111111111111111111";
     private static final String ID2 = "222222222222222222222222";
@@ -76,6 +90,8 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     private static final String ABORTED = "ABORTED";
     private static final String UNSTABLE = "UNSTABLE";
     private static final int BUILD_NR = 54321;
+    private static Date lastHour;
+    private static Date now;
     private TimePeriod hourPeriod1;
     private TimePeriod hourPeriod2;
     private GraphFilterBuilder filter1;
@@ -85,12 +101,19 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     @Before
     public void setUp() throws IOException {
         super.setUp();
-        Calendar lastHour = Calendar.getInstance();
-        lastHour.add(Calendar.HOUR_OF_DAY, -1);
-        hourPeriod1 = new Hour(lastHour.getTime());
+        Calendar lastHourCalendar = Calendar.getInstance();
+        lastHourCalendar.add(Calendar.HOUR_OF_DAY, -1);
+        lastHour = lastHourCalendar.getTime();
+        now = new Date();
+        hourPeriod1 = new Hour(lastHour);
         hourPeriod2 = new Hour();
         filter1 = new GraphFilterBuilder();
         filter2 = new GraphFilterBuilder();
+
+        PluginImpl plugin = new PluginImpl();
+        mockStatic(PluginImpl.class);
+        when(PluginImpl.getInstance()).thenReturn(plugin);
+        Whitebox.setInternalState(plugin, "knowledgeBase", knowledgeBase);
     }
 
     /**
@@ -101,8 +124,8 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         FailureCauseStatistics statCause1 = new FailureCauseStatistics(ID1, null);
         FailureCauseStatistics statCause2 = new FailureCauseStatistics(ID2, null);
 
-        FailureCause cause1 = new FailureCause(ID1, null, null, CAT1, null);
-        FailureCause cause2 = new FailureCause(ID2, null, null, CAT2, null);
+        FailureCause cause1 = new FailureCause(ID1, null, null, null, null, CAT1, null, null);
+        FailureCause cause2 = new FailureCause(ID2, null, null, null, null, CAT2, null, null);
 
         knowledgeBase.addCause(cause1);
         knowledgeBase.addCause(cause2);
@@ -116,19 +139,58 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
 
         List<FailureCauseStatistics> failureList3 = new ArrayList<FailureCauseStatistics>();
 
-        Calendar lastHour = Calendar.getInstance();
-        lastHour.add(Calendar.HOUR_OF_DAY, -1);
-
-        Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour.getTime(), 1L, null, null, MASTER_A, 0, UNSTABLE,
+        Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour, 1L, null, null, MASTER_A, 0, UNSTABLE,
                                                 null, failureList1);
-        Statistics statistics2 = new Statistics(PROJECT_B, 2, new Date(), 1L, null, null, MASTER_B, 0, ABORTED,
+        Statistics statistics2 = new Statistics(PROJECT_B, 2, now, 1L, null, null, MASTER_B, 0, ABORTED,
                                                 null, failureList2);
-        Statistics statistics3 = new Statistics(PROJECT_C, 3, new Date(), 1L, null, null, MASTER_C, 0, SUCCESS,
+        Statistics statistics3 = new Statistics(PROJECT_C, 3, now, 1L, null, null, MASTER_C, 0, SUCCESS,
                                                 null, failureList3);
 
         knowledgeBase.saveStatistics(statistics1);
         knowledgeBase.saveStatistics(statistics2);
         knowledgeBase.saveStatistics(statistics3);
+    }
+
+    /**
+     * Tests {@link MongoDBKnowledgeBase#getLatestFailureForCause(String)}.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testGetLatestFailureForCause() throws Exception {
+        setUpTwoCauses();
+        assertEquals(now, knowledgeBase.getLatestFailureForCause(ID1));
+        assertEquals(lastHour, knowledgeBase.getLatestFailureForCause(ID2));
+    }
+
+    /**
+     * Tests {@link MongoDBKnowledgeBase#updateLastSeen(List, Date)}.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testUpdateLastSeen() throws Exception {
+        setUpTwoCauses();
+        List<String> ids = Arrays.asList(ID1, ID2);
+        knowledgeBase.updateLastSeen(ids, now);
+
+        assertEquals(now, knowledgeBase.getCause(ID1).getLastOccurred());
+        assertEquals(now, knowledgeBase.getCause(ID2).getLastOccurred());
+    }
+
+    /**
+     * Tests {@link MongoDBKnowledgeBase#getCreationDateForCause(String)} by saving
+     * a dummy {@link FailureCause} and verifying it was created recently.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testGetCreationDateForCause() throws Exception {
+        FailureCause emptyCause = new FailureCause(null, null, null, null, null, "", null, null);
+        String id = knowledgeBase.addCause(emptyCause).getId();
+
+        Date creationDate = knowledgeBase.getCreationDateForCause(id);
+        long createdMillisAgo = System.currentTimeMillis() - creationDate.getTime();
+        int createdSecondsAgo = (int)TimeUnit.SECONDS.convert(createdMillisAgo, TimeUnit.MILLISECONDS);
+
+        assertThat(createdSecondsAgo, is(lessThan(2)));
     }
 
     /**
@@ -145,6 +207,26 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
 
         assertEquals(1, knowledgeBase.getNbrOfNullFailureCauses(null));
     }
+
+    /**
+     * Test for {@link FailureCause#initModifications()}. Verifies that the creation date
+     * is taken as latest modification date if no saved modifications are present.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testInitModifications() throws Exception {
+        FailureCause cause = knowledgeBase.addCause(new FailureCause());
+
+        List<FailureCauseModification> mods = cause.getAndInitiateModifications();
+
+        assertFalse("Should have creation date after initiation", mods.isEmpty());
+        long createdMillisAgo = System.currentTimeMillis() - mods.get(0).getTime().getTime();
+        int createdSecondsAgo = (int)TimeUnit.SECONDS.convert(createdMillisAgo, TimeUnit.MILLISECONDS);
+
+        assertThat(createdSecondsAgo, is(lessThan(2)));
+    }
+
+
 
     /**
      * Tests {@link MongoDBKnowledgeBase#getNbrOfFailureCausesPerId
@@ -354,7 +436,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
      */
     @Test
     public void testGetUnknownFailureCauseQuotaPerTimeOneDay() throws Exception {
-        FailureCause cause = new FailureCause(ID1, null, null, CAT1, null);
+        FailureCause cause = new FailureCause(ID1, null, null, null, null, CAT1, null, null);
         knowledgeBase.saveCause(cause);
 
         FailureCauseStatistics causeStats = new FailureCauseStatistics(ID1, null);

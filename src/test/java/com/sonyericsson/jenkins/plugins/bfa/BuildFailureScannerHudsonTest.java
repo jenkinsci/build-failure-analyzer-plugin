@@ -1,8 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +24,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
@@ -55,14 +40,12 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIn
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
-
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.listeners.RunListener;
-
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
 import org.mockito.ArgumentMatcher;
@@ -70,6 +53,20 @@ import org.mockito.Matchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -333,7 +330,8 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         Indication indication = new BuildLogIndication(".*ERROR.*");
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
-        FailureCause cause = new FailureCause("myId", "testcause", "testdescription", "testcategory", indicationList);
+        FailureCause cause = new FailureCause("myId", "testcause", "testdescription", "testcomment",
+                                              null, "testcategory", indicationList, null);
         List<FailureCause> causes = new LinkedList<FailureCause>();
         causes.add(cause);
         KnowledgeBase base = mock(KnowledgeBase.class);
@@ -452,7 +450,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      */
     private FailureCause configureCauseAndIndication(String name, String description, Indication indication)
             throws Exception {
-        return configureCauseAndIndication(name, description, "category", indication);
+        return configureCauseAndIndication(name, description, "comment", "category", indication);
     }
 
     /**
@@ -460,16 +458,18 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @param name        the name of the cause.
      * @param description the description of the cause.
+     * @param comment     the comment of this cause.
      * @param category    the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      */
-    public static FailureCause configureCauseAndIndication(String name, String description, String category,
-                                                     Indication indication) throws Exception {
+    public static FailureCause configureCauseAndIndication(String name, String description, String comment,
+                                                           String category, Indication indication) throws Exception {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
-        FailureCause failureCause = new FailureCause(name, name, description, category, indicationList);
+        FailureCause failureCause =
+                new FailureCause(name, name, description, comment, null, category, indicationList, null);
 
         Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 

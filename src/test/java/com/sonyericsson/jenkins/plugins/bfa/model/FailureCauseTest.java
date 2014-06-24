@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.servlet.ServletException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -169,7 +170,8 @@ public class FailureCauseTest {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         Indication indication = new BuildLogIndication("some(thing");
-        FormValidation validate = cause.validate("Some Name", "The Description", Collections.singletonList(indication));
+        FormValidation validate =
+                cause.validate("Some Name", "The Description", Collections.singletonList(indication));
         assertSame(FormValidation.Kind.ERROR, validate.kind);
     }
 
@@ -183,7 +185,8 @@ public class FailureCauseTest {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         Indication indication = new BuildLogIndication(".*");
-        FormValidation validate = cause.validate("Some Name", "The Description", Collections.singletonList(indication));
+        FormValidation validate =
+                cause.validate("Some Name", "The Description", Collections.singletonList(indication));
         assertSame(FormValidation.Kind.OK, validate.kind);
     }
 
@@ -269,9 +272,10 @@ public class FailureCauseTest {
     @Test
     public void testDoCheckNameExisting() throws Exception {
         List<FailureCause> initial = new LinkedList<FailureCause>();
-        FailureCause other = new FailureCause("abc", "AName", "description", "", Collections.EMPTY_LIST);
+        FailureCause other =
+                new FailureCause("abc", "AName", "description", "comment", null, "", Collections.EMPTY_LIST, null);
         initial.add(other);
-        other = new FailureCause("cde", "BName", "description", "", Collections.EMPTY_LIST);
+        other = new FailureCause("cde", "BName", "description", "comment", null, "", Collections.EMPTY_LIST, null);
         initial.add(other);
         LocalFileKnowledgeBase base = new LocalFileKnowledgeBase(initial);
 
@@ -312,14 +316,15 @@ public class FailureCauseTest {
 
         String name = "AName";
         String description = "The Description";
+        String comment = "Comment";
         String category = "category";
         String pattern = ".*";
-        StaplerRequest request = mockRequest("", name, description, category,
-                Collections.singletonList(new BuildLogIndication(pattern)));
+        StaplerRequest request = mockRequest("", name, description, comment, null, category,
+                Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse response = mock(StaplerResponse.class);
 
         FailureCause cause = new FailureCause(null, CauseManagement.NEW_CAUSE_NAME,
-                CauseManagement.NEW_CAUSE_DESCRIPTION, category, null);
+                CauseManagement.NEW_CAUSE_DESCRIPTION, null, null, category, null, null);
         cause.doConfigSubmit(request, response);
 
         verify(baseMock).addCause(same(cause));
@@ -348,9 +353,10 @@ public class FailureCauseTest {
         String id = "abc";
         String name = "AName";
         String description = "The Description";
+        String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(id, name, description, "",
-                Collections.singletonList(new BuildLogIndication(pattern)));
+        StaplerRequest request = mockRequest(id, name, description, comment, null, "",
+                Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse response = mock(StaplerResponse.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
@@ -384,9 +390,10 @@ public class FailureCauseTest {
         String newId = "cde";
         String name = "AName";
         String description = "The Description";
+        String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, "",
-                Collections.singletonList(new BuildLogIndication(pattern)));
+        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+                Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse response = mock(StaplerResponse.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
@@ -413,9 +420,10 @@ public class FailureCauseTest {
         String newId = "cde";
         String name = "AName";
         String description = "The Description";
+        String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, "",
-                Collections.singletonList(new BuildLogIndication(pattern)));
+        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+                Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse response = mock(StaplerResponse.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
@@ -442,9 +450,10 @@ public class FailureCauseTest {
         String newId = "";
         String name = "New Name";
         String description = "New Description";
+        String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, "",
-                Collections.singletonList(new BuildLogIndication(pattern)));
+        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+                Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse response = mock(StaplerResponse.class);
 
         FailureCause cause = new FailureCause("A Name", "The Description");
@@ -458,22 +467,33 @@ public class FailureCauseTest {
      * @param id          the id of the cause
      * @param name        the name
      * @param description the description
-     * @param category the category
+     * @param comment     the comment
+     * @param occurred    the time of last occurrence
+     * @param category    the category
      * @param indications the list of indications as they should be returned from
      *                      {@link StaplerRequest#bindJSONToList(Class, Object)}
+     * @param modifications the modification history of this FailureCause
      * @return a mocked request object.
      *
      * @throws ServletException if so, but probably not.
      */
-    private StaplerRequest mockRequest(String id, String name, String description, String category,
-                                       List<? extends Indication> indications) throws ServletException {
+    private StaplerRequest mockRequest(String id, String name, String description, String comment, Date occurred,
+                                       String category, List<? extends Indication> indications,
+                                       List<FailureCauseModification> modifications) throws ServletException {
         JSONObject form = new JSONObject();
         form.put("id", id);
         form.put("name", name);
         form.put("description", description);
+        form.put("comment", comment);
+        if (occurred != null) {
+            form.put("occurred", occurred);
+        }
         form.put("categories", category);
         if (indications != null) {
             form.put("indications", "");
+        }
+        if (modifications != null) {
+            form.put("modifications", modifications);
         }
         StaplerRequest request = mock(StaplerRequest.class);
         when(request.getSubmittedForm()).thenReturn(form);

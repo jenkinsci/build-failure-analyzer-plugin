@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -41,6 +35,13 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.jfree.data.time.TimePeriod;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
@@ -71,8 +72,8 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     /**
      * Get a shallow list of the {@link FailureCause}s. The list should be the latest possible from the DB as
      * they will be used in the list of causes to edit.
-     * shallow meaning no indications but information enough to show a nice list; at least id and name but description
-     * and categories are preferred as well.
+     * shallow meaning no indications but information enough to show a nice list; at least id and name but description,
+     * comment, lastOccurred and categories are preferred as well.
      *
      * @return a shallow list of all causes.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
@@ -308,6 +309,40 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
         return Collections.<ObjectCountPair<String>>emptyList();
+    }
+
+    /**
+     * Find the time at which the latest Failure occurred which matches the provided FailureCause.
+     * This method needs to be implemented in subclass if last seen-functionality is to be supported.
+     *
+     * @param id     the FailureCause to match.
+     * @return the time at which the latest Failure occurred.
+     */
+    public Date getLatestFailureForCause(String id) {
+        return null;
+    }
+
+    /**
+     * Set the time at which FailureCauses identified by ids last occurred.
+     * This method needs to be implemented in subclass if last seen-functionality is to be supported.
+     *
+     * @param ids   the ids of FailureCauses which occurred.
+     * @param seen  the time at which the FailureCauses occurred.
+     */
+    public void updateLastSeen(List<String> ids, Date seen) {
+        return;
+    }
+
+    /**
+     * Find out when the FailureCause identified by id was first created.
+     * This method needs to be implemented in subclass if last modified-functionality is to work correctly
+     * when upgrading from a version without this functionality.
+     *
+     * @param id the id of the FailureCause which info to retrieve.
+     * @return the Date at which the cause was created, or unix epoch if unknown.
+     */
+    public Date getCreationDateForCause(String id) {
+        return new Date(0);
     }
 
     /**
