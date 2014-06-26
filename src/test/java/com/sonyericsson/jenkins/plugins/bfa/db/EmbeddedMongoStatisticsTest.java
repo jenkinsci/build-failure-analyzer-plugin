@@ -260,17 +260,29 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         // We expect 3 FailureCauseIntervals:
         assertEquals(3, result.size());
 
-        assertEquals(ID1, result.get(0).getId());
-        assertEquals(hourPeriod2, result.get(0).getPeriod());
-        assertEquals(1, result.get(0).getNumber());
+        boolean firstFound = false;
+        boolean secondFound = false;
+        boolean thirdFound = false;
 
-        assertEquals(ID2, result.get(1).getId());
-        assertEquals(hourPeriod1, result.get(1).getPeriod());
-        assertEquals(1, result.get(1).getNumber());
+        for (FailureCauseTimeInterval timeInterval : result) {
+            if (timeInterval.getId().equals(ID1)
+                    && timeInterval.getPeriod().equals(hourPeriod2)
+                    && timeInterval.getNumber() == 1) {
+                firstFound = true;
+            } else if (timeInterval.getId().equals(ID2)
+                    && timeInterval.getPeriod().equals(hourPeriod1)
+                    && timeInterval.getNumber() == 1) {
+                secondFound = true;
+            } else if (timeInterval.getId().equals(ID1)
+                    && timeInterval.getPeriod().equals(hourPeriod1)
+                    && timeInterval.getNumber() == 1) {
+                thirdFound = true;
+            }
+        }
 
-        assertEquals(ID1, result.get(2).getId());
-        assertEquals(hourPeriod1, result.get(2).getPeriod());
-        assertEquals(1, result.get(2).getNumber());
+        assertTrue(firstFound);
+        assertTrue(secondFound);
+        assertTrue(thirdFound);
     }
 
     /**
@@ -287,17 +299,29 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         // We expect 3 FailureCauseIntervals:
         assertEquals(3, result.size());
 
-        assertEquals(CAT1, result.get(0).getName());
-        assertEquals(hourPeriod2, result.get(0).getPeriod());
-        assertEquals(1, result.get(0).getNumber());
+        boolean firstFound = false;
+        boolean secondFound = false;
+        boolean thirdFound = false;
 
-        assertEquals(CAT2, result.get(1).getName());
-        assertEquals(hourPeriod1, result.get(1).getPeriod());
-        assertEquals(1, result.get(1).getNumber());
+        for (FailureCauseTimeInterval timeInterval : result) {
+            if (timeInterval.getName().equals(CAT1)
+                    && timeInterval.getPeriod().equals(hourPeriod2)
+                    && timeInterval.getNumber() == 1) {
+                firstFound = true;
+            } else if (timeInterval.getName().equals(CAT2)
+                    && timeInterval.getPeriod().equals(hourPeriod1)
+                    && timeInterval.getNumber() == 1) {
+                secondFound = true;
+            } else if (timeInterval.getName().equals(CAT1)
+                    && timeInterval.getPeriod().equals(hourPeriod1)
+                    && timeInterval.getNumber() == 1) {
+                thirdFound = true;
+            }
+        }
 
-        assertEquals(CAT1, result.get(2).getName());
-        assertEquals(hourPeriod1, result.get(2).getPeriod());
-        assertEquals(1, result.get(2).getNumber());
+        assertTrue(firstFound);
+        assertTrue(secondFound);
+        assertTrue(thirdFound);
     }
 
     /**
