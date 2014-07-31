@@ -342,7 +342,16 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
         for (DownstreamBuildFinder dbf : DownstreamBuildFinder.getAll()) {
 
-            foundDbf.addAll(dbf.getDownstreamBuilds(build));
+            List<AbstractBuild<?, ?>> downstreamBuilds = dbf.getDownstreamBuilds(build);
+
+            for (AbstractBuild<?, ?> downstreamBuild : downstreamBuilds) {
+                if (downstreamBuild != null) {
+                    foundDbf.add(downstreamBuild);
+                } else {
+                    logger.log(Level.FINER, "[BFA] Ignoring missing downstream build for " + build.getFullDisplayName());
+                }
+            }
+
         }
         return foundDbf;
     }
