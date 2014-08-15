@@ -1,8 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2014 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +24,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import javax.servlet.http.HttpSession;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -49,15 +34,37 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import hudson.Util;
 import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
+import org.apache.commons.lang.StringUtils;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.powermock.reflect.Whitebox;
+
+import javax.servlet.http.HttpSession;
+import java.text.DateFormat;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Hudson tests for {@link CauseManagement}.
@@ -65,6 +72,13 @@ import org.powermock.reflect.Whitebox;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class CauseManagementHudsonTest extends HudsonTestCase {
+
+    private static final int NAME_CELL = 0;
+    private static final int CATEGORY_CELL = 1;
+    private static final int DESCRIPTION_CELL = 2;
+    private static final int COMMENT_CELL = 3;
+    private static final int MODIFIED_CELL = 4;
+    private static final int LAST_SEEN_CELL = 5;
 
     /**
      * Tests {@link com.sonyericsson.jenkins.plugins.bfa.CauseManagement#isUnderTest()}.
@@ -80,20 +94,38 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testTableViewNavigation() throws Exception {
+        KnowledgeBase kb = PluginImpl.getInstance().getKnowledgeBase();
+
+        //Overriding isStatisticsEnabled in order to display all fields on the management page:
+        KnowledgeBase mockKb = spy(kb);
+        when(mockKb.isStatisticsEnabled()).thenReturn(true);
+        Whitebox.setInternalState(PluginImpl.getInstance(), "knowledgeBase", mockKb);
+
         List<String> myCategories = new LinkedList<String>();
         myCategories.add("myCtegory");
-        FailureCause cause = new FailureCause(null, "SomeName", "A Description", myCategories, null);
+
+        //CS IGNORE MagicNumber FOR NEXT 5 LINES. REASON: TestData.
+        Date endOfWorld = new Date(1356106375000L);
+        Date birthday = new Date(678381175000L);
+        Date millenniumBug = new Date(946681200000L);
+        Date pluginReleased = new Date(1351724400000L);
+
+        FailureCause cause = new FailureCause(null, "SomeName", "A Description", "Some comment",
+                endOfWorld, myCategories, null,
+                Collections.singletonList(new FailureCauseModification("user", birthday)));
         cause.addIndication(new BuildLogIndication("."));
-        PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
-        cause = new FailureCause(null, "SomeOtherName", "A Description", myCategories, null);
+        kb.addCause(cause);
+        cause = new FailureCause(null, "SomeOtherName", "A Description", "Another comment",
+                millenniumBug, myCategories, null,
+                Collections.singletonList(new FailureCauseModification("user", pluginReleased)));
         cause.addIndication(new BuildLogIndication("."));
-        PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
+        kb.addCause(cause);
 
         WebClient web = createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
         HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
 
-        Collection<FailureCause> expectedCauses = PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
+        Collection<FailureCause> expectedCauses = kb.getShallowCauses();
 
         int rowCount = table.getRowCount();
         assertEquals(expectedCauses.size() + 1, rowCount);
@@ -105,12 +137,22 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
             assertTrue(causeIterator.hasNext());
             FailureCause c = causeIterator.next();
             HtmlTableRow row = table.getRow(i);
-            String name = row.getCell(0).getTextContent();
-            String categories = row.getCell(1).getTextContent();
-            String description = row.getCell(2).getTextContent();
+            String name = row.getCell(NAME_CELL).getTextContent();
+            String categories = row.getCell(CATEGORY_CELL).getTextContent();
+            String description = row.getCell(DESCRIPTION_CELL).getTextContent();
+            String comment = row.getCell(COMMENT_CELL).getTextContent();
+            String modified = row.getCell(MODIFIED_CELL).getTextContent();
+            String lastSeen = row.getCell(LAST_SEEN_CELL).getTextContent();
             assertEquals(c.getName(), name);
             assertEquals(c.getCategoriesAsString(), categories);
             assertEquals(c.getDescription(), description);
+            assertEquals(c.getComment(), comment);
+            assertEquals("Modified date should be visible", DateFormat.getDateTimeInstance(
+                    DateFormat.SHORT, DateFormat.SHORT).format(c.getLatestModification().getTime())
+                    + " by user", modified);
+            assertEquals("Last seen date should be visible",
+                    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+                    .format(c.getLastOccurred()), lastSeen);
             if (i == 1) {
                 firstCause = c;
             }
@@ -139,10 +181,84 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         HtmlPage editPage = newLink.click();
 
         verifyCorrectCauseEditPage(new FailureCause(
-                CauseManagement.NEW_CAUSE_NAME,
-                CauseManagement.NEW_CAUSE_DESCRIPTION),
+                        CauseManagement.NEW_CAUSE_NAME,
+                        CauseManagement.NEW_CAUSE_DESCRIPTION, ""),
                 editPage);
     }
+
+    /**
+     * Makes a modification to a {@link FailureCause} and verifies that the modification date was updated.
+     * @throws Exception if something goes wrong
+     */
+    public void testMakeModificationUpdatesDate() throws Exception {
+        List<FailureCauseModification> modifications = new LinkedList<FailureCauseModification>();
+        modifications.add(new FailureCauseModification("unknown", new Date(1)));
+        FailureCause cause = new FailureCause(null, "SomeName", "A Description", "Some comment",
+                null, "", null, modifications);
+        cause.addIndication(new BuildLogIndication("."));
+        PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo(CauseManagement.URL_NAME);
+
+        HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
+        HtmlTableRow row = table.getRow(1);
+        final String firstModification = row.getCell(MODIFIED_CELL).getTextContent();
+
+        HtmlAnchor firstCauseLink = (HtmlAnchor)table.getCellAt(1, 0).getFirstChild();
+        HtmlPage editPage = firstCauseLink.click();
+
+        editPage.getElementByName("_.comment").setTextContent("new comment");
+
+        HtmlForm form = editPage.getFormByName("causeForm");
+        page = submit(form);
+
+        table = (HtmlTable)page.getElementById("failureCausesTable");
+        row = table.getRow(1);
+        final String secondModification = row.getCell(MODIFIED_CELL).getTextContent();
+
+        assertThat(secondModification, not(equalTo(firstModification)));
+        assertThat(secondModification, not(equalTo(StringUtils.EMPTY)));
+    }
+
+    /**
+     * Makes a modification to a {@link FailureCause} and verifies that the modification list was updated.
+     * @throws Exception if something goes wrong
+     */
+    public void testMakeModificationUpdatesModificationList() throws Exception {
+        List<FailureCauseModification> modifications = new LinkedList<FailureCauseModification>();
+        modifications.add(new FailureCauseModification("unknown", new Date(1)));
+        FailureCause cause = new FailureCause(null, "SomeName", "A Description", "Some comment",
+                null, "", null, modifications);
+        cause.addIndication(new BuildLogIndication("."));
+        PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
+
+        WebClient web = createWebClient();
+        HtmlPage page = web.goTo(CauseManagement.URL_NAME);
+
+        HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
+
+        HtmlAnchor firstCauseLink = (HtmlAnchor)table.getCellAt(1, 0).getFirstChild();
+        HtmlPage editPage = firstCauseLink.click();
+
+        HtmlElement modList = editPage.getElementById("modifications");
+        int firstNbrOfModifications = modList.getChildNodes().size();
+
+        editPage.getElementByName("_.comment").setTextContent("new comment");
+
+        HtmlForm form = editPage.getFormByName("causeForm");
+        submit(form);
+
+        editPage = firstCauseLink.click();
+        modList = editPage.getElementById("modifications");
+        int secondNbrOfModifications = modList.getChildNodes().size();
+
+        assertEquals(firstNbrOfModifications + 1, secondNbrOfModifications);
+        assertStringContains("Latest modification date should be visible",
+                modList.getFirstChild().asText(), DateFormat.getDateTimeInstance(
+                        DateFormat.SHORT, DateFormat.SHORT).format(cause.getLatestModification().getTime()));
+    }
+
     //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
     /**
      * Tests that an error message is shown when there is no reachable Mongo database.
@@ -178,6 +294,10 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         HtmlElement descrArea = form.getOneHtmlElementByAttribute("textarea", "name", "_.description");
         String description = descrArea.getTextContent();
         assertEquals(expectedCause.getDescription(), description);
+
+        HtmlElement commentArea = form.getOneHtmlElementByAttribute("textarea", "name", "_.comment");
+        String comment = commentArea.getTextContent();
+        assertEquals(expectedCause.getComment(), comment);
 
         if (!expectedCause.getIndications().isEmpty()) {
             HtmlElement indicationsDiv = form.getOneHtmlElementByAttribute("div", "name", "indications");
@@ -254,4 +374,5 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         project.removeProperty(ScannerJobProperty.class);
         project.addProperty(new ScannerJobProperty(!scan));
     }
+
 }

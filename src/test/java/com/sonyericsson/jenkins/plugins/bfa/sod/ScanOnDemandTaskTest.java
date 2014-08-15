@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -273,7 +273,7 @@ public class ScanOnDemandTaskTest {
      */
     private FailureCause configureCauseAndIndication(String name, String description, Indication indication)
             throws Exception {
-        return configureCauseAndIndication(name, description, "category", indication);
+        return configureCauseAndIndication(name, description, "comment", "category", indication);
     }
 
     /**
@@ -281,16 +281,18 @@ public class ScanOnDemandTaskTest {
      *
      * @param name        the name of the cause.
      * @param description the description of the cause.
+     * @param comment     the comment of the cause.
      * @param category    the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, String category,
+    private FailureCause configureCauseAndIndication(String name, String description, String comment, String category,
             Indication indication) throws Exception {
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
-        FailureCause failureCause = new FailureCause(name, name, description, category, indicationList);
+        FailureCause failureCause =
+                new FailureCause(name, name, description, comment, null, category, indicationList, null);
 
         List<FailureCause> causeList = new LinkedList<FailureCause>();
         causeList.add(failureCause);

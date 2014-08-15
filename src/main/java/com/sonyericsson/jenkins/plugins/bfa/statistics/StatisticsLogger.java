@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -129,9 +129,11 @@ public final class StatisticsLogger {
 
             String result = build.getResult().toString();
             List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();
+            List<String> causeIds = new LinkedList<String>();
             for (FoundFailureCause cause : causes) {
                 FailureCauseStatistics stats = new FailureCauseStatistics(cause.getId(), cause.getIndications());
                 failureCauseStatistics.add(stats);
+                causeIds.add(cause.getId());
             }
 
             master = BfaUtils.getMasterName();
@@ -139,13 +141,16 @@ public final class StatisticsLogger {
             Statistics.UpstreamCause suc = new Statistics.UpstreamCause(uc);
             Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses, nodeName,
                                             master, timeZoneOffset, result, suc, failureCauseStatistics);
+
+            PluginImpl p = PluginImpl.getInstance();
+            KnowledgeBase kb = p.getKnowledgeBase();
             try {
-                PluginImpl p = PluginImpl.getInstance();
-                KnowledgeBase kb = p.getKnowledgeBase();
                 kb.saveStatistics(obj);
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Couldn't save statistics: ", e);
             }
+
+            kb.updateLastSeen(causeIds, startingTime);
         }
     }
 }

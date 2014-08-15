@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,6 @@
  * THE SOFTWARE.
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
-
-import static java.util.Arrays.asList;
-
-import javax.naming.AuthenticationException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SimpleTimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
@@ -81,6 +59,28 @@ import org.jfree.data.time.Month;
 import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
+import javax.naming.AuthenticationException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SimpleTimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.util.Arrays.asList;
 
 /**
  * Handling of the MongoDB way of saving the knowledge base.
@@ -244,6 +244,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         keys.put("name", 1);
         keys.put("description", 1);
         keys.put("categories", 1);
+        keys.put("comment", 1);
+        keys.put("modifications", 1);
+        keys.put("lastOccurred", 1);
         BasicDBObject orderBy = new BasicDBObject("name", 1);
         DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
         dbCauses = dbCauses.sort(orderBy);
@@ -618,6 +621,67 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         }
 
         return nbrOfFailureCausesPerId;
+    }
+
+    @Override
+    public Date getLatestFailureForCause(String id) {
+
+        DBObject causeToMatch = new BasicDBObject("$ref", "failureCauses");
+        causeToMatch.put("$id", new ObjectId(id));
+
+        DBObject causeList = new BasicDBObject("failureCauses.failureCause", causeToMatch);
+
+        DBObject match = new BasicDBObject("$match", causeList);
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("startingTime", -1));
+        DBObject limit = new BasicDBObject("$limit", 1);
+
+        AggregationOutput output;
+        try {
+            output = getStatisticsCollection().aggregate(match, sort, limit);
+
+            for (DBObject result : output.results()) {
+                Date startingTime = (Date)result.get("startingTime");
+
+                if (startingTime != null) {
+                    return startingTime;
+                }
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed getting latest failure of cause", e);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Date getCreationDateForCause(String id) {
+        Date creationDate;
+        try {
+            //Get the creation date using time information in MongoDB id:
+            creationDate = new Date(new ObjectId(id).getTime());
+        } catch (IllegalArgumentException e) {
+            logger.log(Level.WARNING, "Could not retrieve original modification", e);
+            creationDate = new Date(0);
+        }
+        return creationDate;
+    }
+
+    @Override
+    public void updateLastSeen(List<String> ids, Date seen) {
+        List<ObjectId> objectIds = new LinkedList<ObjectId>();
+        for (String id : ids) {
+            objectIds.add(new ObjectId(id));
+        }
+        DBObject match = new BasicDBObject("_id", new BasicDBObject("$in", objectIds));
+        DBObject set = new BasicDBObject("$set", new BasicDBObject("lastOccurred", seen));
+
+        try {
+            getJacksonCollection().updateMulti(match, set);
+        } catch (UnknownHostException e) {
+            logger.log(Level.WARNING, "Failed connecting to MongoDB when updating FailureCauses' last occurrence", e);
+        } catch (AuthenticationException e) {
+            logger.log(Level.WARNING, "Failed authentication when updating FailureCauses' last occurrence", e);
+        }
     }
 
     /**

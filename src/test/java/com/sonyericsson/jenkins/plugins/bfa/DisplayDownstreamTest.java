@@ -2,7 +2,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 /*
  * The MIT License
  *
- * Copyright 2013 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2013 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -130,7 +130,7 @@ public class DisplayDownstreamTest extends HudsonTestCase {
 
         Indication indication = new BuildLogIndication(".*rapakalja.*");
         FailureCause failureCause = BuildFailureScannerHudsonTest.
-                configureCauseAndIndication("Other cause", "Other description",
+                configureCauseAndIndication("Other cause", "Other description", "Other comment",
                         "Category", indication);
 
         FailureCauseDisplayData failureCauseDisplayData =

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.CopyOnWriteList;
 import org.junit.Before;
@@ -36,6 +37,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
 
@@ -72,8 +74,8 @@ public class LocalFileKnowledgeBaseTest {
         olle = new FailureCause("olle", "Olle is a good guy who wouldn't hurt a fly.");
         olle.addIndication(new BuildLogIndication(".*olle.*"));
         oldCauses.add(olle);
-        existingCause = new FailureCause("existingId", "me", "I am already here!", "myCategory",
-                new LinkedList<Indication>());
+        existingCause = new FailureCause("existingId", "me", "I am already here!", "someComment", new Date(),
+                "myCategory", new LinkedList<Indication>(), new LinkedList<FailureCauseModification>());
         oldCauses.add(existingCause);
         PluginImpl mock = PowerMockito.mock(PluginImpl.class);
         PowerMockito.mockStatic(PluginImpl.class);
@@ -143,7 +145,8 @@ public class LocalFileKnowledgeBaseTest {
         assertSame(expected, kb.addCause(expected));
 
         FailureCause toSave = new FailureCause(expected.getId(), expected.getName(),
-                expected.getDescription(), "", expected.getIndications());
+                expected.getDescription(), expected.getComment(), expected.getLastOccurred(),
+                "", expected.getIndications(), expected.getModifications());
         assertSame(toSave, kb.saveCause(toSave));
         assertNotSame(expected, kb.getCause(toSave.getId()));
     }
