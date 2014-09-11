@@ -345,10 +345,6 @@ public class Token extends DataBoundTokenMacro {
                     nextIndentLevel);
             }
         }
-
-        for (int i = 0, size = indications.size(); i < size; ++i) {
-            final FoundIndication indication = indications.get(i);
-        }
     }
 
     /**
