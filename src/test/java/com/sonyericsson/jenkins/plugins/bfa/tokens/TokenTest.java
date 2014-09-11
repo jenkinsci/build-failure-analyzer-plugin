@@ -62,6 +62,7 @@ public class TokenTest extends HudsonTestCase {
      */
     @Test
     public void testToken() throws Exception {
+        // CS IGNORE MagicNumberCheck FOR NEXT 63 LINES. REASON: Test data.
         final FreeStyleProject project = createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(ERROR));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
