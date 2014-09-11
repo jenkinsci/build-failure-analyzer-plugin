@@ -24,8 +24,12 @@
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Splitter;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
@@ -34,6 +38,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandTask;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.log4j.Logger;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
@@ -48,11 +53,15 @@ import jenkins.model.Jenkins;
  * The Build Failure Analyzer token for TokenMacro consumers.
  * @author K. R. Walker &lt;krwalker@stellarscience.com&gt;
  */
-@Extension(optional=true)
+@Extension(optional = true)
 public class Token extends DataBoundTokenMacro {
     private static final int ITEM_INCREMENT = 0;
 
     private static final int LIST_INCREMENT = 1;
+
+    private static final String LIST_BULLET = "* ";
+
+    private static final String LIST_BULLET_SPACE = "  ";
 
     private static final Logger logger = Logger.getLogger(Token.class.getName());
 
@@ -70,6 +79,11 @@ public class Token extends DataBoundTokenMacro {
      * When true, the "Identified problems:" title will appear over the causes.
      */
     private boolean includeTitle = true;
+
+    /**
+     * Wrap long lines at this width.If wrapWidth is 0,the text isn't wrapped. Only applies if useHtmlFormat == false.
+     */
+    private int wrapWidth = 0;
 
     /**
      * @param includeIndications When true, the indication numbers and links into the console log are included
@@ -96,6 +110,15 @@ public class Token extends DataBoundTokenMacro {
         this.includeTitle = includeTitle;
     }
 
+    /**
+     * @param wrapWidth Wrap long lines at this width. If wrapWidth is 0, the text isn't wrapped. Only applies if
+     * useHtmlFormat == false.
+     */
+    @Parameter
+    public void setWrapWidth(final int wrapWidth) {
+        this.wrapWidth = wrapWidth;
+    }
+
     @Override
     public boolean acceptsMacroName(final String macroName) {
         return "BUILD_FAILURE_ANALYZER".equals(macroName);
@@ -104,6 +127,7 @@ public class Token extends DataBoundTokenMacro {
     @Override
     public String evaluate(final AbstractBuild<?, ?> build, final TaskListener listener, final String macroName)
         throws MacroEvaluationException, IOException, InterruptedException {
+
         // Scan the build now.
         new ScanOnDemandTask(build).run();
         final FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -158,6 +182,7 @@ public class Token extends DataBoundTokenMacro {
      */
     private void addFailureCauseMatrixRepresentation(final StringBuilder stringBuilder,
         final FailureCauseMatrixBuildAction matrixAction, final int indentLevel) {
+
         final List<MatrixRun> matrixRuns = matrixAction.getRunsWithAction();
         if (useHtmlFormat) {
             stringBuilder.append("<ul>");
@@ -177,6 +202,7 @@ public class Token extends DataBoundTokenMacro {
      */
     private void addMatrixRunRepresentation(final StringBuilder stringBuilder, final MatrixRun matrixRun,
         final int indentLevel) {
+
         final FailureCauseDisplayData data = FailureCauseMatrixBuildAction.getFailureCauseDisplayData(matrixRun);
         if (data.getFoundFailureCauses().isEmpty() && data.getDownstreamFailureCauses().isEmpty()) {
             return;
@@ -194,7 +220,7 @@ public class Token extends DataBoundTokenMacro {
             stringBuilder.append("</li>");
         } else {
             stringBuilder.append(indentForDepth(indentLevel));
-            stringBuilder.append("* ");
+            stringBuilder.append(LIST_BULLET);
             stringBuilder.append(matrixRun.getFullDisplayName());
             stringBuilder.append("\n");
             addFailureCauseDisplayDataRepresentation(stringBuilder, data, nextIndentLevel);
@@ -208,6 +234,7 @@ public class Token extends DataBoundTokenMacro {
      */
     private void addFailureCauseDisplayDataRepresentation(final StringBuilder stringBuilder,
         final FailureCauseDisplayData data, final int indentLevel) {
+
         final IndicationUrlBuilder indicationUrlBuilder = new IndicationUrlBuilder();
         indicationUrlBuilder.setBuildUrl(data.getLinks().getBuildUrl());
         final List<FoundFailureCause> causes = data.getFoundFailureCauses();
@@ -236,6 +263,7 @@ public class Token extends DataBoundTokenMacro {
     private void addFailureCauseRepresentation(final StringBuilder stringBuilder,
         final IndicationUrlBuilder indicationUrlBuilder, final FoundFailureCause cause,
         final int indentLevel) {
+
         final int nextIndentLevel = indentLevel + LIST_INCREMENT;
         if (useHtmlFormat) {
             stringBuilder.append("<li>");
@@ -256,12 +284,30 @@ public class Token extends DataBoundTokenMacro {
             }
             stringBuilder.append("</li>");
         } else {
-            stringBuilder.append(indentForDepth(indentLevel));
-            stringBuilder.append("* ");
-            stringBuilder.append(cause.getName());
-            stringBuilder.append(": ");
-            stringBuilder.append(cause.getDescription());
-            stringBuilder.append("\n");
+            // e.g.,
+            //   * cause-name: cause-description that
+            //     can wrap lines
+            // |-------------------------------------|
+            // AA
+            //   BB
+            // CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            //
+            // A = indentForDepth()
+            // B = LIST_BULLET.length()
+            // C = wrapWidth
+            final List<String> lines = wrap(
+                cause.getName() + ": " + cause.getDescription(),
+                // C - A - B
+                wrapWidth - indentForDepth(indentLevel).length() - LIST_BULLET.length());
+            for (int lineIndex = 0, lineCount = lines.size(); lineIndex < lineCount; ++lineIndex) {
+                if (lineIndex == 0) {
+                    stringBuilder.append(LIST_BULLET);
+                } else {
+                    stringBuilder.append(LIST_BULLET_SPACE);
+                }
+                stringBuilder.append(lines.get(lineIndex));
+                stringBuilder.append("\n");
+            }
             if (includeIndications) {
                 addIndicationsRepresentation(stringBuilder, indicationUrlBuilder, cause.getIndications(),
                     nextIndentLevel);
@@ -278,6 +324,7 @@ public class Token extends DataBoundTokenMacro {
     private void addIndicationsRepresentation(final StringBuilder stringBuilder,
         final IndicationUrlBuilder indicationUrlBuilder, final List<FoundIndication> indications,
         final int indentLevel) {
+
         final int nextIndentLevel = indentLevel + ITEM_INCREMENT;
         if (useHtmlFormat) {
             stringBuilder.append("<ul>");
@@ -314,6 +361,7 @@ public class Token extends DataBoundTokenMacro {
     private void addIndicationRepresentation(final StringBuilder stringBuilder,
         final IndicationUrlBuilder indicationUrlBuilder, final FoundIndication indication,
         final int indicationNumber, final int indentLevel) {
+
         if (useHtmlFormat) {
             stringBuilder.append("<li><a href=\"");
             stringBuilder.append(indicationUrlBuilder.getUrlString());
@@ -323,10 +371,13 @@ public class Token extends DataBoundTokenMacro {
             stringBuilder.append("</a></li>");
         } else {
             stringBuilder.append(indentForDepth(indentLevel));
-            stringBuilder.append("* ");
+            stringBuilder.append(LIST_BULLET);
             stringBuilder.append("Indication ");
             stringBuilder.append(indicationNumber);
-            stringBuilder.append(": <");
+            stringBuilder.append(":\n");
+            stringBuilder.append(indentForDepth(indentLevel));
+            stringBuilder.append(LIST_BULLET_SPACE);
+            stringBuilder.append("<");
             stringBuilder.append(indicationUrlBuilder.getUrlString());
             stringBuilder.append(">\n");
         }
@@ -342,6 +393,7 @@ public class Token extends DataBoundTokenMacro {
      */
     private static String getFoundIndicationURL(final AbstractBuild<?, ?> build, final FoundFailureCause cause,
         final FoundIndication indication) {
+
         final StringBuilder builder = new StringBuilder();
         builder.append(Jenkins.getInstance().getRootUrl());
         builder.append("/");
@@ -358,6 +410,38 @@ public class Token extends DataBoundTokenMacro {
      */
     private static String indentForDepth(final int indentLevel) {
         return StringUtils.repeat("  ", indentLevel);
+    }
+
+    /**
+     * Wrap some text
+     * @param text some text to wrap
+     * @param width the text will be wrapped to this many characters
+     * @return the text lines
+     */
+    /* packageprivate */
+    static List<String> wrap(final String text, final int width) {
+        final List<String> lines = new ArrayList< String>();
+        final Splitter lineSplitter = Splitter.on(Pattern.compile("\\r?\\n"));
+        //Split the text into lines
+        for (final String line : lineSplitter.split(text)) {
+            if (width > 0) {
+                final Pattern firstNonwhitespacePattern = Pattern.compile("[^\\s]");
+                final Matcher firstNonwhiteSpaceMatcher = firstNonwhitespacePattern.matcher(line);
+                String indent = "";
+                if (firstNonwhiteSpaceMatcher.find()) {
+                    indent = line.substring(0, firstNonwhiteSpaceMatcher.start());
+                }
+                //Wrap each line
+                final String wrappedLines = WordUtils.wrap(line, width - indent.length());
+                //Split the wrapped line into lines and add those lines to the result
+                for (final String wrappedLine : lineSplitter.split(wrappedLines)) {
+                    lines.add(indent + wrappedLine.trim());
+                }
+            } else {
+                lines.add(line);
+            }
+        }
+        return lines;
     }
 
     /**

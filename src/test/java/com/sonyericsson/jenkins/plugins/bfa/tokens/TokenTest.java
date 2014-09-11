@@ -23,11 +23,14 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScannerHudsonTest;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
@@ -71,37 +74,94 @@ public class TokenTest extends HudsonTestCase {
         final Future<FreeStyleBuild> buildFuture = project.scheduleBuild2(0);
         final FreeStyleBuild build = buildFuture.get(10, TimeUnit.SECONDS);
         final String defaults = TokenMacro.expandAll(build, listener, "${BUILD_FAILURE_ANALYZER}");
+        System.out.println("Default:\n[" + defaults + "]");
         assertTrue("Default has title", defaults.contains("Identified problems:"));
         assertTrue("Default has cause", defaults.contains("There was an error."));
         assertTrue("Default has indications", defaults.contains("Indication 1"));
         assertTrue("Default is not HTML", !defaults.contains("<li>"));
+        assertEquals("", 4, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(defaults)));
 
         final String plainFull = TokenMacro.expandAll(build, listener,
             "${BUILD_FAILURE_ANALYZER, includeTitle=true, includeIndications=true}");
-        assertTrue("Default has title", plainFull.contains("Identified problems:"));
-        assertTrue("Default has cause", plainFull.contains("There was an error."));
-        assertTrue("Default has indications", plainFull.contains("Indication 1"));
-        assertTrue("Default is not HTML", !plainFull.contains("<li>"));
+        System.out.println("Plaintext full:\n[" + plainFull + "]");
+        assertTrue("Plaintext full has title", plainFull.contains("Identified problems:"));
+        assertTrue("Plaintext full has cause", plainFull.contains("There was an error."));
+        assertTrue("Plaintext full has indications", plainFull.contains("Indication 1"));
+        assertTrue("Plaintext full is not HTML", !plainFull.contains("<li>"));
+        assertEquals("", 4, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(plainFull)));
+
+        final String plainFullWrapped = TokenMacro.expandAll(build, listener,
+            "${BUILD_FAILURE_ANALYZER, includeTitle=true, includeIndications=true, wrapWidth=8}");
+        System.out.println("Plaintext full wrapped:\n[" + plainFullWrapped + "]");
+        assertTrue("Plaintext full wrapped has title", plainFullWrapped.contains("Identified problems:"));
+        assertTrue("Plaintext full wrapped has cause", plainFullWrapped.contains("error."));
+        assertTrue("Plaintext full wrapped has indications", plainFullWrapped.contains("Indication 1"));
+        assertTrue("Plaintext full wrapped is not HTML", !plainFullWrapped.contains("<li>"));
+        assertEquals("", 7, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(plainFullWrapped)));
 
         final String plainMinimal = TokenMacro.expandAll(build, listener,
             "${BUILD_FAILURE_ANALYZER, includeTitle=false, includeIndications=false}");
-        assertTrue("Default has title", !plainMinimal.contains("Identified problems:"));
-        assertTrue("Default has cause", plainMinimal.contains("There was an error."));
-        assertTrue("Default has indications", !plainMinimal.contains("Indication 1"));
-        assertTrue("Default is not HTML", !plainMinimal.contains("<li>"));
+        System.out.println("Plaintext minimal:\n[" + plainMinimal + "]");
+        assertTrue("Plaintext minimal does not have title", !plainMinimal.contains("Identified problems:"));
+        assertTrue("Plaintext minimal has cause", plainMinimal.contains("There was an error."));
+        assertTrue("Plaintext minimal does not have indications", !plainMinimal.contains("Indication 1"));
+        assertTrue("Plaintext minimal is not HTML", !plainMinimal.contains("<li>"));
+        assertEquals("", 1, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(plainMinimal)));
 
         final String htmlFull = TokenMacro.expandAll(build, listener,
             "${BUILD_FAILURE_ANALYZER, useHtmlFormat=true, includeTitle=true, includeIndications=true}");
-        assertTrue("Default has title", htmlFull.contains("Identified problems:"));
-        assertTrue("Default has cause", htmlFull.contains("There was an error."));
-        assertTrue("Default has indications", htmlFull.contains("Indication 1"));
-        assertTrue("Default is HTML", htmlFull.contains("<li>"));
+        System.out.println("HTML full:\n[" + htmlFull + "]");
+        assertTrue("HTML full has title", htmlFull.contains("Identified problems:"));
+        assertTrue("HTML full has cause", htmlFull.contains("There was an error."));
+        assertTrue("HTML full has indications", htmlFull.contains("Indication 1"));
+        assertTrue("HTML full is HTML", htmlFull.contains("<li>"));
+        assertEquals("", 1, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(htmlFull)));
 
-        final String htmlMiminal = TokenMacro.expandAll(build, listener,
+        final String htmlMinimal = TokenMacro.expandAll(build, listener,
             "${BUILD_FAILURE_ANALYZER, useHtmlFormat=true, includeTitle=false, includeIndications=false}");
-        assertTrue("Default has title", !htmlMiminal.contains("Identified problems:"));
-        assertTrue("Default has cause", htmlMiminal.contains("There was an error."));
-        assertTrue("Default has indications", !htmlMiminal.contains("Indication 1"));
-        assertTrue("Default is HTML", htmlMiminal.contains("<li>"));
+        System.out.println("HTML minimal:\n[" + htmlMinimal + "]");
+        assertTrue("HTML minimal does not have title", !htmlMinimal.contains("Identified problems:"));
+        assertTrue("HTML minimal has cause", htmlMinimal.contains("There was an error."));
+        assertTrue("HTML minimal does not have indications", !htmlMinimal.contains("Indication 1"));
+        assertTrue("HTML minimal is HTML", htmlMinimal.contains("<li>"));
+        assertEquals("", 1, Iterables.size(Splitter.on('\n').omitEmptyStrings().split(htmlMinimal)));
     }
+
+    /**
+     * Test that wrap() works appropriately.
+     * @throws Exception if necessary
+     */
+    @Test
+    public void testWrap() throws Exception {
+        // CS IGNORE OperatorWrap FOR NEXT 11 LINES. REASON: Test data.
+        final String text =
+            "Lorem ipsum dolor sit amet,\n" +
+            "consectetur adipiscing elit. Nulla euismod sapien ligula,\n" +
+            "\n" +
+            "    ac euismod quam aliquet vel.\n" +
+            "    Duis quam augue, tristique in mi ac, scelerisque\n" +
+            "    euismod nibh.\n" +
+            "\n" +
+            "Nulla accumsan velit nec neque sollicitudin,\n" +
+            "eget sagittis purus vestibulum. Nunc cursus ornare sapien\n" +
+            "sit amet hendrerit. Proin non nisi sapien.";
+        // No additional wrapping.
+        final int noWrapping = 0;
+        final List<String> unwrappedLines = Token.wrap(text, noWrapping);
+        System.out.println("Unwrapped lines:");
+        for (final String line : unwrappedLines) {
+            System.out.println(line);
+        }
+        final int expectedNoWrappingLineCount = 10;
+        assertEquals(expectedNoWrappingLineCount, unwrappedLines.size());
+        final int wrapAt35 = 35;
+        final List<String> wrappedAt35 = Token.wrap(text, wrapAt35);
+        System.out.println("Wrapped at 35:");
+        for (final String line : wrappedAt35) {
+            System.out.println(line);
+        }
+        final int expectedWrapAt35LineCount = 15;
+        assertEquals(expectedWrapAt35LineCount, wrappedAt35.size());
+    }
+
 }
