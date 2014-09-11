@@ -1,8 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +25,18 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Describable;
-import hudson.model.Descriptor;
 import hudson.model.Failure;
 import hudson.model.Hudson;
+import hudson.model.User;
+import hudson.model.Descriptor;
+import hudson.model.AbstractProject;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -54,6 +55,7 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -71,43 +73,67 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     private String id;
     private String name;
     private String description;
+    private String comment;
+    private Date lastOccurred;
     private List<String> categories;
     private List<Indication> indications;
+    private List<FailureCauseModification> modifications;
 
     /**
      * Standard data bound constructor.
      *
-     * @param id          the id.
-     * @param name        the name of this FailureCause.
-     * @param description the description of this FailureCause.
-     * @param categories the categories of this FailureCause.
-     * @param indications the list of indications
+     * @param id            the id.
+     * @param name          the name of this FailureCause.
+     * @param description   the description of this FailureCause.
+     * @param comment       the comment of this FailureCause.
+     * @param lastOccurred  the time at which this FailureCause last occurred.
+     * @param categories    the categories of this FailureCause.
+     * @param indications   the list of indications
+     * @param modifications the modification history of this FailureCause.
      */
     @DataBoundConstructor
-    public FailureCause(String id, String name, String description, String categories, List<Indication> indications) {
-        this(id, name, description, Arrays.<String>asList(Util.tokenize(categories)), indications);
+    public FailureCause(String id, String name, String description, String comment,
+                        Date lastOccurred, String categories, List<Indication> indications,
+                        List<FailureCauseModification> modifications) {
+        this(id, name, description, comment, lastOccurred, Arrays.<String>asList(Util.tokenize(categories)),
+                indications, modifications);
     }
 
     /**
      * JSON constructor.
      *
-     * @param id          the id.
-     * @param name        the name of this FailureCause.
-     * @param description the description of this FailureCause.
-     * @param categories the categories of this FailureCause.
-     * @param indications the list of indications
+     * @param id            the id.
+     * @param name          the name of this FailureCause.
+     * @param description   the description of this FailureCause.
+     * @param comment       the comment of this FailureCause.
+     * @param lastOccurred  the last time this FailureCause occurred.
+     * @param categories    the categories of this FailureCause.
+     * @param indications   the list of indications
+     * @param modifications the modification history of this FailureCause.
      */
     @JsonCreator
     public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
-    String description, @JsonProperty("categories") List<String> categories,
-                        @JsonProperty("indications") List<Indication> indications) {
+    String description, @JsonProperty("comment") String comment, @JsonProperty("occurred") Date lastOccurred,
+                        @JsonProperty("categories") List<String> categories,
+                        @JsonProperty("indications") List<Indication> indications,
+                        @JsonProperty("modifications") List<FailureCauseModification> modifications) {
         this.id = Util.fixEmpty(id);
         this.name = name;
         this.description = description;
+        this.comment = comment;
+        if (lastOccurred == null) {
+            this.lastOccurred = null;
+        } else {
+            this.lastOccurred = (Date)lastOccurred.clone();
+        }
         this.categories = categories;
         this.indications = indications;
         if (this.indications == null) {
             this.indications = new LinkedList<Indication>();
+        }
+        this.modifications = modifications;
+        if (this.modifications == null) {
+            this.modifications = new LinkedList<FailureCauseModification>();
         }
     }
 
@@ -118,7 +144,18 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param description the description of this FailureCause.
      */
     public FailureCause(String name, String description) {
-        this(null, name, description, "", null);
+        this(null, name, description, "", null, "", null, null);
+    }
+
+    /**
+     * Standard constructor.
+     *
+     * @param name        the name of this FailureCause.
+     * @param description the description of this FailureCause.
+     * @param comment the comment for this FailureCause.
+     */
+    public FailureCause(String name, String description, String comment) {
+        this(null, name, description, comment, null, "", null, null);
     }
 
     /**
@@ -237,6 +274,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
         String newName = form.getString("name");
         String newDescription = form.getString("description");
+        String newComment = form.getString("comment");
         String jsonCategories = form.optString("categories");
         if (Util.fixEmpty(jsonCategories) != null) {
             this.categories = Arrays.asList(Util.tokenize(jsonCategories));
@@ -255,12 +293,25 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
         this.name = newName;
         this.description = newDescription;
+        this.comment = newComment;
         this.indications = newIndications;
+
+        String user = null;
+        try {
+            user = User.current().getId();
+        } catch (NullPointerException npe) {
+            logger.log(Level.INFO,
+                    "Failed to get user for Failure Cause modification");
+        }
+
+        this.modifications.add(0, new FailureCauseModification(user, new Date()));
+
         if (newId == null) {
             PluginImpl.getInstance().getKnowledgeBase().addCause(this);
         } else {
             PluginImpl.getInstance().getKnowledgeBase().saveCause(this);
         }
+
         response.sendRedirect2("../");
     }
 
@@ -317,17 +368,93 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     }
 
     /**
+     * Getter for the comment.
+     *
+     * @return the comment.
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Getter for the last occurrence.
+     *
+     * @return the last occurrence.
+     */
+    public Date getLastOccurred() {
+        if (lastOccurred != null) {
+            return (Date)lastOccurred.clone();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Initiates the last occurrence if it's not already initiated
+     * and then returns the date of last modification.
+     * @return the last occurrence.
+     */
+    @JsonIgnore
+    public Date getAndInitiateLastOccurred() {
+        if (lastOccurred == null && id != null) {
+            loadLastOccurred();
+        }
+
+        if (lastOccurred != null) {
+            return (Date)lastOccurred.clone();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Setter for the last occurrence.
+     *
+     * @param lastOccurred the occurrence to set.
+     */
+    public void setLastOccurred(Date lastOccurred) {
+        if (lastOccurred == null) {
+            this.lastOccurred = null;
+        } else {
+            this.lastOccurred = (Date)lastOccurred.clone();
+        }
+    }
+
+    /**
+     * Getter for the list of modifications.
+     *
+     * @return the modifications.
+     */
+    public List<FailureCauseModification> getModifications() {
+        return modifications;
+    }
+
+    /**
+     * Initiates the list of modifications if it's not already initiated
+     * and then returns the list.
+     * @return list of modifications
+     */
+    @JsonIgnore
+    public List<FailureCauseModification> getAndInitiateModifications() {
+        if ((modifications == null || modifications.isEmpty())
+                && id != null) {
+            initModifications();
+        }
+        return modifications;
+    }
+
+    /**
      * Getter for the categories.
      *
      * @return the categories.
      */
     public List<String> getCategories() {
         return categories;
-
     }
 
     /**
      * Returns the categories as a String, used for the view.
+     *
      * @return the categories as a String.
      */
     @JsonIgnore
@@ -343,6 +470,81 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
             builder.append(item);
         }
         return builder.toString();
+    }
+
+    /**
+     * Helper method for initializing the list of FailureCauseModifications done to this FailureCause.
+     */
+    private void initModifications() {
+        if (this.modifications == null) {
+            this.modifications = new LinkedList<FailureCauseModification>();
+        }
+
+        KnowledgeBase kb = PluginImpl.getInstance().getKnowledgeBase();
+
+        Date creationDate = kb.getCreationDateForCause(id);
+        FailureCauseModification creation = new FailureCauseModification(null, creationDate);
+        this.modifications.add(creation);
+
+        FailureCause originalCause = null;
+        try {
+            originalCause = kb.getCause(this.id);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Got exception when loading the original FailureCause");
+            // Handled in finally-clause
+        } finally {
+            if (originalCause == null) {
+                logger.warning("Original FailureCause was null");
+                return;
+            }
+        }
+
+        if (originalCause.modifications == null) {
+            originalCause.modifications = new LinkedList<FailureCauseModification>();
+        }
+        originalCause.modifications.add(creation);
+
+        try {
+            kb.saveCause(originalCause);
+        } catch (Exception e) {
+            logger.warning("Failed saving failure cause modification to knowledgeBase");
+        }
+    }
+
+    /**
+     * Gets the latest {@link FailureCauseModification} of this FailureCause.
+     *
+     * @return the latest modification
+     */
+    @JsonIgnore
+    public FailureCauseModification getLatestModification() {
+        List<FailureCauseModification> mods = getAndInitiateModifications();
+        if (mods != null && !mods.isEmpty()) {
+            FailureCauseModification latestMod = mods.get(0);
+            if (latestMod.getTime().getTime() > 0) {
+                return latestMod;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * If we're missing information about when this FailureCause last occurred,
+     * try to find an occurrence in the knowledgeBase.
+     * If none is found, set the lastOccurred-attribute to the unix epoch, which symbolizes 'Never'.
+     */
+    private void loadLastOccurred() {
+        this.lastOccurred = PluginImpl.getInstance().getKnowledgeBase().getLatestFailureForCause(this.id);
+        if (lastOccurred == null) {
+            lastOccurred = new Date(0);
+        }
+        try {
+            FailureCause originalCause = PluginImpl.getInstance().getKnowledgeBase().getCause(this.id);
+            originalCause.setLastOccurred(lastOccurred);
+            PluginImpl.getInstance().getKnowledgeBase().saveCause(originalCause);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed updating lastOccurred", e);
+        }
     }
 
     /**
@@ -372,7 +574,6 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * Finds the {@link CauseManagement} ancestor of the {@link Stapler#getCurrentRequest() current request}.
      *
      * @return the management action or a derivative of it, or null if no management action is found.
-     *
      * @throws IllegalStateException if no ancestor is found.
      */
     @JsonIgnore
@@ -432,8 +633,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         public String getLastFailedBuildUrl() {
             StaplerRequest staplerRequest = Stapler.getCurrentRequest();
             if (staplerRequest != null) {
-                String answer = (String)staplerRequest.getSession(true)
-                        .getAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME);
+                String answer = (String)staplerRequest.getSession(true).
+                        getAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME);
                 if (answer != null) {
                     return answer;
                 }
@@ -451,7 +652,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
                 AbstractProject project = staplerRequest.findAncestorObject(AbstractProject.class);
                 if (project != null && project.getLastFailedBuild() != null) {
                     staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME,
-                        Hudson.getInstance().getRootUrl() + project.getLastFailedBuild().getUrl());
+                            Hudson.getInstance().getRootUrl() + project.getLastFailedBuild().getUrl());
                 } else {
                     staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME, "");
                 }
@@ -465,6 +666,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
         /**
          * Does the auto completion for categories, matching with any category already present in the knowledge base.
+         *
          * @param value the input value.
          * @return the AutoCompletionCandidates.
          */

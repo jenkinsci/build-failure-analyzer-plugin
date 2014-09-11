@@ -32,12 +32,17 @@ import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.Item;
+import hudson.model.Project;
 import hudson.model.Result;
 import hudson.util.RunList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
+
+import jenkins.model.Jenkins;
+import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -85,19 +90,56 @@ public class ScanOnDemandBaseAction implements Action {
     public String getJsUrl(String jsName) {
         return PLUGIN_JS_URL + jsName;
     }
+
     @Override
     public String getIconFileName() {
-        return PluginImpl.getDefaultIcon();
+        if (hasPermission()) {
+            return PluginImpl.getDefaultIcon();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public String getDisplayName() {
-        return Messages.FailureScan_DisplayName();
+        if (hasPermission()) {
+            return Messages.FailureScan_DisplayName();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public String getUrlName() {
-        return "scan-on-demand";
+        if (hasPermission()) {
+            return "scan-on-demand";
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * Checks if the current user has {@link Item#CONFIGURE} or {@link Project#BUILD} permission.
+     *
+     * @return true if so.
+     */
+    public boolean hasPermission() {
+        return project.hasPermission(Item.CONFIGURE) || project.hasPermission(Project.BUILD);
+    }
+
+    /**
+     * Checks if the current user has {@link Item#CONFIGURE} or {@link Project#BUILD} permission.
+     *
+     * @see #hasPermission()
+     * @see hudson.security.ACL#checkPermission(hudson.security.Permission)
+     */
+    public void checkPermission() {
+        if (!hasPermission()) {
+            throw new AccessDeniedException(
+                    Messages.SodAccessDeniedException(Jenkins.getAuthentication().getName(),
+                            Item.CONFIGURE.name, Project.BUILD.name));
+        }
     }
 
     /**
@@ -215,6 +257,7 @@ public class ScanOnDemandBaseAction implements Action {
      */
     public void doPerformScan(StaplerRequest request, StaplerResponse response)
             throws ServletException, IOException, InterruptedException {
+        checkPermission();
         List<AbstractBuild> sodbuilds = getBuilds();
         if (sodbuilds.size() > 0) {
             for (AbstractBuild sodbuild : sodbuilds) {

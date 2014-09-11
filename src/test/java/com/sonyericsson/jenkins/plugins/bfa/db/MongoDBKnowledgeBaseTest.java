@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertSame;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.powermock.api.mockito.PowerMockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -56,6 +40,23 @@ import org.mockito.Matchers;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertSame;
+import static junit.framework.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 
 /**
@@ -89,12 +90,15 @@ public class MongoDBKnowledgeBaseTest {
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
-        mockedCause = new FailureCause("id", "myFailureCause", "description", "category", indications);
-        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result", null);
+        mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
+                "category", indications, null);
+        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result",
+                null, null);
     }
 
     /**
      * Tests finding one cause by its id.
+     *
      * @throws Exception if so.
      */
     @Test
@@ -107,6 +111,7 @@ public class MongoDBKnowledgeBaseTest {
 
     /**
      * Tests finding all causes.
+     *
      * @throws Exception if so.
      */
     @Test
@@ -126,6 +131,7 @@ public class MongoDBKnowledgeBaseTest {
 
     /**
      * Tests adding one cause.
+     *
      * @throws Exception if so.
      */
     @Test
@@ -142,6 +148,7 @@ public class MongoDBKnowledgeBaseTest {
 
     /**
      * Tests saving one cause.
+     *
      * @throws Exception if so.
      */
     @Test
@@ -158,6 +165,7 @@ public class MongoDBKnowledgeBaseTest {
 
     /**
      * Tests fetching statistics.
+     *
      * @throws Exception if unable to fetch statistics.
      */
     @Test
@@ -166,7 +174,7 @@ public class MongoDBKnowledgeBaseTest {
         List<Statistics> list = new LinkedList<Statistics>();
         list.add(mockedStatistics);
 
-        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject> any());
+        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject>any());
         when(cursor.limit(anyInt())).thenReturn(cursor);
         when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
         when(cursor.toArray()).thenReturn(list);
@@ -179,6 +187,7 @@ public class MongoDBKnowledgeBaseTest {
 
     /**
      * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
+     *
      * @throws Exception if so.
      */
     @Test(expected = MongoException.class)

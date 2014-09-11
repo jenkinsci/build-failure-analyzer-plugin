@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.statistics;
 import java.util.Date;
 import java.util.List;
 
+import hudson.model.Cause;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -47,6 +48,7 @@ public class Statistics {
     private String master;
     private int timeZoneOffset;
     private String result;
+    private UpstreamCause upstreamCause;
     private List<FailureCauseStatistics> failureCauseStatisticsList;
 
     /**
@@ -125,6 +127,14 @@ public class Statistics {
     }
 
     /**
+     * Getter for the upstream cause description.
+     * @return the upstream cause description.
+     */
+    public UpstreamCause getUpstreamCause() {
+        return upstreamCause;
+    }
+
+    /**
      * Getter for the List of statistics for FailureCauses.
      * @return the list.
      */
@@ -143,6 +153,7 @@ public class Statistics {
      * @param master the master this build ran on.
      * @param timeZoneOffset the time zone offset.
      * @param result the result of the build.
+     * @param upstreamCause the upstream cause of the current build, if any.
      * @param failureCauseStatistics the statistics for the FailureCauses.
      */
     @JsonCreator
@@ -155,6 +166,7 @@ public class Statistics {
                       @JsonProperty("master")         String master,
                       @JsonProperty("timeZoneOffset") int timeZoneOffset,
                       @JsonProperty("result")         String result,
+                      @JsonProperty("upstreamCause")  UpstreamCause upstreamCause,
                       @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics) {
         this.projectName = projectName;
         this.buildNumber = buildNumber;
@@ -169,7 +181,102 @@ public class Statistics {
         this.master = master;
         this.timeZoneOffset = timeZoneOffset;
         this.result = result;
+        this.upstreamCause = upstreamCause;
         this.failureCauseStatisticsList = failureCauseStatistics;
     }
 
+        /**
+         * Deprecated, kept for backwards compatibility.
+         * @param projectName the project name.
+         * @param buildNumber the build number.
+         * @param startingTime the starting time.
+         * @param duration the duration.
+         * @param triggerCauses the causes that triggered this build.
+         * @param nodeName the name of the node this build ran on.
+         * @param master the master this build ran on.
+         * @param timeZoneOffset the time zone offset.
+         * @param result the result of the build.
+         * @param failureCauseStatistics the statistics for the FailureCauses.
+         */
+    @Deprecated
+    public Statistics(String projectName,
+                      int buildNumber,
+                      Date startingTime,
+                      long duration,
+                      List<String> triggerCauses,
+                      String nodeName,
+                      String master,
+                      int timeZoneOffset,
+                      String result,
+                      List<FailureCauseStatistics> failureCauseStatistics) {
+        this(projectName, buildNumber, startingTime, duration, triggerCauses, nodeName, master, timeZoneOffset,
+             result, null, failureCauseStatistics);
+    }
+
+    /**
+     * Upstream cause.
+     */
+    public static class UpstreamCause {
+
+        private String project;
+        private int build;
+
+        /**
+         * JSON constructor.
+         *
+         * @param project Upstream build project.
+         * @param build Upstream build number.
+         */
+        @JsonCreator
+        public UpstreamCause(@JsonProperty("project") String project, @JsonProperty("build") int build) {
+            this.project = project;
+            this.build = build;
+        }
+
+        /**
+         * Constructor for Cause.UpstreamCause.
+         * @param upstreamCause The Cause to copy.
+         */
+        public UpstreamCause(Cause.UpstreamCause upstreamCause) {
+            if (upstreamCause == null) {
+                this.project = "";
+                this.build = 0;
+            } else {
+                this.project = upstreamCause.getUpstreamProject();
+                this.build = upstreamCause.getUpstreamBuild();
+            }
+        }
+
+        /**
+         * Getter for the upstream build project.
+         * @return the upstream build project.
+         */
+        public String getUpstreamProject() {
+            return project;
+        }
+
+        /**
+         * Setter for the upstream build project.
+         * @param p The project to set.
+         */
+        public void setUpstreamProject(String p) {
+            this.project = p;
+        }
+
+        /**
+         * Getter for the upstream build number.
+         * @return the upstream build number.
+         */
+        public int getUpstreamBuild() {
+            return build;
+        }
+
+        /**
+         * Setter for the upstream build number.
+         * @param buildNr The project build to set.
+         */
+        public void setUpstreamBuild(int buildNr) {
+            this.build = buildNr;
+        }
+    }
 }
