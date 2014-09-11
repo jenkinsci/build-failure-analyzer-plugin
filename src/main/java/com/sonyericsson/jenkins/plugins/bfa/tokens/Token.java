@@ -380,27 +380,6 @@ public class Token extends DataBoundTokenMacro {
     }
 
     /**
-     * Returns a URL linking into the consoleFull build log.
-     *
-     * @param build the build
-     * @param cause the found failure cause
-     * @param indication the found indication
-     * @return the URL
-     */
-    private static String getFoundIndicationURL(final AbstractBuild<?, ?> build, final FoundFailureCause cause,
-        final FoundIndication indication) {
-
-        final StringBuilder builder = new StringBuilder();
-        builder.append(Jenkins.getInstance().getRootUrl());
-        builder.append("/");
-        builder.append(build.getUrl());
-        builder.append("consoleFull#");
-        builder.append(indication.getMatchingHash());
-        builder.append(cause.getId());
-        return builder.toString();
-    }
-
-    /**
      * @param indentLevel the indent level
      * @return a whitespace string with an appropriate with for the specified indent level
      */
