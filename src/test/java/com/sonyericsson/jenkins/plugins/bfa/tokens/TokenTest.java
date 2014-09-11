@@ -70,7 +70,7 @@ public class TokenTest extends HudsonTestCase {
         final FreeStyleBuild noCauseBuild = noCauseBuildFuture.get(10, TimeUnit.SECONDS);
         final String defaultNoResult = TokenMacro.expandAll(noCauseBuild, listener, "${BUILD_FAILURE_ANALYZER}");
         assertEquals("", defaultNoResult);
-        BuildFailureScannerHudsonTest.configureCauseAndIndication("error", "There was an error.", "category",
+        BuildFailureScannerHudsonTest.configureCauseAndIndication("error", "There was an error.", "comment", "category",
             new BuildLogIndication(".*ERROR.*"));
         final Future<FreeStyleBuild> buildFuture = project.scheduleBuild2(0);
         final FreeStyleBuild build = buildFuture.get(10, TimeUnit.SECONDS);
