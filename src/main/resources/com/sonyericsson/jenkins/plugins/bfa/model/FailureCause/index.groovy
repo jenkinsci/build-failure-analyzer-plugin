@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,10 @@
  * THE SOFTWARE.
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.FailureCause
-
-import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
 import hudson.Util
+
+import java.text.DateFormat
 
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
@@ -68,6 +69,9 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
             f.entry(title: _("Description"), field: "description") {
               f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
             }
+            f.entry(title: _("Comment"), field: "comment") {
+              f.textarea(value: my.getComment())
+            }
             f.entry(title: _("Categories"), field: "categories") {
               f.textbox(value: my.getCategoriesAsString(), autoCompleteDelimChar: " ")
             }
@@ -80,6 +84,21 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
                         items: my.getIndications(),
                         addCaption: _("Add Indication"),
                         deleteCaption: _("Delete Indication"))
+              }
+            }
+            f.section(title: _("Modification history")) {
+              def history = my.getAndInitiateModifications();
+              f.block {
+                if (history != null) {
+                  ul(id: "modifications") {
+                    history.each{ entry ->
+                      def dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,
+                              DateFormat.SHORT).format(entry.getTime());
+                      li {text(_("ModifiedBy", dateFormat,
+                              entry.getUser() == null ? "unknown": entry.getUser()))}
+                    }
+                  }
+                }
               }
             }
             f.block {

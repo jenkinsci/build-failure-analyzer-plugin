@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,8 @@ public class MongoDBKnowledgeBaseCacheTest {
      */
     @Test(timeout = 5000)
     public void testStartStop() throws Exception {
-        FailureCause mockedCause = new FailureCause("id", "myFailureCause", "description", "category", null);
+        FailureCause mockedCause =
+                new FailureCause("id", "myFailureCause", "description", "comment", null, "category", null, null);
         DBCursor<FailureCause> cursor = mock(DBCursor.class);
         JacksonDBCollection<FailureCause, String> collection = mock(JacksonDBCollection.class);
         when(cursor.next()).thenReturn(mockedCause);

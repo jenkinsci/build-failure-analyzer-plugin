@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2012 Sony Mobile Communications Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
+package com.sonyericsson.jenkins.plugins.bfa.CauseManagement
+import com.sonyericsson.jenkins.plugins.bfa.CauseManagement
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
+import jenkins.model.Jenkins
 
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
-import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
-import jenkins.model.Jenkins;
-import hudson.Functions
+import java.text.DateFormat
 
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
@@ -108,6 +107,11 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
         th{text(_("Name"))}
         th{text(_("Categories"))}
         th{text(_("Description"))}
+        th{text(_("Comment"))}
+        th{text(_("Modified"))}
+        if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+            th{text(_("Last seen"))}
+        }
         th{text(" ")}
       }
 
@@ -121,6 +125,32 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
           }
           td{
             raw(app.markupFormatter.translate(cause.getDescription()))
+          }
+          td{
+            text(cause.getComment())
+          }
+          td{
+            def lastModified = cause.getLatestModification();
+            if (lastModified != null) {
+              def lastModifiedString = DateFormat.getDateTimeInstance(
+                    DateFormat.SHORT, DateFormat.SHORT).format(lastModified.getTime());
+              def user = lastModified.getUser();
+              if (user == null) {
+                user = "unknown";
+              }
+              text(_("ModifiedBy", lastModifiedString, user))
+            }
+          }
+          if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+            def lastOccurred = cause.getAndInitiateLastOccurred();
+            def lastOccurredString = DateFormat.getDateTimeInstance(
+                  DateFormat.SHORT, DateFormat.SHORT).format(lastOccurred)
+            if (lastOccurred == new Date(0)) {
+                lastOccurredString = "Never";
+            }
+            td{
+                text(lastOccurredString)
+            }
           }
           td {
             if (canRemove) {
