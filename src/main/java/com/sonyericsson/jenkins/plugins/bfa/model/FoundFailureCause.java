@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
@@ -47,9 +46,13 @@ public class FoundFailureCause {
     private static final Logger logger = Logger.getLogger(FoundFailureCause.class.getName());
 
     private final String id;
+
     private final String name;
+
     private final String description;
+
     private final List<String> categories;
+
     private List<FoundIndication> indications;
 
     /**
@@ -128,6 +131,32 @@ public class FoundFailureCause {
     }
 
     /**
+     * Adds a found indication to the list.
+     *
+     * @param indication the indication to add.
+     *
+     * @deprecated Prefer adding indications via the constructor. Indication added with this method do not participate
+     * in the building of the formatted description.
+     */
+    @Deprecated
+    public void addIndication(FoundIndication indication) {
+        indications.add(indication);
+    }
+
+    /**
+     * Adds a list of FoundIndications to this cause.
+     *
+     * @param foundIndications the list of FoundIndications to add.
+     *
+     * @deprecated Prefer adding indications via the constructor. Indication added with this method do not participate
+     * in the building of the formatted description.
+     */
+    @Deprecated
+    public void addIndications(List<FoundIndication> foundIndications) {
+        indications.addAll(foundIndications);
+    }
+
+    /**
      * Builds the formatted description from build log indication regular expressions.
      * @param originalCause the original cause of the FoundFailureCause
      * @param foundIndications the indications found that the FoundFailureCause
@@ -135,7 +164,8 @@ public class FoundFailureCause {
      * @return the formatted description
      */
     private static String buildFormattedDescription(final FailureCause originalCause,
-            final List<FoundIndication> foundIndications, final String description) {
+        final List<FoundIndication> foundIndications, final String description) {
+
         String formattedCandidate = description;
         if (!foundIndications.isEmpty()) {
             final FoundIndication firstFoundIndication = foundIndications.get(0);
@@ -147,7 +177,8 @@ public class FoundFailureCause {
                     boolean found = false;
                     for (final int size = originalCauseIndications.size(); expressionIndex < size; ++expressionIndex) {
                         if (originalCauseIndications.get(expressionIndex).getPattern().pattern().equals(
-                                firstFoundIndication.getPattern())) {
+                            firstFoundIndication.getPattern())) {
+
                             found = true;
                             break;
                         }
