@@ -166,43 +166,44 @@ public class FoundFailureCause {
     private static String buildFormattedDescription(final FailureCause originalCause,
         final List<FoundIndication> foundIndications, final String description) {
 
-        String formattedCandidate = description;
+        String formattedDescription = description;
         if (!foundIndications.isEmpty()) {
             final FoundIndication firstFoundIndication = foundIndications.get(0);
             try {
-                // Find the found indication in the list of indications.
+                // Find the first found indication in the list of original potential cause indications.
+                // The expression index of the first found indication will be used later to determine which
+                // placholders will be used and which placeholders will be removed.
                 if (originalCause != null) {
                     final List<Indication> originalCauseIndications = originalCause.getIndications();
                     int expressionIndex = 0;
-                    boolean found = false;
+                    boolean foundExpressionIndex = false;
                     for (final int size = originalCauseIndications.size(); expressionIndex < size; ++expressionIndex) {
                         if (originalCauseIndications.get(expressionIndex).getPattern().pattern().equals(
                             firstFoundIndication.getPattern())) {
 
-                            found = true;
+                            foundExpressionIndex = true;
                             break;
                         }
                     }
-                    if (found) {
+                    if (foundExpressionIndex) {
                         final int expressionNumber = expressionIndex + 1;
-                        formattedCandidate = convertFormat(formattedCandidate, expressionNumber);
-                        // Replace the description with the values from the matched indication. e.g.,
-                        // "Foo $1" becomes
-                        // "Foo value captured from indication match"
+                        // Convert the "${1,2}" tokens in the description to "$2"
+                        formattedDescription = convertFormat(formattedDescription, expressionNumber);
+                        // Replace the "$2" tokens with the values from the matched indication.
                         final Pattern contentPattern = Pattern.compile(firstFoundIndication.getPattern());
                         final Matcher contentMatcher = contentPattern.matcher(firstFoundIndication.getMatchingString());
-                        formattedCandidate = contentMatcher.replaceAll(formattedCandidate);
+                        formattedDescription = contentMatcher.replaceAll(formattedDescription);
                     }
                 }
             } catch (final Exception exception) {
                 logger.log(Level.SEVERE, null, exception);
             }
         }
-        return formattedCandidate;
+        return formattedDescription;
     }
 
     /**
-     * Convert "${i,G}" to "$G" and "${E,G}" to "" while ignoring "\${E,G}".
+     * Convert "${i,G}" to "$G" and "${E,G}" to "" while ignoring the escaped form "\${E,G}".
      * @param input the input string that may contain replacement tokens of the form ${E,G}, where E is the
      * expression number and G is the captured group within the expression numbered E.
      * @param expressionNumber the 1-based expression number in a list of expressions that may contain captured groups
