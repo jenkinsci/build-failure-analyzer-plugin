@@ -56,8 +56,10 @@ import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -78,7 +80,12 @@ import static org.mockito.Mockito.when;
 
 public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
-    private static final String TO_PRINT = "ERROR";
+    private static final String BUILD_LOG = "ERROR: brief\n  detail\n";
+    private static final String BUILD_LOG_FIRST_LINE = "ERROR: brief";
+    private static final String DESCRIPTION = "The error was: ${1,1}${2,1}";
+    private static final String REGEX = "ERROR: (.*?)$";
+    private static final String MULTILINE_REGEX = "ERROR: (.*?)$.*?  detail";
+    private static final String FORMATTED_DESCRIPTION = "The error was: brief";
 
     private boolean hasCalledStatistics = false;
 
@@ -107,6 +114,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         HtmlElement document = page.getDocumentElement();
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         HtmlElement focus = document.getElementById(id);
@@ -117,7 +125,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         HtmlElement error = errorElements.get(0);
 
         assertNotNull(error);
-        assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
+        assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
     }
 
     /**
@@ -126,10 +134,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testOneMultilineIndicationFound() throws Exception {
-        String buildLog = "ERROR\nIS FOUND";
-        FreeStyleProject project = createProject(buildLog);
+        FreeStyleProject project = createProject();
 
-        FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication("ERROR.*IS"));
+        FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication(MULTILINE_REGEX));
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
 
@@ -146,6 +153,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         HtmlElement document = page.getDocumentElement();
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         HtmlElement focus = document.getElementById(id);
@@ -157,12 +165,12 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         assertNotNull(error);
         assertEquals("Error message not found: ",
-                new StringTokenizer(buildLog).nextToken("\n"),
+                new StringTokenizer(BUILD_LOG).nextToken("\n"),
                 error.getTextContent().trim());
     }
 
     /**
-     * Happy test that should find one failure indication in the build.
+     * Happy test that should find two failure causes in the build.
      *
      * @throws Exception if so.
      */
@@ -171,8 +179,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         FailureCause failureCause = configureCauseAndIndication();
 
-        Indication indication = new BuildLogIndication(".*ERROR.*");
-        FailureCause failureCause2 = configureCauseAndIndication("Other cause", "Other description", indication);
+        Indication indication = new BuildLogIndication(REGEX);
+        final String otherDescription = "Other description";
+        FailureCause failureCause2 = configureCauseAndIndication("Other cause", otherDescription, indication);
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
 
@@ -190,17 +199,26 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         HtmlElement document = page.getDocumentElement();
 
+        final Set<String> causeDescriptions = new HashSet<String>();
+        causeDescriptions.add(FORMATTED_DESCRIPTION);
+        causeDescriptions.add(otherDescription);
+
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        String description = foundFailureCause.getDescription();
+        assertTrue(causeDescriptions.remove(description));
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         HtmlElement focus = document.getElementById(id);
         assertNotNull(focus);
 
-        foundFailureCause = causeListFromAction.get(0);
+        foundFailureCause = causeListFromAction.get(1);
+        description = foundFailureCause.getDescription();
+        assertTrue(causeDescriptions.remove(description));
         foundIndication = foundFailureCause.getIndications().get(0);
         id = foundIndication.getMatchingHash() + foundFailureCause.getId();
         focus = document.getElementById(id);
         assertNotNull(focus);
+        assertTrue(causeDescriptions.isEmpty());
 
         String title = failureCause.getName() + "\n" + failureCause2.getName();
 
@@ -213,7 +231,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         assertTrue("Title not found in annotated text", errorElements.size() > 0);
         HtmlElement error = errorElements.get(0);
         assertNotNull(error);
-        assertEquals("Error message not found: ", TO_PRINT, error.getTextContent().trim());
+        assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
     }
 
     /**
@@ -226,7 +244,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         FreeStyleProject project = createProject();
 
-        FailureCause failureCause = configureCauseAndIndication();
+        configureCauseAndIndication();
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
 
@@ -237,7 +255,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
                 + " extension would not return the expected message.",
-                "This is an error ( " + Hudson.getInstance().getRootUrl() + "/job/test0/1/ )",
+                FORMATTED_DESCRIPTION + " ( " + Hudson.getInstance().getRootUrl() + "/job/test0/1/ )",
                 messageProvider.getBuildCompletedMessage(build));
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);
@@ -274,7 +292,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      */
     public void testSuccessfulBuild() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
+        project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         configureCauseAndIndication();
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
@@ -327,7 +345,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      */
     public void testStatisticsLogging() throws Exception {
 
-        Indication indication = new BuildLogIndication(".*ERROR.*");
+        Indication indication = new BuildLogIndication(REGEX);
         List<Indication> indicationList = new LinkedList<Indication>();
         indicationList.add(indication);
         FailureCause cause = new FailureCause("myId", "testcause", "testdescription", "testcomment",
@@ -355,7 +373,8 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
             if (hasCalledStatistics) {
                 break;
             }
-            Thread.sleep(2000);
+            final int twoSeconds = 2000;
+            Thread.sleep(twoSeconds);
         }
         verify(base).saveStatistics(argThat(new IsValidStatisticsObject()));
     }
@@ -412,7 +431,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
     //CS IGNORE LineLength FOR NEXT 11 LINES. REASON: JavaDoc.
 
     /**
-     * Convenience method for a standard cause that finds {@link #TO_PRINT} in the build log.
+     * Convenience method for a standard cause that finds {@link #BUILD_LOG} in the build log.
      *
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
@@ -421,7 +440,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
     private FailureCause configureCauseAndIndication() throws Exception {
-        return configureCauseAndIndication(new BuildLogIndication(".*ERROR.*"));
+        return configureCauseAndIndication(new BuildLogIndication(REGEX));
     }
 
     //CS IGNORE LineLength FOR NEXT 10 LINES. REASON: JavaDoc.
@@ -436,7 +455,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
     private FailureCause configureCauseAndIndication(Indication indication) throws Exception {
-        return configureCauseAndIndication("Error", "This is an error", indication);
+        return configureCauseAndIndication("Error", DESCRIPTION, indication);
     }
 
     /**
@@ -473,7 +492,6 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
-
         List<FailureCause> causeList = new LinkedList<FailureCause>();
         causeList.addAll(causes);
         causeList.add(failureCause);
@@ -482,14 +500,14 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Creates a project that prints {@link #TO_PRINT} to the console and fails the build.
+     * Creates a project that prints {@link #BUILD_LOG} to the console and fails the build.
      *
      * @return the project
      *
      * @throws IOException if so.
      */
     private FreeStyleProject createProject() throws IOException {
-        return createProject(TO_PRINT);
+        return createProject(BUILD_LOG);
     }
 
     /**
@@ -516,7 +534,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
     public static boolean findCauseInList(List<FoundFailureCause> causeListFromAction, FailureCause failureCause) {
         for (FoundFailureCause cause : causeListFromAction) {
             if (failureCause.getName().equals(cause.getName())
-                    && failureCause.getDescription().equals(cause.getDescription())
+                    && failureCause.getId().equals(cause.getId())
                     && failureCause.getCategories().equals(cause.getCategories())) {
                 return true;
             }

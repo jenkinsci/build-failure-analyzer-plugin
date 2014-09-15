@@ -48,8 +48,10 @@ import java.util.regex.PatternSyntaxException;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class Indication implements Describable<Indication>, Serializable {
 
+    /**
+     * The user-provided regular expression.
+     */
     private String pattern;
-    private transient Pattern compiled = null;
 
     /**
      * @param pattern the String value.
@@ -67,6 +69,13 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     }
 
     /**
+     * @return The user-provided regular expression.
+     */
+    public String getUserProvidedExpression() {
+        return pattern;
+    }
+
+    /**
      * Gets a FailureReader used for finding this indication.
      * @return a FailureReader.
      */
@@ -81,24 +90,19 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      * @see IndicationDescriptor#doHelp(org.kohsuke.stapler.StaplerRequest, org.kohsuke.stapler.StaplerResponse)
      */
     public FormValidation validate() {
-        return IndicationDescriptor.checkPattern(pattern);
+        return IndicationDescriptor.checkPattern(getUserProvidedExpression());
     }
 
     /**
-     * Getter for the pattern to match.
+     * Getter for the pattern to match. The compiled pattern may not be identical to the pattern provided by the user.
      *
      * @return the pattern to match.
      */
-    public Pattern getPattern() {
-        if (compiled == null) {
-            compiled = Pattern.compile(pattern);
-        }
-        return compiled;
-    }
+    public abstract Pattern getPattern();
 
     @Override
     public String toString() {
-        return pattern.toString();
+        return getUserProvidedExpression();
     }
 
     /**

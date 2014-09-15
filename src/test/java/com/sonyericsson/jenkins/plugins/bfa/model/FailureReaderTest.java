@@ -40,6 +40,8 @@ import java.util.zip.ZipInputStream;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import hudson.model.AbstractBuild;
 import org.junit.Test;
 
@@ -60,10 +62,10 @@ public class FailureReaderTest {
 
         /**
          * Standard constructor.
-         * @param indicationString the indication string
+         * @param indication the indication for the reader
          */
-        public TestReader(String indicationString) {
-            super(new BuildLogIndication(indicationString));
+        public TestReader(final Indication indication) {
+            super(indication);
         }
 
         @Override
@@ -83,7 +85,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFile() throws Exception {
-        FailureReader reader = new TestReader(".*scan for me please.*");
+        FailureReader reader = new TestReader(new BuildLogIndication(".*scan for me please.*"));
         BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanOneFile(null, br, "test");
@@ -100,7 +102,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFileWithLineTimeout() throws Exception {
-        FailureReader reader = new TestReader(".*scan for me please.*");
+        FailureReader reader = new TestReader(new BuildLogIndication(".*scan for me please.*"));
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
@@ -119,7 +121,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFileWithFileTimeout() throws Exception {
-        FailureReader reader = new TestReader(".*non existing string");
+        FailureReader reader = new TestReader(new BuildLogIndication(".*non existing string"));
         InputStream inStream = new ByteArrayInputStream(new byte[0]);
         for (int i = 0; i < 10; i++) {
             InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
@@ -142,7 +144,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanMultiLineOneFile() throws Exception {
-        FailureReader reader = new TestReader(".*scan for me please.*");
+        FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*scan for me please.*"));
         BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
@@ -159,7 +161,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanMultiLineOneFileWithLineTimeout() throws Exception {
-        FailureReader reader = new TestReader(".*scan for me please.*");
+        FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*scan for me please.*"));
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
@@ -178,7 +180,7 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanMultilineOneFileWithFileTimeout() throws Exception {
-        FailureReader reader = new TestReader(".*non existing string");
+        FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*non existing string"));
         InputStream inStream = new ByteArrayInputStream(new byte[0]);
         for (int i = 0; i < 10; i++) {
             InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");

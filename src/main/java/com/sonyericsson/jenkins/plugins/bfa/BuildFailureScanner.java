@@ -141,8 +141,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
                 public void run() {
                     List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
                     if (!foundIndications.isEmpty()) {
-                        FoundFailureCause foundFailureCause = new FoundFailureCause(cause);
-                        foundFailureCause.addIndications(foundIndications);
+                        FoundFailureCause foundFailureCause = new FoundFailureCause(cause, foundIndications);
                         foundFailureCauseList.add(foundFailureCause);
                     }
                 }

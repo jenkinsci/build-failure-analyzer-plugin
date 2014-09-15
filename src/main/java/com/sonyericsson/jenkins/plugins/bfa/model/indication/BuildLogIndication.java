@@ -51,6 +51,8 @@ import org.kohsuke.stapler.QueryParameter;
  */
 public class BuildLogIndication extends Indication {
 
+    private transient Pattern compiled = null;
+
     /**
      * Standard constructor.
      *
@@ -71,6 +73,14 @@ public class BuildLogIndication extends Indication {
     @Override
     public FailureReader getReader() {
         return new BuildLogFailureReader(this);
+    }
+
+    @Override
+    public Pattern getPattern() {
+        if (compiled == null) {
+            compiled = Pattern.compile(getUserProvidedExpression());
+        }
+        return compiled;
     }
 
     @Override
@@ -275,7 +285,7 @@ public class BuildLogIndication extends Indication {
                             if (foundIndication == null) {
                                 return FormValidation.warning(Messages.StringDoesNotMatchPattern());
                             }
-                            return FormValidation.okWithMarkup(foundIndication.getMatchingString());
+                            return FormValidation.okWithMarkup(foundIndication.getFirstMatchingLine());
                         } catch (IOException e) {
                             return FormValidation.error(Messages.FailedToScanFile_Error());
                         }
