@@ -111,7 +111,7 @@ public class ScanOnDemandTask implements Runnable {
             fos = new FileOutputStream(abstractBuild.getLogFile(), true);
             PrintStream buildLog = new PrintStream(fos, true, "UTF8");
             PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(abstractBuild);
-            BuildFailureScanner.scan(abstractBuild, buildLog);
+            BuildFailureScanner.scanIfNotScanned(abstractBuild, buildLog);
             abstractBuild.save();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);

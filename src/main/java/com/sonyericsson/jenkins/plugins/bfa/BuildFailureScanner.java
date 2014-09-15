@@ -41,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
@@ -85,16 +86,32 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     @Override
     public void onCompleted(AbstractBuild build, TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
+        scanIfNotScanned(build, listener.getLogger());
+    }
+
+    /**
+     * Scans the build if it should be scanned and it has not already been scanned. If configured, also reports
+     * successful builds to the {@link StatisticsLogger}.
+     *
+     * @param build the build to scan
+     * @param buildLog log to write information to
+     */
+    public static void scanIfNotScanned(final AbstractBuild build, final PrintStream buildLog) {
         if (PluginImpl.shouldScan(build)
-                && !(build.getProject() instanceof MatrixProject)) {
-            if (build.getResult().isWorseThan(Result.SUCCESS)) {
-                scan(build, listener.getLogger());
-                ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
-                ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
-            } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
-                final List<FoundFailureCause> emptyCauseList =
-                        Collections.synchronizedList(new LinkedList<FoundFailureCause>());
-                StatisticsLogger.getInstance().log(build, emptyCauseList);
+            && !(build.getProject() instanceof MatrixProject)) {
+
+            if (build.getActions(FailureCauseBuildAction.class).isEmpty()
+                && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
+
+                if (build.getResult().isWorseThan(Result.SUCCESS)) {
+                    scan(build, buildLog);
+                    ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
+                    ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());
+                } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
+                    final List<FoundFailureCause> emptyCauseList
+                        = Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+                    StatisticsLogger.getInstance().log(build, emptyCauseList);
+                }
             }
         }
     }
