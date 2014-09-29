@@ -31,6 +31,7 @@ import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
@@ -71,6 +72,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     /**
      * @return The user-provided regular expression.
      */
+    @JsonIgnore
     public String getUserProvidedExpression() {
         return pattern;
     }
