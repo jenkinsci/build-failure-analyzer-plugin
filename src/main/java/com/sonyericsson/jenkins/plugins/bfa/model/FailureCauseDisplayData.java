@@ -24,6 +24,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
  */
 
 import hudson.model.AbstractBuild;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.List;
  *
  * @author Jan-Olof Sivtoft
  */
+@ExportedBean
 public class FailureCauseDisplayData {
 
     private List<FoundFailureCause> foundFailureCauses;
