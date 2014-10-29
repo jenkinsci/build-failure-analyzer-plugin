@@ -54,6 +54,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
+import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.TestResult;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -127,6 +129,8 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
+            foundCauseList.addAll(findFailedTests(build, buildLog));
+
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);
             build.addAction(buildAction);
@@ -224,5 +228,31 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     private static FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
         FailureReader failureReader = indication.getReader();
         return failureReader.scan(build, buildLog);
+    }
+
+    /**
+     * Finds the failed tests reported by this build
+     *
+     * @param build    the build to analyze.
+     * @param buildLog the build log.
+     * @return a list of found failure causes based on the test results
+     */
+    private static List<FoundFailureCause> findFailedTests(final AbstractBuild build, final PrintStream buildLog) {
+        final List<FoundFailureCause> failedTestList =
+            Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+        final List<AbstractTestResultAction> testActions =
+            build.getActions(AbstractTestResultAction.class);
+
+        for (AbstractTestResultAction testAction : testActions) {
+            List<? extends TestResult> failedTests = testAction.getFailedTests();
+            for (TestResult test : failedTests) {
+                buildLog.println("[BFA] Found failed test case: " + test.getName());
+                FailureCause failureCause = new FailureCause(test.getName(), test.getErrorStackTrace());
+                FoundFailureCause foundFailureCause = new FoundFailureCause(failureCause);
+                failedTestList.add(foundFailureCause);
+            }
+        }
+
+        return failedTestList;
     }
 }
