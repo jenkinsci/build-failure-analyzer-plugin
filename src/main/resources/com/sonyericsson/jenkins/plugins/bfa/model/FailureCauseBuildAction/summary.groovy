@@ -123,6 +123,7 @@ def displayCauses(cause, indent, links) {
                                 , class: "model-link") {
                             text(_("Indication") + " " + (index++))
                         }
+                        text(" ")
                     }
                 }
                 br {}
