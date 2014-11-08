@@ -130,7 +130,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
 
-            if (PluginImpl.isTestResultParsingEnabled()) {
+            if (PluginImpl.getInstance().isTestResultParsingEnabled()) {
                 foundCauseList.addAll(findFailedTests(build, buildLog));
             }
 
@@ -252,7 +252,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
                 buildLog.println("[BFA] Found failed test case: " + test.getName());
                 FailureCause failureCause = new FailureCause(null,
                         test.getName(), test.getErrorStackTrace(), "", null,
-                        PluginImpl.getTestResultCategories(), null, null);
+                        PluginImpl.getInstance().getTestResultCategories(), null, null);
                 FoundFailureCause foundFailureCause = new FoundFailureCause(failureCause);
                 failedTestList.add(foundFailureCause);
             }

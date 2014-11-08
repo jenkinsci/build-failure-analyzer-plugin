@@ -117,8 +117,8 @@ public class PluginImpl extends Plugin {
 
     private Boolean graphsEnabled;
 
-    private static Boolean testResultParsingEnabled;
-    private static String testResultCategories;
+    private Boolean testResultParsingEnabled;
+    private String testResultCategories;
 
     /**
      * ScanOnDemandVariable instance.
@@ -322,7 +322,7 @@ public class PluginImpl extends Plugin {
      *
      * @return True if enabled.
      */
-    public static boolean isTestResultParsingEnabled() {
+    public boolean isTestResultParsingEnabled() {
         if (testResultParsingEnabled == null) {
             return false;
         } else {
@@ -335,7 +335,7 @@ public class PluginImpl extends Plugin {
      *
      * @return the categories.
      */
-    public static String getTestResultCategories() {
+    public String getTestResultCategories() {
         return testResultCategories;
     }
 
