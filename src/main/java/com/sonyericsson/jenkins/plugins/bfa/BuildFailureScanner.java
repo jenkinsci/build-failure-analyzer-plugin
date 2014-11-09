@@ -128,16 +128,27 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     public static void scan(AbstractBuild build, PrintStream buildLog) {
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-            List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
+            List<FoundFailureCause> foundCauseListToLog = findCauses(causes, build, buildLog);
+            List<FoundFailureCause> foundCauseList;
 
+            /* Register failed test cases as foundCauses.
+             * We do not want these to be sent to the StatisticsLogger, to avoid
+             * problems due to these causes not being present in the database.
+             * Since StatisticsLogger spawns a background thread, we create a
+             * copy of the list.
+             */
             if (PluginImpl.getInstance().isTestResultParsingEnabled()) {
+                foundCauseList = Collections.synchronizedList(
+                        new LinkedList<FoundFailureCause>(foundCauseListToLog));
                 foundCauseList.addAll(findFailedTests(build, buildLog));
+            } else {
+                foundCauseList = foundCauseListToLog;
             }
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);
             build.addAction(buildAction);
-            StatisticsLogger.getInstance().log(build, foundCauseList);
+            StatisticsLogger.getInstance().log(build, foundCauseListToLog);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
         }
