@@ -67,11 +67,11 @@
         <f:block>
             <table>
                 <f:optionalBlock name="testResultParsingEnabled"
-                                 title="${%Treat failed test cases } (${%as indicated by JUnit/xUnit/... publishers}) ${%as failure causes}"
+                                 title="${%testResultParsingEnabledDescription}"
                                  checked="${it.testResultParsingEnabled}"
                                  inline="true">
                     <f:entry title="Categories"
-                             description="${%A space-separated list of categories to use for failure causes representing failed test cases.}">
+                             description="${%testResultCategoriesDescription}">
                         <f:textbox name="testResultCategories" value="${it.testResultCategories}"/>
                     </f:entry>
                 </f:optionalBlock>
