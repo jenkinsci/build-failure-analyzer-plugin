@@ -133,6 +133,9 @@ public class PluginImpl extends Plugin {
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
         }
+        if (testResultCategories == null) {
+            testResultCategories = "";
+        }
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         }
