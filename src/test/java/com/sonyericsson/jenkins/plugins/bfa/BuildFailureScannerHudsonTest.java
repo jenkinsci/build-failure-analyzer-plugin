@@ -40,14 +40,19 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIn
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.listeners.RunListener;
+import hudson.tasks.junit.JUnitResultArchiver;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.invocation.InvocationOnMock;
@@ -55,6 +60,8 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -70,7 +77,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-//CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
+//CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: TestData.
 
 /**
  * Tests for the FailureScanner.
@@ -402,6 +409,114 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         assertTrue(gtFound);
         assertTrue(bfaFound);
         assertTrue("BFA (" + bfaPlacement + ") should list before GT (" + gtPlacement + ")", bfaPlacement < gtPlacement);
+    }
+
+    /**
+     * Test whether failed test cases are successfully matched as failure causes.
+     *
+     * @throws Exception if not so.
+     */
+    public void testTestResultInterpretation() throws Exception {
+        PluginImpl.getInstance().setTestResultParsingEnabled(true);
+        FreeStyleProject project = createFreeStyleProject();
+
+        project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
+        project.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+                    BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").copyFrom(
+                    this.getClass().getResource("junit.xml"));
+                return true;
+            }
+        });
+
+        project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.UNSTABLE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
+
+        assertEquals(causeListFromAction.get(0).getName(), "AFailingTest");
+        assertEquals(causeListFromAction.get(0).getDescription(), "Here are details of the failure...");
+        assertEquals(new ArrayList<String>(), causeListFromAction.get(0).getCategories());
+        assertEquals(causeListFromAction.get(1).getName(), "AnotherFailingTest");
+        assertEquals(causeListFromAction.get(1).getDescription(), "More details");
+        assertEquals(new ArrayList<String>(), causeListFromAction.get(1).getCategories());
+    }
+
+    /**
+     * Test whether failed test cases are registered against the configured categories.
+     *
+     * @throws Exception if not so.
+     */
+    public void testTestResultInterpretationWithCategories() throws Exception {
+        PluginImpl.getInstance().setTestResultParsingEnabled(true);
+        String categories = "foo bar";
+        PluginImpl.getInstance().setTestResultCategories(categories);
+        FreeStyleProject project = createFreeStyleProject();
+
+        project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
+        project.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+                    BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").copyFrom(
+                    this.getClass().getResource("junit.xml"));
+                return true;
+            }
+        });
+
+        project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.UNSTABLE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
+
+        List<String> categoriesList = Arrays.asList(categories.split("\\s+"));
+        assertEquals(categoriesList, causeListFromAction.get(0).getCategories());
+        assertEquals(categoriesList, causeListFromAction.get(1).getCategories());
+    }
+
+    /**
+     * Test whether failed test cases are not detected when feature is disabled.
+     *
+     * @throws Exception if not so.
+     */
+    public void testTestResultInterpretationIfDisabled() throws Exception {
+        PluginImpl.getInstance().setTestResultParsingEnabled(false);
+        FreeStyleProject project = createFreeStyleProject();
+
+        project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
+        project.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+                    BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").copyFrom(
+                    this.getClass().getResource("junit.xml"));
+                return true;
+            }
+        });
+
+        project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        assertBuildStatus(Result.UNSTABLE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertEquals("Amount of failure causes does not match.", 0, causeListFromAction.size());
     }
 
     /**

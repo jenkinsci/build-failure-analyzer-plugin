@@ -352,6 +352,24 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Sets if failed test cases should be represented as failure causes or not.
+     *
+     * @param testResultParsingEnabled on or off. null == off.
+     */
+    public void setTestResultParsingEnabled(Boolean testResultParsingEnabled) {
+        this.testResultParsingEnabled = testResultParsingEnabled;
+    }
+
+    /**
+     * Set categories to be assigned to failure causes representing failed test cases.
+     *
+     * @param testResultCategories Space-separated string with categories
+     */
+    public void setTestResultCategories(String testResultCategories) {
+        this.testResultCategories = testResultCategories;
+    }
+
+    /**
      * Send notifications to Gerrit-Trigger-plugin.
      *
      * @return true if on.
