@@ -116,6 +116,10 @@ public class PluginImpl extends Plugin {
     private int nrOfScanThreads;
 
     private Boolean graphsEnabled;
+
+    private Boolean testResultParsingEnabled;
+    private String testResultCategories;
+
     /**
      * ScanOnDemandVariable instance.
      */
@@ -128,6 +132,9 @@ public class PluginImpl extends Plugin {
         load();
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
+        }
+        if (testResultCategories == null) {
+            testResultCategories = "";
         }
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
@@ -314,12 +321,52 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * If failed test cases should be represented as failure causes.
+     *
+     * @return True if enabled.
+     */
+    public boolean isTestResultParsingEnabled() {
+        if (testResultParsingEnabled == null) {
+            return false;
+        } else {
+            return testResultParsingEnabled;
+        }
+    }
+
+    /**
+     * Get categories to be assigned to failure causes representing failed test cases.
+     *
+     * @return the categories.
+     */
+    public String getTestResultCategories() {
+        return testResultCategories;
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
      *
      * @param globalEnabled on or off. null == on.
      */
     public void setGlobalEnabled(Boolean globalEnabled) {
         this.globalEnabled = globalEnabled;
+    }
+
+    /**
+     * Sets if failed test cases should be represented as failure causes or not.
+     *
+     * @param testResultParsingEnabled on or off. null == off.
+     */
+    public void setTestResultParsingEnabled(Boolean testResultParsingEnabled) {
+        this.testResultParsingEnabled = testResultParsingEnabled;
+    }
+
+    /**
+     * Set categories to be assigned to failure causes representing failed test cases.
+     *
+     * @param testResultCategories Space-separated string with categories
+     */
+    public void setTestResultCategories(String testResultCategories) {
+        this.testResultCategories = testResultCategories;
     }
 
     /**
@@ -441,6 +488,8 @@ public class PluginImpl extends Plugin {
         globalEnabled = o.getBoolean("globalEnabled");
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
         graphsEnabled = o.getBoolean("graphsEnabled");
+        testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
+        testResultCategories = o.getString("testResultCategories");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");

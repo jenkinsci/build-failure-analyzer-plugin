@@ -240,6 +240,8 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         form.put("globalEnabled", true);
         form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);
+        form.put("testResultParsingEnabled", true);
+        form.put("testResultCategories", "foo bar");
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);
         form.put("maximumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);

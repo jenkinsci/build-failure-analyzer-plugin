@@ -54,6 +54,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
+import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.TestResult;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -126,11 +128,27 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     public static void scan(AbstractBuild build, PrintStream buildLog) {
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
-            List<FoundFailureCause> foundCauseList = findCauses(causes, build, buildLog);
+            List<FoundFailureCause> foundCauseListToLog = findCauses(causes, build, buildLog);
+            List<FoundFailureCause> foundCauseList;
+
+            /* Register failed test cases as foundCauses.
+             * We do not want these to be sent to the StatisticsLogger, to avoid
+             * problems due to these causes not being present in the database.
+             * Since StatisticsLogger spawns a background thread, we create a
+             * copy of the list.
+             */
+            if (PluginImpl.getInstance().isTestResultParsingEnabled()) {
+                foundCauseList = Collections.synchronizedList(
+                        new LinkedList<FoundFailureCause>(foundCauseListToLog));
+                foundCauseList.addAll(findFailedTests(build, buildLog));
+            } else {
+                foundCauseList = foundCauseListToLog;
+            }
+
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);
             build.addAction(buildAction);
-            StatisticsLogger.getInstance().log(build, foundCauseList);
+            StatisticsLogger.getInstance().log(build, foundCauseListToLog);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
         }
@@ -224,5 +242,33 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
     private static FoundIndication findIndication(Indication indication, AbstractBuild build, PrintStream buildLog) {
         FailureReader failureReader = indication.getReader();
         return failureReader.scan(build, buildLog);
+    }
+
+    /**
+     * Finds the failed tests reported by this build
+     *
+     * @param build    the build to analyze.
+     * @param buildLog the build log.
+     * @return a list of found failure causes based on the test results
+     */
+    private static List<FoundFailureCause> findFailedTests(final AbstractBuild build, final PrintStream buildLog) {
+        final List<FoundFailureCause> failedTestList =
+            Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+        final List<AbstractTestResultAction> testActions =
+            build.getActions(AbstractTestResultAction.class);
+
+        for (AbstractTestResultAction testAction : testActions) {
+            List<? extends TestResult> failedTests = testAction.getFailedTests();
+            for (TestResult test : failedTests) {
+                buildLog.println("[BFA] Found failed test case: " + test.getName());
+                FailureCause failureCause = new FailureCause(null,
+                        test.getName(), test.getErrorStackTrace(), "", null,
+                        PluginImpl.getInstance().getTestResultCategories(), null, null);
+                FoundFailureCause foundFailureCause = new FoundFailureCause(failureCause);
+                failedTestList.add(foundFailureCause);
+            }
+        }
+
+        return failedTestList;
     }
 }

@@ -64,12 +64,25 @@
                  description="${%nrOfScanThreadsDescription}">
             <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${it.nrOfScanThreads}"/>
         </f:entry>
+        <f:block>
+            <table>
+                <f:optionalBlock name="testResultParsingEnabled"
+                                 title="${%testResultParsingEnabledDescription}"
+                                 checked="${it.testResultParsingEnabled}"
+                                 inline="true">
+                    <f:entry title="Categories"
+                             description="${%testResultCategoriesDescription}">
+                        <f:textbox name="testResultCategories" value="${it.testResultCategories}"/>
+                    </f:entry>
+                </f:optionalBlock>
+            </table>
+        </f:block>
     </f:section>
     <f:advanced>
         <f:section title="${%Scan non-scanned builds}">
             <f:entry title="${%Minimum number of Worker Threads}"
                      description="${%Minimum number of worker threads allotted for failure scan options}">
-            <f:textbox name="minimumNumberOfWorkerThreads"
+                <f:textbox name="minimumNumberOfWorkerThreads"
                            value="${it.sodVariables.minimumSodWorkerThreads}"
                            default="${it.sodVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS}"/>
             </f:entry>
