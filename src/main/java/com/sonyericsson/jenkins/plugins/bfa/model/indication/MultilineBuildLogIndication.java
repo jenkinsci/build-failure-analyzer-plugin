@@ -38,6 +38,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class MultilineBuildLogIndication extends BuildLogIndication {
 
+    private static final long serialVersionUID = 8436383594898812087L;
     private transient Pattern compiled = null;
 
     /**

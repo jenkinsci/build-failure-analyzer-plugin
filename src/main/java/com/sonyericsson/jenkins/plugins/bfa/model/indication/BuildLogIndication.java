@@ -51,6 +51,7 @@ import org.kohsuke.stapler.QueryParameter;
  */
 public class BuildLogIndication extends Indication {
 
+    private static final long serialVersionUID = -2889792693081908532L;
     private transient Pattern compiled = null;
 
     /**
