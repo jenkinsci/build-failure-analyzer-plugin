@@ -271,7 +271,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * Finds the name of the matrix project that this action probably belongs to.
      * @return the name of the project or null if runs are bad.
      */
-    public String findUpStreamName() {
+    public synchronized String findUpStreamName() {
         if (runs != null) {
             for (MatrixRun run : runs) {
                 Cause.UpstreamCause cause = run.getCause(Cause.UpstreamCause.class);

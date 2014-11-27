@@ -1102,7 +1102,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @throws UnknownHostException if the host cannot be found.
      * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private DBCollection getStatisticsCollection() throws UnknownHostException, AuthenticationException {
+    private synchronized DBCollection getStatisticsCollection() throws UnknownHostException, AuthenticationException {
         if (statisticsCollection == null) {
             statisticsCollection = getDb().getCollection(STATISTICS_COLLECTION_NAME);
         }
