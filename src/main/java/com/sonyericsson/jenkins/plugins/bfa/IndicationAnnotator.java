@@ -77,7 +77,7 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
 
     @Override
     public ConsoleAnnotator annotate(Object context, MarkupText text) {
-        AnnotationHelper match = helperMap.get(text.getText().trim());
+        AnnotationHelper match = helperMap.get(text.getText().replace("\n", "").replace("\r", ""));
         if (match != null) {
             text.wrapBy(match.getBefore(), match.getAfter());
         }
