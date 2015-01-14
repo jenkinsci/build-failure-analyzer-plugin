@@ -115,8 +115,8 @@ public class CauseManagement extends BfaGraphAction {
 
     @Override
     public String getIconFileName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION) ||
-                Hudson.getInstance().hasPermission(PluginImpl.VIEW_PERMISSION)) {
+        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)
+                || Hudson.getInstance().hasPermission(PluginImpl.VIEW_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
         } else {
             return null;
