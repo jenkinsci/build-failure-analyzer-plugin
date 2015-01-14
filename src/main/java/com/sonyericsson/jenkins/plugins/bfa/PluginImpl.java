@@ -87,6 +87,13 @@ public class PluginImpl extends Plugin {
                     Messages._PermissionUpdate_Description(), Hudson.ADMINISTER);
 
     /**
+     * Permission to view the causes. E.e. Access {@link CauseManagement}.
+     */
+    public static final Permission VIEW_PERMISSION =
+            new Permission(PERMISSION_GROUP, "ViewCauses",
+                    Messages._PermissionView_Description(), UPDATE_PERMISSION);
+
+    /**
      * Permission to remove causes.
      */
     public static final Permission REMOVE_PERMISSION =
