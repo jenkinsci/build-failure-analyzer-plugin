@@ -32,7 +32,7 @@ def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
 
-l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
+l.layout(permission: PluginImpl.VIEW_PERMISSION) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
@@ -55,7 +55,11 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
             + "z-index: -100;"
             + "background-image: url(\'" + bgImageUrl + "');") {}
 
-    h1(_("Update Failure Causes"))
+    if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+      h1(_("Update Failure Causes"))
+    } else {
+      h1(_("List of Failure Causes"))
+    }
 
     def shallowCauses = management.getShallowCauses()
     if (management.isError(request)) {
@@ -73,28 +77,30 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
     }
 
     //The New Cause link
-    div(style: "margin-top: 10px; margin-bottom: 10px; width: 90%;") {
-      a(style:  "font-weight: bold; "
-                + "font-size: larger; "
-                + "padding-left: 30px; "
-                + "min-height: 30px; "
-                + "padding-top: 5px; "
-                + "padding-bottom: 5px; "
-                + "background-image: url( \'" + newImageUrl + "\'); "
-                + "background-position: left center; "
-                + "background-repeat: no-repeat;",
-        href: "new",
-        alt: _("New")) {text(_("Create new"))}
+    if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        div(style: "margin-top: 10px; margin-bottom: 10px; width: 90%;") {
+            a(style: "font-weight: bold; "
+                    + "font-size: larger; "
+                    + "padding-left: 30px; "
+                    + "min-height: 30px; "
+                    + "padding-top: 5px; "
+                    + "padding-bottom: 5px; "
+                    + "background-image: url( \'" + newImageUrl + "\'); "
+                    + "background-position: left center; "
+                    + "background-repeat: no-repeat;",
+                    href: "new",
+                    alt: _("New")) { text(_("Create new")) }
 
-      if (PluginImpl.getInstance().isGraphsEnabled()) {
-        a(style:  "font-weight: bold; "
-                + "font-size: larger; "
-                + "padding-top: 5px; "
-                + "padding-bottom: 5px; "
-                + "float: right;",
-          href: "detailedgraphs",
-          alt: _("Graphs/statistics")) {text(_("Graphs/Statistics"))}
-      }
+            if (PluginImpl.getInstance().isGraphsEnabled()) {
+                a(style: "font-weight: bold; "
+                        + "font-size: larger; "
+                        + "padding-top: 5px; "
+                        + "padding-bottom: 5px; "
+                        + "float: right;",
+                        href: "detailedgraphs",
+                        alt: _("Graphs/statistics")) { text(_("Graphs/Statistics")) }
+            }
+        }
     }
 
     //One time check so we don't do it for every iteration below
@@ -118,7 +124,11 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
       shallowCauses.each{ cause ->
         tr {
           td{
-            a(href: cause.getId()){ text(cause.getName())}
+            if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+              a(href: cause.getId()) { text(cause.getName()) }
+            } else {
+              text(cause.getName())
+            }
           }
           td{
             text(cause.getCategoriesAsString())
