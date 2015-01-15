@@ -86,6 +86,11 @@ public class Token extends DataBoundTokenMacro {
     private int wrapWidth = 0;
 
     /**
+     * Default text to include if no problem was found. It defaults to an empty string.
+     */
+    private String noFailureText = "";
+
+    /**
      * @param includeIndications When true, the indication numbers and links into the console log are included
      * in the token replacement text.
      */
@@ -119,6 +124,14 @@ public class Token extends DataBoundTokenMacro {
         this.wrapWidth = wrapWidth;
     }
 
+    /**
+     * @param noFailureText Text to return when no failure cause is present.
+     */
+    @Parameter
+    public void setNoFailureText(final String noFailureText) {
+        this.noFailureText = noFailureText;
+    }
+
     @Override
     public boolean acceptsMacroName(final String macroName) {
         return "BUILD_FAILURE_ANALYZER".equals(macroName);
@@ -135,7 +148,7 @@ public class Token extends DataBoundTokenMacro {
             final FailureCauseDisplayData data = action.getFailureCauseDisplayData();
             if (data.getFoundFailureCauses().isEmpty() && data.getDownstreamFailureCauses().isEmpty()) {
                 logger.info("there were no causes");
-                return "";
+                return noFailureText;
             }
             final StringBuilder stringBuilder = new StringBuilder();
             addTitle(stringBuilder);
