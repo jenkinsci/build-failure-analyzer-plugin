@@ -165,4 +165,57 @@ public class TokenTest extends HudsonTestCase {
         assertEquals(expectedWrapAt35LineCount, wrappedAt35.size());
     }
 
+    /**
+     * Tests the expansion when there is no failure for the default setup.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testNoFailureWithDefaultEmptyText() throws Exception {
+        // CS IGNORE MagicNumberCheck FOR NEXT 7 LINES. REASON: Test data.
+        final FreeStyleProject project = createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder(ERROR));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        final Future<FreeStyleBuild> noCauseBuildFuture = project.scheduleBuild2(0);
+        final FreeStyleBuild noCauseBuild = noCauseBuildFuture.get(10, TimeUnit.SECONDS);
+        final String defaultNoResult = TokenMacro.expandAll(noCauseBuild, listener, "${BUILD_FAILURE_ANALYZER}");
+        assertEquals("", defaultNoResult);
+    }
+
+    /**
+     * Tests the expansion when there is no failure with noFailureText set to the empty string.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testNoFailureWithEmptyText() throws Exception {
+        // CS IGNORE MagicNumberCheck FOR NEXT 8 LINES. REASON: Test data.
+        final FreeStyleProject project = createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder(ERROR));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        final Future<FreeStyleBuild> noCauseBuildFuture = project.scheduleBuild2(0);
+        final FreeStyleBuild noCauseBuild = noCauseBuildFuture.get(10, TimeUnit.SECONDS);
+        final String defaultNoResult = TokenMacro.expandAll(noCauseBuild, listener,
+                "${BUILD_FAILURE_ANALYZER, noFailureText=\"\"}");
+        assertEquals("", defaultNoResult);
+    }
+
+    /**
+     * Tests the expansion when there is no failure with noFailureText set to something.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testNoFailureWithText() throws Exception {
+        // CS IGNORE MagicNumberCheck FOR NEXT 8 LINES. REASON: Test data.
+        final FreeStyleProject project = createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder(ERROR));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        final Future<FreeStyleBuild> noCauseBuildFuture = project.scheduleBuild2(0);
+        final FreeStyleBuild noCauseBuild = noCauseBuildFuture.get(10, TimeUnit.SECONDS);
+        final String defaultNoResult = TokenMacro.expandAll(noCauseBuild, listener,
+                "${BUILD_FAILURE_ANALYZER, noFailureText=\"Sample text with <b>html</b>\"}");
+        assertEquals("Sample text with <b>html</b>", defaultNoResult);
+    }
+
 }
