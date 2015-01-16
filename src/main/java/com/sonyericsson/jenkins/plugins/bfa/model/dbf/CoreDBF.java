@@ -70,6 +70,6 @@ public class CoreDBF extends DownstreamBuildFinder {
             }
         }
 
-        return EMPTY;
+        return foundBuilds;
     }
 }
