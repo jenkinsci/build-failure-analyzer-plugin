@@ -205,7 +205,8 @@ public class DisplayDownstreamTest extends HudsonTestCase {
         createFreestyleProjectWithShell(PROJECT_SW, "rapakalja");
 
         hudson.setNumExecutors(50);
-        hudson.setNodes(hudson.getNodes()); // update nodes configuration (TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary)
+        //TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary
+        hudson.setNodes(hudson.getNodes()); // update nodes configuration
 
         matrixProject = createMatrixProject(MATRIX_PROJECT_NEWS);
 
