@@ -155,8 +155,14 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             if (!downstreamFailureCauses.isEmpty()){
                 buildLog.println("[BFA] Found downstream Failure causes ...");
                 for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
-                FailureCauseDisplayData.Links links = displayData.getLinks();
-                buildLog.println("[BFA] See "+links.getProjectDisplayName()+links.getBuildDisplayName());
+                  FailureCauseDisplayData.Links links = displayData.getLinks();
+                  buildLog.println("[BFA] See "+links.getProjectDisplayName()+links.getBuildDisplayName());
+                  List<FoundFailureCause> failureCauses = displayData.getFoundFailureCauses();
+                  for (FoundFailureCause foundCause : failureCauses) {
+                    buildLog.println("[BFA] "
+                                 +foundCause.getName()+" from category "+
+                                 foundCause.getCategories().get(0));
+                    }
                 }
             }
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
@@ -213,7 +219,9 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         if (!foundFailureCauseList.isEmpty()) {
             buildLog.println("[BFA] Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
-                buildLog.println(foundCause.getName());
+                buildLog.println("[BFA] "
+                                 +foundCause.getName()+" from category "+
+                                 foundCause.getCategories().get(0));
             }
 
         } else {
