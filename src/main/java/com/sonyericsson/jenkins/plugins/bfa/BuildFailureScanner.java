@@ -160,8 +160,8 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
                   List<FoundFailureCause> failureCauses = displayData.getFoundFailureCauses();
                   for (FoundFailureCause foundCause : failureCauses) {
                     buildLog.println("[BFA] "
-                                 +foundCause.getName()+" from category "+
-                                 foundCause.getCategories().get(0));
+                                 +foundCause.getName()+" from category "
+                                 +foundCause.getCategories().get(0));
                     }
                 }
             }
@@ -220,8 +220,8 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             buildLog.println("[BFA] Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
                 buildLog.println("[BFA] "
-                                 +foundCause.getName()+" from category "+
-                                 foundCause.getCategories().get(0));
+                                 +foundCause.getName()+" from category "
+                                 +foundCause.getCategories().get(0));
             }
 
         } else {
