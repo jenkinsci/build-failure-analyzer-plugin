@@ -219,9 +219,13 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         if (!foundFailureCauseList.isEmpty()) {
             buildLog.println("[BFA] Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
-                buildLog.println("[BFA] "
+                if (foundCause.getCategories() == null){
+                    buildLog.println("[BFA] "+foundCause.getName());
+                } else {
+                    buildLog.println("[BFA] "
                                  +foundCause.getName()+" from category "
-                                 +foundCause.getCategories());
+                                 +foundCause.getCategories().get(0));
+                }
             }
 
         } else {
