@@ -221,7 +221,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             for (FoundFailureCause foundCause : foundFailureCauseList) {
                 buildLog.println("[BFA] "
                                  +foundCause.getName()+" from category "
-                                 +foundCause.getCategories().get(0));
+                                 +foundCause.getCategories());
             }
 
         } else {
