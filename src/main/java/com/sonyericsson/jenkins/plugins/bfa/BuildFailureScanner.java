@@ -41,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
@@ -148,6 +149,22 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);
             build.addAction(buildAction);
+            final FailureCauseDisplayData data = buildAction.getFailureCauseDisplayData();
+            List<FailureCauseDisplayData> downstreamFailureCauses = data.getDownstreamFailureCauses();
+
+            if (!downstreamFailureCauses.isEmpty()){
+                buildLog.println("[BFA] Found downstream Failure causes ...");
+                for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
+                  FailureCauseDisplayData.Links links = displayData.getLinks();
+                  buildLog.println("[BFA] See "+links.getProjectDisplayName()+links.getBuildDisplayName());
+                  List<FoundFailureCause> failureCauses = displayData.getFoundFailureCauses();
+                  for (FoundFailureCause foundCause : failureCauses) {
+                    buildLog.println("[BFA] "
+                                 +foundCause.getName()+" from category "
+                                 +foundCause.getCategories().get(0));
+                    }
+                }
+            }
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
@@ -199,7 +216,21 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
                     {build.getFullDisplayName(),
                             String.valueOf(time), });
         }
-        buildLog.println();
+        if (!foundFailureCauseList.isEmpty()) {
+            buildLog.println("[BFA] Found failure cause(s):");
+            for (FoundFailureCause foundCause : foundFailureCauseList) {
+                if (foundCause.getCategories() == null){
+                    buildLog.println("[BFA] "+foundCause.getName());
+                } else {
+                    buildLog.println("[BFA] "
+                                 +foundCause.getName()+" from category "
+                                 +foundCause.getCategories().get(0));
+                }
+            }
+
+        } else {
+            buildLog.println("[BFA] No failure causes found");
+        }
         buildLog.println("[BFA] Done. " + TimeUnit.MILLISECONDS.toSeconds(time) + "s");
         return foundFailureCauseList;
     }
