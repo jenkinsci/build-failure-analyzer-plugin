@@ -33,6 +33,7 @@ import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
+import hudson.model.ItemGroup;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -98,12 +99,13 @@ public class BuildLogIndication extends Indication {
         /**
          * A pattern matched by all Jenkins job URL:s.
          */
-        private static final Pattern URL_PATTERN = Pattern.compile("^.*/([^/]+)/([^/]+)/([^/]+)/?$");
+        private static final Pattern URL_PATTERN = Pattern.compile(
+                        "^(?:http(?:s)?://(?:[^/]+))(/.*)?/([^/]+)/([^/]+)/([^/]+)/?$");
 
         /**
          * The number of groups in URL_PATTERN.
          */
-        private static final int NUM_OF_URL_PARTS = 3;
+        private static final int NUM_OF_URL_PARTS = 4;
 
         /**
          * An identifier for a non-numeric build for a given project,
@@ -255,7 +257,25 @@ public class BuildLogIndication extends Indication {
                     for (int i = 0; i < urlParts.length; i++) {
                         urlParts[i] = urlMatcher.group(i + 1);
                     }
+
                     AbstractBuild build = null;
+                    ItemGroup getItemInstance = null;
+
+                    if (urlParts[0] != null && urlParts[0].split("/job").length > 0) {
+                        /*
+                         * We matched a folders job. Let's get the jobs up to the part were the next
+                         * iteration can be continued from
+                         */
+                        String fullFolderName = "/";
+                        String[] jobParts = urlParts[0].split("/job");
+                        for (String part: jobParts) {
+                            fullFolderName += part;
+                        }
+                        getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName);
+                    } else {
+                        getItemInstance = (ItemGroup)Jenkins.getInstance();
+                    }
+
                     /*
                        Find out which of the following url types testText matches, if any,
                        and assign to build accordingly. The url types are checked in the
@@ -264,20 +284,21 @@ public class BuildLogIndication extends Indication {
                        Type 2: .../<job>/<matrixInfo>/<buildNumber>/
                        Type 3: .../<job>/<buildNumber>/<matrixInfo>/
                      */
-                    if (Jenkins.getInstance().getItem(urlParts[1]) instanceof AbstractProject
+
+                    if (getItemInstance.getItem(urlParts[2]) instanceof AbstractProject
+                            && isValidBuildId(urlParts[3])) {
+                        AbstractProject project = (AbstractProject)getItemInstance.getItem(urlParts[2]);
+                        build = getBuildById(project, urlParts[3]);
+                    } else if (getItemInstance.getItem(urlParts[1]) instanceof MatrixProject
+                            && isValidBuildId(urlParts[3])) {
+                        MatrixProject project = (MatrixProject)getItemInstance.getItem(urlParts[1]);
+                        MatrixConfiguration configuration = project.getItem(urlParts[2]);
+                        build = getBuildById(configuration, urlParts[3]);
+                    } else if (getItemInstance.getItem(urlParts[1]) instanceof MatrixProject
                             && isValidBuildId(urlParts[2])) {
-                        AbstractProject project = (AbstractProject)Jenkins.getInstance().getItem(urlParts[1]);
-                        build = getBuildById(project, urlParts[2]);
-                    } else if (Jenkins.getInstance().getItem(urlParts[0]) instanceof MatrixProject
-                            && isValidBuildId(urlParts[2])) {
-                        MatrixProject project = (MatrixProject)Jenkins.getInstance().getItem(urlParts[0]);
-                        MatrixConfiguration configuration = project.getItem(urlParts[1]);
+                        MatrixProject matrixProject = (MatrixProject)getItemInstance.getItem(urlParts[1]);
+                        MatrixConfiguration configuration = matrixProject.getItem(urlParts[3]);
                         build = getBuildById(configuration, urlParts[2]);
-                    } else if (Jenkins.getInstance().getItem(urlParts[0]) instanceof MatrixProject
-                            && isValidBuildId(urlParts[1])) {
-                        MatrixProject matrixProject = (MatrixProject)Jenkins.getInstance().getItem(urlParts[0]);
-                        MatrixConfiguration configuration = matrixProject.getItem(urlParts[2]);
-                        build = getBuildById(configuration, urlParts[1]);
                     }
                     if (build != null) {
                         try {
