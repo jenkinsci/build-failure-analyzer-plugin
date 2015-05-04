@@ -273,7 +273,7 @@ public class BuildLogIndication extends Indication {
                         }
                         getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName);
                     } else {
-                        getItemInstance = (ItemGroup)Jenkins.getInstance();
+                        getItemInstance = Jenkins.getInstance();
                     }
 
                     /*
