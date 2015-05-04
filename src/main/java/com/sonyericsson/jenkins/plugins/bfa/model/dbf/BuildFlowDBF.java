@@ -63,12 +63,14 @@ public class BuildFlowDBF extends DownstreamBuildFinder {
 
         //CS IGNORE EmptyBlock FOR NEXT 10 LINES. REASON: irrelevant exceptions.
         for (com.cloudbees.plugins.flow.JobInvocation invocation : vertexSet) {
-            try {
-                result.add((AbstractBuild<?, ?>)invocation.getBuild());
-            } catch (ExecutionException e) {
-                // skip
-            } catch (InterruptedException e) {
-                // ignore
+            if (invocation != null) {
+                try {
+                    result.add((AbstractBuild<?, ?>)invocation.getBuild());
+                } catch (ExecutionException e) {
+                    // skip
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
         }
 
