@@ -152,16 +152,16 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             final FailureCauseDisplayData data = buildAction.getFailureCauseDisplayData();
             List<FailureCauseDisplayData> downstreamFailureCauses = data.getDownstreamFailureCauses();
 
-            if (!downstreamFailureCauses.isEmpty()){
+            if (!downstreamFailureCauses.isEmpty()) {
                 buildLog.println("[BFA] Found downstream Failure causes ...");
                 for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
                   FailureCauseDisplayData.Links links = displayData.getLinks();
-                  buildLog.println("[BFA] See "+links.getProjectDisplayName()+links.getBuildDisplayName());
+                  buildLog.println("[BFA] See " + links.getProjectDisplayName() + links.getBuildDisplayName());
                   List<FoundFailureCause> failureCauses = displayData.getFoundFailureCauses();
                   for (FoundFailureCause foundCause : failureCauses) {
                     buildLog.println("[BFA] "
-                                 +foundCause.getName()+" from category "
-                                 +foundCause.getCategories().get(0));
+                                 + foundCause.getName() + " from category "
+                                 + foundCause.getCategories().get(0));
                     }
                 }
             }
@@ -219,12 +219,12 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         if (!foundFailureCauseList.isEmpty()) {
             buildLog.println("[BFA] Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
-                if (foundCause.getCategories() == null){
-                    buildLog.println("[BFA] "+foundCause.getName());
+                if (foundCause.getCategories() == null) {
+                    buildLog.println("[BFA] " + foundCause.getName());
                 } else {
                     buildLog.println("[BFA] "
-                                 +foundCause.getName()+" from category "
-                                 +foundCause.getCategories().get(0));
+                                 + foundCause.getName() + " from category "
+                                 + foundCause.getCategories().get(0));
                 }
             }
 
