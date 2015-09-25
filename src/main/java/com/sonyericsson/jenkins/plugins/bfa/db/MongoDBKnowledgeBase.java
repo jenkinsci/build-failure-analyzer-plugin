@@ -411,7 +411,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     && equals(oldMongoDBKnowledgeBase.getDbName(), dbName)
                     && equals(oldMongoDBKnowledgeBase.getUserName(), userName)
                     && equals(oldMongoDBKnowledgeBase.getPassword(), password)
-                    && this.enableStatistics == oldMongoDBKnowledgeBase.enableStatistics;
+                    && this.enableStatistics == oldMongoDBKnowledgeBase.enableStatistics
+                    && this.successfulLogging == oldMongoDBKnowledgeBase.successfulLogging;
         } else {
             return false;
         }
