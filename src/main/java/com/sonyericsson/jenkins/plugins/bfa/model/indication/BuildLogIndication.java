@@ -266,8 +266,13 @@ public class BuildLogIndication extends Indication {
                          * We matched a folders job. Let's get the jobs up to the part were the next
                          * iteration can be continued from
                          */
-                        String fullFolderName = "/";
-                        String[] jobParts = urlParts[0].split("/job");
+                        String fullFolderName = "";
+                        /* The interestingJobParts string created below is meant to discard everything
+                         * that comes before the first '/job' occurrent which is either nothing or the
+                         * prefix from where jenkins is served, ie: http://localhost/jenkins/job/<job>/<buildNumber>
+                         */
+                        String interestingJobParts = urlParts[0].split("/job", 2)[-1];
+                        String[] jobParts = interestingJobParts.split("/job");
                         for (String part: jobParts) {
                             fullFolderName += part;
                         }
