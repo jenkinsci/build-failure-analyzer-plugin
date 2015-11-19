@@ -99,8 +99,7 @@ public class BuildLogIndication extends Indication {
         /**
          * A pattern matched by all Jenkins job URL:s.
          */
-        private static final Pattern URL_PATTERN = Pattern.compile(
-                        "^(?:http(?:s)?://(?:[^/]+))(/.*)?/([^/]+)/([^/]+)/([^/]+)/?$");
+        private static final Pattern URL_PATTERN = Pattern.compile("^(.*/)([^/]+)/([^/]+)/([^/]+)/?$");
 
         /**
          * The number of groups in URL_PATTERN.
@@ -261,7 +260,7 @@ public class BuildLogIndication extends Indication {
                     AbstractBuild build = null;
                     ItemGroup getItemInstance = null;
 
-                    if (urlParts[0] != null && urlParts[0].split("/job").length > 0) {
+                    if (urlParts[0].split("/job").length > 0) {
                         /*
                          * We matched a folders job. Let's get the jobs up to the part were the next
                          * iteration can be continued from
