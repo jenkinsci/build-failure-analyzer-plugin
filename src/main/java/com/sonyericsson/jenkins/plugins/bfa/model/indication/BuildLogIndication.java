@@ -260,7 +260,7 @@ public class BuildLogIndication extends Indication {
                     AbstractBuild build = null;
                     ItemGroup getItemInstance = null;
 
-                    if (urlParts[0].split("/job").length > 0) {
+                    if (urlParts[0].split("/job").length > 2) {
                         /*
                          * We matched a folders job. Let's get the jobs up to the part were the next
                          * iteration can be continued from
