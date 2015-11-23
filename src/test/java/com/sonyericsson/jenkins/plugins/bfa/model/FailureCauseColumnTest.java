@@ -25,6 +25,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.FreeStyleProject;
@@ -71,7 +72,7 @@ public class FailureCauseColumnTest {
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
     assertNotNull("Couldn't find the failure cause image in columnwithouttext view",
-        page.selectSingleNode("//img[@Title='Failure Builder']"));
+            page.selectSingleNode("//img[@Title='Failure Builder']"));
     assertNull(page.selectSingleNode("//*[.='Failure Builder']"));
   }
 

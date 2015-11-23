@@ -65,7 +65,7 @@ public class CauseManagementPermissionTest {
             webClient.goTo("failure-cause-management");
             fail("Access to the page should have failed");
         } catch (FailingHttpStatusCodeException ex) {
-            assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getStatusCode());
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, ex.getStatusCode());
         }
     }
 

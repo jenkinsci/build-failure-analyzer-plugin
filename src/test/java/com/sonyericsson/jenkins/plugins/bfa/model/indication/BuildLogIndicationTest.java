@@ -39,7 +39,6 @@ import hudson.model.Result;
 import hudson.util.FormValidation;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 
@@ -60,7 +59,11 @@ public class BuildLogIndicationTest {
 
     private static final long WAIT_TIME_IN_SECONDS = 10;
 
+    /**
+     * The test harness.
+     */
     @Rule
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule j = new JenkinsRule();
 
     /**

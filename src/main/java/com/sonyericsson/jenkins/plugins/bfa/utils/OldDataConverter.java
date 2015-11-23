@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,10 +62,11 @@ public final class OldDataConverter extends ItemListener {
      */
     public static final int POOL_SIZE = 10;
 
+    //CS IGNORE LineLength FOR NEXT 5 LINES. REASON: Javadoc
     /**
      * The seconds to delay actual processing of the conversion.
      *
-     * @see ScheduledExecutorService#schedule(java.util.concurrent.Callable, long, java.util.concurrent.TimeUnit)
+     * @see java.util.concurrent.ScheduledExecutorService#schedule(java.util.concurrent.Callable, long, java.util.concurrent.TimeUnit)
      */
     public static final int SCHEDULE_DELAY = 3;
 
@@ -75,7 +76,7 @@ public final class OldDataConverter extends ItemListener {
 
     private Set<AbstractBuild> performedBuilds;
     private Map<String, List<FailureCauseMatrixBuildAction>> actionsToConvert;
-    private ScheduledExecutorService executor;
+    private ScheduledThreadPoolExecutor executor;
     //Has the call from Jenkins arrived that all items are loaded?
     private boolean itemsLoaded = false;
 
@@ -101,7 +102,7 @@ public final class OldDataConverter extends ItemListener {
     public OldDataConverter() {
         performedBuilds = Collections.synchronizedSet(new HashSet<AbstractBuild>());
         actionsToConvert = Collections.synchronizedMap(new HashMap<String, List<FailureCauseMatrixBuildAction>>());
-        executor = Executors.newScheduledThreadPool(POOL_SIZE);
+        executor = (ScheduledThreadPoolExecutor)Executors.newScheduledThreadPool(POOL_SIZE);
     }
 
     /**
@@ -153,6 +154,27 @@ public final class OldDataConverter extends ItemListener {
             }
         }
         actionsToConvert.clear();
+    }
+
+    /**
+     * Waits until there are no more running conversion tasks.
+     * Since builds are lazy loaded the returning of this method does
+     * not mean that all needed builds are converted, only those loaded
+     * before or during this method was invoked.
+     *
+     * @throws InterruptedException if so while sleeping
+     */
+    public void waitForInitialCompletion() throws InterruptedException {
+        boolean loaded = false;
+        while (!loaded) {
+            synchronized (this) {
+                loaded = this.itemsLoaded;
+            }
+            TimeUnit.SECONDS.sleep(1);
+        }
+        while (!executor.getQueue().isEmpty()) {
+            TimeUnit.SECONDS.sleep(1);
+        }
     }
 
     /**
