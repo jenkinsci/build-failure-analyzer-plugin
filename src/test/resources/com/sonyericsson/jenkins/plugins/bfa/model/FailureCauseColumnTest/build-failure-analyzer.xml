@@ -11,7 +11,7 @@
           <description>Simulating a failure</description>
           <indications>
             <com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication>
-              <pattern>.*Simulating a failure.*</pattern>
+              <pattern>.*Simulating a specific result code.*FAILURE.*</pattern>
             </com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication>
           </indications>
         </com.sonyericsson.jenkins.plugins.bfa.model.FailureCause>

@@ -35,6 +35,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixRun;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -44,7 +45,6 @@ import org.powermock.reflect.Whitebox;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static hudson.Util.fixEmpty;
 
@@ -109,10 +109,11 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
      */
     @LocalData
     public void testLoadOldFailureCauseWithOnlyLineNumbers() throws Exception {
-        TimeUnit.SECONDS.sleep(OldDataConverter.SCHEDULE_DELAY + 1);
         FreeStyleProject job = (FreeStyleProject)Jenkins.getInstance().getItem("MyProject");
         assertNotNull(job);
-        FailureCauseBuildAction action = job.getBuilds().getFirstBuild().getAction(FailureCauseBuildAction.class);
+        FreeStyleBuild build = job.getBuilds().getFirstBuild();
+        OldDataConverter.getInstance().waitForInitialCompletion();
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         List<FoundFailureCause> foundFailureCauses = Whitebox.getInternalState(action, "foundFailureCauses");
         FoundFailureCause foundFailureCause = foundFailureCauses.get(0);
         FoundIndication indication = foundFailureCause.getIndications().get(0);
@@ -131,9 +132,9 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
      */
     @LocalData
     public void testMatrix120() throws InterruptedException {
-        TimeUnit.SECONDS.sleep(6);
         MatrixProject project = (MatrixProject)jenkins.getItem("mymatrix");
         MatrixBuild build = project.getBuildByNumber(1);
+        OldDataConverter.getInstance().waitForInitialCompletion();
         FailureCauseMatrixBuildAction matrixBuildAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNotNull(matrixBuildAction);
         List<MatrixRun> runs = Whitebox.getInternalState(matrixBuildAction, "runs");
