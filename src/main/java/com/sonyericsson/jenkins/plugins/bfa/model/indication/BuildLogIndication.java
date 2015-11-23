@@ -270,8 +270,8 @@ public class BuildLogIndication extends Indication {
                          * that comes before the first '/job' occurrent which is either nothing or the
                          * prefix from where jenkins is served, ie: http://localhost/jenkins/job/<job>/<buildNumber>
                          */
-                        String interestingJobParts = urlParts[0].split("/job", 2)[-1];
-                        String[] jobParts = interestingJobParts.split("/job");
+                        String[] interestingJobParts = urlParts[0].split("/job", 2);
+                        String[] jobParts = interestingJobParts[interestingJobParts.length-1].split("/job");
                         for (String part: jobParts) {
                             fullFolderName += part;
                         }
