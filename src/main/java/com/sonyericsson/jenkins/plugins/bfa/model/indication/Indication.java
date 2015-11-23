@@ -35,7 +35,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import java.io.Serializable;
 import java.util.regex.Pattern;
@@ -57,7 +56,6 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     /**
      * @param pattern the String value.
      */
-    @DataBoundConstructor
     @JsonCreator
     public Indication(@JsonProperty("pattern") String pattern) {
         this.pattern = pattern;
