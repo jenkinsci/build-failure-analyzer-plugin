@@ -260,7 +260,7 @@ public class BuildLogIndication extends Indication {
                     AbstractBuild build = null;
                     ItemGroup getItemInstance = null;
 
-                    if (urlParts[0].split("/job").length > 2) {
+                    if (urlParts[0].split("/job/").length > 1) {
                         /*
                          * We matched a folders job. Let's get the jobs up to the part were the next
                          * iteration can be continued from
@@ -270,10 +270,10 @@ public class BuildLogIndication extends Indication {
                          * that comes before the first '/job' occurrent which is either nothing or the
                          * prefix from where jenkins is served, ie: http://localhost/jenkins/job/<job>/<buildNumber>
                          */
-                        String[] interestingJobParts = urlParts[0].split("/job", 2);
-                        String[] jobParts = interestingJobParts[interestingJobParts.length-1].split("/job");
+                        String[] interestingJobParts = urlParts[0].split("/job/", 2);
+                        String[] jobParts = interestingJobParts[interestingJobParts.length-1].split("/job/");
                         for (String part: jobParts) {
-                            fullFolderName += part;
+                            fullFolderName += "/" + part;
                         }
                         getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName);
                     } else {
