@@ -452,6 +452,7 @@ public class BuildLogIndicationFoldersTest {
         assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
     }
 
+    //CS IGNORE JavadocMethod FOR NEXT 1 LINES. REASON: Test helper method
     private Folder createFolder() throws IOException {
         return r.jenkins.createProject(Folder.class, "folder" + r.jenkins.getItems().size());
     }
