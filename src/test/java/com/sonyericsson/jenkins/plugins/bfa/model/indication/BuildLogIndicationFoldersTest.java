@@ -69,11 +69,12 @@ public class BuildLogIndicationFoldersTest {
     public JenkinsRule r = new JenkinsRule();
 
     /**
-     * Tests that the BuildLogFailureReader can find the string in the build log.
+     * Tests that the BuildLogFailureReader can find the string in the build log
+     * on a one level folder.
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderSuccessful() throws Exception {
+    public void testBuildLogFailureReaderSuccessfulNF1() throws Exception {
         Folder f = createFolder();
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
@@ -85,12 +86,87 @@ public class BuildLogIndicationFoldersTest {
     }
 
     /**
-     * Tests that the BuildLogFailureReader doesn't find the string in the build log.
+     * Tests that the BuildLogFailureReader can find the string in the build log
+     * on a two level folder.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testBuildLogFailureReaderSuccessfulNF2() throws Exception {
+        Folder f0 = createFolder();
+        Folder f = f0.createProject(Folder.class, "f2");
+        FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
+        project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild build = r.buildAndAssertSuccess(project);
+        BuildLogIndication indication = new BuildLogIndication(".*test.*");
+        BuildLogFailureReader reader = new BuildLogFailureReader(indication);
+        FoundIndication found = reader.scan(build, System.out);
+        assertNotNull(found);
+    }
+
+    /**
+     * Tests that the BuildLogFailureReader can find the string in the build log
+     * on a three level folder.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testBuildLogFailureReaderSuccessfulNF3() throws Exception {
+        Folder f0 = createFolder();
+        Folder f1 = f0.createProject(Folder.class, "f2");
+        Folder f = f1.createProject(Folder.class, "f3");
+        FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
+        project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild build = r.buildAndAssertSuccess(project);
+        BuildLogIndication indication = new BuildLogIndication(".*test.*");
+        BuildLogFailureReader reader = new BuildLogFailureReader(indication);
+        FoundIndication found = reader.scan(build, System.out);
+        assertNotNull(found);
+    }
+
+    /**
+     * Tests that the BuildLogFailureReader doesn't find the string in the build log
+     * on a one level folder.
      * @throws Exception if so.
      */
     @Test
     public void testBuildLogFailureReaderUnsuccessful() throws Exception {
         Folder f = createFolder();
+        FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
+        project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild build = r.buildAndAssertSuccess(project);
+        BuildLogIndication indication = new BuildLogIndication("correct horse battery staple");
+        BuildLogFailureReader reader = new BuildLogFailureReader(indication);
+        FoundIndication found = reader.scan(build, System.out);
+        assertNull(found);
+    }
+
+    /**
+     * Tests that the BuildLogFailureReader doesn't find the string in the build log
+     * on a two level folder.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testBuildLogFailureReaderUnsuccessfulNF2() throws Exception {
+        Folder f0 = createFolder();
+        Folder f = f0.createProject(Folder.class, "f2");
+        FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
+        project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild build = r.buildAndAssertSuccess(project);
+        BuildLogIndication indication = new BuildLogIndication("correct horse battery staple");
+        BuildLogFailureReader reader = new BuildLogFailureReader(indication);
+        FoundIndication found = reader.scan(build, System.out);
+        assertNull(found);
+    }
+
+    /**
+     * Tests that the BuildLogFailureReader doesn't find the string in the build log
+     * on a three level folder.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testBuildLogFailureReaderUnsuccessfulNF3() throws Exception {
+        Folder f0 = createFolder();
+        Folder f1 = f0.createProject(Folder.class, "f2");
+        Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
@@ -108,6 +184,67 @@ public class BuildLogIndicationFoldersTest {
     @Test
     public void testDoMatchTextUrlValidOkFreestyleProject() throws Exception {
         Folder f = createFolder();
+        FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
+        String buildUrl = r.getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("/1/", "/lastBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastBuild", "lastSuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a freestyle build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidOkFreestyleProjectNF2() throws Exception {
+        Folder f0 = createFolder();
+        Folder f = f0.createProject(Folder.class, "f2");
+        FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
+        String buildUrl = r.getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("/1/", "/lastBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastBuild", "lastSuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*test\\D+", buildUrl, true);
+        assertEquals(TEST_STRING, formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a freestyle build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidOkFreestyleProjectNF3() throws Exception {
+        Folder f0 = createFolder();
+        Folder f1 = f0.createProject(Folder.class, "f2");
+        Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
@@ -172,12 +309,138 @@ public class BuildLogIndicationFoldersTest {
 
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a matrix build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidOkMatrixProjectNF2() throws Exception {
+        Folder f0 = createFolder();
+        Folder f = f0.createProject(Folder.class, "f2");
+        MatrixProject matrixProject = f.createProject(MatrixProject.class, "foo");
+        Axis axis1 = new Axis("Letter", "Alfa");
+        Axis axis2 = new Axis("Number", "One", "Two");
+        matrixProject.setAxes(new AxisList(axis1, axis2));
+        matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
+        String buildUrl = r.getURL() + build.getUrl();
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("/1/", "/lastFailedBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastFailedBuild", "lastUnsuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        List<MatrixRun> matrixRuns = build.getRuns();
+        for (MatrixRun matrixRun : matrixRuns) {
+            buildUrl = r.getURL() + matrixRun.getUrl();
+            formValidation = indicationDescriptor.doMatchText(".*Simulating.*", buildUrl, true);
+            assertEquals("Simulating a specific result code FAILURE", formValidation.getMessage());
+            assertEquals(FormValidation.Kind.OK, formValidation.kind);
+        }
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a matrix build whose log contains a line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidOkMatrixProjectNF3() throws Exception {
+        Folder f0 = createFolder();
+        Folder f1 = f0.createProject(Folder.class, "f2");
+        Folder f = f1.createProject(Folder.class, "f3");
+        MatrixProject matrixProject = f.createProject(MatrixProject.class, "foo");
+        Axis axis1 = new Axis("Letter", "Alfa");
+        Axis axis2 = new Axis("Number", "One", "Two");
+        matrixProject.setAxes(new AxisList(axis1, axis2));
+        matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
+        String buildUrl = r.getURL() + build.getUrl();
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        FormValidation formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("/1/", "/lastFailedBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        buildUrl = buildUrl.replace("lastFailedBuild", "lastUnsuccessfulBuild");
+        formValidation = indicationDescriptor.doMatchText(".*Started by.*", buildUrl, true);
+        assertEquals("Started by user SYSTEM", formValidation.getMessage());
+        assertEquals(FormValidation.Kind.OK, formValidation.kind);
+
+        List<MatrixRun> matrixRuns = build.getRuns();
+        for (MatrixRun matrixRun : matrixRuns) {
+            buildUrl = r.getURL() + matrixRun.getUrl();
+            formValidation = indicationDescriptor.doMatchText(".*Simulating.*", buildUrl, true);
+            assertEquals("Simulating a specific result code FAILURE", formValidation.getMessage());
+            assertEquals(FormValidation.Kind.OK, formValidation.kind);
+        }
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a build whose log does not contain any line that matches the pattern.
      * @throws Exception if so.
      */
     @Test
     public void testDoMatchTextUrlValidWarning() throws Exception {
         Folder f = createFolder();
+        FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        String buildUrl = r.getURL() + freeStyleBuild.getUrl();
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", buildUrl, true);
+        assertEquals(Messages.StringDoesNotMatchPattern(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a build whose log does not contain any line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidWarningNF2() throws Exception {
+        Folder f0 = createFolder();
+        Folder f = f0.createProject(Folder.class, "f2");
+        FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
+        freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
+        FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
+        BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
+                new BuildLogIndication.BuildLogIndicationDescriptor();
+        String buildUrl = r.getURL() + freeStyleBuild.getUrl();
+        FormValidation formValidation = indicationDescriptor.doMatchText("hi", buildUrl, true);
+        assertEquals(Messages.StringDoesNotMatchPattern(), formValidation.getMessage());
+        assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
+    }
+
+    /**
+     * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
+     * to a build whose log does not contain any line that matches the pattern.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoMatchTextUrlValidWarningNF3() throws Exception {
+        Folder f0 = createFolder();
+        Folder f1 = f0.createProject(Folder.class, "f2");
+        Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
