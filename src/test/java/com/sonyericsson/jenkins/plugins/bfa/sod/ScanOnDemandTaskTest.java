@@ -27,6 +27,7 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.util.RunList;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -37,6 +38,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.matrix.MatrixBuild;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import jenkins.model.Jenkins;
@@ -88,14 +91,13 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testOneSODbuildfoundwithBuildFailure() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
         AbstractBuild mockbuild1 = PowerMockito.mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = PowerMockito.mock(AbstractBuild.class);
         PowerMockito.when(mockbuild1.getResult()).thenReturn(Result.SUCCESS);
         PowerMockito.when(mockbuild2.getResult()).thenReturn(Result.FAILURE);
-        sodbuilds.add(mockbuild1);
-        sodbuilds.add(mockbuild2);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 1, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -109,14 +111,15 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testTwoSODbuildfoundwithBuildFailure() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
+
         AbstractBuild mockbuild1 = PowerMockito.mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = PowerMockito.mock(AbstractBuild.class);
         PowerMockito.when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         PowerMockito.when(mockbuild2.getResult()).thenReturn(Result.FAILURE);
-        sodbuilds.add(mockbuild1);
-        sodbuilds.add(mockbuild2);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
+
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 2, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -129,14 +132,14 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testNoSODbuildfoundwithBuildSuccess() {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
         AbstractBuild mockbuild1 = PowerMockito.mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = PowerMockito.mock(AbstractBuild.class);
         PowerMockito.when(mockbuild1.getResult()).thenReturn(Result.SUCCESS);
         PowerMockito.when(mockbuild2.getResult()).thenReturn(Result.SUCCESS);
-        sodbuilds.add(mockbuild1);
-        sodbuilds.add(mockbuild2);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+
+        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -150,7 +153,6 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testNoSODbuildfoundwithBuildFailedButAlreadyScanned() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
 
         List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
         foundFailureCauses.add(new FoundFailureCause(configureCauseAndIndication()));
@@ -160,9 +162,12 @@ public class ScanOnDemandTaskTest {
         PowerMockito.when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         FailureCauseBuildAction failureCauseBuildAction = PowerMockito.mock(FailureCauseBuildAction.class);
         mockbuild1.addAction(failureCauseBuildAction);
-        sodbuilds.add(mockbuild1);
+
+        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Collections.singletonList(mockbuild1));
+
         PowerMockito.when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -176,14 +181,16 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testOneSODMatrixbuildfoundwithBuildFailure() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
+
         MatrixBuild matrixbuild1 = PowerMockito.mock(MatrixBuild.class);
         MatrixBuild matrixbuild2 = PowerMockito.mock(MatrixBuild.class);
         PowerMockito.when(matrixbuild1.getResult()).thenReturn(Result.SUCCESS);
         PowerMockito.when(matrixbuild2.getResult()).thenReturn(Result.FAILURE);
-        sodbuilds.add(matrixbuild1);
-        sodbuilds.add(matrixbuild2);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+
+        RunList<MatrixBuild> builds = new RunList<MatrixBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
+
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 1, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -197,14 +204,16 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testNoSODMatrixBuildfoundwithBuildSuccess() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
+
         MatrixBuild matrixbuild1 = PowerMockito.mock(MatrixBuild.class);
         MatrixBuild matrixbuild2 = PowerMockito.mock(MatrixBuild.class);
         PowerMockito.when(matrixbuild1.getResult()).thenReturn(Result.SUCCESS);
         PowerMockito.when(matrixbuild2.getResult()).thenReturn(Result.SUCCESS);
-        sodbuilds.add(matrixbuild1);
-        sodbuilds.add(matrixbuild2);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+
+        RunList<MatrixBuild> builds = new RunList<MatrixBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
+
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
     }
@@ -218,7 +227,7 @@ public class ScanOnDemandTaskTest {
     @Test
     public void testNoSODmatrixbuildfoundwithBuildFailedButAlreadyScanned() throws Exception {
         mockproject = PowerMockito.mock(AbstractProject.class);
-        RunList sodbuilds = new RunList();
+
         List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
         foundFailureCauses.add(new FoundFailureCause(configureCauseAndIndication()));
         List<FailureCauseBuildAction> failureCauseBuildActions = new ArrayList<FailureCauseBuildAction>();
@@ -227,9 +236,12 @@ public class ScanOnDemandTaskTest {
         PowerMockito.when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         FailureCauseBuildAction failureCauseBuildAction = PowerMockito.mock(FailureCauseBuildAction.class);
         mockbuild1.addAction(failureCauseBuildAction);
-        sodbuilds.add(mockbuild1);
+
+        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        Whitebox.setInternalState(builds, "base", Collections.singletonList(mockbuild1));
+
         PowerMockito.when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
-        PowerMockito.when(mockproject.getBuilds()).thenReturn(sodbuilds);
+        PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
         sodbaseaction = new ScanOnDemandBaseAction(mockproject);
         assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
     }

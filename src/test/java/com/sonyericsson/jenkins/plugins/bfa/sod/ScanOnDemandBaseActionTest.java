@@ -36,7 +36,6 @@ import hudson.model.Item;
 import hudson.model.Result;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.SecurityRealm;
-import hudson.util.RunList;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -74,8 +73,6 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         }
         assertNull(build.getAction(FailureCauseBuildAction.class));
         assertBuildStatus(Result.FAILURE, build);
-        RunList sodbuilds = new RunList();
-        sodbuilds.add(build);
         ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
         sodbaseaction.setBuildType("nonscanned");
         StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
@@ -101,8 +98,6 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         }
         assertNull(build.getAction(FailureCauseBuildAction.class));
         assertBuildStatus(Result.SUCCESS, build);
-        RunList sodbuilds = new RunList();
-        sodbuilds.add(build);
         ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
         sodbaseaction.setBuildType("nonscanned");
         StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);

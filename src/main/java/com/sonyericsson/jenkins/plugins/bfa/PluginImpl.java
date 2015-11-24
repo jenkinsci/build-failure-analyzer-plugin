@@ -42,9 +42,11 @@ import hudson.model.Hudson;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -288,8 +290,17 @@ public class PluginImpl extends Plugin {
      *
      * @return the one.
      */
+    @Nonnull
     public static PluginImpl getInstance() {
-        return Hudson.getInstance().getPlugin(PluginImpl.class);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            throw new AssertionError("Jenkins is not here yet.");
+        }
+        PluginImpl plugin = jenkins.getPlugin(PluginImpl.class);
+        if (plugin == null) {
+            throw new AssertionError("Not here yet.");
+        }
+        return plugin;
     }
 
     /**
