@@ -1,8 +1,23 @@
-Plugins page; https://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer
-Issues page; https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27build-failure-analyzer-plugin%27
+# Build Failure Analyzer Plugin
 
+This plugin scans build logs and other files in the workspace for recognised patterns
+of known causes to build failures and displays them on the build page for quicker
+recognition of why the build failed.
 
+## Maintainers
 
+Robert Sandell - robert.sandell@cloudbees.com
+                 sandell.robert@gmail.com
+
+Tomas Westling - tomas.westling@sonymobile.com
+
+## Community Resources
+ * [Wiki](https://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer)
+ * [Open Issues](https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27build-failure-analyzer-plugin%27)
+ * [Mailing Lists](http://jenkins-ci.org/content/mailing-lists)
+
+# License
+```
 The MIT License
 
 Copyright 2012 Sony Ericsson Mobile Communications. All rights reserved.
@@ -25,21 +40,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
+```
 ==============
 
 Icon from Tango Icon Library 0.8.90 http://tango.freedesktop.org/Tango_Icon_Library
-
-==============
-
-This plugin scans build logs and other files in the workspace for recognised patterns
-of known causes to build failures and displays them on the build page for quicker
-recognition of why the build failed.
-
-==============
-Maintainers
-
-Robert Sandell - robert.sandell@cloudbees.com
-                 sandell.robert@gmail.com
-
-Tomas Westling - tomas.westling@sonymobile.com
