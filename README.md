@@ -6,10 +6,12 @@ recognition of why the build failed.
 
 ## Maintainers
 
-Robert Sandell - robert.sandell@cloudbees.com
-                 sandell.robert@gmail.com
+* Robert Sandell 
+  - robert.sandell@cloudbees.com
+  - sandell.robert@gmail.com
 
-Tomas Westling - tomas.westling@sonymobile.com
+* Tomas Westling 
+  - tomas.westling@sonymobile.com
 
 ## Community Resources
  * [Wiki](https://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer)
