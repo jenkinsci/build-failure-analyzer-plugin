@@ -30,6 +30,7 @@ import hudson.model.AbstractBuild;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
@@ -68,6 +69,8 @@ public class BuildFlowDBF extends DownstreamBuildFinder {
             } catch (ExecutionException e) {
                 // skip
             } catch (InterruptedException e) {
+                // ignore
+            } catch (CancellationException e) {
                 // ignore
             }
         }
