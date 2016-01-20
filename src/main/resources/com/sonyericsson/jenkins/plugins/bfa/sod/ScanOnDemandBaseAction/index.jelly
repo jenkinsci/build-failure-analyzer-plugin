@@ -41,8 +41,7 @@
                         <f:entry help="/plugin/build-failure-analyzer/help/help-SearchOption.html">
                             <input type="hidden" id="build" name="build" value="nonscanned"/>
                             <input type="radio" name="buildType" value="Only non-scanned builds" id="nonscanned_builds"
-                                   onClick= "selectBuildType('nonscanned','nonscanned_builds');this.form.submit()" />
-                            Scan non-scanned builds<br/>
+                                   onClick= "selectBuildType('nonscanned','nonscanned_builds');this.form.submit()" />Scan non-scanned builds<br/>
                             <input type="radio" name="buildType" value="All builds"  id= "all_builds"
                                    onClick="selectBuildType('all','all_builds');this.form.submit()" />Scan/Rescan all the builds<br/>
                         </f:entry>
