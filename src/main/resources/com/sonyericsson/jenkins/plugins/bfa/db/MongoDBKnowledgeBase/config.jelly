@@ -40,7 +40,7 @@
     <f:entry title="${%Password}" description="${%MongoDBKnowledgeBase_PasswordDesc}">
         <f:password name="password" value="${instance.password}"/>
     </f:entry>
-    <f:entry title="${%Enable Statistics logging}">
+    <f:entry title="${%Enable statistics logging}">
         <f:checkbox name="enableStatistics" default="true" checked="${instance.isStatisticsEnabled()}"/>
     </f:entry>
     <f:entry title="${%Enable statistics logging of successful builds}">

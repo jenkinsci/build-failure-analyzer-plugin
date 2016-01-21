@@ -29,7 +29,7 @@
             <f:checkbox name="globalEnabled" checked="${it.globalEnabled}" default="true"/>
         </f:entry>
         <f:entry title="${%Enable graphs}"
-                 description="${%Whether to display graphs or not. NOTE! The selected storage type must support this!}">
+                 description="${%Whether to display graphs or not. NOTE: The selected storage type must support this!}">
             <f:checkbox name="graphsEnabled" checked="${it.graphsEnabled}" default="true"/>
         </f:entry>
         <f:entry title="${%Text when no failure causes are found}"
