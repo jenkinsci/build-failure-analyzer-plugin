@@ -191,6 +191,9 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    Thread.currentThread().setName("BFA-scanner-"
+                                                           + build.getFullDisplayName() + ": "
+                                                           + cause.getName());
                     List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
                     if (!foundIndications.isEmpty()) {
                         FoundFailureCause foundFailureCause = new FoundFailureCause(cause, foundIndications);
@@ -248,6 +251,10 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
         List<Indication> indicationList = cause.getIndications();
         List<FoundIndication> foundIndicationList = new LinkedList<FoundIndication>();
         for (Indication indication : indicationList) {
+            Thread.currentThread().setName("BFA-scanner-"
+                                                   + build.getFullDisplayName() + ": "
+                                                   + cause.getName() + "-"
+                                                   + indication.getUserProvidedExpression());
             FoundIndication foundIndication = findIndication(indication, build, buildLog);
             if (foundIndication != null) {
                 foundIndicationList.add(foundIndication);
