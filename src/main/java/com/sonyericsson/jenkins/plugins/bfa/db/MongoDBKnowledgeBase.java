@@ -467,6 +467,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         DBObject object = new BasicDBObject();
         object.put("projectName", stat.getProjectName());
         object.put("buildNumber", stat.getBuildNumber());
+        object.put("displayName", stat.getDisplayName());
         object.put("master", stat.getMaster());
         object.put("slaveHostName", stat.getSlaveHostName());
         object.put("startingTime", stat.getStartingTime());

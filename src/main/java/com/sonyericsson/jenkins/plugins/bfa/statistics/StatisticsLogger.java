@@ -116,6 +116,7 @@ public final class StatisticsLogger {
         public void run() {
             String projectName = build.getProject().getFullName();
             int buildNumber = build.getNumber();
+            String displayName = build.getDisplayName();
             Date startingTime = build.getTime();
             long duration = build.getDuration();
             List<String> triggerCauses = new LinkedList<String>();
@@ -139,8 +140,9 @@ public final class StatisticsLogger {
             master = BfaUtils.getMasterName();
             Cause.UpstreamCause uc = (Cause.UpstreamCause)build.getCause(Cause.UpstreamCause.class);
             Statistics.UpstreamCause suc = new Statistics.UpstreamCause(uc);
-            Statistics obj = new Statistics(projectName, buildNumber, startingTime, duration, triggerCauses, nodeName,
-                                            master, timeZoneOffset, result, suc, failureCauseStatistics);
+            Statistics obj = new Statistics(projectName, buildNumber, displayName, startingTime, duration,
+                                            triggerCauses, nodeName, master, timeZoneOffset, result, suc,
+                                            failureCauseStatistics);
 
             PluginImpl p = PluginImpl.getInstance();
             KnowledgeBase kb = p.getKnowledgeBase();

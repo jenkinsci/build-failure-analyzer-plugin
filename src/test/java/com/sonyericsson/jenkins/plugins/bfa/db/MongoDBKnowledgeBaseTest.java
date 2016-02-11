@@ -92,7 +92,7 @@ public class MongoDBKnowledgeBaseTest {
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
                 "category", indications, null);
-        mockedStatistics = new Statistics("projectName", 1, null, 1, null, "nodeName", "master", 0, "result",
+        mockedStatistics = new Statistics("projectName", 1, "", null, 1, null, "nodeName", "master", 0, "result",
                 null, null);
     }
 
