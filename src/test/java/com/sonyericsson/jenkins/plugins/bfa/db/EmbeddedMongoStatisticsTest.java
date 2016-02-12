@@ -443,7 +443,8 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         List<FailureCauseStatistics> statList = new ArrayList<FailureCauseStatistics>();
         statList.add(causeStats);
 
-        Statistics statistics1 = new Statistics(null, 1, null, new Date(), 1L, null, null, null, 0, null, null, statList);
+        Statistics statistics1 = new Statistics(null, 1, null, new Date(), 1L, null, null, null, 0, null, null,
+                                                statList);
         Statistics statistics2 = new Statistics(null, 2, null, new Date(), 1L, null, null, null, 0, null, null, null);
 
         knowledgeBase.saveStatistics(statistics1);

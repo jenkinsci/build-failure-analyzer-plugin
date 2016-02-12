@@ -155,6 +155,7 @@ public class Statistics {
      * Standard/JSON constructor.
      * @param projectName the project name.
      * @param buildNumber the build number.
+     * @param displayName the build display name.
      * @param startingTime the starting time.
      * @param duration the duration.
      * @param triggerCauses the causes that triggered this build.
