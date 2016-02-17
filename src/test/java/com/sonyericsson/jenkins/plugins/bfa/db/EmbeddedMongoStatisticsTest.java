@@ -139,11 +139,11 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
 
         List<FailureCauseStatistics> failureList3 = new ArrayList<FailureCauseStatistics>();
 
-        Statistics statistics1 = new Statistics(PROJECT_A, 1, lastHour, 1L, null, null, MASTER_A, 0, UNSTABLE,
+        Statistics statistics1 = new Statistics(PROJECT_A, 1, "", lastHour, 1L, null, null, MASTER_A, 0, UNSTABLE,
                                                 null, failureList1);
-        Statistics statistics2 = new Statistics(PROJECT_B, 2, now, 1L, null, null, MASTER_B, 0, ABORTED,
+        Statistics statistics2 = new Statistics(PROJECT_B, 2, "", now, 1L, null, null, MASTER_B, 0, ABORTED,
                                                 null, failureList2);
-        Statistics statistics3 = new Statistics(PROJECT_C, 3, now, 1L, null, null, MASTER_C, 0, SUCCESS,
+        Statistics statistics3 = new Statistics(PROJECT_C, 3, "", now, 1L, null, null, MASTER_C, 0, SUCCESS,
                                                 null, failureList3);
 
         knowledgeBase.saveStatistics(statistics1);
@@ -202,7 +202,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     public void testGetNbrOfNullFailureCauses() throws Exception {
         assertEquals(0, knowledgeBase.getNbrOfNullFailureCauses(null));
 
-        Statistics nullStatistics = new Statistics(null, 1, null, 1L, null, null, null, 1, null, null, null);
+        Statistics nullStatistics = new Statistics(null, 1, null, null, 1L, null, null, null, 1, null, null, null);
         knowledgeBase.saveStatistics(nullStatistics);
 
         assertEquals(1, knowledgeBase.getNbrOfNullFailureCauses(null));
@@ -272,7 +272,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     @Test
     public void testStatisticsWithUpstreamCauses() throws Exception {
         Statistics.UpstreamCause uc = new UpstreamCause(PROJECT_B, BUILD_NR);
-        Statistics s = new Statistics(PROJECT_A, 1, null, 1L, null, null, MASTER_A, 0, UNSTABLE, uc, null);
+        Statistics s = new Statistics(PROJECT_A, 1, null, null, 1L, null, null, MASTER_A, 0, UNSTABLE, uc, null);
         knowledgeBase.saveStatistics(s);
         List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
         assertNotNull("The fetched statistics should not be null", fetchedStatistics);
@@ -289,7 +289,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
      */
     @Test
     public void testStatisticsWithNoUpstreamCauses() throws Exception {
-        Statistics s = new Statistics(PROJECT_A, 1, null, 1L, null, null, MASTER_A, 0, UNSTABLE, null, null);
+        Statistics s = new Statistics(PROJECT_A, 1, null, null, 1L, null, null, MASTER_A, 0, UNSTABLE, null, null);
         knowledgeBase.saveStatistics(s);
         List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
         assertNotNull("The fetched statistics should not be null", fetchedStatistics);
@@ -443,8 +443,9 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         List<FailureCauseStatistics> statList = new ArrayList<FailureCauseStatistics>();
         statList.add(causeStats);
 
-        Statistics statistics1 = new Statistics(null, 1, new Date(), 1L, null, null, null, 0, null, null, statList);
-        Statistics statistics2 = new Statistics(null, 2, new Date(), 1L, null, null, null, 0, null, null, null);
+        Statistics statistics1 = new Statistics(null, 1, null, new Date(), 1L, null, null, null, 0, null, null,
+                                                statList);
+        Statistics statistics2 = new Statistics(null, 2, null, new Date(), 1L, null, null, null, 0, null, null, null);
 
         knowledgeBase.saveStatistics(statistics1);
         knowledgeBase.saveStatistics(statistics2);

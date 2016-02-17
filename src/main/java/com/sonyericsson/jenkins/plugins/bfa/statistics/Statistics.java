@@ -41,6 +41,7 @@ public class Statistics {
 
     private String projectName;
     private int buildNumber;
+    private String displayName;
     private Date startingTime;
     private long duration;
     private List<String> triggerCauses;
@@ -65,6 +66,14 @@ public class Statistics {
      */
     public int getBuildNumber() {
         return buildNumber;
+    }
+
+    /**
+     * Getter for the build display name.
+     * @return the build display name.
+     */
+    public String getDisplayName() {
+        return displayName;
     }
 
      /**
@@ -146,6 +155,7 @@ public class Statistics {
      * Standard/JSON constructor.
      * @param projectName the project name.
      * @param buildNumber the build number.
+     * @param displayName the build display name.
      * @param startingTime the starting time.
      * @param duration the duration.
      * @param triggerCauses the causes that triggered this build.
@@ -159,6 +169,7 @@ public class Statistics {
     @JsonCreator
     public Statistics(@JsonProperty("projectName")    String projectName,
                       @JsonProperty("buildNumber")    int buildNumber,
+                      @JsonProperty("displayName")    String displayName,
                       @JsonProperty("startingTime")   Date startingTime,
                       @JsonProperty("duration")       long duration,
                       @JsonProperty("triggerCauses")  List<String> triggerCauses,
@@ -170,6 +181,7 @@ public class Statistics {
                       @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics) {
         this.projectName = projectName;
         this.buildNumber = buildNumber;
+        this.displayName = displayName;
         if (startingTime == null) {
             this.startingTime = null;
         } else {
@@ -209,7 +221,7 @@ public class Statistics {
                       int timeZoneOffset,
                       String result,
                       List<FailureCauseStatistics> failureCauseStatistics) {
-        this(projectName, buildNumber, startingTime, duration, triggerCauses, nodeName, master, timeZoneOffset,
+        this(projectName, buildNumber, null, startingTime, duration, triggerCauses, nodeName, master, timeZoneOffset,
              result, null, failureCauseStatistics);
     }
 
