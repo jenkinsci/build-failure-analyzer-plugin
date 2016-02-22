@@ -1014,7 +1014,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private void addFailureCausesToDBObject(DBObject object, List<FailureCauseStatistics> failureCauseStatisticsList)
             throws UnknownHostException, AuthenticationException {
-        if (failureCauseStatisticsList != null && failureCauseStatisticsList.size() > 0) {
+        if (failureCauseStatisticsList != null && !failureCauseStatisticsList.isEmpty()) {
             List<DBObject> failureCauseStatisticsObjects = new LinkedList<DBObject>();
 
             for (FailureCauseStatistics failureCauseStatistics : failureCauseStatisticsList) {
@@ -1036,7 +1036,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param indications the list of indications to add.
      */
     private void addIndicationsToDBObject(DBObject object, List<FoundIndication> indications) {
-        if (indications != null && indications.size() > 0) {
+        if (indications != null && !indications.isEmpty()) {
             List<DBObject> foundIndicationObjects = new LinkedList<DBObject>();
             for (FoundIndication foundIndication : indications) {
                 DBObject foundIndicationObject = new BasicDBObject();
