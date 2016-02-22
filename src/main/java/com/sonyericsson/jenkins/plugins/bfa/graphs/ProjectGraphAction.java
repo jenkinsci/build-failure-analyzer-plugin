@@ -152,7 +152,7 @@ public class ProjectGraphAction extends BfaGraphAction {
     @Override
     protected String getGraphCacheId(GraphType whichGraph, String reqTimePeriod,
             boolean hideAborted, boolean forAllMasters) {
-        String id = null;
+        String id;
         if (whichGraph == GraphType.BAR_CHART_BUILD_NBRS) {
             id = getCacheIdForBuildNbrs(getProjectName());
         } else {

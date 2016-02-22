@@ -297,7 +297,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
             //Yes the folders plugin could cause problems here,
             // but stapler can't help me if I use the URL which would be preferred.
             //TODO what to do when the job is renamed?
-            TopLevelItem item = null;
+            TopLevelItem item;
             item = Jenkins.getInstance().getItem(project);
             logger.log(Level.FINE, "Project item for {0} is {1}", new Object[]{project, item});
             if (item != null && item instanceof MatrixProject) {

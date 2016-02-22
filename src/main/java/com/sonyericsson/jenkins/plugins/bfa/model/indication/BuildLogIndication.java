@@ -258,7 +258,7 @@ public class BuildLogIndication extends Indication {
                     }
 
                     AbstractBuild build = null;
-                    ItemGroup getItemInstance = null;
+                    ItemGroup getItemInstance;
 
                     if (urlParts[0].split("/job/").length > 1) {
                         /*

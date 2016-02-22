@@ -76,7 +76,7 @@ public class PieChart extends BFAGraph {
     private PieDataset createDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<ObjectCountPair<String>> nbrOfFailureCauses = null;
+        List<ObjectCountPair<String>> nbrOfFailureCauses;
         if (byCategories) {
             nbrOfFailureCauses = knowledgeBase.getNbrOfFailureCategoriesPerName(filter, -1);
         } else {
