@@ -157,7 +157,7 @@ public class ScanOnDemandBaseAction implements Action {
      * @return sodbuilds.
      */
     public List<AbstractBuild> getAllBuilds() {
-        AbstractProject currentProject = (AbstractProject)project;
+        AbstractProject currentProject = project;
         List<AbstractBuild> sodbuilds = new ArrayList<AbstractBuild>();
         if (currentProject != null) {
             RunList builds = currentProject.getBuilds();
@@ -231,7 +231,7 @@ public class ScanOnDemandBaseAction implements Action {
      * @param  build AbstractBuild.
      */
     public void removeRunActions(MatrixBuild build) {
-        List<MatrixRun> runs = ((MatrixBuild)build).getRuns();
+        List<MatrixRun> runs = build.getRuns();
         for (MatrixRun run : runs) {
             if (run.getNumber() == build.getNumber()) {
                 FailureCauseBuildAction fcba = run.getAction(FailureCauseBuildAction.class);
