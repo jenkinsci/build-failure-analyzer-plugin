@@ -215,9 +215,13 @@ public abstract class FailureReader {
     private String removeConsoleNotes(final String input) {
         final List<String> cleanLines = new LinkedList<String>();
         final Scanner lineTokenizer = new Scanner(input);
-        lineTokenizer.useDelimiter(Pattern.compile("[\\n\\r]"));
-        while (lineTokenizer.hasNext()) {
-            cleanLines.add(ConsoleNote.removeNotes(lineTokenizer.next()));
+        try {
+            lineTokenizer.useDelimiter(Pattern.compile("[\\n\\r]"));
+            while (lineTokenizer.hasNext()) {
+                cleanLines.add(ConsoleNote.removeNotes(lineTokenizer.next()));
+            }
+        } finally {
+            lineTokenizer.close();
         }
         return Joiner.on('\n').join(cleanLines);
     }
