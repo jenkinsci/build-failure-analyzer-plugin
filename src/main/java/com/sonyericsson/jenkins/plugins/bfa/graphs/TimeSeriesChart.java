@@ -153,9 +153,7 @@ public class TimeSeriesChart extends BFAGraph {
 
         plot.setRangeAxis(yAxis);
 
-        JFreeChart chart = new JFreeChart(graphTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-
-        return chart;
+        return new JFreeChart(graphTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
     }
 
     /**

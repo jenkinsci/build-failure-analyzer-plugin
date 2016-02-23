@@ -90,7 +90,6 @@ public class ScanOnDemandTask implements Runnable {
     public void endMatrixBuildScan() throws IOException {
         List<MatrixRun> runs = ((MatrixBuild)build).getRuns();
         List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
-        int i = 0;
         for (MatrixRun run : runs) {
             if (run.getNumber() == build.getNumber()) {
                 runsWithCorrectNumber.add(run);
