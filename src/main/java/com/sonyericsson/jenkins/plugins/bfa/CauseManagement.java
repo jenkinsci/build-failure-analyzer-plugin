@@ -109,7 +109,7 @@ public class CauseManagement extends BfaGraphAction {
     private static final String GRAPH_TITLE_CATEGORIES = "Failures causes for all nodes grouped by categories";
 
     private static final String GRAPH_TITLE_UNKNOWN_PERCENTAGE = "Unknown failure causes";
-
+    private static final String OWNER_URL = "/";
     @Override
     public String getIconFileName() {
         if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)
@@ -260,7 +260,7 @@ public class CauseManagement extends BfaGraphAction {
      * @return the owner's URL or some place else to redirect the user after save.
      */
     protected String getOwnerUrl() {
-        return "/";
+        return OWNER_URL;
     }
 
     /**
