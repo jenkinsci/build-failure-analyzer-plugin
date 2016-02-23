@@ -117,7 +117,7 @@ public class ComputerGraphAction extends BfaGraphAction {
         if (computer == null) {
             return false;
         }
-        return (computer.getNode() instanceof Slave);
+        return computer.getNode() instanceof Slave;
     }
 
     @Override

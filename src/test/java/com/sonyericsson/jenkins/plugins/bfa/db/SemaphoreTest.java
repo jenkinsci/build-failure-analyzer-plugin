@@ -43,7 +43,7 @@ public class SemaphoreTest {
     @Test(timeout = 20000)
     public void testAcquireAndRelease() throws Exception {
         Semaphore semaphore = new Semaphore();
-        java.util.concurrent.Semaphore innerSemaphore = Whitebox.getInternalState(semaphore, "semaphore");
+        java.util.concurrent.Semaphore innerSemaphore = Whitebox.getInternalState(semaphore, "semaphoreLock");
         assertEquals("The semaphore should have no available permits to start with", 0,
                 innerSemaphore.availablePermits());
         semaphore.release();
