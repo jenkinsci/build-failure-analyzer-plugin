@@ -259,7 +259,7 @@ public class ScanOnDemandBaseAction implements Action {
             throws ServletException, IOException, InterruptedException {
         checkPermission();
         List<AbstractBuild> sodbuilds = getBuilds();
-        if (sodbuilds.size() > 0) {
+        if (!sodbuilds.isEmpty()) {
             for (AbstractBuild sodbuild : sodbuilds) {
                 FailureCauseBuildAction fcba = sodbuild.getAction(FailureCauseBuildAction.class);
                 if (fcba != null) {

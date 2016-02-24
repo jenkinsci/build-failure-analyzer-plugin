@@ -459,7 +459,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     @JsonIgnore
     public String getCategoriesAsString() {
-        if (categories == null || categories.size() == 0) {
+        if (categories == null || categories.isEmpty()) {
             return null;
         }
         StringBuilder builder = new StringBuilder();

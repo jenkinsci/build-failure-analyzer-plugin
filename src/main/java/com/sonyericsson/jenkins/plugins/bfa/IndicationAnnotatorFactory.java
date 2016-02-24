@@ -61,7 +61,7 @@ public class IndicationAnnotatorFactory extends ConsoleAnnotatorFactory {
             return null;
         }
         List<FoundFailureCause> foundFailureCauses = action.getFoundFailureCauses();
-        if (foundFailureCauses.size() < 1) {
+        if (foundFailureCauses.isEmpty()) {
             return null;
         }
         return new IndicationAnnotator(foundFailureCauses);
