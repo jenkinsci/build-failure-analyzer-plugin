@@ -130,8 +130,12 @@ public class FoundIndication {
      */
     public String getFirstMatchingLine() {
         final Scanner scanner = new Scanner(matchingString);
-        scanner.useDelimiter(Pattern.compile("[\\n\\r]"));
-        return scanner.next();
+        try {
+            scanner.useDelimiter(Pattern.compile("[\\n\\r]"));
+            return scanner.next();
+        } finally {
+            scanner.close();
+        }
     }
 
     /**
