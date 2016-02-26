@@ -126,7 +126,7 @@ public final class StatisticsLogger {
             Node node = build.getBuiltOn();
             String nodeName = node.getNodeName();
             int timeZoneOffset = TimeZone.getDefault().getRawOffset();
-            String master = "";
+            String master;
 
             String result = build.getResult().toString();
             List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();

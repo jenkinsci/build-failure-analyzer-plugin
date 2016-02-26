@@ -96,9 +96,9 @@ public class BarChart extends BFAGraph {
     private CategoryDataset createDataset() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        List<ObjectCountPair<String>> failureItems = null;
+        List<ObjectCountPair<String>> failureItems;
         long nullFailureItems = 0;
-        String nullFailuteItemsName = null;
+        String nullFailuteItemsName;
         if (byCategories) {
             failureItems = knowledgeBase.getNbrOfFailureCategoriesPerName(filter, -1);
             nullFailuteItemsName = GRAPH_UNCATEGORIZED;

@@ -856,7 +856,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         // MongoDB timezone is UTC:
         c.setTimeZone(new SimpleTimeZone(0, "UTC"));
 
-        TimePeriod period = null;
+        TimePeriod period;
         if (intervalSize == Calendar.HOUR_OF_DAY) {
             int dayOfMonth = groupedAttrs.getInt("dayOfMonth");
             c.set(Calendar.DAY_OF_MONTH, dayOfMonth);

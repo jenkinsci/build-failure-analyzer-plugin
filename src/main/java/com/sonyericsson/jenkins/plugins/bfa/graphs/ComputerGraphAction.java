@@ -180,7 +180,7 @@ public class ComputerGraphAction extends BfaGraphAction {
             GraphFilterBuilder filter, Map<String, String> rawReqParams) {
         String date = rawReqParams.get(URL_PARAM_TIME_PERIOD);
 
-        int interval = 0;
+        int interval;
         Calendar cal = Calendar.getInstance();
         if (URL_PARAM_VALUE_TODAY.equals(date)) {
             interval = Calendar.HOUR_OF_DAY;
