@@ -50,6 +50,9 @@ public class FoundIndication {
      */
     protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
+    /**
+     * @deprecated, kept for backwards compatibility.
+     */
     @Deprecated
     private transient Integer matchingLine;
     private String pattern;

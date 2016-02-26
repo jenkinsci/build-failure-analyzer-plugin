@@ -30,13 +30,13 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
  */
 public class Semaphore {
 
-    private java.util.concurrent.Semaphore semaphore;
+    private java.util.concurrent.Semaphore semaphoreLock;
 
     /**
      * Standard constructor.
      */
     public Semaphore() {
-        semaphore = new java.util.concurrent.Semaphore(0);
+        semaphoreLock = new java.util.concurrent.Semaphore(0);
     }
 
     /**
@@ -46,12 +46,12 @@ public class Semaphore {
      */
     public void acquire() throws InterruptedException {
         int take;
-        if (semaphore.availablePermits() < 1) {
+        if (semaphoreLock.availablePermits() < 1) {
             take = 1;
         } else {
-            take = semaphore.availablePermits();
+            take = semaphoreLock.availablePermits();
         }
-        semaphore.acquire(take);
+        semaphoreLock.acquire(take);
     }
 
     /**
@@ -59,6 +59,6 @@ public class Semaphore {
      * Releases a permit, returning it to the semaphore.
      */
     public void release() {
-        semaphore.release();
+        semaphoreLock.release();
     }
 }
