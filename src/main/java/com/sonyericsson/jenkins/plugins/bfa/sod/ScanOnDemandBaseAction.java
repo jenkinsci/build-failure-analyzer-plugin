@@ -192,7 +192,7 @@ public class ScanOnDemandBaseAction implements Action {
     public List<AbstractBuild> getBuilds() {
         buildType = getBuildType();
         if (buildType != null) {
-            if (buildType.length() == 0 | buildType.equals(NON_SCANNED)) {
+            if (buildType.length() == 0 || buildType.equals(NON_SCANNED)) {
                 return getNotScannedBuilds();
             } else {
                 return getAllBuilds();

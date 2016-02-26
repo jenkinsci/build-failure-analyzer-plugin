@@ -51,6 +51,8 @@ import java.util.Map;
  */
 public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Serializable {
 
+    private static final long DEFAULT_NBR_OF_NULL_FAILURE_CAUSES = 0;
+
     /**
      * Get the list of {@link FailureCause}s. It is intended to be used in the scanning phase hence it should be
      * returned as quickly as possible, so the list could be cached.
@@ -253,7 +255,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return number of statistics posts without FailureCause
      */
     public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
-        return 0;
+        return DEFAULT_NBR_OF_NULL_FAILURE_CAUSES;
     }
 
     /**

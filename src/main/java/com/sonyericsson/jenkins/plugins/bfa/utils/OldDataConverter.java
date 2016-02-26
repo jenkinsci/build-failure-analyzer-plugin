@@ -28,6 +28,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.listeners.ItemListener;
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -145,12 +147,13 @@ public final class OldDataConverter extends ItemListener {
     public synchronized void onLoaded() {
         //Release the hounds!!!
         itemsLoaded = true;
-        for (String project : actionsToConvert.keySet()) {
-            List<FailureCauseMatrixBuildAction> actions = actionsToConvert.get(project);
+        for (Entry<String, List<FailureCauseMatrixBuildAction>> actionToConvert : actionsToConvert.entrySet()) {
+            List<FailureCauseMatrixBuildAction> actions = actionToConvert.getValue();
             logger.log(Level.FINE, "Scheduling conversion of {1} build actions for project {2}.",
-                    new Object[]{actions.size(), project});
+                    new Object[]{actions.size(), actionToConvert.getKey()});
             for (FailureCauseMatrixBuildAction action : actions) {
-                executor.schedule(new MatrixBuildActionWork(project, action), SCHEDULE_DELAY, TimeUnit.SECONDS);
+                executor.schedule(new MatrixBuildActionWork(actionToConvert.getKey(), action),
+                        SCHEDULE_DELAY, TimeUnit.SECONDS);
             }
         }
         actionsToConvert.clear();
