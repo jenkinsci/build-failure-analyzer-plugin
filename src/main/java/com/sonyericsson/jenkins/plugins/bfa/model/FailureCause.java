@@ -234,10 +234,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         //Use the cache it's hopefully good enough
         try {
             for (FailureCause other : PluginImpl.getInstance().getKnowledgeBase().getCauses()) {
-                if (id == null || !id.equals(other.getId())) {
-                    if (value.equals(other.getName())) {
-                        return FormValidation.error("There is another cause with that name.");
-                    }
+                if ((id == null || !id.equals(other.getId())) && value.equals(other.getName())) {
+                    return FormValidation.error("There is another cause with that name.");
                 }
             }
 

@@ -66,10 +66,9 @@ public class ScanOnDemandTask implements Runnable {
                 for (AbstractBuild run : runs) {
                     if (run.getActions(FailureCauseBuildAction.class).isEmpty()
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
-                            && run.getResult().isWorseThan(Result.SUCCESS)) {
-                        if (run.getNumber() == build.getNumber()) {
-                            scanBuild(run);
-                        }
+                            && run.getResult().isWorseThan(Result.SUCCESS)
+                            && run.getNumber() == build.getNumber()) {
+                        scanBuild(run);
                     }
                 }
                 endMatrixBuildScan();
