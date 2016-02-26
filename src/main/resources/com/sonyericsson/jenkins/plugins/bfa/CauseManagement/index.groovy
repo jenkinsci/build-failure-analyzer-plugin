@@ -32,7 +32,7 @@ def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
 
-l.layout(permission: PluginImpl.VIEW_PERMISSION) {
+l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
