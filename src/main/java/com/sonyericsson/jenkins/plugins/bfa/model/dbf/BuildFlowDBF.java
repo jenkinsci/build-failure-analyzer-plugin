@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 
 
 /**
@@ -43,8 +42,6 @@ import java.util.logging.Logger;
 @Extension
 public class BuildFlowDBF extends DownstreamBuildFinder {
 
-    private static final Logger logger = Logger.
-            getLogger(BuildFlowDBF.class.getName());
     @Override
     public List<AbstractBuild<?, ?>> getDownstreamBuilds(
             final AbstractBuild build) {

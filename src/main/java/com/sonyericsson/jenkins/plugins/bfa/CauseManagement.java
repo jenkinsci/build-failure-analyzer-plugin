@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Page for managing the failure causes.
@@ -63,8 +62,6 @@ import java.util.logging.Logger;
  */
 @Extension
 public class CauseManagement extends BfaGraphAction {
-
-    private static final Logger logger = Logger.getLogger(CauseManagement.class.getName());
 
     /**
      * Where in the Jenkins name space this action will be.

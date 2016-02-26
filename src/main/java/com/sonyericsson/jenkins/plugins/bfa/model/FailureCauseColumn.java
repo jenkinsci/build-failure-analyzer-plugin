@@ -119,8 +119,7 @@ public class FailureCauseColumn extends ListViewColumn {
     if (lastBuild == null) {
       return null;
     }
-    FailureCauseBuildAction action = lastBuild.getAction(FailureCauseBuildAction.class);
-    return action;
+    return lastBuild.getAction(FailureCauseBuildAction.class);
   }
 
 }
