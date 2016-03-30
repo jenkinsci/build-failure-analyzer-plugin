@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImplHudsonTest { //extends HudsonTestCase {
+public class PluginImplHudsonTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
