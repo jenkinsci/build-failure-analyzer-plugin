@@ -586,11 +586,22 @@ public class PluginImpl extends Plugin {
         save();
     }
 
+
+    /**
+     *
+     * Get value of boolean parameter with default. If parameter is not defined, return default value.
+     *
+     * @param object - JSON object
+     * @param parameter - parameter name
+     * @param defaultValue - default value
+     * @return Parameter value that was casted to Boolean, or default value is parameter was not defined.
+     */
     private Boolean getBooleanWithDefault(JSONObject object, String parameter, Boolean defaultValue) {
         Boolean result = defaultValue;
         Object b = object.get(parameter);
-        if (b != null)
+        if (b != null) {
             result = object.getBoolean(parameter);
+        }
 
         return result;
     }
