@@ -40,12 +40,16 @@ import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
 import hudson.ExtensionList;
 import net.sf.json.JSONObject;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
 import org.powermock.reflect.Whitebox;
 
 import java.util.List;
 
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -56,7 +60,9 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImplHudsonTest extends HudsonTestCase {
+public class PluginImplHudsonTest { //extends HudsonTestCase {
+    @Rule
+    public JenkinsRule jenkins = new JenkinsRule();
 
     /**
      * Tests that {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getKnowledgeBaseDescriptors()} contains the
@@ -64,6 +70,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testGetKnowledgeBaseDescriptors() throws Exception {
         ExtensionList<KnowledgeBase.KnowledgeBaseDescriptor> descriptors =
                 PluginImpl.getInstance().getKnowledgeBaseDescriptors();
@@ -90,6 +97,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testConfigure() throws Exception {
         KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         String expectedNoCauseMessage = "I am blinded!";
@@ -112,6 +120,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testConfigureLowScanThreads() throws Exception {
         KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         String expectedNoCauseMessage = "I am blinded!";
@@ -135,6 +144,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testConfigureConvert() throws Exception {
         KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         FailureCause cause = new FailureCause("Olle", "Olle");
@@ -154,7 +164,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         assertSame(cause, knowledgeBase.getCauses().iterator().next());
 
         //Check that the config page contains what we expect as well.
-        HtmlPage page = createWebClient().goTo("configure");
+        HtmlPage page = jenkins.createWebClient().goTo("configure");
         assertConfigPageRendering(knowledgeBase, page);
     }
 
@@ -164,6 +174,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testConfigureConvertSameType() throws Exception {
         DifferentKnowledgeBase prevKnowledgeBase = new DifferentKnowledgeBase("Original");
         FailureCause cause = new FailureCause("Olle", "Olle");
@@ -184,7 +195,7 @@ public class PluginImplHudsonTest extends HudsonTestCase {
         assertSame(cause, knowledgeBase.getCauses().iterator().next());
 
         //Check that the config page contains what we expect as well.
-        HtmlPage page = createWebClient().goTo("configure");
+        HtmlPage page = jenkins.createWebClient().goTo("configure");
         assertConfigPageRendering(knowledgeBase, page);
     }
 

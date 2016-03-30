@@ -59,7 +59,7 @@ public class FailureCauseMatrixAggregatorTest extends HudsonTestCase {
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         matrix.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(10, TimeUnit.SECONDS);
         FailureCauseMatrixBuildAction matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNotNull(matrixAction);
@@ -75,9 +75,27 @@ public class FailureCauseMatrixAggregatorTest extends HudsonTestCase {
         MatrixProject matrix = createMatrixProject();
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
-        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(10, TimeUnit.SECONDS);
         Action matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
+        assertNull(matrixAction);
+    }
+
+    /**
+     * Tests that an action is added when the builds fail.
+     * Also tests getRunsWithAction.
+     *
+     * @throws Exception if so.
+     */
+    public void testAggregateIgnoreAbortedCauses() throws Exception {
+        MatrixProject matrix = createMatrixProject();
+        ResultFilter.setDoNotAnalyzeAbortedJobs(true);
+        Axis axis = new Axis("Axel", "Foley", "Rose");
+        matrix.setAxes(new AxisList(axis));
+        matrix.getBuildersList().add(new MockBuilder(Result.ABORTED));
+        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
+        MatrixBuild build = future.get(10, TimeUnit.SECONDS);
+        FailureCauseMatrixBuildAction matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNull(matrixAction);
     }
 }

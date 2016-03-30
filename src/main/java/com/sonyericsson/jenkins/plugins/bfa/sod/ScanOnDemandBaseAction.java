@@ -25,6 +25,7 @@ package com.sonyericsson.jenkins.plugins.bfa.sod;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.ResultFilter;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import hudson.matrix.MatrixBuild;
@@ -162,7 +163,7 @@ public class ScanOnDemandBaseAction implements Action {
         if (currentProject != null) {
             RunList builds = currentProject.getBuilds();
             for (Object build : builds) {
-                if (((AbstractBuild)build).getResult().isWorseThan(Result.SUCCESS)) {
+                if (ResultFilter.analyzeResult(((AbstractBuild)build).getResult())) {
                     sodbuilds.add((AbstractBuild)build);
                 }
             }
@@ -214,7 +215,7 @@ public class ScanOnDemandBaseAction implements Action {
             for (AbstractBuild build : builds) {
                 final Result result = build.getResult();
                 if (result != null
-                    && result.isWorseThan(Result.SUCCESS)
+                    && ResultFilter.analyzeResult(result)
                     && build.getActions(FailureCauseBuildAction.class).isEmpty()
                     && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
 

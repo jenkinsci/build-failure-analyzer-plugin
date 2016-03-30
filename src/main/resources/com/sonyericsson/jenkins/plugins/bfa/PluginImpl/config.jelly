@@ -111,5 +111,9 @@
                            default="${it.sodVariables.DEFAULT_SOD_COREPOOL_THREADS}"/>
             </f:entry>
         </f:section>
+        <f:entry title="${%Do not analyze aborted jobs}"
+                 description="${%Skip aborted jobs}">
+            <f:checkbox name="doNotAnalyzeAbortedJob" checked="${it.doNotAnalyzeAbortedJob}" default="false"/>
+        </f:entry>
     </f:advanced>
 </j:jelly>

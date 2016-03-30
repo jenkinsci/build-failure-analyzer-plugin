@@ -115,6 +115,7 @@ public class PluginImpl extends Plugin {
     private String noCausesMessage;
 
     private Boolean globalEnabled;
+    private Boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
 
@@ -180,6 +181,13 @@ public class PluginImpl extends Plugin {
                 causes = null;
             }
         }
+
+        if (doNotAnalyzeAbortedJob == null) {
+            doNotAnalyzeAbortedJob = Boolean.FALSE;
+        }
+
+        ResultFilter.setDoNotAnalyzeAbortedJobs(doNotAnalyzeAbortedJob);
+
         try {
             knowledgeBase.start();
             logger.fine("[BFA] Started!");
@@ -504,6 +512,7 @@ public class PluginImpl extends Plugin {
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
+        doNotAnalyzeAbortedJob = getBooleanWithDefault(o, "doNotAnalyzeAbortedJob", Boolean.FALSE);
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
         graphsEnabled = o.getBoolean("graphsEnabled");
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
@@ -571,6 +580,19 @@ public class PluginImpl extends Plugin {
             knowledgeBase.stop();
             knowledgeBase = base;
         }
+
+        ResultFilter.setDoNotAnalyzeAbortedJobs(doNotAnalyzeAbortedJob);
+
         save();
+    }
+
+    private Boolean getBooleanWithDefault(JSONObject object, String parameter, Boolean defaultValue) {
+        Object b = object.get(parameter);
+        if (b != null)
+            doNotAnalyzeAbortedJob = object.getBoolean(parameter);
+        else
+            doNotAnalyzeAbortedJob = defaultValue;
+
+        return doNotAnalyzeAbortedJob;
     }
 }

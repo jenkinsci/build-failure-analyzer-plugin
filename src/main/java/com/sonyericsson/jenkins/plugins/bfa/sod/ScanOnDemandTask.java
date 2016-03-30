@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.sonyericsson.jenkins.plugins.bfa.ResultFilter;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScanner;
@@ -30,7 +31,6 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
-import hudson.model.Result;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -66,14 +66,16 @@ public class ScanOnDemandTask implements Runnable {
                 for (AbstractBuild run : runs) {
                     if (run.getActions(FailureCauseBuildAction.class).isEmpty()
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
-                            && run.getResult().isWorseThan(Result.SUCCESS)
+                            && ResultFilter.analyzeResult(run.getResult())
                             && run.getNumber() == build.getNumber()) {
                         scanBuild(run);
                     }
                 }
                 endMatrixBuildScan();
             } else {
-                scanBuild(build);
+                if (ResultFilter.analyzeResult(build.getResult())) {
+                    scanBuild(build);
+                }
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to add a FailureScanner to "
