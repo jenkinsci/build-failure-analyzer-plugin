@@ -587,12 +587,11 @@ public class PluginImpl extends Plugin {
     }
 
     private Boolean getBooleanWithDefault(JSONObject object, String parameter, Boolean defaultValue) {
+        Boolean result = defaultValue;
         Object b = object.get(parameter);
         if (b != null)
-            doNotAnalyzeAbortedJob = object.getBoolean(parameter);
-        else
-            doNotAnalyzeAbortedJob = defaultValue;
+            result = object.getBoolean(parameter);
 
-        return doNotAnalyzeAbortedJob;
+        return result;
     }
 }

@@ -163,7 +163,7 @@ public class ScanOnDemandBaseAction implements Action {
         if (currentProject != null) {
             RunList builds = currentProject.getBuilds();
             for (Object build : builds) {
-                if (ResultFilter.analyzeResult(((AbstractBuild)build).getResult())) {
+                if (ResultFilter.needToAnalyze(((AbstractBuild)build).getResult())) {
                     sodbuilds.add((AbstractBuild)build);
                 }
             }
@@ -215,7 +215,7 @@ public class ScanOnDemandBaseAction implements Action {
             for (AbstractBuild build : builds) {
                 final Result result = build.getResult();
                 if (result != null
-                    && ResultFilter.analyzeResult(result)
+                    && ResultFilter.needToAnalyze(result)
                     && build.getActions(FailureCauseBuildAction.class).isEmpty()
                     && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
 

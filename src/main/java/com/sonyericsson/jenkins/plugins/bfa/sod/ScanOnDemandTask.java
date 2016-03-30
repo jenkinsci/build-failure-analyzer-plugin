@@ -66,14 +66,14 @@ public class ScanOnDemandTask implements Runnable {
                 for (AbstractBuild run : runs) {
                     if (run.getActions(FailureCauseBuildAction.class).isEmpty()
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
-                            && ResultFilter.analyzeResult(run.getResult())
+                            && ResultFilter.needToAnalyze(run.getResult())
                             && run.getNumber() == build.getNumber()) {
                         scanBuild(run);
                     }
                 }
                 endMatrixBuildScan();
             } else {
-                if (ResultFilter.analyzeResult(build.getResult())) {
+                if (ResultFilter.needToAnalyze(build.getResult())) {
                     scanBuild(build);
                 }
             }

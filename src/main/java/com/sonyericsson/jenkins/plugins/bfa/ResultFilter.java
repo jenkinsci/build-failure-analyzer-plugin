@@ -9,7 +9,7 @@ public class ResultFilter {
         ResultFilter.doNotAnalyzeAbortedJobs = doNotAnalyzeAbortedJobs;
     }
 
-    public static boolean analyzeResult(Result result)  {
+    public static boolean needToAnalyze(Result result)  {
         if (doNotAnalyzeAbortedJobs) {
             return result != Result.SUCCESS && result != Result.ABORTED;
         }
