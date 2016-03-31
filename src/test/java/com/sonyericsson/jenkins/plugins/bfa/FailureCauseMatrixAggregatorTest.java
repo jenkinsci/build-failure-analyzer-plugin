@@ -51,6 +51,9 @@ import static org.junit.Assert.assertNull;
  * @throws Exception if so.
  */
 public class FailureCauseMatrixAggregatorTest {
+    /**
+     * The Jenkins Rule.
+     */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule jenkins = new JenkinsRule();

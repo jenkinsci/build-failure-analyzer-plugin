@@ -64,6 +64,9 @@ import static org.mockito.Mockito.when;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class PluginImplHudsonTest {
+    /**
+     * The Jenkins Rule.
+     */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule jenkins = new JenkinsRule();
