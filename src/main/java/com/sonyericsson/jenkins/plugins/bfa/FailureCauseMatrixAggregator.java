@@ -54,7 +54,7 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
 
     @Override
     public boolean endBuild() {
-        if (PluginImpl.shouldScan(build) && ResultFilter.needToAnalyze(build.getResult())) {
+        if (PluginImpl.shouldScan(build) && PluginImpl.needToAnalyze(build.getResult())) {
             List<MatrixRun> runsWithCorrectNumber = getRuns(build);
             build.addAction(new FailureCauseMatrixBuildAction(build, runsWithCorrectNumber));
         }

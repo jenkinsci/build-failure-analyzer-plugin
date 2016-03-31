@@ -80,6 +80,7 @@ public class ScanOnDemandTaskTest {
         pluginMock = PowerMockito.mock(PluginImpl.class);
         mockStatic(PluginImpl.class);
         when(PluginImpl.getInstance()).thenReturn(pluginMock);
+        when(PluginImpl.needToAnalyze(Result.FAILURE)).thenReturn(true);
     }
 
     /**

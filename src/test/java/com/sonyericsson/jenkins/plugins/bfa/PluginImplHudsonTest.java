@@ -42,7 +42,6 @@ import hudson.ExtensionList;
 import net.sf.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
-//import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
 import org.powermock.reflect.Whitebox;
@@ -66,7 +65,8 @@ import static org.mockito.Mockito.when;
  */
 public class PluginImplHudsonTest {
     @Rule
-    private JenkinsRule jenkins = new JenkinsRule();
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
+    public JenkinsRule jenkins = new JenkinsRule();
 
     /**
      * Tests that {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getKnowledgeBaseDescriptors()} contains the
