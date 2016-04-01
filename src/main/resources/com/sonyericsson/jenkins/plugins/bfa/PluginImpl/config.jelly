@@ -112,7 +112,7 @@
             </f:entry>
         </f:section>
         <f:entry title="${%Do not analyze aborted jobs}"
-                 description="${%Skip aborted jobs}">
+                                help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
             <f:checkbox name="doNotAnalyzeAbortedJob" checked="${it.doNotAnalyzeAbortedJob}" default="false"/>
         </f:entry>
     </f:advanced>

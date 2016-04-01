@@ -116,7 +116,7 @@ public class PluginImpl extends Plugin {
     private String noCausesMessage;
 
     private Boolean globalEnabled;
-    private Boolean doNotAnalyzeAbortedJob;
+    private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
 
@@ -181,10 +181,6 @@ public class PluginImpl extends Plugin {
                 //No reason to keep it in memory right?
                 causes = null;
             }
-        }
-
-        if (doNotAnalyzeAbortedJob == null) {
-            doNotAnalyzeAbortedJob = Boolean.FALSE;
         }
 
         try {
@@ -337,7 +333,7 @@ public class PluginImpl extends Plugin {
      *
      * @return true if on.
      */
-    public Boolean doNotAnalyzeAbortedJob() {
+    public boolean isDoNotAnalyzeAbortedJob() {
         return doNotAnalyzeAbortedJob;
     }
 
@@ -468,7 +464,7 @@ public class PluginImpl extends Plugin {
      * @return true if it should be analyzed.
      */
     public static boolean needToAnalyze(Result result)  {
-        if (getInstance().doNotAnalyzeAbortedJob()) {
+        if (getInstance().isDoNotAnalyzeAbortedJob()) {
             return result != Result.SUCCESS && result != Result.ABORTED;
         }   else {
             return result != Result.SUCCESS;
