@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import hudson.model.Hudson;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,9 +51,9 @@ public class PluginImplTest {
      */
     @Before
     public void setUp() {
-        Hudson hudson = mock(Hudson.class);
-        mockStatic(Hudson.class);
-        when(Hudson.getInstance()).thenReturn(hudson);
+        Jenkins jenkins = mock(Jenkins.class);
+        mockStatic(Jenkins.class);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
     }
 
     /**

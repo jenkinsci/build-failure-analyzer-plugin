@@ -52,7 +52,6 @@ import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import hudson.Extension;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
-import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -106,7 +105,7 @@ public class BuildFailureScanner extends RunListener<AbstractBuild> {
             if (build.getActions(FailureCauseBuildAction.class).isEmpty()
                 && build.getActions(FailureCauseMatrixBuildAction.class).isEmpty()) {
 
-                if (build.getResult().isWorseThan(Result.SUCCESS)) {
+                if (PluginImpl.needToAnalyze(build.getResult())) {
                     scan(build, buildLog);
                     ProjectGraphAction.invalidateProjectGraphCache(build.getProject());
                     ComputerGraphAction.invalidateNodeGraphCache(build.getBuiltOn());

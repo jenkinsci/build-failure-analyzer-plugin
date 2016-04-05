@@ -30,7 +30,6 @@ import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.BuildListener;
-import hudson.model.Result;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -55,7 +54,7 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
 
     @Override
     public boolean endBuild() {
-        if (PluginImpl.shouldScan(build) && build.getResult().isWorseThan(Result.SUCCESS)) {
+        if (PluginImpl.shouldScan(build) && PluginImpl.needToAnalyze(build.getResult())) {
             List<MatrixRun> runsWithCorrectNumber = getRuns(build);
             build.addAction(new FailureCauseMatrixBuildAction(build, runsWithCorrectNumber));
         }

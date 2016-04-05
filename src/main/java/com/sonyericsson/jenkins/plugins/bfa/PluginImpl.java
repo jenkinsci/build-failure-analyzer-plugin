@@ -39,6 +39,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
@@ -115,6 +116,7 @@ public class PluginImpl extends Plugin {
     private String noCausesMessage;
 
     private Boolean globalEnabled;
+    private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
 
@@ -180,6 +182,7 @@ public class PluginImpl extends Plugin {
                 causes = null;
             }
         }
+
         try {
             knowledgeBase.start();
             logger.fine("[BFA] Started!");
@@ -202,7 +205,7 @@ public class PluginImpl extends Plugin {
      */
     public static String getStaticResourcesBase() {
         if (staticResourcesBase == null) {
-            PluginManager pluginManager = Hudson.getInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
             if (pluginManager != null) {
                 PluginWrapper wrapper = pluginManager.getPlugin(PluginImpl.class);
                 if (wrapper != null) {
@@ -258,7 +261,7 @@ public class PluginImpl extends Plugin {
      * @return a URL to the image.
      */
     public static String getFullImageUrl(String size, String name) {
-        return Hudson.getInstance().getRootUrl() + getImageUrl(size, name);
+        return Jenkins.getInstance().getRootUrl() + getImageUrl(size, name);
     }
 
     /**
@@ -326,6 +329,15 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * If this feature is enabled or not. When on all aborted builds will be ignored.
+     *
+     * @return true if on.
+     */
+    public boolean isDoNotAnalyzeAbortedJob() {
+        return doNotAnalyzeAbortedJob;
+    }
+
+    /**
      * If graphs are enabled or not. Links to graphs and graphs will not be displayed when disabled.
      * It can be enabled only if the knowledgeBase has support for it.
      * @return True if enabled.
@@ -358,6 +370,15 @@ public class PluginImpl extends Plugin {
      */
     public String getTestResultCategories() {
         return testResultCategories;
+    }
+
+    /**
+     * Sets if this feature is enabled or not. When on all aborted builds will be ignored.
+     *
+     * @param doNotAnalyzeAbortedJob on or off.
+     */
+    public void setDoNotAnalyzeAbortedJob(boolean doNotAnalyzeAbortedJob) {
+        this.doNotAnalyzeAbortedJob = doNotAnalyzeAbortedJob;
     }
 
     /**
@@ -437,6 +458,20 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Checks if the build with certain result should be analyzed or not.
+     *
+     * @param result the result
+     * @return true if it should be analyzed.
+     */
+    public static boolean needToAnalyze(Result result)  {
+        if (getInstance().isDoNotAnalyzeAbortedJob()) {
+            return result != Result.SUCCESS && result != Result.ABORTED;
+        }   else {
+            return result != Result.SUCCESS;
+        }
+    }
+
+    /**
      * Checks if the specified build should be scanned or not.
      *
      * @param build the build
@@ -504,6 +539,7 @@ public class PluginImpl extends Plugin {
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
+        doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
         graphsEnabled = o.getBoolean("graphsEnabled");
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
@@ -571,6 +607,7 @@ public class PluginImpl extends Plugin {
             knowledgeBase.stop();
             knowledgeBase = base;
         }
+
         save();
     }
 }

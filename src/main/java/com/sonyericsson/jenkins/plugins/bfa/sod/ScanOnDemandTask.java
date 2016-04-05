@@ -30,7 +30,6 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
-import hudson.model.Result;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -66,7 +65,7 @@ public class ScanOnDemandTask implements Runnable {
                 for (AbstractBuild run : runs) {
                     if (run.getActions(FailureCauseBuildAction.class).isEmpty()
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
-                            && run.getResult().isWorseThan(Result.SUCCESS)
+                            && PluginImpl.needToAnalyze(run.getResult())
                             && run.getNumber() == build.getNumber()) {
                         scanBuild(run);
                     }
