@@ -23,12 +23,11 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
-import hudson.model.AbstractProject;
-
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import hudson.model.Job;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -64,7 +63,7 @@ public class TimeSeriesUnkownFailuresChart extends TimeSeriesChart {
      * @param intervalSize the interval sizes in which the data is grouped
      * @param graphTitle The title of the graph
      */
-    public TimeSeriesUnkownFailuresChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
+    public TimeSeriesUnkownFailuresChart(long timestamp, int defaultW, int defaultH, Job project,
             GraphFilterBuilder filter, int intervalSize, String graphTitle) {
         super(timestamp, defaultW, defaultH, project, filter, intervalSize, false, graphTitle);
     }

@@ -23,10 +23,9 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
-import hudson.model.AbstractProject;
-
 import java.util.List;
 
+import hudson.model.Job;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -65,7 +64,7 @@ public class BarChart extends BFAGraph {
      * @param byCategories True to display categories, or false to display failure causes
      */
     public BarChart(long timestamp, int defaultW, int defaultH,
-            AbstractProject project, GraphFilterBuilder filter,
+            Job project, GraphFilterBuilder filter,
             String graphTitle, boolean byCategories) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
         this.byCategories = byCategories;

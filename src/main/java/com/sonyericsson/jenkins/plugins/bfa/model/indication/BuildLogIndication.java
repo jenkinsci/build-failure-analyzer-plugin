@@ -30,10 +30,10 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.model.ItemGroup;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -119,11 +119,11 @@ public class BuildLogIndication extends Indication {
                  * @param project a project.
                  * @return the build of the given project based on this StringBuildId.
                  *
-                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 * @see StringBuildId#getBuild(hudson.model.Job)
                  */
                 @Override
-                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
-                                        ? extends AbstractBuild<?, ?>> project) {
+                public Run getBuild(Job<? extends Job<?, ?>,
+                                        ? extends Run<?, ?>> project) {
                     return project.getLastBuild();
                 }
             },
@@ -135,11 +135,11 @@ public class BuildLogIndication extends Indication {
                  * @param project a project.
                  * @return the build of the given project based on this StringBuildId.
                  *
-                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 * @see StringBuildId#getBuild(hudson.model.Job)
                  */
                 @Override
-                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
-                        ? extends AbstractBuild<?, ?>> project) {
+                public Run getBuild(Job<? extends Job<?, ?>,
+                        ? extends Run<?, ?>> project) {
                     return project.getLastFailedBuild();
                 }
             },
@@ -151,11 +151,11 @@ public class BuildLogIndication extends Indication {
                  * @param project a project.
                  * @return the build of the given project based on this StringBuildId.
                  *
-                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 * @see StringBuildId#getBuild(hudson.model.Job)
                  */
                 @Override
-                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
-                        ? extends AbstractBuild<?, ?>> project) {
+                public Run getBuild(Job<? extends Job<?, ?>,
+                        ? extends Run<?, ?>> project) {
                     return project.getLastUnsuccessfulBuild();
                 }
             },
@@ -167,11 +167,11 @@ public class BuildLogIndication extends Indication {
                  * @param project a project.
                  * @return the build of the given project based on this StringBuildId.
                  *
-                 * @see StringBuildId#getBuild(hudson.model.AbstractProject)
+                 * @see StringBuildId#getBuild(hudson.model.Job)
                  */
                 @Override
-                public AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
-                        ? extends AbstractBuild<?, ?>> project) {
+                public Run getBuild(Job<? extends Job<?, ?>,
+                        ? extends Run<?, ?>> project) {
                     return project.getLastSuccessfulBuild();
                 }
             };
@@ -223,8 +223,8 @@ public class BuildLogIndication extends Indication {
              * @param project a project.
              * @return the build of the given project based on this StringBuildId.
              */
-            public abstract AbstractBuild getBuild(AbstractProject<? extends AbstractProject<?, ?>,
-                    ? extends AbstractBuild<?, ?>> project);
+            public abstract Run getBuild(Job<? extends Job<?, ?>,
+                    ? extends Run<?, ?>> project);
         }
 
         @Override
@@ -257,7 +257,7 @@ public class BuildLogIndication extends Indication {
                         urlParts[i] = urlMatcher.group(i + 1);
                     }
 
-                    AbstractBuild build = null;
+                    Run build = null;
                     ItemGroup getItemInstance;
 
                     if (urlParts[0].split("/job/").length > 1) {
@@ -271,7 +271,7 @@ public class BuildLogIndication extends Indication {
                          * prefix from where jenkins is served, ie: http://localhost/jenkins/job/<job>/<buildNumber>
                          */
                         String[] interestingJobParts = urlParts[0].split("/job/", 2);
-                        String[] jobParts = interestingJobParts[interestingJobParts.length-1].split("/job/");
+                        String[] jobParts = interestingJobParts[interestingJobParts.length - 1].split("/job/");
                         for (String part: jobParts) {
                             fullFolderName += "/" + part;
                         }
@@ -289,9 +289,9 @@ public class BuildLogIndication extends Indication {
                        Type 3: .../<job>/<buildNumber>/<matrixInfo>/
                      */
 
-                    if (getItemInstance.getItem(urlParts[2]) instanceof AbstractProject
+                    if (getItemInstance.getItem(urlParts[2]) instanceof Job
                             && isValidBuildId(urlParts[3])) {
-                        AbstractProject project = (AbstractProject)getItemInstance.getItem(urlParts[2]);
+                        Job project = (Job)getItemInstance.getItem(urlParts[2]);
                         build = getBuildById(project, urlParts[3]);
                     } else if (getItemInstance.getItem(urlParts[1]) instanceof MatrixProject
                             && isValidBuildId(urlParts[3])) {
@@ -348,8 +348,8 @@ public class BuildLogIndication extends Indication {
          * @return the build defined by the given project and id, or null if no build can be
          * found for the given project and id.
          */
-        private AbstractBuild getBuildById(AbstractProject<? extends AbstractProject<?, ?>,
-                ? extends AbstractBuild<?, ?>> project, String id) {
+        private Run getBuildById(Job<? extends Job<?, ?>,
+                ? extends Run<?, ?>> project, String id) {
             if (id.matches("\\d+")) {
                 return project.getBuildByNumber(Integer.parseInt(id));
             } else {

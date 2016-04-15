@@ -23,8 +23,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
-import hudson.model.AbstractProject;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -38,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import hudson.model.Job;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -89,7 +88,7 @@ public class TimeSeriesChart extends BFAGraph {
      * @param graphTitle The title of the graph
      */
     public TimeSeriesChart(long timestamp, int defaultW, int defaultH,
-            AbstractProject project, GraphFilterBuilder filter,
+            Job project, GraphFilterBuilder filter,
             int intervalSize, boolean groupByCategories, String graphTitle) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
         this.intervalSize = intervalSize;

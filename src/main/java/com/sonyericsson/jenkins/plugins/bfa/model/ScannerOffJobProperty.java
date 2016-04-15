@@ -24,7 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.JobProperty;
 
 import java.io.Serializable;
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * @deprecated {@link ScannerJobProperty} is used instead, but this is kept to be able to de-serialize old jobs.
  */
 @Deprecated
-public class ScannerOffJobProperty extends JobProperty<AbstractProject<?, ?>> implements Serializable {
+public class ScannerOffJobProperty extends JobProperty<Job<?, ?>> implements Serializable {
     private boolean doNotScan;
 
     /**

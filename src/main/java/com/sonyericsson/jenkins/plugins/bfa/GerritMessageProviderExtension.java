@@ -30,7 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.Hudson;
 
 /**
@@ -43,7 +43,7 @@ import hudson.model.Hudson;
 public class GerritMessageProviderExtension extends GerritMessageProvider {
 
     @Override
-    public String getBuildCompletedMessage(AbstractBuild build) {
+    public String getBuildCompletedMessage(Run build) {
         if (PluginImpl.getInstance().isGerritTriggerEnabled()) {
             StringBuilder customMessage = new StringBuilder();
             if (build != null) {

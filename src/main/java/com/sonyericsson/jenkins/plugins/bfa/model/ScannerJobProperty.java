@@ -31,9 +31,9 @@ import hudson.Launcher;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -48,7 +48,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  *
  * @author Robert Sandell &lt;robert.sandell@sonymobile.com&gt;
  */
-public class ScannerJobProperty extends JobProperty<AbstractProject<?, ?>> implements MatrixAggregatable, Serializable {
+public class ScannerJobProperty extends JobProperty<Job<?, ?>> implements MatrixAggregatable, Serializable {
 
     private boolean doNotScan;
 
@@ -79,7 +79,7 @@ public class ScannerJobProperty extends JobProperty<AbstractProject<?, ?>> imple
 
     @Override
     @Restricted(NoExternalUse.class)
-    public Action getJobAction(AbstractProject<?, ?> job) {
+    public Action getJobAction(Job<?, ?> job) {
         return new FailureCauseProjectAction(job);
     }
 

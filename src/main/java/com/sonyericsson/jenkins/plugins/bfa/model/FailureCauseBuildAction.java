@@ -29,9 +29,9 @@ import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
 import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Hudson;
+import hudson.model.Run;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -60,7 +60,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
     public static final String URL_NAME = "bfa";
     private static final Logger logger = Logger.getLogger(FailureCauseBuildAction.class.getName());
 
-    private AbstractBuild build;
+    private Run build;
 
     /**
      * Standard constructor.
@@ -186,7 +186,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      *
      * @param build - the build corresponding to this action
      */
-    public void setBuild(AbstractBuild build) {
+    public void setBuild(Run build) {
         this.build = build;
     }
 
@@ -195,7 +195,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      *
      * @return the build corresponding to this action
      */
-    public AbstractBuild getBuild() {
+    public Run getBuild() {
         return build;
     }
 
@@ -242,11 +242,11 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
             // Add causes from this build
             displayData.setFoundFailureCauses(
                     buildAction.getFoundFailureCauses());
-            for (AbstractBuild abstractBuild
+            for (Run run
                     : getDownstreamBuilds(buildAction.getBuild())) {
 
                 checkSubFailureCauseBuildAction(
-                        abstractBuild, displayData, depth);
+                        run, displayData, depth);
             }
         }
         return displayData;
@@ -256,22 +256,22 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * Check if the build has the action FailureCauseBuildAction. If so, add
      * information to the display data.
      *
-     * @param abstractBuild the build under investigation
+     * @param run the build under investigation
      * @param displayData object holding display information
      * @param depth recursive depth
      */
     private static void checkSubFailureCauseBuildAction(
-            final AbstractBuild abstractBuild,
+            final Run run,
             final FailureCauseDisplayData displayData,
             final int depth) {
         FailureCauseBuildAction subAction =
-                abstractBuild.getAction(FailureCauseBuildAction.class);
+                run.getAction(FailureCauseBuildAction.class);
         if (subAction != null) {
             setSubDisplayData(subAction, displayData, depth);
         } else {
             // Nested matrix build
             FailureCauseMatrixBuildAction subMatrixAction =
-                    abstractBuild.getAction(
+                    run.getAction(
                             FailureCauseMatrixBuildAction.class);
             if (subMatrixAction != null) {
                 for (MatrixRun matrixRun
@@ -281,7 +281,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
                     if (action != null) {
                         FailureCauseDisplayData subDisplayData =
                                 setSubDisplayData(action, displayData, depth);
-                        adjustProjectDisplayName(abstractBuild, subDisplayData);
+                        adjustProjectDisplayName(run, subDisplayData);
                     }
                 }
             }
@@ -315,15 +315,15 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * When nested there is one link to the project and one to the build. The
      * build nbr is removed from the name.
      *
-     * @param abstractBuild the build generating the build failure
+     * @param run the build generating the build failure
      * @param subDisplayData the data object to update
      */
     private static void adjustProjectDisplayName(
-            final AbstractBuild abstractBuild,
+            final Run run,
             final FailureCauseDisplayData subDisplayData) {
         if (subDisplayData != null) {
             subDisplayData.getLinks().setProjectDisplayName(
-                    abstractBuild.getParent().getFullName() + " » "
+                    run.getParent().getFullName() + " » "
                     + subDisplayData.getLinks().getProjectDisplayName());
         }
     }
@@ -335,16 +335,16 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * @param build collect downstream builds from this
      * @return a set of downstream builds
      */
-    private static Set<AbstractBuild<?, ?>> getDownstreamBuilds(
-            final AbstractBuild build) {
+    private static Set<Run<?, ?>> getDownstreamBuilds(
+            final Run build) {
 
-        Set<AbstractBuild<?, ?>> foundDbf = new TreeSet<AbstractBuild<?, ?>>();
+        Set<Run<?, ?>> foundDbf = new TreeSet<Run<?, ?>>();
 
         for (DownstreamBuildFinder dbf : DownstreamBuildFinder.getAll()) {
 
-            List<AbstractBuild<?, ?>> downstreamBuilds = dbf.getDownstreamBuilds(build);
+            List<Run<?, ?>> downstreamBuilds = dbf.getDownstreamBuilds(build);
 
-            for (AbstractBuild<?, ?> downstreamBuild : downstreamBuilds) {
+            for (Run<?, ?> downstreamBuild : downstreamBuilds) {
                 if (downstreamBuild != null) {
                     foundDbf.add(downstreamBuild);
                 } else {

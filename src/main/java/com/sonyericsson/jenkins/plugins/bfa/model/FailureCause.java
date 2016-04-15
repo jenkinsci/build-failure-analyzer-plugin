@@ -32,11 +32,11 @@ import hudson.Util;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Describable;
+import hudson.model.Descriptor;
 import hudson.model.Failure;
 import hudson.model.Hudson;
+import hudson.model.Job;
 import hudson.model.User;
-import hudson.model.Descriptor;
-import hudson.model.AbstractProject;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -647,7 +647,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         public void setLastFailedBuildUrl() {
             StaplerRequest staplerRequest = Stapler.getCurrentRequest();
             if (staplerRequest != null) {
-                AbstractProject project = staplerRequest.findAncestorObject(AbstractProject.class);
+                Job project = staplerRequest.findAncestorObject(Job.class);
                 if (project != null && project.getLastFailedBuild() != null) {
                     staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME,
                             Hudson.getInstance().getRootUrl() + project.getLastFailedBuild().getUrl());

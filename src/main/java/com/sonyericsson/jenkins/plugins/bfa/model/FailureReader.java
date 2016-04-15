@@ -37,7 +37,7 @@ import com.google.common.base.Joiner;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.console.ConsoleNote;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 
 /**
@@ -74,7 +74,7 @@ public abstract class FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws IOException if so.
      */
-    public abstract FoundIndication scan(AbstractBuild build) throws IOException;
+    public abstract FoundIndication scan(Run build) throws IOException;
 
     /**
      * Scans for indications of a failure cause.
@@ -82,7 +82,7 @@ public abstract class FailureReader {
      * @param buildLog the log of the build.
      * @return a FoundIndication if something was found, null if not.
      */
-    public abstract FoundIndication scan(AbstractBuild build, PrintStream buildLog);
+    public abstract FoundIndication scan(Run build, PrintStream buildLog);
 
     /**
      * Scans one file for the required pattern.
@@ -92,7 +92,7 @@ public abstract class FailureReader {
      * @return a FoundIndication if we find the pattern, null if not.
      * @throws IOException if problems occur in the reader handling.
      */
-    protected FoundIndication scanOneFile(AbstractBuild build, BufferedReader reader, String currentFile)
+    protected FoundIndication scanOneFile(Run build, BufferedReader reader, String currentFile)
             throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;
@@ -152,7 +152,7 @@ public abstract class FailureReader {
      * @return a FoundIndication if we find the pattern, null if not.
      * @throws IOException if problems occur in the reader handling.
      */
-    protected FoundIndication scanMultiLineOneFile(AbstractBuild build, BufferedReader reader, String currentFile)
+    protected FoundIndication scanMultiLineOneFile(Run build, BufferedReader reader, String currentFile)
             throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         FoundIndication foundIndication = null;

@@ -23,12 +23,12 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.InvisibleAction;
 
 import javax.annotation.Nonnull;
 
+import hudson.model.Job;
+import hudson.model.Run;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -40,12 +40,12 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 public class FailureCauseProjectAction extends InvisibleAction {
 
-    private final AbstractProject<?, ?> job;
+    private final Job<?, ?> job;
 
     /**
      * @param job A project to report.
      */
-    public FailureCauseProjectAction(@Nonnull AbstractProject<?, ?> job) {
+    public FailureCauseProjectAction(@Nonnull Job<?, ?> job) {
         this.job = job;
     }
 
@@ -53,7 +53,7 @@ public class FailureCauseProjectAction extends InvisibleAction {
      * @return Build action to report.
      */
     public FailureCauseBuildAction getAction() {
-        AbstractBuild<?, ?> build = job.getLastCompletedBuild();
+        Run<?, ?> build = job.getLastCompletedBuild();
         if (build == null) {
             return null;
         }

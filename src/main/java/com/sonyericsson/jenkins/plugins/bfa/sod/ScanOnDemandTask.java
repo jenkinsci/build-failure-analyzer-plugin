@@ -29,7 +29,8 @@ import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScanner;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -46,14 +47,14 @@ import java.util.logging.Logger;
 public class ScanOnDemandTask implements Runnable {
 
     private static final Logger logger = Logger.getLogger(ScanOnDemandTask.class.getName());
-    private AbstractBuild build;
+    private Run build;
 
     /**
      * SODExecutor constructor.
      *
      * @param build the build to analyze.
      */
-    public ScanOnDemandTask(final AbstractBuild build) {
+    public ScanOnDemandTask(final Run build) {
         this.build = build;
     }
 
@@ -62,7 +63,7 @@ public class ScanOnDemandTask implements Runnable {
         try {
             if (build instanceof MatrixBuild) {
                 List<MatrixRun> runs = ((MatrixBuild)build).getRuns();
-                for (AbstractBuild run : runs) {
+                for (Run run : runs) {
                     if (run.getActions(FailureCauseBuildAction.class).isEmpty()
                             && run.getActions(FailureCauseMatrixBuildAction.class).isEmpty()
                             && PluginImpl.needToAnalyze(run.getResult())
@@ -76,7 +77,7 @@ public class ScanOnDemandTask implements Runnable {
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to add a FailureScanner to "
-                    + build.getProject().getFullDisplayName(), e);
+                    + build.getParent().getFullDisplayName(), e);
         }
     }
 
@@ -101,16 +102,16 @@ public class ScanOnDemandTask implements Runnable {
     /**
      * Scan the non scanned old build.
      *
-     * @param abstractBuild the non-scanned/scanned build to scan/rescan.
+     * @param run the non-scanned/scanned build to scan/rescan.
      */
-    public void scanBuild(AbstractBuild abstractBuild) {
+    public void scanBuild(Run run) {
         FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream(abstractBuild.getLogFile(), true);
+            fos = new FileOutputStream(run.getLogFile(), true);
             PrintStream buildLog = new PrintStream(fos, true, "UTF8");
-            PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(abstractBuild);
-            BuildFailureScanner.scanIfNotScanned(abstractBuild, buildLog);
-            abstractBuild.save();
+            PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(run);
+            BuildFailureScanner.scanIfNotScanned(run, buildLog);
+            run.save();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
         } finally {
@@ -118,7 +119,7 @@ public class ScanOnDemandTask implements Runnable {
                 try {
                     fos.close();
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the build log file " + abstractBuild.getLogFile(), e);
+                    logger.log(Level.WARNING, "Failed to close the build log file " + run.getLogFile(), e);
                 }
             }
         }

@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 
 /**
@@ -60,7 +60,7 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws java.io.IOException if so.
      */
-    public FoundIndication scan(AbstractBuild build) throws IOException {
+    public FoundIndication scan(Run build) throws IOException {
         String currentfile = build.getLogFile().getName();
         BufferedReader reader = null;
         try {
@@ -87,7 +87,7 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      * @return a FoundIndication if something was found, null if not.
      */
     @Override
-    public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
+    public FoundIndication scan(Run build, PrintStream buildLog) {
         FoundIndication foundIndication = null;
         String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;

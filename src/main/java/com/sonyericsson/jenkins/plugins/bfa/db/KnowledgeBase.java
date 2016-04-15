@@ -30,9 +30,9 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 import hudson.ExtensionList;
-import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import jenkins.model.Jenkins;
 import org.jfree.data.time.TimePeriod;
 
@@ -349,10 +349,10 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Removes the build failure cause of particular build.
-     * @param build the AbstractBuild.
+     * @param build the build.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract void removeBuildfailurecause(AbstractBuild build) throws Exception;
+    public abstract void removeBuildfailurecause(Run build) throws Exception;
     /**
      * Descriptor for {@link KnowledgeBase}s.
      */

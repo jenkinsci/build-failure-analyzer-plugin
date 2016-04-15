@@ -28,7 +28,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import hudson.Extension;
 import hudson.console.ConsoleAnnotator;
 import hudson.console.ConsoleAnnotatorFactory;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -50,12 +50,12 @@ public class IndicationAnnotatorFactory extends ConsoleAnnotatorFactory {
             //Accessed through some other means than http, so lets assume it is not a human.
             return null;
         }
-        Ancestor ancestor = currentRequest.findAncestor(AbstractBuild.class);
+        Ancestor ancestor = currentRequest.findAncestor(Run.class);
         if (ancestor == null) {
             return null;
         }
         Object object = ancestor.getObject();
-        AbstractBuild build = (AbstractBuild)object;
+        Run build = (Run)object;
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         if (action == null) {
             return null;

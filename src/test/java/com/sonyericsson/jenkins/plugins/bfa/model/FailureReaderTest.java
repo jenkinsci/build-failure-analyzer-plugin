@@ -42,7 +42,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.junit.Test;
 
 
@@ -69,12 +69,12 @@ public class FailureReaderTest {
         }
 
         @Override
-        public FoundIndication scan(AbstractBuild build) throws IOException {
+        public FoundIndication scan(Run build) throws IOException {
             return null;
         }
 
         @Override
-        public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
+        public FoundIndication scan(Run build, PrintStream buildLog) {
             return null;
         }
     }

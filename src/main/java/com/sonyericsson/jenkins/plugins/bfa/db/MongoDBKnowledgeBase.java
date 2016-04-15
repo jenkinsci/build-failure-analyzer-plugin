@@ -43,8 +43,8 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
@@ -988,9 +988,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void removeBuildfailurecause(AbstractBuild build) throws Exception {
+    public void removeBuildfailurecause(Run build) throws Exception {
         BasicDBObject searchObj = new BasicDBObject();
-        searchObj.put("projectName", build.getProject().getFullName());
+        searchObj.put("projectName", build.getParent().getFullName());
         searchObj.put("buildNumber", build.getNumber());
         searchObj.put("master", BfaUtils.getMasterName());
         com.mongodb.DBCursor dbcursor = getStatisticsCollection().find(searchObj);

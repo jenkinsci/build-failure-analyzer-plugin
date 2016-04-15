@@ -25,15 +25,15 @@ package com.sonyericsson.jenkins.plugins.bfa.sod;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import hudson.Extension;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.TransientProjectActionFactory;
+import hudson.model.Job;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
+import jenkins.model.TransientActionFactory;
 
 /**
  * Extension point for inserting SOD Transient Actions
@@ -42,10 +42,15 @@ import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
  * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
  */
 @Extension
-public class ScanOnDemandTransientActionProvider extends TransientProjectActionFactory {
+public class ScanOnDemandTransientActionProvider extends TransientActionFactory<Job> {
 
     @Override
-    public Collection<? extends Action> createFor(AbstractProject target) {
+    public Class<Job> type() {
+        return Job.class;
+    }
+
+    @Override
+    public Collection<? extends Action> createFor(Job target) {
         if (PluginImpl.shouldScan(target)) {
             final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
             final ProjectGraphAction graphAction = new ProjectGraphAction(target);
