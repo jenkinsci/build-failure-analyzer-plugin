@@ -26,6 +26,8 @@ package com.sonyericsson.jenkins.plugins.bfa.model.dbf;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
 import hudson.model.Run;
 
@@ -57,9 +59,28 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
      *
      * @param build get the downstream build(s) relative this build
      * @return a list with downstream builds
+     * @deprecated use {@link #getDownstreamBuilds(hudson.model.Run)}
      */
-    public abstract List<Run<?, ?>> getDownstreamBuilds(
-            final Run build);
+    @Deprecated
+    public List<Run<?, ?>> getDownstreamBuilds(final AbstractBuild build) {
+        if (Util.isOverridden(DownstreamBuildFinder.class, getClass(), "getDownstreamBuilds", Run.class)) {
+            return getDownstreamBuilds((Run) build);
+        }
+        return null;
+    }
+
+    /**
+     * Return a list of all downstream builds originating from provided build.
+     *
+     * @param build get the downstream build(s) relative this build
+     * @return a list with downstream builds
+     */
+    public List<Run<?, ?>> getDownstreamBuilds(final Run build) {
+        if (Util.isOverridden(DownstreamBuildFinder.class, getClass(), "getDownstreamBuilds", AbstractBuild.class)) {
+            return getDownstreamBuilds((AbstractBuild)build);
+        }
+        return null;
+    }
 
     /**
      * Return a list of all registered DownstreamBuildFinder of this type.

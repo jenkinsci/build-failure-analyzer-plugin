@@ -36,7 +36,9 @@ import java.util.regex.Pattern;
 import com.google.common.base.Joiner;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.Util;
 import hudson.console.ConsoleNote;
+import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import org.codehaus.jackson.annotate.JsonIgnoreType;
 
@@ -73,8 +75,45 @@ public abstract class FailureReader {
      * @return a FoundIndication if the pattern given by this FailureReader
      * is found in the log of the given build; return null otherwise.
      * @throws IOException if so.
+     * @deprecated use {@link #scan(hudson.model.Run)}.
      */
-    public abstract FoundIndication scan(Run build) throws IOException;
+    @Deprecated
+    public FoundIndication scan(AbstractBuild build) throws IOException {
+        if (Util.isOverridden(FailureReader.class, getClass(), "scan", Run.class)) {
+            return scan((Run) build);
+        }
+        return null;
+    }
+
+    /**
+     * Scans a build log.
+     *
+     * @param build - the build whose log should be scanned.
+     * @return a FoundIndication if the pattern given by this FailureReader
+     * is found in the log of the given build; return null otherwise.
+     * @throws IOException if so.
+     */
+    public FoundIndication scan(Run build) throws IOException {
+        if (Util.isOverridden(FailureReader.class, getClass(), "scan", AbstractBuild.class)) {
+            return scan((AbstractBuild) build);
+        }
+        return null;
+    }
+
+    /**
+     * Scans for indications of a failure cause.
+     * @param build the build to scan for indications.
+     * @param buildLog the log of the build.
+     * @return a FoundIndication if something was found, null if not.
+     * @deprecated Use {@link #scan(hudson.model.Run, java.io.PrintStream)}.
+     */
+    @Deprecated
+    public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
+        if (Util.isOverridden(FailureReader.class, getClass(), "scan", Run.class, PrintStream.class)) {
+            return scan((Run) build, buildLog);
+        }
+        return null;
+    }
 
     /**
      * Scans for indications of a failure cause.
@@ -82,7 +121,12 @@ public abstract class FailureReader {
      * @param buildLog the log of the build.
      * @return a FoundIndication if something was found, null if not.
      */
-    public abstract FoundIndication scan(Run build, PrintStream buildLog);
+    public FoundIndication scan(Run build, PrintStream buildLog) {
+        if (Util.isOverridden(FailureReader.class, getClass(), "scan", AbstractBuild.class, PrintStream.class)) {
+            return scan((AbstractBuild) build, buildLog);
+        }
+        return null;
+    }
 
     /**
      * Scans one file for the required pattern.
