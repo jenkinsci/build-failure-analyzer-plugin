@@ -64,7 +64,7 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
     @Deprecated
     public List<Run<?, ?>> getDownstreamBuilds(final AbstractBuild build) {
         if (Util.isOverridden(DownstreamBuildFinder.class, getClass(), "getDownstreamBuilds", Run.class)) {
-            return getDownstreamBuilds((Run) build);
+            return getDownstreamBuilds((Run)build);
         }
         return null;
     }

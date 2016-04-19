@@ -80,7 +80,7 @@ public abstract class FailureReader {
     @Deprecated
     public FoundIndication scan(AbstractBuild build) throws IOException {
         if (Util.isOverridden(FailureReader.class, getClass(), "scan", Run.class)) {
-            return scan((Run) build);
+            return scan((Run)build);
         }
         return null;
     }
@@ -95,7 +95,7 @@ public abstract class FailureReader {
      */
     public FoundIndication scan(Run build) throws IOException {
         if (Util.isOverridden(FailureReader.class, getClass(), "scan", AbstractBuild.class)) {
-            return scan((AbstractBuild) build);
+            return scan((AbstractBuild)build);
         }
         return null;
     }
@@ -110,7 +110,7 @@ public abstract class FailureReader {
     @Deprecated
     public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
         if (Util.isOverridden(FailureReader.class, getClass(), "scan", Run.class, PrintStream.class)) {
-            return scan((Run) build, buildLog);
+            return scan((Run)build, buildLog);
         }
         return null;
     }
@@ -123,7 +123,7 @@ public abstract class FailureReader {
      */
     public FoundIndication scan(Run build, PrintStream buildLog) {
         if (Util.isOverridden(FailureReader.class, getClass(), "scan", AbstractBuild.class, PrintStream.class)) {
-            return scan((AbstractBuild) build, buildLog);
+            return scan((AbstractBuild)build, buildLog);
         }
         return null;
     }
