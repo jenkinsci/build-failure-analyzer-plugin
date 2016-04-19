@@ -35,11 +35,11 @@ import hudson.ExtensionList;
 import hudson.Plugin;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
@@ -476,10 +476,10 @@ public class PluginImpl extends Plugin {
      *
      * @param build the build
      * @return true if it should be scanned.
-     * @see {@link #shouldScan(AbstractProject)}
+     * @see {@link #shouldScan(Job)}
      */
-    public static boolean shouldScan(AbstractBuild build) {
-        return shouldScan(build.getProject());
+    public static boolean shouldScan(Run build) {
+        return shouldScan(build.getParent());
     }
 
     /**
@@ -489,7 +489,7 @@ public class PluginImpl extends Plugin {
      * @param project the project
      * @return true if it should be scanned.
      */
-    public static boolean shouldScan(AbstractProject project) {
+    public static boolean shouldScan(Job project) {
         if (getInstance().isGlobalEnabled()) {
             ScannerJobProperty property = (ScannerJobProperty)project.getProperty(ScannerJobProperty.class);
             if (property != null) {

@@ -26,8 +26,10 @@ package com.sonyericsson.jenkins.plugins.bfa.model.dbf;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
+import hudson.model.Run;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -38,7 +40,7 @@ import java.util.List;
  * plugin have there own way of keeping this information.
  * <p/>
  * Extend this class and implement
- * {@link #getDownstreamBuilds(hudson.model.AbstractBuild)}
+ * {@link #getDownstreamBuilds(hudson.model.Run)}
  * in a way suitable for the plugin
  *
  * @author Jan-Olof Sivtoft
@@ -49,8 +51,23 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
      * No need to create a new empty list each time there is nothing to return.
      * Make it unmodifiable to make sure it isn't used.
      */
-    protected static final List<AbstractBuild<?, ?>> EMPTY =
-            Collections.unmodifiableList(new LinkedList<AbstractBuild<?, ?>>());
+    protected static final List<Run<?, ?>> EMPTY =
+            Collections.unmodifiableList(new LinkedList<Run<?, ?>>());
+
+    /**
+     * Return a list of all downstream builds originating from provided build.
+     *
+     * @param build get the downstream build(s) relative this build
+     * @return a list with downstream builds
+     * @deprecated use {@link #getDownstreamBuilds(hudson.model.Run)}
+     */
+    @Deprecated
+    public List<Run<?, ?>> getDownstreamBuilds(final AbstractBuild build) {
+        if (Util.isOverridden(DownstreamBuildFinder.class, getClass(), "getDownstreamBuilds", Run.class)) {
+            return getDownstreamBuilds((Run) build);
+        }
+        return null;
+    }
 
     /**
      * Return a list of all downstream builds originating from provided build.
@@ -58,8 +75,12 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
      * @param build get the downstream build(s) relative this build
      * @return a list with downstream builds
      */
-    public abstract List<AbstractBuild<?, ?>> getDownstreamBuilds(
-            final AbstractBuild build);
+    public List<Run<?, ?>> getDownstreamBuilds(final Run build) {
+        if (Util.isOverridden(DownstreamBuildFinder.class, getClass(), "getDownstreamBuilds", AbstractBuild.class)) {
+            return getDownstreamBuilds((AbstractBuild)build);
+        }
+        return null;
+    }
 
     /**
      * Return a list of all registered DownstreamBuildFinder of this type.

@@ -26,7 +26,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,7 +60,7 @@ public class BuildLogFailureReader extends FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws IOException if so.
      */
-    public FoundIndication scan(AbstractBuild build) throws IOException {
+    public FoundIndication scan(Run build) throws IOException {
         String currentfile = build.getLogFile().getName();
         BufferedReader reader = null;
         try {
@@ -87,7 +87,7 @@ public class BuildLogFailureReader extends FailureReader {
      * @return a FoundIndication if something was found, null if not.
      */
     @Override
-    public FoundIndication scan(AbstractBuild build, PrintStream buildLog) {
+    public FoundIndication scan(Run build, PrintStream buildLog) {
         FoundIndication foundIndication = null;
         String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;

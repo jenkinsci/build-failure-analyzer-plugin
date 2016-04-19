@@ -30,9 +30,11 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 import hudson.ExtensionList;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import jenkins.model.Jenkins;
 import org.jfree.data.time.TimePeriod;
 
@@ -349,10 +351,30 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Removes the build failure cause of particular build.
-     * @param build the AbstractBuild.
+     * @param build the build.
+     * @throws Exception if something in the KnowledgeBase handling goes wrong.
+     * @deprecated use {@link #removeBuildfailurecause(hudson.model.Run)}
+     */
+    @Deprecated
+    public void removeBuildfailurecause(AbstractBuild build) throws Exception {
+        if (Util.isOverridden(KnowledgeBase.class, getClass(), "removeBuildfailurecause", Run.class)) {
+            removeBuildfailurecause((Run)build);
+        }
+    }
+
+    /**
+     * Removes the build failure cause of particular build.
+     * @param build the build.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract void removeBuildfailurecause(AbstractBuild build) throws Exception;
+    public void removeBuildfailurecause(Run build) throws Exception {
+        if (Util.isOverridden(KnowledgeBase.class, getClass(), "removeBuildfailurecause", AbstractBuild.class)) {
+            removeBuildfailurecause((AbstractBuild)build);
+        }
+    }
+
+
+
     /**
      * Descriptor for {@link KnowledgeBase}s.
      */

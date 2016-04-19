@@ -23,8 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
+import hudson.model.Job;
 import hudson.model.ModelObject;
-import hudson.model.AbstractProject;
 import hudson.util.Graph;
 
 import java.util.Date;
@@ -51,13 +51,13 @@ public class ProjectGraphAction extends BfaGraphAction {
     private static final String GRAPH_TITLE_CATEGORIES = "Failures grouped by categories for this project";
     private static final String BUILD_NBR_TITLE = "Failure causes per build for this project";
 
-    private AbstractProject project;
+    private Job project;
 
     /**
      * Standard constructor.
      * @param project the parent project of this action
      */
-    public ProjectGraphAction(AbstractProject project) {
+    public ProjectGraphAction(Job project) {
         this.project = project;
     }
 
@@ -191,7 +191,7 @@ public class ProjectGraphAction extends BfaGraphAction {
      * Invalidate the cache for the build number graph for the specified project.
      * @param project The project whose build number graph to invalidate
      */
-    public static void invalidateBuildNbrGraphCache(AbstractProject project) {
+    public static void invalidateBuildNbrGraphCache(Job project) {
         GraphCache.getInstance().invalidate(ProjectGraphAction.getCacheIdForBuildNbrs(project.getFullName()));
     }
 
@@ -199,7 +199,7 @@ public class ProjectGraphAction extends BfaGraphAction {
      * Invalidate all graph caches for the specified project.
      * @param project The project whose graphs to invalidate
      */
-    public static void invalidateProjectGraphCache(AbstractProject project) {
+    public static void invalidateProjectGraphCache(Job project) {
         Pattern projectPattern = Pattern.compile("^.*" + ID_SEPARATOR
                 + project.getFullName() + ID_SEPARATOR + ".*$");
         GraphCache.getInstance().invalidateMatching(projectPattern);

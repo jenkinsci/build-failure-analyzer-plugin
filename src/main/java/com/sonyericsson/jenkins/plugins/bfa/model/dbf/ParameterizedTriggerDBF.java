@@ -25,8 +25,8 @@
 package com.sonyericsson.jenkins.plugins.bfa.model.dbf;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import hudson.model.Run;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -56,8 +56,8 @@ public class ParameterizedTriggerDBF extends DownstreamBuildFinder {
      * @return a list with downstream builds
      */
     @Override
-    public List<AbstractBuild<?, ?>> getDownstreamBuilds(
-            final AbstractBuild build) {
+    public List<Run<?, ?>> getDownstreamBuilds(
+            final Run build) {
 
         if (build == null) {
             return EMPTY;

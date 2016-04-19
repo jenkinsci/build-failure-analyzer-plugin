@@ -25,10 +25,10 @@
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
-import hudson.model.AbstractBuild;
 
 import java.util.List;
 
+import hudson.model.Run;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -56,7 +56,7 @@ public class FoundIndication {
     @Deprecated
     private transient Integer matchingLine;
     private String pattern;
-    private AbstractBuild build;
+    private Run build;
     private String matchingString;
 
     /**
@@ -67,7 +67,7 @@ public class FoundIndication {
      * @param matchingFile    the path to the file in which we found the match.
      * @param matchingString  the String that makes up the match.
      */
-    public FoundIndication(AbstractBuild build, String originalPattern,
+    public FoundIndication(Run build, String originalPattern,
                            String matchingFile, String matchingString) {
         this.pattern = originalPattern;
         this.matchingFile = matchingFile;
@@ -114,7 +114,7 @@ public class FoundIndication {
      *
      * @return the build.
      */
-    public AbstractBuild getBuild() {
+    public Run getBuild() {
         return build;
     }
 

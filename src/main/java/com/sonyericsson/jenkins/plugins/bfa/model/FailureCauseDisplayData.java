@@ -23,7 +23,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
  * THE SOFTWARE.
  */
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.LinkedList;
@@ -54,7 +54,7 @@ public class FailureCauseDisplayData {
      *
      * @param build corresponding build
      */
-    public FailureCauseDisplayData(final AbstractBuild build) {
+    public FailureCauseDisplayData(final Run build) {
         links = new Links(build);
     }
 
@@ -123,10 +123,10 @@ public class FailureCauseDisplayData {
          *
          * @param build - the build to extract link info from
          */
-        private Links(final AbstractBuild build) {
-            this.projectUrl = build.getProject().getUrl();
+        private Links(final Run build) {
+            this.projectUrl = build.getParent().getUrl();
             this.buildUrl = build.getUrl();
-            this.projectDisplayName = build.getProject().getDisplayName();
+            this.projectDisplayName = build.getParent().getDisplayName();
             this.buildDisplayName = build.getDisplayName();
         }
 

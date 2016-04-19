@@ -29,10 +29,10 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.Project;
 import hudson.model.Result;
 import hudson.util.RunList;
@@ -55,7 +55,7 @@ import org.kohsuke.stapler.StaplerResponse;
 public class ScanOnDemandBaseAction implements Action {
 
     /** The project. */
-    private AbstractProject project;
+    private Job project;
     /**
      * javascript file location.
      */
@@ -74,7 +74,7 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @param project current project.
      */
-    public ScanOnDemandBaseAction(final AbstractProject project) {
+    public ScanOnDemandBaseAction(final Job project) {
         this.project = project;
     }
 
@@ -147,7 +147,7 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @return project
      */
-    public final AbstractProject<?, ?> getProject() {
+    public final Job<?, ?> getProject() {
         return project;
     }
 
@@ -156,14 +156,14 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @return sodbuilds.
      */
-    public List<AbstractBuild> getAllBuilds() {
-        AbstractProject currentProject = project;
-        List<AbstractBuild> sodbuilds = new ArrayList<AbstractBuild>();
+    public List<Run> getAllBuilds() {
+        Job currentProject = project;
+        List<Run> sodbuilds = new ArrayList<Run>();
         if (currentProject != null) {
             RunList builds = currentProject.getBuilds();
             for (Object build : builds) {
-                if (PluginImpl.needToAnalyze(((AbstractBuild)build).getResult())) {
-                    sodbuilds.add((AbstractBuild)build);
+                if (PluginImpl.needToAnalyze(((Run)build).getResult())) {
+                    sodbuilds.add((Run)build);
                 }
             }
         }
@@ -177,7 +177,7 @@ public class ScanOnDemandBaseAction implements Action {
      * @param scanTarget String.
      * @return builds.
      */
-    public List<AbstractBuild> getBuilds(String scanTarget) {
+    public List<Run> getBuilds(String scanTarget) {
         if (scanTarget != null) {
             setBuildType(scanTarget);
         }
@@ -189,7 +189,7 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @return builds.
      */
-    public List<AbstractBuild> getBuilds() {
+    public List<Run> getBuilds() {
         buildType = getBuildType();
         if (buildType != null) {
             if (buildType.length() == 0 || buildType.equals(NON_SCANNED)) {
@@ -207,11 +207,11 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @return sodbuilds.
      */
-    public List<AbstractBuild> getNotScannedBuilds() {
-        List<AbstractBuild> sodbuilds = new ArrayList<AbstractBuild>();
+    public List<Run> getNotScannedBuilds() {
+        List<Run> sodbuilds = new ArrayList<Run>();
         if (project != null) {
-            List<AbstractBuild> builds = project.getBuilds();
-            for (AbstractBuild build : builds) {
+            List<Run> builds = project.getBuilds();
+            for (Run build : builds) {
                 final Result result = build.getResult();
                 if (result != null
                     && PluginImpl.needToAnalyze(result)
@@ -228,7 +228,7 @@ public class ScanOnDemandBaseAction implements Action {
     /**
      * Method for remove matrix run actions.
      *
-     * @param  build AbstractBuild.
+     * @param build the MatrixBuild.
      */
     public void removeRunActions(MatrixBuild build) {
         List<MatrixRun> runs = build.getRuns();
@@ -258,9 +258,9 @@ public class ScanOnDemandBaseAction implements Action {
     public void doPerformScan(StaplerRequest request, StaplerResponse response)
             throws ServletException, IOException, InterruptedException {
         checkPermission();
-        List<AbstractBuild> sodbuilds = getBuilds();
+        List<Run> sodbuilds = getBuilds();
         if (!sodbuilds.isEmpty()) {
-            for (AbstractBuild sodbuild : sodbuilds) {
+            for (Run sodbuild : sodbuilds) {
                 FailureCauseBuildAction fcba = sodbuild.getAction(FailureCauseBuildAction.class);
                 if (fcba != null) {
                     sodbuild.getActions().remove(fcba);

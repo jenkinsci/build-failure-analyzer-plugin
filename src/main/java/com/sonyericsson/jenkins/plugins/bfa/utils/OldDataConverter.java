@@ -30,7 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.listeners.ItemListener;
 
 import java.io.IOException;
@@ -76,7 +76,7 @@ public final class OldDataConverter extends ItemListener {
     private static OldDataConverter instance;
 
 
-    private Set<AbstractBuild> performedBuilds;
+    private Set<Run> performedBuilds;
     private Map<String, List<FailureCauseMatrixBuildAction>> actionsToConvert;
     private ScheduledThreadPoolExecutor executor;
     //Has the call from Jenkins arrived that all items are loaded?
@@ -102,7 +102,7 @@ public final class OldDataConverter extends ItemListener {
      * Default Constructor. <strong>Should only be instantiated by Jenkins</strong>
      */
     public OldDataConverter() {
-        performedBuilds = Collections.synchronizedSet(new HashSet<AbstractBuild>());
+        performedBuilds = Collections.synchronizedSet(new HashSet<Run>());
         actionsToConvert = Collections.synchronizedMap(new HashMap<String, List<FailureCauseMatrixBuildAction>>());
         executor = (ScheduledThreadPoolExecutor)Executors.newScheduledThreadPool(POOL_SIZE);
     }
@@ -113,7 +113,7 @@ public final class OldDataConverter extends ItemListener {
      *
      * @param build the build to convert.
      */
-    public void convertFoundIndications(AbstractBuild build) {
+    public void convertFoundIndications(Run build) {
         //Just a convenience first check, because of the delay in scheduling
         // we will still get the same build multiple times in the executor, but the run method takes care of that.
         if (!performedBuilds.contains(build)) {
@@ -210,8 +210,8 @@ public final class OldDataConverter extends ItemListener {
      * A work task that does the actual conversion in an executor thread.
      */
     public static class FoundIndicationWork implements Runnable {
-        private AbstractBuild build;
-        private Set<AbstractBuild> performedBuilds;
+        private Run build;
+        private Set<Run> performedBuilds;
 
         /**
          * Standard Constructor.
@@ -219,7 +219,7 @@ public final class OldDataConverter extends ItemListener {
          * @param build           the build to convert.
          * @param performedBuilds the list of in-progress or already converted builds.
          */
-        public FoundIndicationWork(AbstractBuild build, Set<AbstractBuild> performedBuilds) {
+        public FoundIndicationWork(Run build, Set<Run> performedBuilds) {
             this.build = build;
             this.performedBuilds = performedBuilds;
         }

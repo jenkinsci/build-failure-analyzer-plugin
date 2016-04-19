@@ -25,9 +25,9 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.TransientProjectActionFactory;
+import hudson.model.Job;
+import jenkins.model.TransientActionFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -36,11 +36,16 @@ import java.util.Collections;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 @Extension
-public class TransientActionProvider extends TransientProjectActionFactory {
+public class TransientActionProvider extends TransientActionFactory<Job> {
 
 
     @Override
-    public Collection<? extends Action> createFor(AbstractProject target) {
+    public Class<Job> type() {
+        return Job.class;
+    }
+
+    @Override
+    public Collection<? extends Action> createFor(Job target) {
         if (PluginImpl.shouldScan(target)) {
             return Collections.singleton(new TransientCauseManagement(target));
         } else {

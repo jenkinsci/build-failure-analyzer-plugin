@@ -26,8 +26,9 @@ package com.sonyericsson.jenkins.plugins.bfa.model.dbf;
 
 import hudson.Extension;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Fingerprint;
+import hudson.model.Job;
+import hudson.model.Run;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -50,21 +51,22 @@ public class CoreDBF extends DownstreamBuildFinder {
      * @return alist with downstream builds
      */
     @Override
-    public List<AbstractBuild<?, ?>> getDownstreamBuilds(
-            final AbstractBuild build) {
+    public List<Run<?, ?>> getDownstreamBuilds(
+            final Run build) {
 
-        LinkedList<AbstractBuild<?, ?>> foundBuilds =
-                new LinkedList<AbstractBuild<?, ?>>();
+        Map<Job, Fingerprint.RangeSet> buildMap = null;
+        if (build instanceof AbstractBuild) {
+            buildMap = ((AbstractBuild)build).getDownstreamBuilds();
+        }
+        LinkedList<Run<?, ?>> foundBuilds =
+                new LinkedList<Run<?, ?>>();
 
-        Map<AbstractProject, Fingerprint.RangeSet> buildMap =
-                build.getDownstreamBuilds();
 
-        if (!buildMap.isEmpty()) {
-            for (Map.Entry<AbstractProject, Fingerprint.RangeSet> entry
+        if (buildMap != null && !buildMap.isEmpty()) {
+            for (Map.Entry<Job, Fingerprint.RangeSet> entry
                     : buildMap.entrySet()) {
-
                 for (Integer buildId : entry.getValue().listNumbers()) {
-                    foundBuilds.add((AbstractBuild<?, ?>)
+                    foundBuilds.add((Run<?, ?>)
                             entry.getKey().getBuildByNumber(buildId));
                 }
             }

@@ -25,7 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.model.dbf;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +43,8 @@ import java.util.concurrent.ExecutionException;
 public class BuildFlowDBF extends DownstreamBuildFinder {
 
     @Override
-    public List<AbstractBuild<?, ?>> getDownstreamBuilds(
-            final AbstractBuild build) {
+    public List<Run<?, ?>> getDownstreamBuilds(
+            final Run build) {
 
         if (build == null) {
             return EMPTY;
@@ -57,12 +57,12 @@ public class BuildFlowDBF extends DownstreamBuildFinder {
         Set<com.cloudbees.plugins.flow.JobInvocation> vertexSet =
                 ((com.cloudbees.plugins.flow.FlowRun)build).getJobsGraph().vertexSet();
 
-        List<AbstractBuild<?, ?>> result = new ArrayList<AbstractBuild<?, ?>>(vertexSet.size());
+        List<Run<?, ?>> result = new ArrayList<Run<?, ?>>(vertexSet.size());
 
         //CS IGNORE EmptyBlock FOR NEXT 10 LINES. REASON: irrelevant exceptions.
         for (com.cloudbees.plugins.flow.JobInvocation invocation : vertexSet) {
             try {
-                result.add((AbstractBuild<?, ?>)invocation.getBuild());
+                result.add((Run<?, ?>)invocation.getBuild());
             } catch (ExecutionException e) {
                 // skip
             } catch (InterruptedException e) {

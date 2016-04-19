@@ -32,6 +32,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.Node;
+import hudson.model.Run;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -87,7 +88,7 @@ public final class StatisticsLogger {
      * @param build the build.
      * @param causes the list of causes.
      */
-    public void log(AbstractBuild build, List<FoundFailureCause> causes) {
+    public void log(Run build, List<FoundFailureCause> causes) {
         if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
             queueExecutor.submit(new LoggingWork(build, causes));
         }
@@ -99,7 +100,7 @@ public final class StatisticsLogger {
     static class LoggingWork implements Runnable {
 
         List<FoundFailureCause> causes;
-        AbstractBuild build;
+        Run build;
 
         /**
          * Standard Constructor.
@@ -107,14 +108,14 @@ public final class StatisticsLogger {
          * @param build the build to log for.
          * @param causes the causes to log.
          */
-        LoggingWork(AbstractBuild build, List<FoundFailureCause> causes) {
+        LoggingWork(Run build, List<FoundFailureCause> causes) {
             this.build = build;
             this.causes = causes;
         }
 
         @Override
         public void run() {
-            String projectName = build.getProject().getFullName();
+            String projectName = build.getParent().getFullName();
             int buildNumber = build.getNumber();
             String displayName = build.getDisplayName();
             Date startingTime = build.getTime();
@@ -123,8 +124,12 @@ public final class StatisticsLogger {
             for (Object o : build.getCauses()) {
                 triggerCauses.add(o.getClass().getSimpleName());
             }
-            Node node = build.getBuiltOn();
-            String nodeName = node.getNodeName();
+            String nodeName = "NoNodeInformation";
+            if (build instanceof AbstractBuild) {
+                AbstractBuild abstractBuild = (AbstractBuild)build;
+                Node node = abstractBuild.getBuiltOn();
+                nodeName = node.getNodeName();
+            }
             int timeZoneOffset = TimeZone.getDefault().getRawOffset();
             String master;
 

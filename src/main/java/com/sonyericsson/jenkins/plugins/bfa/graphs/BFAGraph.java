@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.Graph;
 import hudson.util.RunList;
@@ -44,7 +44,7 @@ public abstract class BFAGraph extends Graph {
     /**
      * The project that this graph is plotting values for. Is null for non-project graphs.
      */
-    protected AbstractProject project;
+    protected Job project;
     /**
      * The data filter used for this graph.
      */
@@ -99,7 +99,7 @@ public abstract class BFAGraph extends Graph {
      *            The title of the graph
      */
     protected BFAGraph(long timestamp, int defaultW, int defaultH,
-            AbstractProject project, GraphFilterBuilder filter,
+            Job project, GraphFilterBuilder filter,
             String graphTitle) {
         super(timestamp, defaultW, defaultH);
         this.project = project;
@@ -112,7 +112,7 @@ public abstract class BFAGraph extends Graph {
      * @param project the project to list build numbers for
      * @return list of build numbers, empty if project is null
      */
-    public static List<Integer> getBuildNumbers(AbstractProject project) {
+    public static List<Integer> getBuildNumbers(Job project) {
         List<Integer> buildNumbers = new ArrayList<Integer>();
         if (project != null) {
             RunList runList = project.getBuilds();

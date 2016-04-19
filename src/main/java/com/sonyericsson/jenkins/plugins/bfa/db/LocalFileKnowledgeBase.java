@@ -41,8 +41,8 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import hudson.util.CopyOnWriteList;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -229,7 +229,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void removeBuildfailurecause(AbstractBuild build) throws Exception {
+    public void removeBuildfailurecause(Run build) throws Exception {
         //Not implemented
     }
 

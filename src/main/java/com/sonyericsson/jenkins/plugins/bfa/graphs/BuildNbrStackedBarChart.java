@@ -27,13 +27,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import hudson.model.Job;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-
-import hudson.model.AbstractProject;
 
 /**
  * Stacked bar chart displaying the number of different failure causes for every build number.
@@ -60,7 +59,7 @@ public class BuildNbrStackedBarChart extends StackedBarChart {
      * @param graphTitle The title of the graph
      */
     protected BuildNbrStackedBarChart(long timestamp, int defaultW,
-            int defaultH, AbstractProject project, GraphFilterBuilder filter,
+            int defaultH, Job project, GraphFilterBuilder filter,
             int nbrOfBuildsToShow, String graphTitle) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
         this.nbrOfBuildsToShow = nbrOfBuildsToShow;

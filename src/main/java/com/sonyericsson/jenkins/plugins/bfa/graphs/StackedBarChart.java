@@ -23,8 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.graphs;
 
-import hudson.model.AbstractProject;
-
+import hudson.model.Job;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -61,7 +60,7 @@ public abstract class StackedBarChart extends BFAGraph {
      * @param filter the filter used when fetching data for this graph
      * @param graphTitle The title of the graph
      */
-    public StackedBarChart(long timestamp, int defaultW, int defaultH, AbstractProject project,
+    public StackedBarChart(long timestamp, int defaultW, int defaultH, Job project,
             GraphFilterBuilder filter, String graphTitle) {
         super(timestamp, defaultW, defaultH, project, filter, graphTitle);
     }
