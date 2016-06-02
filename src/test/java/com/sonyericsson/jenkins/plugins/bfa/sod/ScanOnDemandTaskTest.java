@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.google.common.collect.Lists;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import hudson.model.AbstractBuild;
@@ -66,7 +67,6 @@ import static org.junit.Assert.assertEquals;
 @PrepareForTest({Jenkins.class, PluginImpl.class, ScanOnDemandQueue.class, ScanOnDemandTask.class })
 public class ScanOnDemandTaskTest {
 
-    private ScanOnDemandBaseAction sodbaseaction;
     private AbstractProject mockproject;
     private PluginImpl pluginMock;
 
@@ -99,8 +99,8 @@ public class ScanOnDemandTaskTest {
         RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 1, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 1, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -121,8 +121,8 @@ public class ScanOnDemandTaskTest {
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
 
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 2, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 2, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -141,8 +141,8 @@ public class ScanOnDemandTaskTest {
         RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -169,8 +169,8 @@ public class ScanOnDemandTaskTest {
 
         PowerMockito.when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -192,8 +192,8 @@ public class ScanOnDemandTaskTest {
         Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
 
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 1, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 1, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -215,8 +215,8 @@ public class ScanOnDemandTaskTest {
         Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
 
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
@@ -243,12 +243,12 @@ public class ScanOnDemandTaskTest {
 
         PowerMockito.when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
         PowerMockito.when(mockproject.getBuilds()).thenReturn(builds);
-        sodbaseaction = new ScanOnDemandBaseAction(mockproject);
-        assertEquals("Nonscanned buils", 0, sodbaseaction.getNotScannedBuilds().size());
+        ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
+        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
     }
 
     /**
-     * Convenience method for a standard cause that finds {@link #TO_PRINT} in the build log.
+     * Convenience method for a standard cause that finds ERROR in the build log.
      *
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.

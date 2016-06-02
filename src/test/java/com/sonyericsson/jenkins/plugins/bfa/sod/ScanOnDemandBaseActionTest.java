@@ -41,20 +41,30 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.powermock.api.mockito.PowerMockito;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
 /**
- * Tests for the ScanOnDemandBaseAction.
+ * Tests for {@link ScanOnDemandBaseAction}.
  * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
- * @throws Exception if so.
  */
-public class ScanOnDemandBaseActionTest extends HudsonTestCase {
+public class ScanOnDemandBaseActionTest {
+
+    //CS IGNORE VisibilityModifier FOR NEXT 5 LINES. REASON: by design
+    /**
+     * The Jenkins rule, duh.
+     */
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     private static final String TO_PRINT = "ERROR";
     /**
@@ -62,8 +72,9 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testPerformScanFailedProject() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
         Future<FreeStyleBuild> future = project.scheduleBuild2(0);
@@ -72,12 +83,8 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
             build.getActions().remove(build.getAction(FailureCauseBuildAction.class));
         }
         assertNull(build.getAction(FailureCauseBuildAction.class));
-        assertBuildStatus(Result.FAILURE, build);
-        ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
-        sodbaseaction.setBuildType("nonscanned");
-        StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
-        StaplerResponse mockresponse = PowerMockito.mock(StaplerResponse.class);
-        sodbaseaction.doPerformScan(mockrequest, mockresponse);
+        j.assertBuildStatus(Result.FAILURE, build);
+        j.createWebClient().getPage(project, "scan-on-demand/nonscanned/performScan");
         ScanOnDemandQueue.shutdown();
         assertNotNull(build.getAction(FailureCauseBuildAction.class));
 
@@ -88,8 +95,9 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testPerformScanSuccessProject() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new MockBuilder(Result.SUCCESS));
         Future<FreeStyleBuild> future = project.scheduleBuild2(0);
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -97,12 +105,9 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
             build.getActions().remove(build.getAction(FailureCauseBuildAction.class));
         }
         assertNull(build.getAction(FailureCauseBuildAction.class));
-        assertBuildStatus(Result.SUCCESS, build);
-        ScanOnDemandBaseAction sodbaseaction = new ScanOnDemandBaseAction(project);
-        sodbaseaction.setBuildType("nonscanned");
-        StaplerRequest mockrequest = PowerMockito.mock(StaplerRequest.class);
-        StaplerResponse mockresponse = PowerMockito.mock(StaplerResponse.class);
-        sodbaseaction.doPerformScan(mockrequest, mockresponse);
+        j.assertBuildStatus(Result.SUCCESS, build);
+        j.createWebClient().getPage(project, "scan-on-demand/nonscanned/performScan");
+        ScanOnDemandQueue.shutdown();
         assertNull(build.getAction(FailureCauseBuildAction.class));
     }
 
@@ -112,11 +117,12 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
      * @throws Exception if problemos
      * @see ScanOnDemandBaseAction#hasPermission()
      */
+    @Test
     public void testShouldOnlyShowWhenHasPermission() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
-        String expectedHref = "/" + project.getUrl() + "scan-on-demand";
+        FreeStyleProject project = j.createFreeStyleProject();
+        String expectedHref = "/jenkins/" + project.getUrl() + "scan-on-demand";
 
-        SecurityRealm securityRealm = createDummySecurityRealm();
+        SecurityRealm securityRealm = j.createDummySecurityRealm();
         Jenkins.getInstance().setSecurityRealm(securityRealm);
         GlobalMatrixAuthorizationStrategy strategy = new GlobalMatrixAuthorizationStrategy();
         strategy.add(Jenkins.READ, "anonymous");
@@ -128,7 +134,7 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
         Jenkins.getInstance().setAuthorizationStrategy(strategy);
 
 
-        WebClient client = createWebClient();
+        JenkinsRule.WebClient client = j.createWebClient();
 
         HtmlPage page = client.login("alice").getPage(project);
         try {
@@ -151,12 +157,13 @@ public class ScanOnDemandBaseActionTest extends HudsonTestCase {
      *
      * @throws Exception if problemos
      */
+    @Test
     public void testShouldOnlyShowWhenScanningIsEnabled() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
-        project = configRoundtrip(project);
-        String expectedHref = "/" + project.getUrl() + "scan-on-demand";
+        FreeStyleProject project = j.createFreeStyleProject();
+        project = j.configRoundtrip(project);
+        String expectedHref = "/jenkins/" + project.getUrl() + "scan-on-demand";
 
-        WebClient client = createWebClient();
+        JenkinsRule.WebClient client = j.createWebClient();
 
         //Assert visible
         HtmlPage page = client.getPage(project);
