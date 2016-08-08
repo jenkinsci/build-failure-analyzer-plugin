@@ -77,9 +77,9 @@ public class PluginImpl extends Plugin {
     public static final int DEFAULT_NR_OF_SCAN_THREADS = 3;
 
     /**
-     * Default max size of log to be scanned.
+     * Default max size of log to be scanned ('0' disables check).
      */
-    public static final int DEFAULT_MAX_LOG_SIZE = 1024;
+    public static final int DEFAULT_MAX_LOG_SIZE = 0;
 
     private static final int BYTES_IN_MEGABYTE = 1024 * 1024;
 
@@ -516,7 +516,8 @@ public class PluginImpl extends Plugin {
      * @return true if size is in limit.
      */
     public static boolean isSizeInLimit(Run build) {
-        return getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
+        return getInstance().getMaxLogSize() == 0 ||
+                getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
     }
 
     /**
@@ -595,7 +596,7 @@ public class PluginImpl extends Plugin {
             nrOfScanThreads = scanThreads;
         }
 
-        if (maxLogSize <= 0) {
+        if (maxLogSize < 0) {
             maxLogSize = DEFAULT_MAX_LOG_SIZE;
         }
 
