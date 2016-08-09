@@ -93,6 +93,9 @@ import static org.mockito.Mockito.when;
 
 public class BuildFailureScannerHudsonTest {
 
+    /**
+     * The Jenkins Rule.
+     */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -339,6 +342,11 @@ public class BuildFailureScannerHudsonTest {
         assertNull(action);
     }
 
+    /**
+     * Tests that there is no scanner result when build log size exceeds max log size.
+     *
+     * @throws Exception if so.
+     */
     @Test
     public void testDoNotScanIfLogSizeExceedsLimit() throws Exception {
         PluginImpl.getInstance().setMaxLogSize(1);
@@ -351,6 +359,11 @@ public class BuildFailureScannerHudsonTest {
         assertNull(action);
     }
 
+    /**
+     * Tests that scanner result presents when build log size is less than max log size.
+     *
+     * @throws Exception if so.
+     */
     @Test
     public void testDoScanIfLogSizeIsInLimit() throws Exception {
         PluginImpl.getInstance().setMaxLogSize(2);
@@ -363,11 +376,16 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(action);
     }
 
-    private static String createHugeString(int length)
-    {
+
+    /**
+     * Create a string with any length than contains only 'a' letters
+     *
+     * @param length desired string length
+     * @return string
+     */
+    private static String createHugeString(int length)  {
         char[] text = new char[length];
-        for (int i = 0; i < length; i++)
-        {
+        for (int i = 0; i < length; i++) {
             text[i] = 'a';
         }
         return new String(text);
