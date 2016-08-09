@@ -516,8 +516,8 @@ public class PluginImpl extends Plugin {
      * @return true if size is in limit.
      */
     public static boolean isSizeInLimit(Run build) {
-        return getInstance().getMaxLogSize() == 0 ||
-                getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
+        return getInstance().getMaxLogSize() == 0
+                || getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
     }
 
     /**
