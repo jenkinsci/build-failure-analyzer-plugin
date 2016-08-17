@@ -89,7 +89,12 @@ public class BuildFailureScanner extends RunListener<Run> {
     @Override
     public void onCompleted(Run build, TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
-        scanIfNotScanned(build, listener.getLogger());
+
+        if (PluginImpl.isSizeInLimit(build)) {
+            scanIfNotScanned(build, listener.getLogger());
+        } else {
+            listener.getLogger().println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+        }
     }
 
     /**

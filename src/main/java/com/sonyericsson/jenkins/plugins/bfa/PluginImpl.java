@@ -77,6 +77,13 @@ public class PluginImpl extends Plugin {
     public static final int DEFAULT_NR_OF_SCAN_THREADS = 3;
 
     /**
+     * Default max size of log to be scanned ('0' disables check).
+     */
+    public static final int DEFAULT_MAX_LOG_SIZE = 0;
+
+    private static final int BYTES_IN_MEGABYTE = 1024 * 1024;
+
+    /**
      * The permission group for all permissions related to this plugin.
      */
     public static final PermissionGroup PERMISSION_GROUP =
@@ -125,6 +132,7 @@ public class PluginImpl extends Plugin {
     private KnowledgeBase knowledgeBase;
 
     private int nrOfScanThreads;
+    private int maxLogSize;
 
     private Boolean graphsEnabled;
 
@@ -458,6 +466,25 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Set the maximum log size that should be scanned.
+     *
+     * @param maxLogSize value
+     */
+    public void setMaxLogSize(int maxLogSize) {
+        this.maxLogSize = maxLogSize;
+    }
+
+    /**
+     * Returns the maximum log size that should be scanned.
+     *
+     * @return value
+     */
+    public int getMaxLogSize() {
+        return maxLogSize;
+    }
+
+
+    /**
      * Checks if the build with certain result should be analyzed or not.
      *
      * @param result the result
@@ -480,6 +507,17 @@ public class PluginImpl extends Plugin {
      */
     public static boolean shouldScan(Run build) {
         return shouldScan(build.getParent());
+    }
+
+    /**
+     * Checks that log size is in limits.
+     *
+     * @param build the build
+     * @return true if size is in limit.
+     */
+    public static boolean isSizeInLimit(Run build) {
+        return getInstance().getMaxLogSize() == 0
+                || getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
     }
 
     /**
@@ -535,6 +573,7 @@ public class PluginImpl extends Plugin {
         return null;
     }
 
+
     @Override
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
@@ -544,6 +583,7 @@ public class PluginImpl extends Plugin {
         graphsEnabled = o.getBoolean("graphsEnabled");
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
         testResultCategories = o.getString("testResultCategories");
+        maxLogSize = o.optInt("maxLogSize");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
@@ -554,6 +594,10 @@ public class PluginImpl extends Plugin {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         } else {
             nrOfScanThreads = scanThreads;
+        }
+
+        if (maxLogSize < 0) {
+            maxLogSize = DEFAULT_MAX_LOG_SIZE;
         }
 
         if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {

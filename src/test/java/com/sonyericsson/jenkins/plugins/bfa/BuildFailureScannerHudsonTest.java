@@ -46,11 +46,13 @@ import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.junit.JUnitResultArchiver;
-import org.jvnet.hudson.test.HudsonTestCase;
+import jenkins.model.Jenkins;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.ArgumentMatcher;
@@ -71,6 +73,10 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -85,7 +91,14 @@ import static org.mockito.Mockito.when;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 
-public class BuildFailureScannerHudsonTest extends HudsonTestCase {
+public class BuildFailureScannerHudsonTest {
+
+    /**
+     * The Jenkins Rule.
+     */
+    @Rule
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
+    public JenkinsRule jenkins = new JenkinsRule();
 
     private static final String BUILD_LOG = "ERROR: brief\n  detail\n";
     private static final String BUILD_LOG_FIRST_LINE = "ERROR: brief";
@@ -101,23 +114,23 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testOneIndicationFound() throws Exception {
         FreeStyleProject project = createProject();
 
         FailureCause failureCause = configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, failureCause));
 
-        WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl() + "console");
         HtmlElement document = page.getDocumentElement();
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
@@ -140,23 +153,23 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testOneMultilineIndicationFound() throws Exception {
         FreeStyleProject project = createProject();
 
         FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication(MULTILINE_REGEX));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, failureCause));
 
-        WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl() + "console");
         HtmlElement document = page.getDocumentElement();
 
         FoundFailureCause foundFailureCause = causeListFromAction.get(0);
@@ -181,6 +194,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testTwoIndicationsSameLine() throws Exception {
         FreeStyleProject project = createProject();
 
@@ -190,10 +204,10 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         final String otherDescription = "Other description";
         FailureCause failureCause2 = configureCauseAndIndication("Other cause", otherDescription, indication);
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
@@ -201,8 +215,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         assertTrue(findCauseInList(causeListFromAction, failureCause));
         assertTrue(findCauseInList(causeListFromAction, failureCause2));
 
-        WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + build.getUrl() + "console");
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl() + "console");
 
         HtmlElement document = page.getDocumentElement();
 
@@ -246,6 +259,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testOneIndicationBuildCompletedMessage() throws Exception {
         PluginImpl.getInstance().setGerritTriggerEnabled(true);
 
@@ -253,16 +267,16 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
 
         GerritMessageProviderExtension messageProvider = new GerritMessageProviderExtension();
 
         assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
                 + " extension would not return the expected message.",
-                FORMATTED_DESCRIPTION + " ( " + Hudson.getInstance().getRootUrl() + "/job/test0/1/ )",
+                FORMATTED_DESCRIPTION + " ( " + Jenkins.getInstance().getRootUrl() + "/job/test0/1/ )",
                 messageProvider.getBuildCompletedMessage(build));
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);
@@ -277,15 +291,16 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testNoIndicationFound() throws Exception {
         FreeStyleProject project = createProject();
 
         FailureCause failureCause = configureCauseAndIndication(
                 new BuildLogIndication(".*something completely different.*"));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
@@ -297,14 +312,15 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testSuccessfulBuild() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.SUCCESS, build);
+        jenkins.assertBuildStatus(Result.SUCCESS, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
     }
@@ -314,15 +330,65 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testDoNotScanGlobal() throws Exception {
         PluginImpl.getInstance().setGlobalEnabled(false);
         FreeStyleProject project = createProject();
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
+    }
+
+    /**
+     * Tests that there is no scanner result when build log size exceeds max log size.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoNotScanIfLogSizeExceedsLimit() throws Exception {
+        PluginImpl.getInstance().setMaxLogSize(1);
+        FreeStyleProject project = createProject(createHugeString(1024*1024) + BUILD_LOG);
+        configureCauseAndIndication();
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNull(action);
+    }
+
+    /**
+     * Tests that scanner result presents when build log size is less than max log size.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoScanIfLogSizeIsInLimit() throws Exception {
+        PluginImpl.getInstance().setMaxLogSize(2);
+        FreeStyleProject project = createProject(createHugeString(1024*1024) + BUILD_LOG);
+        configureCauseAndIndication();
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+    }
+
+
+    /**
+     * Create a string with any length than contains only 'a' letters
+     *
+     * @param length desired string length
+     * @return string
+     */
+    private static String createHugeString(int length)  {
+        char[] text = new char[length];
+        for (int i = 0; i < length; i++) {
+            text[i] = 'a';
+        }
+        return new String(text);
     }
 
     /**
@@ -332,14 +398,15 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testDoNotScanSpecific() throws Exception {
         PluginImpl.getInstance().setGlobalEnabled(true);
         FreeStyleProject project = createProject();
         project.addProperty(new ScannerJobProperty(true));
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNull(action);
     }
@@ -350,6 +417,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testStatisticsLogging() throws Exception {
 
         Indication indication = new BuildLogIndication(REGEX);
@@ -372,9 +440,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
         }).when(base).saveStatistics(Matchers.<Statistics>any());
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, base);
         FreeStyleProject project = createProject();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() < time + 30000) {
             if (hasCalledStatistics) {
@@ -390,6 +458,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * Tests that {@link BuildFailureScanner} is found before
      * {@link com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener}.
      */
+    @Test
     public void testOrdinal() {
         int counter = 0;
         int bfaPlacement = 0;
@@ -416,9 +485,10 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if not so.
      */
+    @Test
     public void testTestResultInterpretation() throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(true);
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         project.getBuildersList().add(new TestBuilder() {
@@ -432,9 +502,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.UNSTABLE, build);
+        jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
@@ -455,11 +525,12 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if not so.
      */
+    @Test
     public void testTestResultInterpretationWithCategories() throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(true);
         String categories = "foo bar";
         PluginImpl.getInstance().setTestResultCategories(categories);
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         project.getBuildersList().add(new TestBuilder() {
@@ -473,9 +544,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.UNSTABLE, build);
+        jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
@@ -493,9 +564,10 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if not so.
      */
+    @Test
     public void testTestResultInterpretationIfDisabled() throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(false);
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         project.getBuildersList().add(new TestBuilder() {
@@ -509,9 +581,9 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.UNSTABLE, build);
+        jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
@@ -633,7 +705,7 @@ public class BuildFailureScannerHudsonTest extends HudsonTestCase {
      * @throws IOException if so
      */
     private FreeStyleProject createProject(String logString) throws IOException {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(logString));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
         return project;
