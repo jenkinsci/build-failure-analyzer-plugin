@@ -27,13 +27,18 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
+
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Util;
@@ -129,52 +134,67 @@ public abstract class FailureReader {
     }
 
     /**
-     * Scans one file for the required pattern.
-     * @param build the build we are processing.
-     * @param reader the reader to read from.
-     * @param currentFile the file path of the file we want to scan.
-     * @return a FoundIndication if we find the pattern, null if not.
-     * @throws IOException if problems occur in the reader handling.
+     * Checks all patterns one-by-one for entire file.
+     *
+     * @param indications that we a looking for.
+     * @param build current build.
+     * @param reader file reader.
+     * @param currentFile file name.
+     * @return found indications.
+     * @throws IOException Exception.
      */
-    protected FoundIndication scanOneFile(Run build, BufferedReader reader, String currentFile)
+   public static List<FoundIndication> scanSingleLinePatterns(List<BuildLogIndication> indications,
+                                                              Run build,
+                                                              BufferedReader reader,
+                                                              String currentFile)
             throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
-        FoundIndication foundIndication = null;
-        boolean found = false;
-        final Pattern pattern = indication.getPattern();
+        List<FoundIndication> foundIndications = new ArrayList<>();
+
         String line;
         int currentLine = 1;
+
         timerThread.start();
         try {
             long startTime = System.currentTimeMillis();
             while ((line = reader.readLine()) != null) {
-                try {
-                    if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
-                        found = true;
-                        break;
+                Set<BuildLogIndication> passed = new HashSet<>();
+                for (Indication indication : indications) {
+                    Pattern pattern = indication.getPattern();
+
+                    try {
+                        if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
+                            String cleanLine = ConsoleNote.removeNotes(line);
+                            FoundIndication foundIndication = new FoundIndication(
+                                                                    build,
+                                                                    pattern.toString(),
+                                                                    currentFile,
+                                                                    cleanLine);
+                            foundIndication.setCause(indication.getCause());
+                            foundIndications.add(foundIndication);
+
+                            passed.add((BuildLogIndication) indication);
+                        }
+                    } catch (RuntimeException e) {
+                        if (e.getCause() instanceof InterruptedException) {
+                            logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
+                                    + currentFile + ":" + currentLine);
+                        } else {
+                            // This is not a timeout exception
+                            throw e;
+                        }
                     }
-                } catch (RuntimeException e) {
-                    if (e.getCause() instanceof InterruptedException) {
-                        logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
-                                + currentFile + ":" + currentLine);
-                    } else {
-                        // This is not a timeout exception
-                        throw e;
+                    currentLine++;
+                    timerThread.touch();
+                    if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
+                        logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
+                                + currentFile);
+                        return foundIndications;
                     }
                 }
-                currentLine++;
-                timerThread.touch();
-                if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
-                    logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
-                            + currentFile);
-                    break;
-                }
+                indications.removeAll(passed);
             }
-            if (found) {
-                String cleanLine = ConsoleNote.removeNotes(line);
-                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
-            }
-            return foundIndication;
+            return foundIndications;
         } finally {
             timerThread.requestStop();
             timerThread.interrupt();
