@@ -148,7 +148,7 @@ public class TokenTest extends HudsonTestCase {
             "sit amet hendrerit. Proin non nisi sapien.";
         // No additional wrapping.
         final int noWrapping = 0;
-        final List<String> unwrappedLines = Token.wrap(text, noWrapping);
+        final List<String> unwrappedLines = TokenUtils.wrap(text, noWrapping);
         System.out.println("Unwrapped lines:");
         for (final String line : unwrappedLines) {
             System.out.println(line);
@@ -156,7 +156,7 @@ public class TokenTest extends HudsonTestCase {
         final int expectedNoWrappingLineCount = 10;
         assertEquals(expectedNoWrappingLineCount, unwrappedLines.size());
         final int wrapAt35 = 35;
-        final List<String> wrappedAt35 = Token.wrap(text, wrapAt35);
+        final List<String> wrappedAt35 = TokenUtils.wrap(text, wrapAt35);
         System.out.println("Wrapped at 35:");
         for (final String line : wrappedAt35) {
             System.out.println(line);
