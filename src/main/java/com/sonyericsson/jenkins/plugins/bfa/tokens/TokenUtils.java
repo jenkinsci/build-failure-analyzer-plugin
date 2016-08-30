@@ -34,8 +34,9 @@ import java.util.regex.Pattern;
 /**
  * Static helper methods for Token generation.
  */
-public class TokenUtils {
+public final class TokenUtils {
 
+    /** Utility class */
     private TokenUtils() {}
 
     /**

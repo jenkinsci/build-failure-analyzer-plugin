@@ -25,8 +25,10 @@ package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import hudson.matrix.MatrixRun;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -34,13 +36,17 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Renderer for the Token mechanims. Provides options to render based on {@link FailureCauseBuildAction} or
+ * {@link FailureCauseMatrixBuildAction}.
+ */
 public class Renderer {
-    protected static final int ITEM_INCREMENT = 0;
-    protected static final int LIST_INCREMENT = 1;
-    protected static final String LIST_BULLET = "* ";
-    protected static final String LIST_BULLET_SPACE = "  ";
+    private static final int ITEM_INCREMENT = 0;
+    private static final int LIST_INCREMENT = 1;
+    private static final String LIST_BULLET = "* ";
+    private static final String LIST_BULLET_SPACE = "  ";
 
-    protected final Logger logger = Logger.getLogger(getClass().getName());
+    private static final Logger logger = Logger.getLogger(Renderer.class.getName());
 
     /**
      * When true, the indication numbers and links into the console log are included in the token replacement text.
@@ -50,7 +56,7 @@ public class Renderer {
     /**
      * When true, the replacement will be an HTML snippet.
      */
-    protected boolean useHtmlFormat = false;
+    private boolean useHtmlFormat = false;
 
     /**
      * When true, the "Identified problems:" title will appear over the causes.
@@ -67,38 +73,61 @@ public class Renderer {
      */
     private String noFailureText = "";
 
+    /**
+     * @param includeIndications When true, the indication numbers and links into the console log are included
+     * in the token replacement text.
+     */
     public void setIncludeIndications(boolean includeIndications) {
         this.includeIndications = includeIndications;
     }
 
+    /**
+     * @param useHtmlFormat When true, the replacement text will be an HTML snippet.
+     */
     public void setUseHtmlFormat(boolean useHtmlFormat) {
         this.useHtmlFormat = useHtmlFormat;
     }
 
+    /**
+     * @param includeTitle When true, the title will appear in the token replacement text.
+     */
     public void setIncludeTitle(boolean includeTitle) {
         this.includeTitle = includeTitle;
     }
 
+    /**
+     * @param wrapWidth Wrap long lines at this width. If wrapWidth is 0, the text isn't wrapped. Only applies if
+     * useHtmlFormat == false.
+     */
     public void setWrapWidth(int wrapWidth) {
         this.wrapWidth = wrapWidth;
     }
 
+    /**
+     * @param noFailureText Text to return when no failure cause is present.
+     */
     public void setNoFailureText(String noFailureText) {
         this.noFailureText = noFailureText;
     }
 
+    /**
+     * Append the either the html or plain text given to the StringBuilder, depending on "useHtmlFormat" value.
+     * @param stringBuilder The {@link StringBuilder} to append to.
+     * @param htmlText Text to append in case of html, can be null.
+     * @param plainText Text to append in case of plain text, can be null.
+     */
     protected void appendHtmlOrPlain(StringBuilder stringBuilder, String htmlText, String plainText) {
-        if (useHtmlFormat) {
-            if (htmlText != null) stringBuilder.append(htmlText);
-        } else {
-            if (plainText != null) stringBuilder.append(plainText);
+        if (useHtmlFormat && htmlText != null) {
+            stringBuilder.append(htmlText);
+        } else if (!useHtmlFormat && plainText != null) {
+            stringBuilder.append(plainText);
         }
     }
 
     /**
-     * Renders the Causes as provided by the action
-     * @param action
-     * @return
+     * Renders the Causes as provided by the action.
+     * @param action The action containing the causes
+     * @return The formatted causes.
      */
     public String render(FailureCauseBuildAction action) {
         final FailureCauseDisplayData data = action.getFailureCauseDisplayData();
@@ -162,7 +191,8 @@ public class Renderer {
      * @param indentLevel the indent level
      */
     private void addFailureCauseRepresentation(final StringBuilder stringBuilder,
-                                               final IndicationUrlBuilder indicationUrlBuilder, final FoundFailureCause cause,
+                                               final IndicationUrlBuilder indicationUrlBuilder,
+                                               final FoundFailureCause cause,
                                                final int indentLevel) {
 
         final int nextIndentLevel = indentLevel + LIST_INCREMENT;
@@ -223,7 +253,8 @@ public class Renderer {
      * @param indentLevel the indent level
      */
     private void addIndicationsRepresentation(final StringBuilder stringBuilder,
-                                              final IndicationUrlBuilder indicationUrlBuilder, final List<FoundIndication> indications,
+                                              final IndicationUrlBuilder indicationUrlBuilder,
+                                              final List<FoundIndication> indications,
                                               final int indentLevel) {
 
         final int nextIndentLevel = indentLevel + ITEM_INCREMENT;
@@ -247,7 +278,8 @@ public class Renderer {
      * @param indentLevel the indent level
      */
     private void addIndicationRepresentation(final StringBuilder stringBuilder,
-                                             final IndicationUrlBuilder indicationUrlBuilder, final FoundIndication indication,
+                                             final IndicationUrlBuilder indicationUrlBuilder,
+                                             final FoundIndication indication,
                                              final int indicationNumber, final int indentLevel) {
 
         if (useHtmlFormat) {
@@ -268,6 +300,73 @@ public class Renderer {
             stringBuilder.append("<");
             stringBuilder.append(indicationUrlBuilder.getUrlString());
             stringBuilder.append(">\n");
+        }
+    }
+
+    /**
+     * Renders the Causes as provided by the action.
+     * @param matrixAction The action containing the causes
+     * @return The formatted causes.
+     */
+    public String render(final FailureCauseMatrixBuildAction matrixAction) {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        addTitle(stringBuilder);
+        final int indentLevel = 0;
+        addFailureCauseMatrixRepresentation(stringBuilder, matrixAction, indentLevel);
+        return stringBuilder.toString();
+    }
+
+    /**
+     * @param stringBuilder the string builder to which to add the matrix build representation
+     * @param matrixAction  the matrix action
+     * @param indentLevel   the indent level
+     */
+    private void addFailureCauseMatrixRepresentation(final StringBuilder stringBuilder,
+                                                     final FailureCauseMatrixBuildAction matrixAction,
+                                                     final int indentLevel) {
+
+        final List<MatrixRun> matrixRuns = matrixAction.getRunsWithAction();
+        if (useHtmlFormat) {
+            stringBuilder.append("<ul>");
+        }
+        for (final MatrixRun matrixRun : matrixRuns) {
+            addMatrixRunRepresentation(stringBuilder, matrixRun, indentLevel + ITEM_INCREMENT);
+        }
+        if (useHtmlFormat) {
+            stringBuilder.append("</ul>");
+        }
+    }
+
+    /**
+     * @param stringBuilder the string builder to which to add the matrix run representation
+     * @param matrixRun     the matrix run
+     * @param indentLevel   the indent level
+     */
+    private void addMatrixRunRepresentation(final StringBuilder stringBuilder, final MatrixRun matrixRun,
+                                            final int indentLevel) {
+
+        final FailureCauseDisplayData data = FailureCauseMatrixBuildAction.getFailureCauseDisplayData(matrixRun);
+        if (data.getFoundFailureCauses().isEmpty() && data.getDownstreamFailureCauses().isEmpty()) {
+            return;
+        }
+        final int nextIndentLevel = indentLevel + LIST_INCREMENT;
+        if (useHtmlFormat) {
+            stringBuilder.append("<li>");
+            try {
+                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(
+                        matrixRun.getFullDisplayName()));
+            } catch (final IOException exception) {
+                stringBuilder.append("matrix-full-display-name");
+            }
+            addFailureCauseDisplayDataRepresentation(stringBuilder, data, nextIndentLevel);
+            stringBuilder.append("</li>");
+        } else {
+            stringBuilder.append(indentForDepth(indentLevel));
+            stringBuilder.append(LIST_BULLET);
+            stringBuilder.append(matrixRun.getFullDisplayName());
+            stringBuilder.append("\n");
+            addFailureCauseDisplayDataRepresentation(stringBuilder, data, nextIndentLevel);
         }
     }
 

@@ -23,31 +23,16 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.google.common.base.Splitter;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
-import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandTask;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
-import org.apache.log4j.Logger;
+import hudson.Extension;
+import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
-import hudson.Extension;
-import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
-import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
+import java.io.IOException;
 
 /**
  * The Build Failure Analyzer token for TokenMacro consumers.
@@ -56,7 +41,7 @@ import jenkins.model.Jenkins;
 @Extension(optional = true)
 public class Token extends DataBoundTokenMacro {
 
-    private MatrixRenderer renderer = new MatrixRenderer();
+    private Renderer renderer = new Renderer();
 
     /**
      * @param includeIndications When true, the indication numbers and links into the console log are included
