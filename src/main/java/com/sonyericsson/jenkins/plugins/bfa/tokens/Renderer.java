@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2014 Stellar Science Ltd Co
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
@@ -64,6 +87,14 @@ public class Renderer {
         this.noFailureText = noFailureText;
     }
 
+    protected void appendHtmlOrPlain(StringBuilder stringBuilder, String htmlText, String plainText) {
+        if (useHtmlFormat) {
+            if (htmlText != null) stringBuilder.append(htmlText);
+        } else {
+            if (plainText != null) stringBuilder.append(plainText);
+        }
+    }
+
     /**
      * Renders the Causes as provided by the action
      * @param action
@@ -97,14 +128,9 @@ public class Renderer {
     protected void addTitle(final StringBuilder stringBuilder) {
         if (includeTitle) {
             final String title = "Identified problems:";
-            if (useHtmlFormat) {
-                stringBuilder.append("<h2>");
-                stringBuilder.append(title);
-                stringBuilder.append("</h2>");
-            } else {
-                stringBuilder.append(title);
-                stringBuilder.append("\n");
-            }
+            appendHtmlOrPlain(stringBuilder, "<h2>", null);
+            stringBuilder.append(title);
+            appendHtmlOrPlain(stringBuilder, "</h2>", "\n");
         }
     }
 
@@ -120,19 +146,13 @@ public class Renderer {
         indicationUrlBuilder.setBuildUrl(data.getLinks().getBuildUrl());
         final List<FoundFailureCause> causes = data.getFoundFailureCauses();
         final int nextIndentLevel = indentLevel + ITEM_INCREMENT;
-        if (useHtmlFormat) {
-            stringBuilder.append("<ul>");
-            for (final FoundFailureCause cause : causes) {
-                indicationUrlBuilder.setCause(cause);
-                addFailureCauseRepresentation(stringBuilder, indicationUrlBuilder, cause, nextIndentLevel);
-            }
-            stringBuilder.append("</ul>");
-        } else {
-            for (final FoundFailureCause cause : causes) {
-                indicationUrlBuilder.setCause(cause);
-                addFailureCauseRepresentation(stringBuilder, indicationUrlBuilder, cause, nextIndentLevel);
-            }
+
+        appendHtmlOrPlain(stringBuilder, "<ul>", null);
+        for (final FoundFailureCause cause : causes) {
+            indicationUrlBuilder.setCause(cause);
+            addFailureCauseRepresentation(stringBuilder, indicationUrlBuilder, cause, nextIndentLevel);
         }
+        appendHtmlOrPlain(stringBuilder, "</ul>", null);
     }
 
     /**
@@ -207,19 +227,16 @@ public class Renderer {
                                               final int indentLevel) {
 
         final int nextIndentLevel = indentLevel + ITEM_INCREMENT;
-        if (useHtmlFormat) {
-            stringBuilder.append("<ul>");
+
+        appendHtmlOrPlain(stringBuilder, "<ul>", null);
+        for (int i = 0, size = indications.size(); i < size; ++i) {
+            final FoundIndication indication = indications.get(i);
+            indicationUrlBuilder.setIndication(indication);
+            final int indicationNumber = i + 1;
+            addIndicationRepresentation(stringBuilder, indicationUrlBuilder, indication, indicationNumber,
+                    nextIndentLevel);
         }
-            for (int i = 0, size = indications.size(); i < size; ++i) {
-                final FoundIndication indication = indications.get(i);
-                indicationUrlBuilder.setIndication(indication);
-                final int indicationNumber = i + 1;
-                addIndicationRepresentation(stringBuilder, indicationUrlBuilder, indication, indicationNumber,
-                        nextIndentLevel);
-            }
-        if (useHtmlFormat) {
-            stringBuilder.append("</ul>");
-        }
+        appendHtmlOrPlain(stringBuilder, "</ul>", null);
     }
 
     /**
