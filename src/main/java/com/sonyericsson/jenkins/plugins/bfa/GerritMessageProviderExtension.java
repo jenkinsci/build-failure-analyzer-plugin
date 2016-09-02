@@ -32,6 +32,8 @@ import hudson.Extension;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
 
+import java.util.List;
+
 /**
  * ExtensionPoint that allows BFA to send the failure cause description
  * directly to Gerrit.
@@ -50,13 +52,11 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                 if (action != null) {
                     FailureCauseDisplayData displayData = action.getFailureCauseDisplayData();
 
-                    addFailureCausesFromData(build, customMessage, displayData);
-                    for (FailureCauseDisplayData downstreamCause : displayData.getDownstreamFailureCauses()) {
-                        addFailureCausesFromData(build, customMessage, downstreamCause);
-                    }
+                    addFailureCausesFromData(customMessage, displayData);
+                    printDownstream(customMessage, displayData.getDownstreamFailureCauses());
 
                     if (customMessage.length() > 0) {
-                        return customMessage.toString().replace("'", "\\'");
+                        return customMessage.toString().replace("'", "&#39");
                     }
                 }
             }
@@ -65,13 +65,28 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
     }
 
     /**
+     *
+     * Adds all causes from downstream builds in recursion
+     *
+     * @param message the StringBuilder to add to.
+     * @param downstreamFailureCauses the list of downstream failures.
+     */
+    private void printDownstream(StringBuilder message, List<FailureCauseDisplayData> downstreamFailureCauses) {
+        if (!downstreamFailureCauses.isEmpty()) {
+            for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
+                addFailureCausesFromData(message, displayData);
+                printDownstream(message, displayData.getDownstreamFailureCauses());
+            }
+        }
+    }
+
+    /**
      * Appends FailureCause information to provided StringBuilder.
      *
-     * @param run the current run
      * @param message the StringBuilder to add to
      * @param displayData the data of downstream failures
      */
-    private void addFailureCausesFromData(Run run, StringBuilder message, FailureCauseDisplayData displayData) {
+    private void addFailureCausesFromData(StringBuilder message, FailureCauseDisplayData displayData) {
         for (FoundFailureCause failureCause : displayData.getFoundFailureCauses()) {
             if (message.length() > 0) {
                 message.append("\n\n");
@@ -80,8 +95,7 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
 
             message.append(" ( ")
             .append(Jenkins.getInstance().getRootUrl())
-            .append('/')
-            .append(run.getUrl())
+            .append(displayData.getLinks().getBuildUrl())
             .append(" )");
         }
     }
