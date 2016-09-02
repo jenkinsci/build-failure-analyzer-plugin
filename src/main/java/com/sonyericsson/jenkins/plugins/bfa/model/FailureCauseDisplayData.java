@@ -23,6 +23,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
  * THE SOFTWARE.
  */
 
+import hudson.model.Run;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.LinkedList;
@@ -51,13 +52,30 @@ public class FailureCauseDisplayData {
     /**
      * Use this constructor when the build is known.
      *
+     * @param build corresponding build.
+     *
+     */
+    @Deprecated
+    public FailureCauseDisplayData(final Run build) {
+        links = new Links(build.getParent().getUrl(),
+                build.getParent().getDisplayName(),
+                build.getUrl(),
+                build.getDisplayName());
+    }
+
+    /**
+     * Use this constructor when the build is known.
+     *
      * @param parentUrl url of the parent job.
      * @param parentName name of the parent job.
      * @param buildUrl url of the build.
      * @param buildName name of the build.
      *
      */
-    public FailureCauseDisplayData(final String parentUrl, final String parentName, final String buildUrl, final String buildName) {
+    public FailureCauseDisplayData(final String parentUrl,
+                                   final String parentName,
+                                   final String buildUrl,
+                                   final String buildName) {
         links = new Links(parentUrl, parentName, buildUrl, buildName);
     }
 
@@ -129,7 +147,10 @@ public class FailureCauseDisplayData {
          * @param buildUrl url of the build.
          * @param buildName name of the build.
          */
-        private Links(final String parentUrl, final String parentName, final String buildUrl, final String buildName) {
+        private Links(final String parentUrl,
+                      final String parentName,
+                      final String buildUrl,
+                      final String buildName) {
             this.projectUrl = parentUrl;
             this.buildUrl = buildUrl;
             this.projectDisplayName = parentName;

@@ -180,21 +180,19 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param downstreamFailureCauses the list of downstream failure causes.
      */
     private static void printDownstream(PrintStream buildLog, List<FailureCauseDisplayData> downstreamFailureCauses) {
-        if (!downstreamFailureCauses.isEmpty()) {
-            for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
-                FailureCauseDisplayData.Links links = displayData.getLinks();
-                if (!displayData.getFoundFailureCauses().isEmpty()) {
-                    buildLog.println("[BFA] See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
-                    for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
-                        String foundString = "[BFA] " + foundCause.getName();
-                        if (foundCause.getCategories() != null) {
-                            foundString += " from category " + foundCause.getCategories().get(0);
-                        }
-                        buildLog.println(foundString);
+        for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
+            FailureCauseDisplayData.Links links = displayData.getLinks();
+            if (!displayData.getFoundFailureCauses().isEmpty()) {
+                buildLog.println("[BFA] See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
+                for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
+                    String foundString = "[BFA] " + foundCause.getName();
+                    if (foundCause.getCategories() != null) {
+                        foundString += " from category " + foundCause.getCategories().get(0);
                     }
+                    buildLog.println(foundString);
                 }
-                printDownstream(buildLog, displayData.getDownstreamFailureCauses());
             }
+            printDownstream(buildLog, displayData.getDownstreamFailureCauses());
         }
     }
 

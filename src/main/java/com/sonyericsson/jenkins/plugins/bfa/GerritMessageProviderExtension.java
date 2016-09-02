@@ -56,7 +56,7 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                     printDownstream(customMessage, displayData.getDownstreamFailureCauses());
 
                     if (customMessage.length() > 0) {
-                        return customMessage.toString().replace("'", "&#39");
+                        return customMessage.toString().replace("'", "\"");
                     }
                 }
             }

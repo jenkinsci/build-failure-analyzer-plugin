@@ -121,7 +121,7 @@ public class GerritMessageProviderExtensionTest {
 
         GerritMessageProviderExtension extension = new GerritMessageProviderExtension();
 
-        Assert.assertEquals("it&#39s a single quote ( http://some.jenkins.com/jobs/build/123 )",
+        Assert.assertEquals("it\"s a single quote ( http://some.jenkins.com/jobs/build/123 )",
                 extension.getBuildCompletedMessage(run));
     }
 
@@ -134,7 +134,7 @@ public class GerritMessageProviderExtensionTest {
 
         GerritMessageProviderExtension extension = new GerritMessageProviderExtension();
 
-        Assert.assertEquals("q&#39u&#39o&#39t&#39e&#39s ( http://some.jenkins.com/jobs/build/123 )",
+        Assert.assertEquals("q\"u\"o\"t\"e\"s ( http://some.jenkins.com/jobs/build/123 )",
                 extension.getBuildCompletedMessage(run));
     }
 
