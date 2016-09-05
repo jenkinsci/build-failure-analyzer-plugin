@@ -30,8 +30,8 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
 import hudson.matrix.MatrixRun;
 import hudson.model.BuildBadgeAction;
-import hudson.model.Hudson;
 import hudson.model.Run;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -73,7 +73,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getIconFileName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
         } else {
             return null;
@@ -82,7 +82,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getDisplayName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return Messages.CauseManagement_DisplayName();
         } else {
             return null;
@@ -237,7 +237,11 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         FailureCauseDisplayData displayData = null;
         // Preventing us to get into a recursive loop
         if (depth < maxDepth && buildAction.getBuild() != null) {
-            displayData = new FailureCauseDisplayData(buildAction.getBuild());
+            Run build = buildAction.getBuild();
+            displayData = new FailureCauseDisplayData(build.getParent().getUrl(),
+                    build.getParent().getDisplayName(),
+                    build.getUrl(),
+                    build.getDisplayName());
 
             // Add causes from this build
             displayData.setFoundFailureCauses(

@@ -57,6 +57,7 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
+import jenkins.model.Jenkins;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -161,22 +162,37 @@ public class BuildFailureScanner extends RunListener<Run> {
 
             if (!downstreamFailureCauses.isEmpty()) {
                 buildLog.println("[BFA] Found downstream Failure causes ...");
-                for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
-                  FailureCauseDisplayData.Links links = displayData.getLinks();
-                  buildLog.println("[BFA] See " + links.getProjectDisplayName() + links.getBuildDisplayName());
-                  List<FoundFailureCause> failureCauses = displayData.getFoundFailureCauses();
-                  for (FoundFailureCause foundCause : failureCauses) {
+                printDownstream(buildLog, downstreamFailureCauses);
+            }
+
+            StatisticsLogger.getInstance().log(build, foundCauseListToLog);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not scan build " + build, e);
+        }
+    }
+
+
+    /**
+     *
+     * Adds all causes from downstream builds in recursion
+     *
+     * @param buildLog log to write information to.
+     * @param downstreamFailureCauses the list of downstream failure causes.
+     */
+    private static void printDownstream(PrintStream buildLog, List<FailureCauseDisplayData> downstreamFailureCauses) {
+        for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
+            FailureCauseDisplayData.Links links = displayData.getLinks();
+            if (!displayData.getFoundFailureCauses().isEmpty()) {
+                buildLog.println("[BFA] See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
+                for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
                     String foundString = "[BFA] " + foundCause.getName();
                     if (foundCause.getCategories() != null) {
                         foundString += " from category " + foundCause.getCategories().get(0);
                     }
                     buildLog.println(foundString);
-                    }
                 }
             }
-            StatisticsLogger.getInstance().log(build, foundCauseListToLog);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Could not scan build " + build, e);
+            printDownstream(buildLog, displayData.getDownstreamFailureCauses());
         }
     }
 
@@ -296,7 +312,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      *
      * @param build    the build to analyze.
      * @param buildLog the build log.
-     * @return a list of found failure causes based on the test results
+     * @return a list of found failure causes based on the test results.
      */
     private static List<FoundFailureCause> findFailedTests(final Run build, final PrintStream buildLog) {
         final List<FoundFailureCause> failedTestList =

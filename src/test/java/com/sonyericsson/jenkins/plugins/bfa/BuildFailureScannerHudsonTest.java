@@ -276,7 +276,7 @@ public class BuildFailureScannerHudsonTest {
 
         assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
                 + " extension would not return the expected message.",
-                FORMATTED_DESCRIPTION + " ( " + Jenkins.getInstance().getRootUrl() + "/job/test0/1/ )",
+                FORMATTED_DESCRIPTION + " ( " + Jenkins.getInstance().getRootUrl() + "job/test0/1/ )",
                 messageProvider.getBuildCompletedMessage(build));
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);

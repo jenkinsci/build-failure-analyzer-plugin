@@ -52,10 +52,31 @@ public class FailureCauseDisplayData {
     /**
      * Use this constructor when the build is known.
      *
-     * @param build corresponding build
+     * @param build corresponding build.
+     *
      */
+    @Deprecated
     public FailureCauseDisplayData(final Run build) {
-        links = new Links(build);
+        links = new Links(build.getParent().getUrl(),
+                build.getParent().getDisplayName(),
+                build.getUrl(),
+                build.getDisplayName());
+    }
+
+    /**
+     * Use this constructor when the build is known.
+     *
+     * @param parentUrl url of the parent job.
+     * @param parentName name of the parent job.
+     * @param buildUrl url of the build.
+     * @param buildName name of the build.
+     *
+     */
+    public FailureCauseDisplayData(final String parentUrl,
+                                   final String parentName,
+                                   final String buildUrl,
+                                   final String buildName) {
+        links = new Links(parentUrl, parentName, buildUrl, buildName);
     }
 
     /**
@@ -121,13 +142,19 @@ public class FailureCauseDisplayData {
          *
          * Url to the project and the build will be displayed in the view.
          *
-         * @param build - the build to extract link info from
+         * @param parentUrl url of the parent job.
+         * @param parentName name of the parent job.
+         * @param buildUrl url of the build.
+         * @param buildName name of the build.
          */
-        private Links(final Run build) {
-            this.projectUrl = build.getParent().getUrl();
-            this.buildUrl = build.getUrl();
-            this.projectDisplayName = build.getParent().getDisplayName();
-            this.buildDisplayName = build.getDisplayName();
+        private Links(final String parentUrl,
+                      final String parentName,
+                      final String buildUrl,
+                      final String buildName) {
+            this.projectUrl = parentUrl;
+            this.buildUrl = buildUrl;
+            this.projectDisplayName = parentName;
+            this.buildDisplayName = buildName;
         }
 
         /**
