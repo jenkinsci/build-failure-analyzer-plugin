@@ -109,20 +109,6 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     }
 
     /**
-     * @return failure cause
-     */
-    public FailureCause getCause() {
-        return cause;
-    }
-
-    /**
-     * @param cause Failure cause
-     */
-    public void setCause(FailureCause cause) {
-        this.cause = cause;
-    }
-
-    /**
      * The descriptor for this indicator.
      */
     @JsonIgnoreType

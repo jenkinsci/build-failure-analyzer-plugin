@@ -199,17 +199,17 @@ public class FoundIndication {
         }
     }
 
-    /**
-     * @param cause FailureCause
-     */
-    public void setCause(FailureCause cause) {
-        this.cause = cause;
-    }
-
-    /**
-     * @return FailureCause
-     */
-    public FailureCause getCause() {
-        return cause;
-    }
+//    /**
+//     * @param cause FailureCause
+//     */
+//    public void setCause(FailureCause cause) {
+//        this.cause = cause;
+//    }
+//
+//    /**
+//     * @return FailureCause
+//     */
+//    public FailureCause getCause() {
+//        return cause;
+//    }
 }

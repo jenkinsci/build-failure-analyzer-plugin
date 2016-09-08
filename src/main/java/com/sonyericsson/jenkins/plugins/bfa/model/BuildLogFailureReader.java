@@ -66,7 +66,19 @@ public class BuildLogFailureReader extends FailureReader {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
-            return scan(build, reader, currentFile);
+            List<FailureCause> causes = new ArrayList<>(1);
+            FailureCause fc = new FailureCause("somename", "somedescription");
+            causes.add(fc);
+            fc.addIndication(indication);
+            List<FoundFailureCause> foundFailureCauses = FailureReader.scanSingleLinePatterns(causes,
+                                                                                              build,
+                                                                                              reader,
+                                                                                              currentFile);
+            if (foundFailureCauses.isEmpty()) {
+                return null;
+            } else {
+                return foundFailureCauses.get(0).getIndications().get(0);
+            }
         } finally {
             if (reader != null) {
                 try {
@@ -76,29 +88,5 @@ public class BuildLogFailureReader extends FailureReader {
                 }
             }
         }
-    }
-
-    /**
-     * @param run current run
-     * @param reader file reader
-     * @param currentFile current file name
-     * @return Should return only one found indication or null. Kept for backwards compatibility.
-     * @throws IOException Exception
-     */
-    private FoundIndication scan(Run run, BufferedReader reader, String currentFile) throws IOException {
-        List<BuildLogIndication> indicationList = new ArrayList<>();
-        indicationList.add((BuildLogIndication) indication);
-
-        List<FoundIndication> indications = FailureReader.scanSingleLinePatterns(
-                indicationList,
-                run,
-                reader,
-                currentFile);
-
-        if (indications.size()==1) {
-            return indications.get(0);
-        }
-
-        return null;
     }
 }

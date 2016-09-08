@@ -26,6 +26,9 @@ package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -42,6 +45,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 
+import java.io.BufferedReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -79,6 +84,54 @@ public class BuildLogIndicationTest {
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
         FoundIndication found = reader.scan(build);
         assertNotNull(found);
+    }
+
+    /**
+     * Tests that the FailureReader parses two difference indications of same cause and description in result.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testFailureReaderForTwoIndications() throws Exception {
+        FreeStyleProject project = j.createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder("bla Build timed out bla"));
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
+
+        FailureCause cause = new FailureCause("bla", "${1,1}", "comment");
+
+        cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
+        cause.addIndication(new BuildLogIndication("(.*Build timed out.*)"));
+
+        List<FailureCause> causes = new ArrayList<>();
+        causes.add(cause);
+
+        List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,
+                new BufferedReader(build.getLogReader()), "test");
+        assertEquals(foundFailureCause.size(), 1);
+        assertEquals(foundFailureCause.get(0).getIndications().size(), 2);
+        assertEquals(foundFailureCause.get(0).getDescription(), "bla Build timed out bla");
+    }
+
+    /**
+     * Tests that Failure reader stops to check indication after first occurrence.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testFailureReaderStopsOnFirstOccurrence() throws Exception {
+        FreeStyleProject project = j.createFreeStyleProject();
+        project.getBuildersList().add(new PrintToLogBuilder("bla Build timed out bla\nbla Build timed out bla"));
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
+
+        FailureCause cause = new FailureCause("bla", "${1,1}", "comment");
+        cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
+
+        List<FailureCause> causes = new ArrayList<>();
+        causes.add(cause);
+
+        List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,
+                new BufferedReader(build.getLogReader()), "test");
+        assertEquals(foundFailureCause.size(), 1);
+        assertEquals(foundFailureCause.get(0).getIndications().size(), 1);
+        assertEquals(foundFailureCause.get(0).getDescription(), "bla Build timed out bla");
     }
 
     /**

@@ -44,6 +44,7 @@ import hudson.model.Run;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -95,21 +96,24 @@ public class FailureReaderTest {
                                  String currentFile) throws IOException {
         Run run = PowerMockito.mock(Run.class);
 
-        List<BuildLogIndication> indicationList = new ArrayList<>();
-        indicationList.add(indication);
+        List<FailureCause> causes = new ArrayList<>();
+        FailureCause cause = new FailureCause("test", "description");
+        cause.addIndication(indication);
+        causes.add(cause);
 
-        List<FoundIndication> indications = FailureReader.scanSingleLinePatterns(
-                indicationList,
+        List<FoundFailureCause> foundFailureCauses = FailureReader.scanSingleLinePatterns(
+                causes,
                 run,
                 reader,
                 currentFile);
 
-        if (indications.isEmpty()) {
+        if (foundFailureCauses.isEmpty()) {
             return null;
         }
 
-        assertEquals(1, indications.size());
-        return indications.get(0);
+        assertEquals(1, foundFailureCauses.size());
+        assertFalse(foundFailureCauses.get(0).getIndications().isEmpty());
+        return foundFailureCauses.get(0).getIndications().get(0);
 
     }
 
