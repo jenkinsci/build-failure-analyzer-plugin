@@ -114,7 +114,6 @@ public class FailureReaderTest {
         assertEquals(1, foundFailureCauses.size());
         assertFalse(foundFailureCauses.get(0).getIndications().isEmpty());
         return foundFailureCauses.get(0).getIndications().get(0);
-
     }
 
     /**

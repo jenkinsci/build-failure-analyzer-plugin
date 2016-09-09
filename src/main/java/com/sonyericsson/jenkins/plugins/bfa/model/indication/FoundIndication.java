@@ -198,18 +198,4 @@ public class FoundIndication {
             return 0;
         }
     }
-
-//    /**
-//     * @param cause FailureCause
-//     */
-//    public void setCause(FailureCause cause) {
-//        this.cause = cause;
-//    }
-//
-//    /**
-//     * @return FailureCause
-//     */
-//    public FailureCause getCause() {
-//        return cause;
-//    }
 }

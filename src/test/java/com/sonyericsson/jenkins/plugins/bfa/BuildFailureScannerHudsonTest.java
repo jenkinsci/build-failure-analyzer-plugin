@@ -206,7 +206,7 @@ public class BuildFailureScannerHudsonTest {
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
-        FreeStyleBuild build = future.get(10000, TimeUnit.SECONDS);
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
