@@ -312,7 +312,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
             return foundFailureCauses;
         } catch (IOException e) {
-            buildLog.print("Sorry, Alex tried to fix BFA plugin ASAP and didn't mention this corner case: " + e);
+            buildLog.print("[BFA] Exception during parsing file: " + e);
         }
 
         return new ArrayList<>();

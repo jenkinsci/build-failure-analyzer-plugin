@@ -147,6 +147,7 @@ public abstract class FailureReader {
                                                               BufferedReader reader,
                                                               String currentFile) throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
+        final long adjustedFileTimeout = TIMEOUT_FILE * getTotalNumberOfPatterns(causes);
 
         Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<>();
         Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<>();
@@ -179,9 +180,9 @@ public abstract class FailureReader {
                         }
                         currentLine++;
                         timerThread.touch();
-                        if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
+                        if (System.currentTimeMillis() - startTime > adjustedFileTimeout) {
                             logger.warning("File timeout scanning for indication '" + indication.toString() + "'"
-                                    + " for file " + currentFile);
+                                    + " for file " + currentFile + ":" + currentLine);
                             return convertToFoundFailureCauses(resultMap);
                         }
                     }
@@ -199,6 +200,20 @@ public abstract class FailureReader {
             // reset the interrupt
             Thread.interrupted();
         }
+    }
+
+    /**
+     * Calculates total number of patterns in list of causes.
+     *
+     * @param causes list of failure causes that we a looking for.
+     * @return total number of patterns.
+     */
+    private static int getTotalNumberOfPatterns(List<FailureCause> causes) {
+        int total = 0;
+        for (FailureCause cause : causes) {
+            total += cause.getIndications().size();
+        }
+        return total;
     }
 
     /**
