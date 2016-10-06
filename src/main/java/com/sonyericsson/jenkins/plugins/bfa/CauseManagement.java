@@ -271,7 +271,7 @@ public class CauseManagement extends BfaGraphAction {
      * @see com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication.IndicationDescriptor#getAll()
      */
     public ExtensionList<Indication.IndicationDescriptor> getIndicationDescriptors() {
-        return Indication.IndicationDescriptor.getAll();
+        return Indication.IndicationDescriptor.getFiltered();
     }
 
     /**
