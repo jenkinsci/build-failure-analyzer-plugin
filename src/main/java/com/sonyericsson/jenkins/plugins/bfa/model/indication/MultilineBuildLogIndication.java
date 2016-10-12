@@ -23,13 +23,15 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
-import java.util.regex.Pattern;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.MultilineBuildLogFailureReader;
 import hudson.Extension;
 import hudson.model.Hudson;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.util.regex.Pattern;
 
 /**
  * Build log indication that matches over multiple lines.
@@ -47,7 +49,7 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
      * @param pattern the string value to search for.
      */
     @DataBoundConstructor
-    public MultilineBuildLogIndication(String pattern) {
+    public MultilineBuildLogIndication(@JsonProperty("pattern") String pattern) {
         super(pattern);
     }
 
