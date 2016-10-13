@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
@@ -52,10 +53,29 @@ public abstract class FailureReader {
 
     private static final Logger logger = Logger.getLogger(FailureReader.class.getName());
 
+    private static final long TIMEOUT_BLOCK = 2000;
     private static final long TIMEOUT_FILE = 10000;
     private static final long TIMEOUT_LINE = 1000;
     private static final long SLEEPTIME = 200;
-    private static final int SCAN_HORIZON = 10000;
+
+    /**
+     * Overlapping bytes when moving the sliding window searching area.
+     * A value of 5000 essentially means that a regular expression can span
+     * 5000 bytes (~50 lines) anywhere in the buildlog and still get a match.
+     * Used when scanning for
+     * {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication}.
+     *
+     * Can never be larger than BUF_SIZE_BYTES.
+     */
+    private static int OVERLAP_BYTES = 5000;
+
+    /**
+     * The read buffer size for scanMultiLineOneFile(). This is also the size
+     * of the total "search area" when moving the sliding window through
+     * the buildlog. Used when scanning for
+     * {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication}.
+     */
+    private static int BUF_SIZE_BYTES = 15000;
 
     /** The indication we are looking for. */
     protected Indication indication;
@@ -198,24 +218,27 @@ public abstract class FailureReader {
      */
     protected FoundIndication scanMultiLineOneFile(Run build, BufferedReader reader, String currentFile)
             throws IOException {
-        TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
+        TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_BLOCK);
         FoundIndication foundIndication = null;
-        boolean found = false;
         final Pattern pattern = indication.getPattern();
-        final Scanner scanner = new Scanner(reader);
-        scanner.useDelimiter(Pattern.compile("[\\r\\n]+"));
-        String matchingString = null;
         timerThread.start();
         try {
             long startTime = System.currentTimeMillis();
-            while (scanner.hasNext()) {
+            char[] buf = new char[BUF_SIZE_BYTES];
+            StringBuilder searchBuffer = new StringBuilder();
+            int read;
+            boolean firstRead = true;
+            while ((read = reader.read(buf, 0, BUF_SIZE_BYTES - (firstRead ? 0 : OVERLAP_BYTES))) != -1) {
                 try {
-                    matchingString = scanner.findWithinHorizon(pattern, SCAN_HORIZON);
-                    if (matchingString != null) {
-                        found = true;
+                    firstRead = false;
+                    searchBuffer.append(buf, 0, read);
+                    Matcher matcher = pattern.matcher(searchBuffer.toString());
+                    if (matcher.find()) {
+                        foundIndication = new FoundIndication(build, indication.getUserProvidedExpression(), currentFile,
+                                removeConsoleNotes(matcher.group()));
                         break;
                     }
-                    scanner.next();
+                    searchBuffer.delete(0, BUF_SIZE_BYTES - OVERLAP_BYTES);
                 } catch (RuntimeException e) {
                     if (e.getCause() instanceof InterruptedException) {
                         logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
@@ -225,17 +248,12 @@ public abstract class FailureReader {
                         throw e;
                     }
                 }
-
                 timerThread.touch();
                 if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
                     logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
                             + currentFile);
                     break;
                 }
-            }
-            if (found) {
-                foundIndication = new FoundIndication(build, pattern.pattern(), currentFile,
-                    removeConsoleNotes(matchingString));
             }
             return foundIndication;
         } finally {
