@@ -232,9 +232,9 @@ public abstract class FailureReader {
                 try {
                     firstRead = false;
                     searchBuffer.append(buf, 0, read);
-                    Matcher matcher = pattern.matcher(searchBuffer.toString());
+                    Matcher matcher = pattern.matcher(new InterruptibleCharSequence(searchBuffer.toString()));
                     if (matcher.find()) {
-                        foundIndication = new FoundIndication(build, indication.getUserProvidedExpression(), currentFile,
+                        foundIndication = new FoundIndication(build, pattern.pattern(), currentFile,
                                 removeConsoleNotes(matcher.group()));
                         break;
                     }

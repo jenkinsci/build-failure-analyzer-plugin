@@ -179,7 +179,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
     public void testDoMatchTextUrlValidWarning() throws Exception {
         FreeStyleProject freeStyleProject = createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
-        FreeStyleBuild freeStyleBuild = buildAndAssertSuccess(freeStyleProject);
+        FreeStyleBuild freeStyleBuild = freeStyleProject.scheduleBuild2(0, new Cause.UserCause()).get();
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
         String buildUrl = getURL() + freeStyleBuild.getUrl();
