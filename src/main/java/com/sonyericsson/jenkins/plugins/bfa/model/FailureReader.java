@@ -67,7 +67,7 @@ public abstract class FailureReader {
      *
      * Can never be larger than BUF_SIZE_BYTES.
      */
-    private static int OVERLAP_BYTES = 5000;
+    private static final int OVERLAP_BYTES = 5000;
 
     /**
      * The read buffer size for scanMultiLineOneFile(). This is also the size
@@ -75,7 +75,7 @@ public abstract class FailureReader {
      * the buildlog. Used when scanning for
      * {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication}.
      */
-    private static int BUF_SIZE_BYTES = 15000;
+    private static final int BUF_SIZE_BYTES = 15000;
 
     /** The indication we are looking for. */
     protected Indication indication;
@@ -228,6 +228,7 @@ public abstract class FailureReader {
             StringBuilder searchBuffer = new StringBuilder();
             int read;
             boolean firstRead = true;
+            //CS IGNORE AvoidInlineConditionals FOR NEXT 1 LINES. REASON: Split up makes code less reasable.
             while ((read = reader.read(buf, 0, BUF_SIZE_BYTES - (firstRead ? 0 : OVERLAP_BYTES))) != -1) {
                 try {
                     firstRead = false;
