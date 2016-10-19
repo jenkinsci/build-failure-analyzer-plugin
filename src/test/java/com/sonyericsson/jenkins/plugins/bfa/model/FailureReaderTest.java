@@ -155,23 +155,21 @@ public class FailureReaderTest {
     }
 
     /**
-     * Test of timeout on abusive line. Should timeout on two lines
-     * each timeout between 1 and 2 seconds.
+     * Test of timeout on abusive line.
      * @throws Exception if so
      */
     @Test
-    public void testScanMultiLineOneFileWithLineTimeout() throws Exception {
-        FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*scan for me please.*"));
-        InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
-        ZipInputStream zipStream = new ZipInputStream(resStream);
-        zipStream.getNextEntry();
-        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(zipStream)));
+    public void testScanMultiLineOneFileWithBlockTimeout() throws Exception {
+        // Evil input + expression. Will timeout every time.
+        FailureReader reader = new TestReader(new MultilineBuildLogIndication("^(([a-z])+.)+[A-Z]([a-z])+$"));
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".getBytes())));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 5000);
-        assertNotNull("Expected to find an indication", indication);
+        assertNull("Did not expect to find an indication", indication);
     }
 
     /**

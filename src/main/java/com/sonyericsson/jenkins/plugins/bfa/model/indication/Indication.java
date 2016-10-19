@@ -70,7 +70,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     /**
      * @return The user-provided regular expression.
      */
-    @JsonIgnore
+    @JsonProperty("pattern")
     public String getUserProvidedExpression() {
         return pattern;
     }
@@ -98,6 +98,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      *
      * @return the pattern to match.
      */
+    @JsonIgnore
     public abstract Pattern getPattern();
 
     @Override

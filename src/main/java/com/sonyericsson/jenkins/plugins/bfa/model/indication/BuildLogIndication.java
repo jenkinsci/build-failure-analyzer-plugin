@@ -35,15 +35,15 @@ import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Indication that parses the build log file for a pattern.
@@ -61,7 +61,7 @@ public class BuildLogIndication extends Indication {
      * @param pattern the string value to search for.
      */
     @DataBoundConstructor
-    public BuildLogIndication(String pattern) {
+    public BuildLogIndication(@JsonProperty("pattern") String pattern) {
         super(pattern);
     }
 
