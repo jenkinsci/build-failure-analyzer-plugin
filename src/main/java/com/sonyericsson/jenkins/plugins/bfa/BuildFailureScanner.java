@@ -298,12 +298,15 @@ public class BuildFailureScanner extends RunListener<Run> {
                             + cause.getName() + "-"
                             + indication.getUserProvidedExpression());
 
-                    foundIndications.add(findIndication(indication, build, buildLog));
+                    final FoundIndication foundIndication = findIndication(indication, build, buildLog);
+                    if (foundIndication != null) {
+                        foundIndications.add(foundIndication);
 
-                    if (logger.isLoggable(Level.FINER)) {
-                        logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
-                                cause.getName(),
-                                String.valueOf(System.currentTimeMillis() - start), });
+                        if (logger.isLoggable(Level.FINER)) {
+                            logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
+                                    cause.getName(),
+                                    String.valueOf(System.currentTimeMillis() - start),});
+                        }
                     }
                 }
 
