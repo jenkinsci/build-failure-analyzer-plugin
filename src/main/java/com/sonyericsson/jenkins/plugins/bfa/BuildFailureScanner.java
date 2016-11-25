@@ -305,7 +305,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                         if (logger.isLoggable(Level.FINER)) {
                             logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
                                     cause.getName(),
-                                    String.valueOf(System.currentTimeMillis() - start),});
+                                    String.valueOf(System.currentTimeMillis() - start), });
                         }
                     }
                 }

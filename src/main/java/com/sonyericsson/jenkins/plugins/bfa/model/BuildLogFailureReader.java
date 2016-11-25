@@ -61,6 +61,7 @@ public class BuildLogFailureReader extends FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws IOException if so.
      */
+    @Override
     public FoundIndication scan(Run build) throws IOException {
         String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;
