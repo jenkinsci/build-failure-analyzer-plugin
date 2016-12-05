@@ -98,5 +98,12 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
             .append(displayData.getLinks().getBuildUrl())
             .append(" )");
         }
+
+        if (displayData.getDownstreamFailureCauses().isEmpty() && displayData.getFoundFailureCauses().isEmpty()) {
+            message.append("Unknown (")
+                    .append(Jenkins.getInstance().getRootUrl())
+                    .append(displayData.getLinks().getBuildUrl())
+                    .append(")");
+        }
     }
 }
