@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 
 import java.util.List;
@@ -55,6 +56,9 @@ public class FoundIndication {
      */
     @Deprecated
     private transient Integer matchingLine;
+    @Deprecated
+    private transient FailureCause cause;
+
     private String pattern;
     private Run build;
     private String matchingString;
