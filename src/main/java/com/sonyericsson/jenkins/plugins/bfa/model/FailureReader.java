@@ -149,8 +149,8 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         final long adjustedFileTimeout = TIMEOUT_FILE * getTotalNumberOfPatterns(causes);
 
-        Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<>();
-        Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<>();
+        Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<FailureCause, List<FoundIndication>>();
+        Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<FailureCause, List<Indication>>();
 
         timerThread.start();
         try {
@@ -164,7 +164,7 @@ public abstract class FailureReader {
                             List<Indication> wasBefore = firstOccurrences.get(cause);
                             if (wasBefore == null || !wasBefore.contains(indication)) {
                                 if (processIndication(build, currentFile, resultMap, line, cause, indication)) {
-                                    wasBefore = new ArrayList<>();
+                                    wasBefore = new ArrayList<Indication>();
                                     wasBefore.add(indication);
                                     firstOccurrences.put(cause, wasBefore);
                                 }
@@ -263,7 +263,7 @@ public abstract class FailureReader {
         if (causeIndicationsMap.containsKey(cause)) {
             causeIndicationsMap.get(cause).add(foundIndication);
         } else {
-            List<FoundIndication> foundIndications = new ArrayList<>();
+            List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
             foundIndications.add(foundIndication);
             causeIndicationsMap.put(cause, foundIndications);
         }
@@ -276,7 +276,7 @@ public abstract class FailureReader {
      * @return List of FoundFailureCauses that was generated from input data
      */
     private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> x) {
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<>(x.size());
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(x.size());
 
         for (FailureCause failureCause : x.keySet()) {
             foundFailureCauses.add(new FoundFailureCause(failureCause, x.get(failureCause)));

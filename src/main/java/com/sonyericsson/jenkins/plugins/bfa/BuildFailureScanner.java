@@ -197,7 +197,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     private static List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
                                                       final Run build, final PrintStream buildLog) {
-        final List<FoundFailureCause> foundFailureCauseList = new ArrayList<>();
+        final List<FoundFailureCause> foundFailureCauseList = new ArrayList<FoundFailureCause>();
         long start = System.currentTimeMillis();
 
         THREAD_POOL_EXECUTOR.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
@@ -215,7 +215,9 @@ public class BuildFailureScanner extends RunListener<Run> {
 
         try {
             THREAD_POOL_EXECUTOR.submit(runnable).get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            buildLog.print("[BFA] was interrupted: " + e);
+        } catch (ExecutionException e) {
             buildLog.print("[BFA] was interrupted: " + e);
         }
 
@@ -258,10 +260,10 @@ public class BuildFailureScanner extends RunListener<Run> {
     private static List<FoundFailureCause> findIndications(final Collection<FailureCause> causes,
                                                          Run build,
                                                          PrintStream buildLog) {
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<>();
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
 
-        List<FailureCause> singleLineCauses = new ArrayList<>();
-        List<FailureCause> notOnlySingleLineCauses = new ArrayList<>();
+        List<FailureCause> singleLineCauses = new ArrayList<FailureCause>();
+        List<FailureCause> notOnlySingleLineCauses = new ArrayList<FailureCause>();
 
         for (FailureCause cause : causes) {
             boolean atLeast = false;
@@ -278,47 +280,53 @@ public class BuildFailureScanner extends RunListener<Run> {
             }
         }
 
+        BufferedReader reader = null;
         try {
-            try (BufferedReader reader = new BufferedReader(build.getLogReader())) {
-                foundFailureCauses.addAll(
-                        FailureReader.scanSingleLinePatterns(
-                                singleLineCauses,
-                                build,
-                                reader,
-                                build.getLogFile().getName()));
-            }
-
-            for (FailureCause cause : notOnlySingleLineCauses) {
-                List<FoundIndication> foundIndications = new ArrayList<>();
-                for (Indication indication : cause.getIndications()) {
-                    long start = System.currentTimeMillis();
-
-                    Thread.currentThread().setName("BFA-scanner-"
-                            + build.getFullDisplayName() + ": "
-                            + cause.getName() + "-"
-                            + indication.getUserProvidedExpression());
-
-                    final FoundIndication foundIndication = findIndication(indication, build, buildLog);
-                    if (foundIndication != null) {
-                        foundIndications.add(foundIndication);
-
-                        if (logger.isLoggable(Level.FINER)) {
-                            logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
-                                    cause.getName(),
-                                    String.valueOf(System.currentTimeMillis() - start), });
-                        }
-                    }
-                }
-
-                foundFailureCauses.add(new FoundFailureCause(cause, foundIndications));
-            }
-
-            return foundFailureCauses;
+            reader = new BufferedReader(build.getLogReader());
+            foundFailureCauses.addAll(
+                    FailureReader.scanSingleLinePatterns(
+                            singleLineCauses,
+                            build,
+                            reader,
+                            build.getLogFile().getName()));
         } catch (IOException e) {
             buildLog.print("[BFA] Exception during parsing file: " + e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
+                }
+            }
         }
 
-        return new ArrayList<>();
+        for (FailureCause cause : notOnlySingleLineCauses) {
+            List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
+            for (Indication indication : cause.getIndications()) {
+                long start = System.currentTimeMillis();
+
+                Thread.currentThread().setName("BFA-scanner-"
+                        + build.getFullDisplayName() + ": "
+                        + cause.getName() + "-"
+                        + indication.getUserProvidedExpression());
+
+                final FoundIndication foundIndication = findIndication(indication, build, buildLog);
+                if (foundIndication != null) {
+                    foundIndications.add(foundIndication);
+
+                    if (logger.isLoggable(Level.FINER)) {
+                        logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
+                                cause.getName(),
+                                String.valueOf(System.currentTimeMillis() - start), });
+                    }
+                }
+            }
+
+            foundFailureCauses.add(new FoundFailureCause(cause, foundIndications));
+        }
+
+        return foundFailureCauses;
     }
 
     /**

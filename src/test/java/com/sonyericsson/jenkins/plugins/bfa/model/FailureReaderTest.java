@@ -96,7 +96,7 @@ public class FailureReaderTest {
                                  String currentFile) throws IOException {
         Run run = PowerMockito.mock(Run.class);
 
-        List<FailureCause> causes = new ArrayList<>();
+        List<FailureCause> causes = new ArrayList<FailureCause>();
         FailureCause cause = new FailureCause("test", "description");
         cause.addIndication(indication);
         causes.add(cause);

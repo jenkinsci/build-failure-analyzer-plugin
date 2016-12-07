@@ -101,7 +101,7 @@ public class BuildLogIndicationTest {
         cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
         cause.addIndication(new BuildLogIndication("(.*Build timed out.*)"));
 
-        List<FailureCause> causes = new ArrayList<>();
+        List<FailureCause> causes = new ArrayList<FailureCause>();
         causes.add(cause);
 
         List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,
@@ -124,7 +124,7 @@ public class BuildLogIndicationTest {
         FailureCause cause = new FailureCause("bla", "${1,1}", "comment");
         cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
 
-        List<FailureCause> causes = new ArrayList<>();
+        List<FailureCause> causes = new ArrayList<FailureCause>();
         causes.add(cause);
 
         List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,

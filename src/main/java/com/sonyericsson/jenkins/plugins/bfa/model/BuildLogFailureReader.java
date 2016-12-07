@@ -67,7 +67,7 @@ public class BuildLogFailureReader extends FailureReader {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
-            List<FailureCause> causes = new ArrayList<>(1);
+            List<FailureCause> causes = new ArrayList<FailureCause>(1);
             FailureCause fc = new FailureCause("somename", "somedescription");
             causes.add(fc);
             fc.addIndication(indication);
