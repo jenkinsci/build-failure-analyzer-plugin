@@ -100,6 +100,10 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
         }
 
         if (displayData.getDownstreamFailureCauses().isEmpty() && displayData.getFoundFailureCauses().isEmpty()) {
+            if (message.length() > 0) {
+                message.append("\n\n");
+            }
+
             message.append("Unknown (")
                     .append(Jenkins.getInstance().getRootUrl())
                     .append(displayData.getLinks().getBuildUrl())
