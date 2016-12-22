@@ -104,10 +104,11 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                 message.append("\n\n");
             }
 
-            message.append("Unknown (")
+            message.append(PluginImpl.getInstance().getNoCausesMessage())
+                    .append(" ( ")
                     .append(Jenkins.getInstance().getRootUrl())
                     .append(displayData.getLinks().getBuildUrl())
-                    .append(")");
+                    .append(" )");
         }
     }
 }
