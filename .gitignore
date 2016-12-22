@@ -4,6 +4,7 @@ bin
 *.iws
 *.ipr
 work
+.DS_Store
 .idea
 .classpath
 .project
