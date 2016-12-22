@@ -28,6 +28,7 @@ import java.util.List;
 public class GerritMessageProviderExtensionTest {
     private static final String JENKINS_URL =  "http://some.jenkins.com";
     private static final String BUILD_URL = "jobs/build/123";
+    private static final String NO_CAUSES_MSG = "FEEL_FREE_TO_PUT_WHAT_EVER_YOU_WANT";
 
     /**
      * Initialize basic stuff: Jenkins, PluginImpl, etc.
@@ -44,6 +45,7 @@ public class GerritMessageProviderExtensionTest {
         PluginImpl plugin = PowerMockito.mock(PluginImpl.class);
         PowerMockito.when(plugin.isGerritTriggerEnabled()).thenReturn(true);
         PowerMockito.when(PluginImpl.getInstance()).thenReturn(plugin);
+        PowerMockito.when(plugin.getNoCausesMessage()).thenReturn(NO_CAUSES_MSG);
     }
 
     /**
@@ -59,17 +61,19 @@ public class GerritMessageProviderExtensionTest {
         FailureCauseBuildAction action = PowerMockito.mock(FailureCauseBuildAction.class);
 
         List<FoundFailureCause> failureCauses = new ArrayList<FoundFailureCause>();
-        failureCauses.add(new FoundFailureCause(new FailureCause("testName", cause)));
-        FailureCauseDisplayData displayData = new FailureCauseDisplayData("parentURL", "parentName",
+
+        final FailureCauseDisplayData displayData = new FailureCauseDisplayData("parentURL", "parentName",
                 "/jobs/build/123", "buildName");
         displayData.setFoundFailureCauses(failureCauses);
+        if (cause != null) {
+            failureCauses.add(new FoundFailureCause(new FailureCause("testName", cause)));
+        }
 
         PowerMockito.when(run.getAction(FailureCauseBuildAction.class)).thenReturn(action);
         PowerMockito.when(run.getUrl()).thenReturn(BUILD_URL);
         PowerMockito.when(run.getParent()).thenReturn(parent);
         PowerMockito.when(action.getBuild()).thenReturn(run);
         PowerMockito.when(action.getFailureCauseDisplayData()).thenReturn(displayData);
-
         return run;
     }
 
@@ -161,6 +165,19 @@ public class GerritMessageProviderExtensionTest {
         GerritMessageProviderExtension extension = new GerritMessageProviderExtension();
 
         Assert.assertEquals("deep cause ( http://some.jenkins.com/jobs/build/789 )",
+                extension.getBuildCompletedMessage(run));
+    }
+
+    /**
+     * Test that even if there no causes messages will be created.
+     */
+    @Test
+    public void testNoCause() {
+        Run run = getRunWithTopCause(null);
+
+        GerritMessageProviderExtension extension = new GerritMessageProviderExtension();
+
+        Assert.assertEquals(NO_CAUSES_MSG + " ( http://some.jenkins.com/jobs/build/123 )",
                 extension.getBuildCompletedMessage(run));
     }
 }
