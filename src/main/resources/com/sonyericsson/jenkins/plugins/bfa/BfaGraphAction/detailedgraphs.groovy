@@ -141,7 +141,6 @@ l.layout() {
         }
       }
 
-      br(style: "clear: both;") {}
     }
 
     div() {
