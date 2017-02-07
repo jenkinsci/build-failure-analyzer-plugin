@@ -218,7 +218,7 @@ public abstract class FailureReader {
 
     /**
      *
-     * Updates map of founded failure causes it patter matches the line
+     * Updates map of found failure causes if pattern matches the line
      *
      * @param build current build
      * @param currentFile current file
@@ -270,16 +270,18 @@ public abstract class FailureReader {
     }
 
     /**
-     * Converts map of FailureCauses to FoundIndications to list of FoundFailureCauses
+     * Converts from a map with a FailureCause as key
+     * and a list of FoundIndications as value
+     * to a list of FoundFailureCauses
      *
-     * @param x input data
+     * @param causes input data
      * @return List of FoundFailureCauses that was generated from input data
      */
-    private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> x) {
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(x.size());
+    private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> causes) {
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(causes.size());
 
-        for (FailureCause failureCause : x.keySet()) {
-            foundFailureCauses.add(new FoundFailureCause(failureCause, x.get(failureCause)));
+        for (FailureCause failureCause : causes.keySet()) {
+            foundFailureCauses.add(new FoundFailureCause(failureCause, causes.get(failureCause)));
         }
 
         return foundFailureCauses;

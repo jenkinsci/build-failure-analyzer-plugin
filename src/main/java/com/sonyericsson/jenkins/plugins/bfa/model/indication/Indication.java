@@ -24,7 +24,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.ExtensionList;
 import hudson.model.Describable;
@@ -53,12 +52,6 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      * The user-provided regular expression.
      */
     private String pattern;
-
-    /**
-     * @deprecated, kept for backwards compatibility.
-     */
-    @Deprecated
-    private transient FailureCause cause;
 
     /**
      * @param pattern the String value.
