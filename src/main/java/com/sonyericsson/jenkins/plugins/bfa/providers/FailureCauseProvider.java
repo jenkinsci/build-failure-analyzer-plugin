@@ -26,7 +26,6 @@ package com.sonyericsson.jenkins.plugins.bfa.providers;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.Extension;
 import hudson.model.Run;
 import net.sf.json.JSONObject;
@@ -50,9 +49,9 @@ public class FailureCauseProvider extends MQDataProvider {
             JSONObject failureCausesJSON = new JSONObject();
             for (FoundFailureCause foundFailureCause : foundFailureCauses) {
                 JSONObject failureCauseJSON = new JSONObject();
-                failureCauseJSON.put("name",foundFailureCause.getName());
-                failureCauseJSON.put("description",foundFailureCause.getDescription());
-                failureCauseJSON.put("categories",foundFailureCause.getCategories());
+                failureCauseJSON.put("name", foundFailureCause.getName());
+                failureCauseJSON.put("description", foundFailureCause.getDescription());
+                failureCauseJSON.put("categories", foundFailureCause.getCategories());
                 JSONObject foundIndicationsJSON = new JSONObject();
                 for(FoundIndication ind : foundFailureCause.getIndications()) {
                     foundIndicationsJSON.put("pattern", ind.getPattern());
