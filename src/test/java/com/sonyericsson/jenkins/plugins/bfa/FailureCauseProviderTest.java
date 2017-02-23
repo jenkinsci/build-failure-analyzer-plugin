@@ -84,7 +84,7 @@ public class FailureCauseProviderTest {
         //Check that the correct values are in place in the Json.
         JSONObject failureCausesjson = (JSONObject)json.get("failurecauses");
         JSONObject specificFailureCausesJson = (JSONObject)failureCausesjson.get("myid");
-        List<String> cat = (List<String>) specificFailureCausesJson.get("categories");
+        List<String> cat = (List<String>)specificFailureCausesJson.get("categories");
         JSONObject indicationsJson = (JSONObject)specificFailureCausesJson.get("indications");
         assertThat(specificFailureCausesJson.getString("name"), is("myname"));
         assertThat(specificFailureCausesJson.getString("description"), is("mydescription"));

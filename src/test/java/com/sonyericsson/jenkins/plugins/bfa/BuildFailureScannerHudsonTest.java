@@ -350,7 +350,7 @@ public class BuildFailureScannerHudsonTest {
     @Test
     public void testDoNotScanIfLogSizeExceedsLimit() throws Exception {
         PluginImpl.getInstance().setMaxLogSize(1);
-        FreeStyleProject project = createProject(createHugeString(1024*1024) + BUILD_LOG);
+        FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -367,7 +367,7 @@ public class BuildFailureScannerHudsonTest {
     @Test
     public void testDoScanIfLogSizeIsInLimit() throws Exception {
         PluginImpl.getInstance().setMaxLogSize(2);
-        FreeStyleProject project = createProject(createHugeString(1024*1024) + BUILD_LOG);
+        FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);

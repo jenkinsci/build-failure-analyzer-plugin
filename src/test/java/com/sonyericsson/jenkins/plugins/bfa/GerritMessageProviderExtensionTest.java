@@ -24,7 +24,7 @@ import java.util.List;
  * @throws Exception if so.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PluginImpl.class, Jenkins.class})
+@PrepareForTest({PluginImpl.class, Jenkins.class })
 public class GerritMessageProviderExtensionTest {
     private static final String JENKINS_URL =  "http://some.jenkins.com";
     private static final String BUILD_URL = "jobs/build/123";
