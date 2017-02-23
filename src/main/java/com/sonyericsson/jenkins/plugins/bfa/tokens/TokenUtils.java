@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public final class TokenUtils {
 
     /** Utility class */
-    private TokenUtils() {}
+    private TokenUtils() { }
 
     /**
      * Wrap some text
