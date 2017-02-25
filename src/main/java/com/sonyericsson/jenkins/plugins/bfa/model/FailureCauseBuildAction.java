@@ -38,6 +38,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -342,7 +343,17 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
     private static Set<Run<?, ?>> getDownstreamBuilds(
             final Run build) {
 
-        Set<Run<?, ?>> foundDbf = new TreeSet<Run<?, ?>>();
+        Set<Run<?, ?>> foundDbf = new TreeSet<Run<?, ?>>(new Comparator<Run<?, ?>>() {
+            @Override
+            public int compare(Run<?, ?> o1, Run<?, ?> o2) {
+                final int res = o1.getParent().getFullName().compareTo(o2.getParent().getFullName());
+                if (res == 0) {
+                    return o1.number - o2.number;
+                }
+
+                return res;
+            }
+        });
 
         for (DownstreamBuildFinder dbf : DownstreamBuildFinder.getAll()) {
 
