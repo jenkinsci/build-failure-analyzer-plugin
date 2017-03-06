@@ -28,6 +28,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import hudson.Extension;
 import hudson.model.Run;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import com.sonymobile.jenkins.plugins.mq.mqnotifier.providers.MQDataProvider;
 
@@ -46,19 +47,22 @@ public class FailureCauseProvider extends MQDataProvider {
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
             List<FoundFailureCause> foundFailureCauses = action.getFoundFailureCauses();
-            JSONObject failureCausesJSON = new JSONObject();
+            JSONArray failureCausesJSON = new JSONArray();
             for (FoundFailureCause foundFailureCause : foundFailureCauses) {
                 JSONObject failureCauseJSON = new JSONObject();
+                failureCauseJSON.put("id", foundFailureCause.getId());
                 failureCauseJSON.put("name", foundFailureCause.getName());
                 failureCauseJSON.put("description", foundFailureCause.getDescription());
                 failureCauseJSON.put("categories", foundFailureCause.getCategories());
-                JSONObject foundIndicationsJSON = new JSONObject();
+                JSONArray foundIndicationsJSON = new JSONArray();
                 for (FoundIndication ind : foundFailureCause.getIndications()) {
-                    foundIndicationsJSON.put("pattern", ind.getPattern());
-                    foundIndicationsJSON.put("matchingString", ind.getMatchingString());
+                    JSONObject foundIndicationJSON = new JSONObject();
+                    foundIndicationJSON.put("pattern", ind.getPattern());
+                    foundIndicationJSON.put("matchingString", ind.getMatchingString());
+                    foundIndicationsJSON.add(foundIndicationJSON);
                 }
                 failureCauseJSON.put("indications", foundIndicationsJSON);
-                failureCausesJSON.put(foundFailureCause.getId(), failureCauseJSON);
+                failureCausesJSON.add(failureCauseJSON);
             }
             json.put("failurecauses", failureCausesJSON);
         }

@@ -29,6 +29,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.providers.FailureCauseProvider;
 import hudson.model.Run;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.junit.Test;
 import java.util.ArrayList;
@@ -52,7 +53,8 @@ public class FailureCauseProviderTest {
     @Test
     public void testCorrectJson() {
         List<String> categories = new ArrayList<String>();
-        categories.add("category");
+        categories.add("category1");
+        categories.add("category2");
         //Create the needed objects in order to test the FailureCauseProvider.
         //The null values in the constructor are the ones that don't end up in the resulting
         //Json structure, namely comment, date, modifications and indications (which is added directly
@@ -82,14 +84,16 @@ public class FailureCauseProviderTest {
         provider.provideCompletedRunData(run, json);
 
         //Check that the correct values are in place in the Json.
-        JSONObject failureCausesjson = (JSONObject)json.get("failurecauses");
-        JSONObject specificFailureCausesJson = (JSONObject)failureCausesjson.get("myid");
+        JSONArray failureCausesjson = (JSONArray)json.get("failurecauses");
+        JSONObject specificFailureCausesJson = (JSONObject)failureCausesjson.get(0);
         List<String> cat = (List<String>)specificFailureCausesJson.get("categories");
-        JSONObject indicationsJson = (JSONObject)specificFailureCausesJson.get("indications");
+        JSONArray indicationsJson = (JSONArray)specificFailureCausesJson.get("indications");
+        assertThat(specificFailureCausesJson.getString("id"), is("myid"));
         assertThat(specificFailureCausesJson.getString("name"), is("myname"));
         assertThat(specificFailureCausesJson.getString("description"), is("mydescription"));
-        assertThat(cat.get(0), is("category"));
-        assertThat(indicationsJson.getString("pattern"), is("mypattern"));
-        assertThat(indicationsJson.getString("matchingString"), is("mystring"));
+        assertThat(cat.get(0), is("category1"));
+        assertThat(cat.get(1), is("category2"));
+        assertThat(((JSONObject)indicationsJson.get(0)).getString("pattern"), is("mypattern"));
+        assertThat(((JSONObject)indicationsJson.get(0)).getString("matchingString"), is("mystring"));
     }
 }
