@@ -46,25 +46,25 @@ public class FailureCauseProvider extends MQDataProvider {
     public void provideCompletedRunData(Run run, JSONObject json) {
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
-            List<FoundFailureCause> foundFailureCauses = action.getFoundFailureCauses();
-            JSONArray failureCausesJSON = new JSONArray();
-            for (FoundFailureCause foundFailureCause : foundFailureCauses) {
-                JSONObject failureCauseJSON = new JSONObject();
-                failureCauseJSON.put("id", foundFailureCause.getId());
-                failureCauseJSON.put("name", foundFailureCause.getName());
-                failureCauseJSON.put("description", foundFailureCause.getDescription());
-                failureCauseJSON.put("categories", foundFailureCause.getCategories());
-                JSONArray foundIndicationsJSON = new JSONArray();
-                for (FoundIndication ind : foundFailureCause.getIndications()) {
-                    JSONObject foundIndicationJSON = new JSONObject();
-                    foundIndicationJSON.put("pattern", ind.getPattern());
-                    foundIndicationJSON.put("matchingString", ind.getMatchingString());
-                    foundIndicationsJSON.add(foundIndicationJSON);
+            List<FoundFailureCause> foundFailureCausesList = action.getFoundFailureCauses();
+            JSONArray failureCausesJSONArray = new JSONArray();
+            for (FoundFailureCause foundFailureCause : foundFailureCausesList) {
+                JSONObject failureCauseJSONObject = new JSONObject();
+                failureCauseJSONObject.put("id", foundFailureCause.getId());
+                failureCauseJSONObject.put("name", foundFailureCause.getName());
+                failureCauseJSONObject.put("description", foundFailureCause.getDescription());
+                failureCauseJSONObject.put("categories", foundFailureCause.getCategories());
+                JSONArray foundIndicationsJSONArray = new JSONArray();
+                for (FoundIndication indication : foundFailureCause.getIndications()) {
+                    JSONObject foundIndicationJSONObject = new JSONObject();
+                    foundIndicationJSONObject.put("pattern", indication.getPattern());
+                    foundIndicationJSONObject.put("matchingString", indication.getMatchingString());
+                    foundIndicationsJSONArray.add(foundIndicationJSONObject);
                 }
-                failureCauseJSON.put("indications", foundIndicationsJSON);
-                failureCausesJSON.add(failureCauseJSON);
+                failureCauseJSONObject.put("indications", foundIndicationsJSONArray);
+                failureCausesJSONArray.add(failureCauseJSONObject);
             }
-            json.put("failurecauses", failureCausesJSON);
+            json.put("failurecauses", failureCausesJSONArray);
         }
     }
 }
