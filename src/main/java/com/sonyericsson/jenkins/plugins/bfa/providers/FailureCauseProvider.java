@@ -28,6 +28,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import hudson.Extension;
 import hudson.model.Run;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import com.sonymobile.jenkins.plugins.mq.mqnotifier.providers.MQDataProvider;
 
@@ -45,22 +46,25 @@ public class FailureCauseProvider extends MQDataProvider {
     public void provideCompletedRunData(Run run, JSONObject json) {
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
-            List<FoundFailureCause> foundFailureCauses = action.getFoundFailureCauses();
-            JSONObject failureCausesJSON = new JSONObject();
-            for (FoundFailureCause foundFailureCause : foundFailureCauses) {
-                JSONObject failureCauseJSON = new JSONObject();
-                failureCauseJSON.put("name", foundFailureCause.getName());
-                failureCauseJSON.put("description", foundFailureCause.getDescription());
-                failureCauseJSON.put("categories", foundFailureCause.getCategories());
-                JSONObject foundIndicationsJSON = new JSONObject();
-                for (FoundIndication ind : foundFailureCause.getIndications()) {
-                    foundIndicationsJSON.put("pattern", ind.getPattern());
-                    foundIndicationsJSON.put("matchingString", ind.getMatchingString());
+            List<FoundFailureCause> foundFailureCausesList = action.getFoundFailureCauses();
+            JSONArray failureCausesJSONArray = new JSONArray();
+            for (FoundFailureCause foundFailureCause : foundFailureCausesList) {
+                JSONObject failureCauseJSONObject = new JSONObject();
+                failureCauseJSONObject.put("id", foundFailureCause.getId());
+                failureCauseJSONObject.put("name", foundFailureCause.getName());
+                failureCauseJSONObject.put("description", foundFailureCause.getDescription());
+                failureCauseJSONObject.put("categories", foundFailureCause.getCategories());
+                JSONArray foundIndicationsJSONArray = new JSONArray();
+                for (FoundIndication indication : foundFailureCause.getIndications()) {
+                    JSONObject foundIndicationJSONObject = new JSONObject();
+                    foundIndicationJSONObject.put("pattern", indication.getPattern());
+                    foundIndicationJSONObject.put("matchingString", indication.getMatchingString());
+                    foundIndicationsJSONArray.add(foundIndicationJSONObject);
                 }
-                failureCauseJSON.put("indications", foundIndicationsJSON);
-                failureCausesJSON.put(foundFailureCause.getId(), failureCauseJSON);
+                failureCauseJSONObject.put("indications", foundIndicationsJSONArray);
+                failureCausesJSONArray.add(failureCauseJSONObject);
             }
-            json.put("failurecauses", failureCausesJSON);
+            json.put("failurecauses", failureCausesJSONArray);
         }
     }
 }
