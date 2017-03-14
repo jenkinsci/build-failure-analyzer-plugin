@@ -24,6 +24,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
  */
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
@@ -35,18 +36,25 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixRun;
 import hudson.model.Cause;
-import hudson.model.Project;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.BlockingBehaviour;
 import hudson.plugins.parameterizedtrigger.CurrentBuildParameters;
 import hudson.plugins.parameterizedtrigger.TriggerBuilder;
 import hudson.tasks.Shell;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 //CS IGNORE MagicNumber FOR NEXT 260 LINES. REASON: TestData
 
@@ -56,9 +64,15 @@ import java.util.List;
  *
  * @author Jan-Olof Sivtoft
  */
-public class DisplayDownstreamTest extends HudsonTestCase {
+public class DisplayDownstreamTest {
+    /**
+     * The Jenkins Rule.
+     */
+    @Rule
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
+    public JenkinsRule jenkins = new JenkinsRule();
 
-    MatrixProject matrixProject;
+    private MatrixProject matrixProject;
 
     private static final String MATRIX_PROJECT_NEWS = "NEWS";
     private static final String PROJECT_NE = "NORTH-EAST";
@@ -66,12 +80,14 @@ public class DisplayDownstreamTest extends HudsonTestCase {
     private static final String PROJECT_SE = "SOUTH-EAST";
     private static final String PROJECT_SW = "SOUTH-WEST";
     private static final String DEFAULT = "echo I am ${PROJECT_NAME}";
+    private static final String FAILED = "rapakalja";
 
     /**
      * Test the FailureCauseDisplayData object.
      *
      * @throws Exception if failure  build can't be executed
      */
+    @Test
     public void testFailureCauseDisplayData() throws Exception {
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
@@ -96,6 +112,7 @@ public class DisplayDownstreamTest extends HudsonTestCase {
      *
      * @throws Exception if failure build can't be executed
      */
+    @Test
     public void testMatrixNoIdentifiedCause() throws Exception {
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
@@ -126,9 +143,10 @@ public class DisplayDownstreamTest extends HudsonTestCase {
      * @throws Exception if failure cause cant be configured or build can't
      *                   be executed
      */
+    @Test
     public void testMatrixIdentifiedCause() throws Exception {
 
-        Indication indication = new BuildLogIndication(".*rapakalja.*");
+        Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         FailureCause failureCause = BuildFailureScannerHudsonTest.
                 configureCauseAndIndication("Other cause", "Other description", "Other comment",
                         "Category", indication);
@@ -159,6 +177,44 @@ public class DisplayDownstreamTest extends HudsonTestCase {
     }
 
     /**
+     * Test FailureCauseDisplayData object population when an indication is
+     * specified.
+     *
+     * @throws Exception if failure cause cant be configured or build can't
+     *                   be executed
+     */
+    @Test
+    public void testIdentifiedTwoCauses() throws Exception {
+        final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
+        final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
+
+        final FreeStyleProject parent = jenkins.createFreeStyleProject("parent");
+        parent.getBuildersList().add(new TriggerBuilder(
+                new BlockableBuildTriggerConfig(child1.getName() + ", " + child2.getName(),
+                    new BlockingBehaviour(Result.FAILURE, Result.FAILURE, Result.FAILURE),
+                    new ArrayList<AbstractBuildParameters>())));
+
+        final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
+        BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
+                "Other description", "Other comment", "Category", indication);
+
+        parent.scheduleBuild2(0).get();
+
+        final FailureCauseBuildAction buildAction = parent.getFirstBuild().getAction(FailureCauseBuildAction.class);
+        final FailureCauseDisplayData failureCauseDisplayData = buildAction.getFailureCauseDisplayData();
+        final List<FailureCauseDisplayData> downstreamCauses = failureCauseDisplayData.getDownstreamFailureCauses();
+
+        assertEquals(0, failureCauseDisplayData.getFoundFailureCauses().size());
+        assertEquals(2, downstreamCauses.size());
+
+        for (FailureCauseDisplayData causeDisplayData : downstreamCauses) {
+            final List<FoundFailureCause> causeListFromAction = causeDisplayData.getFoundFailureCauses();
+            assertEquals(1, causeListFromAction.size());
+            assertEquals(causeListFromAction.get(0).getName(), "Other cause");
+        }
+    }
+
+    /**
      * Creates and executes a matrix build.
      *
      * @return a Matrix build object
@@ -169,7 +225,7 @@ public class DisplayDownstreamTest extends HudsonTestCase {
         createMatrixProjectNews();
 
         matrixProject.setQuietPeriod(0);
-        hudson.rebuildDependencyGraph();
+        jenkins.getInstance().rebuildDependencyGraph();
         matrixProject.scheduleBuild2(0, new Cause.UserCause()).get();
 
         return matrixProject.getLastBuild();
@@ -189,7 +245,7 @@ public class DisplayDownstreamTest extends HudsonTestCase {
         // This should be the PROJECT_SW
         MatrixRun runProjectSW = action.getRunsWithAction().get(0);
 
-        return action.getFailureCauseDisplayData(runProjectSW);
+        return FailureCauseMatrixBuildAction.getFailureCauseDisplayData(runProjectSW);
     }
 
     /**
@@ -204,11 +260,11 @@ public class DisplayDownstreamTest extends HudsonTestCase {
                 PROJECT_NE, PROJECT_EW, PROJECT_SE);
         createFreestyleProjectWithShell(PROJECT_SW, "rapakalja");
 
-        hudson.setNumExecutors(50);
+        jenkins.getInstance().setNumExecutors(50);
         //TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary
-        hudson.setNodes(hudson.getNodes()); // update nodes configuration
+        jenkins.getInstance().setNodes(jenkins.getInstance().getNodes()); // update nodes configuration
 
-        matrixProject = createMatrixProject(MATRIX_PROJECT_NEWS);
+        matrixProject = jenkins.createMatrixProject(MATRIX_PROJECT_NEWS);
 
         AxisList axes = new AxisList();
         axes.add(new Axis("X", "EAST", "WEST"));
@@ -249,12 +305,14 @@ public class DisplayDownstreamTest extends HudsonTestCase {
      *
      * @param name the name of the project
      * @param command the shell command
+     * @return created project
      * @throws Exception if project(s) can't be created
      */
-    private void createFreestyleProjectWithShell(String name, String command)
+    private FreeStyleProject createFreestyleProjectWithShell(String name, String command)
             throws Exception {
-        Project<?, ?> project = createFreeStyleProject(name);
+        final FreeStyleProject project = jenkins.createFreeStyleProject(name);
         project.getBuildersList().add(new Shell(command));
+        return project;
     }
 
 }
