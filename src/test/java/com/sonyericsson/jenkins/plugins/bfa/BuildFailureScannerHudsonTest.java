@@ -295,16 +295,33 @@ public class BuildFailureScannerHudsonTest {
     public void testNoIndicationFound() throws Exception {
         FreeStyleProject project = createProject();
 
-        FailureCause failureCause = configureCauseAndIndication(
-                new BuildLogIndication(".*something completely different.*"));
+        configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
 
         Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
-        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
-        assertTrue(causeListFromAction.size() == 0);
+        assertTrue(action.getFoundFailureCauses().isEmpty());
+    }
+
+    /**
+     * Unhappy test that should not find any failure multiline indications in the build.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoMultilineIndicationFound() throws Exception {
+        FreeStyleProject project = createProject();
+
+        configureCauseAndIndication(new MultilineBuildLogIndication(".*something completely different.*"));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        assertTrue(action.getFoundFailureCauses().isEmpty());
     }
 
     /**
