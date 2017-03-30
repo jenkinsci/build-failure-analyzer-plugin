@@ -1146,7 +1146,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * Descriptor for {@link LocalFileKnowledgeBase}.
+     * Descriptor for {@link MongoDBKnowledgeBase}.
      */
     @Extension
     public static class MongoDBKnowledgeBaseDescriptor extends KnowledgeBaseDescriptor {
