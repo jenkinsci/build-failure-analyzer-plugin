@@ -30,7 +30,8 @@ import hudson.model.Run;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,47 +61,25 @@ public class BuildLogFailureReader extends FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws IOException if so.
      */
-    public FoundIndication scan(Run build) throws IOException {
-        String currentfile = build.getLogFile().getName();
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(build.getLogReader());
-            return scanOneFile(build, reader, currentfile);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Scans for indications of a failure cause in a build log. Note: If an exception
-     * occurs during the scanning, information about the exception is appended to
-     * the build log.
-     *
-     * @param build the build to scan for indications.
-     * @param buildLog the log of the build.
-     * @return a FoundIndication if something was found, null if not.
-     */
     @Override
-    public FoundIndication scan(Run build, PrintStream buildLog) {
-        FoundIndication foundIndication = null;
+    public FoundIndication scan(Run build) throws IOException {
         String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;
-        long start = System.currentTimeMillis();
         try {
             reader = new BufferedReader(build.getLogReader());
-            foundIndication = scanOneFile(build, reader, currentFile);
-        } catch (IOException ioe) {
-            logger.log(Level.SEVERE, "[BFA] I/O problems during indication analysis: ", ioe);
-            buildLog.println("[BFA] I/O problems during indication analysis.");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "[BFA] Could not open reader for indication: ", e);
-            buildLog.println("[BFA] Could not open reader for indication.");
+            List<FailureCause> causes = new ArrayList<FailureCause>(1);
+            FailureCause fc = new FailureCause("somename", "somedescription");
+            causes.add(fc);
+            fc.addIndication(indication);
+            List<FoundFailureCause> foundFailureCauses = FailureReader.scanSingleLinePatterns(causes,
+                                                                                              build,
+                                                                                              reader,
+                                                                                              currentFile);
+            if (foundFailureCauses.isEmpty()) {
+                return null;
+            } else {
+                return foundFailureCauses.get(0).getIndications().get(0);
+            }
         } finally {
             if (reader != null) {
                 try {
@@ -109,13 +88,6 @@ public class BuildLogFailureReader extends FailureReader {
                     logger.log(Level.WARNING, "Failed to close the reader. ", e);
                 }
             }
-            if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "[BFA] [{0}] - [{1}] {2}ms",
-                        new Object[]{build.getFullDisplayName(),
-                                     indication.toString(),
-                                     String.valueOf(System.currentTimeMillis() - start), });
-            }
         }
-        return foundIndication;
     }
 }

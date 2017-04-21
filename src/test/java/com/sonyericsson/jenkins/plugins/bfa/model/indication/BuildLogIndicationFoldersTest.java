@@ -81,7 +81,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication(".*test.*");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNotNull(found);
     }
 
@@ -99,7 +99,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication(".*test.*");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNotNull(found);
     }
 
@@ -118,7 +118,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication(".*test.*");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNotNull(found);
     }
 
@@ -135,7 +135,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication("correct horse battery staple");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNull(found);
     }
 
@@ -153,7 +153,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication("correct horse battery staple");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNull(found);
     }
 
@@ -172,7 +172,7 @@ public class BuildLogIndicationFoldersTest {
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
         BuildLogIndication indication = new BuildLogIndication("correct horse battery staple");
         BuildLogFailureReader reader = new BuildLogFailureReader(indication);
-        FoundIndication found = reader.scan(build, System.out);
+        FoundIndication found = reader.scan(build);
         assertNull(found);
     }
 

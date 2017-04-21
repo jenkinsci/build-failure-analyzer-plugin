@@ -55,6 +55,7 @@ public class FoundIndication {
      */
     @Deprecated
     private transient Integer matchingLine;
+
     private String pattern;
     private Run build;
     private String matchingString;

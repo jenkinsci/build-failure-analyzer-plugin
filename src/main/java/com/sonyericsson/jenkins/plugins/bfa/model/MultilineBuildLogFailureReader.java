@@ -60,6 +60,7 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      * is found in the log of the given build; return null otherwise.
      * @throws java.io.IOException if so.
      */
+    @Override
     public FoundIndication scan(Run build) throws IOException {
         String currentfile = build.getLogFile().getName();
         BufferedReader reader = null;
@@ -86,7 +87,6 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      * @param buildLog the log of the build.
      * @return a FoundIndication if something was found, null if not.
      */
-    @Override
     public FoundIndication scan(Run build, PrintStream buildLog) {
         FoundIndication foundIndication = null;
         String currentFile = build.getLogFile().getName();

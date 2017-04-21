@@ -24,10 +24,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +32,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.SequenceInputStream;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipInputStream;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
@@ -44,6 +42,13 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import hudson.model.Run;
 import org.junit.Test;
+import org.powermock.api.mockito.PowerMockito;
+
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
@@ -80,15 +85,47 @@ public class FailureReaderTest {
     }
 
     /**
+     * @param indication indication that we are looking for
+     * @param reader build reader
+     * @param currentFile current file name
+     * @return found indication
+     * @throws IOException Exception
+     */
+    private FoundIndication scan(BuildLogIndication indication,
+                                 BufferedReader reader,
+                                 String currentFile) throws IOException {
+        Run run = PowerMockito.mock(Run.class);
+
+        List<FailureCause> causes = new ArrayList<FailureCause>();
+        FailureCause cause = new FailureCause("test", "description");
+        cause.addIndication(indication);
+        causes.add(cause);
+
+        List<FoundFailureCause> foundFailureCauses = FailureReader.scanSingleLinePatterns(
+                causes,
+                run,
+                reader,
+                currentFile);
+
+        if (foundFailureCauses.isEmpty()) {
+            return null;
+        }
+
+        assertEquals(1, foundFailureCauses.size());
+        assertFalse(foundFailureCauses.get(0).getIndications().isEmpty());
+        return foundFailureCauses.get(0).getIndications().get(0);
+    }
+
+    /**
      * Happy test verifying that a scan doesn't take an exceptional amount of time.
      * @throws Exception if so
      */
     @Test
     public void testScanOneFile() throws Exception {
-        FailureReader reader = new TestReader(new BuildLogIndication(".*scan for me please.*"));
         BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
+
         long startTime = System.currentTimeMillis();
-        FoundIndication indication = reader.scanOneFile(null, br, "test");
+        FoundIndication indication = scan(new BuildLogIndication(".*scan for me please.*"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected long time to parse log: " + elapsedTime, elapsedTime <= 1000);
@@ -102,13 +139,12 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFileWithLineTimeout() throws Exception {
-        FailureReader reader = new TestReader(new BuildLogIndication(".*scan for me please.*"));
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
         BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(zipStream)));
         long startTime = System.currentTimeMillis();
-        FoundIndication indication = reader.scanOneFile(null, br, "test");
+        FoundIndication indication = scan(new BuildLogIndication(".*scan for me please.*"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= 5000);
@@ -121,7 +157,6 @@ public class FailureReaderTest {
      */
     @Test
     public void testScanOneFileWithFileTimeout() throws Exception {
-        FailureReader reader = new TestReader(new BuildLogIndication(".*non existing string"));
         InputStream inStream = new ByteArrayInputStream(new byte[0]);
         for (int i = 0; i < 10; i++) {
             InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
@@ -131,7 +166,7 @@ public class FailureReaderTest {
         }
         BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(inStream)));
         long startTime = System.currentTimeMillis();
-        FoundIndication indication = reader.scanOneFile(null, br, "test");
+        FoundIndication indication = scan(new BuildLogIndication(".*non existing string"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
@@ -229,6 +264,10 @@ public class FailureReaderTest {
         @Override
         public String readLine() throws IOException {
             String line = super.readLine();
+            if (line == null) {
+                return null;
+            }
+
             StringBuilder str = new StringBuilder(line);
             str.append(line);
             str.append(line);

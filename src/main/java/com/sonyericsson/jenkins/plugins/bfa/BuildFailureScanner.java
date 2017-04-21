@@ -25,13 +25,17 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -48,6 +52,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import hudson.Extension;
 import hudson.matrix.MatrixProject;
@@ -58,6 +63,8 @@ import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
+
+import javax.annotation.Nonnull;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -72,6 +79,9 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     public static final int ORDINAL = 11003;
     private static final Logger logger = Logger.getLogger(BuildFailureScanner.class.getName());
+
+    private static final ThreadPoolExecutor THREAD_POOL_EXECUTOR = (ThreadPoolExecutor)Executors.
+            newFixedThreadPool(PluginImpl.getInstance().getNrOfScanThreads());
 
     @Override
     public void onStarted(Run build, TaskListener listener) {
@@ -88,7 +98,7 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     @Override
-    public void onCompleted(Run build, TaskListener listener) {
+    public void onCompleted(Run build, @Nonnull TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
 
         if (PluginImpl.isSizeInLimit(build)) {
@@ -206,44 +216,20 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     private static List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
                                                       final Run build, final PrintStream buildLog) {
-        final List<FoundFailureCause> foundFailureCauseList =
-                Collections.synchronizedList(new LinkedList<FoundFailureCause>());
-        long start = System.currentTimeMillis();
-        ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.
-                newFixedThreadPool(PluginImpl.getInstance().getNrOfScanThreads());
+        THREAD_POOL_EXECUTOR.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
+        THREAD_POOL_EXECUTOR.setMaximumPoolSize(PluginImpl.getInstance().getNrOfScanThreads());
+
         buildLog.println("[BFA] Scanning build for known causes...");
-        for (final FailureCause cause : causes) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    Thread.currentThread().setName("BFA-scanner-"
-                                                           + build.getFullDisplayName() + ": "
-                                                           + cause.getName());
-                    List<FoundIndication> foundIndications = findIndications(cause, build, buildLog);
-                    if (!foundIndications.isEmpty()) {
-                        FoundFailureCause foundFailureCause = new FoundFailureCause(cause, foundIndications);
-                        foundFailureCauseList.add(foundFailureCause);
-                    }
-                }
-            });
-        }
-        executor.shutdown();
-        try {
-            while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
-                buildLog.print('.');
-            }
-        } catch (InterruptedException e) {
-            logger.log(Level.FINE,
-                    "Got interrupted while waiting for scanner threads to finish for {0}",
-                    build.getFullDisplayName());
-            buildLog.println("[BFA] Interrupted.");
-        }
+        long start = System.currentTimeMillis();
+        final List<FoundFailureCause> foundFailureCauseList = findIndications(causes, build, buildLog);
+
         long time = System.currentTimeMillis() - start;
         if (logger.isLoggable(Level.FINER)) {
             logger.log(Level.FINER, "[BFA] [{0}] {1}ms", new Object[]
                     {build.getFullDisplayName(),
                             String.valueOf(time), });
         }
+
         if (!foundFailureCauseList.isEmpty()) {
             buildLog.println("[BFA] Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
@@ -264,34 +250,180 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     /**
-     * Finds the indications of a failure cause.
      *
-     * @param cause    the cause to find indications for.
-     * @param build    the build to analyze.
-     * @param buildLog the build log.
-     * @return a list of found indications for a cause.
+     * Finds indications for all causes.
+     *
+     * @param causes the list of possible causes.
+     * @param build current build.
+     * @param buildLog build log for providing feedback.
+     * @return a list of found indications, could be empty.
      */
-    private static List<FoundIndication> findIndications(FailureCause cause, Run build, PrintStream buildLog) {
-        long start = System.currentTimeMillis();
-        List<Indication> indicationList = cause.getIndications();
-        List<FoundIndication> foundIndicationList = new LinkedList<FoundIndication>();
-        for (Indication indication : indicationList) {
-            Thread.currentThread().setName("BFA-scanner-"
-                                                   + build.getFullDisplayName() + ": "
-                                                   + cause.getName() + "-"
-                                                   + indication.getUserProvidedExpression());
-            FoundIndication foundIndication = findIndication(indication, build, buildLog);
-            if (foundIndication != null) {
-                foundIndicationList.add(foundIndication);
+    private static List<FoundFailureCause> findIndications(final Collection<FailureCause> causes,
+                                                           final Run build,
+                                                           final PrintStream buildLog) {
+        final List<FailureCause> singleLineCauses = new ArrayList<FailureCause>();
+        final List<FailureCause> notOnlySingleLineCauses = new ArrayList<FailureCause>();
+
+        splitCauses(causes, singleLineCauses, notOnlySingleLineCauses);
+
+        final List<Future<?>> scanningTasks = new ArrayList<Future<?>>(notOnlySingleLineCauses.size() + 1);
+        final List<FoundFailureCause> foundFailureCauses = Collections.synchronizedList(
+                new ArrayList<FoundFailureCause>());
+
+        if (!singleLineCauses.isEmpty()) {
+            scanningTasks.add(THREAD_POOL_EXECUTOR.submit(new Runnable() {
+                @Override
+                public void run() {
+                    foundFailureCauses.addAll(parseSingleLineCauses(build, buildLog, singleLineCauses));
+                    Thread.currentThread().setName("BFA-scanner-" + build.getFullDisplayName());
+                }
+            }));
+        }
+
+        for (final FailureCause cause : notOnlySingleLineCauses) {
+            scanningTasks.add(THREAD_POOL_EXECUTOR.submit(new Runnable() {
+                @Override
+                public void run() {
+                    final List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
+                    for (final Indication indication : cause.getIndications()) {
+                        Thread.currentThread().setName("BFA-scanner-"
+                                + build.getFullDisplayName() + ": "
+                                + cause.getName() + "-"
+                                + indication.getUserProvidedExpression());
+
+                        FoundIndication foundIndication = parseIndication(build, buildLog, indication, cause.getName());
+                        if (foundIndication != null) {
+                            foundIndications.add(foundIndication);
+                        }
+                    }
+
+                    if (!foundIndications.isEmpty()) {
+                        foundFailureCauses.add(new FoundFailureCause(cause, foundIndications));
+                    }
+                }
+            }));
+        }
+
+        waitAllTasks(buildLog, scanningTasks);
+
+        return foundFailureCauses;
+    }
+
+    /**
+     *
+     * Wait all scanning tasks to be completed. Cancel all of them if InterruptedException happened.
+     *
+     * @param buildLog build log for providing feedback.
+     * @param scanningTasks List of scheduled scanning tasks.
+     */
+    private static void waitAllTasks(PrintStream buildLog, List<Future<?>> scanningTasks) {
+        try {
+            for (Future<?> scanningTask : scanningTasks) {
+                try {
+                    scanningTask.get();
+                } catch (ExecutionException e) {
+                    buildLog.print("[BFA] task failed due exception: " + e);
+                }
+            }
+        } catch (InterruptedException e) {
+            buildLog.print("[BFA] was interrupted: " + e);
+            for (Future<?> scanningTask : scanningTasks) {
+                scanningTask.cancel(true);
+            }
+            buildLog.print("[BFA] all bfa tasks were cancelled");
+        }
+    }
+
+    /**
+     *
+     * Split list of causes in two part: causes with single line indication only and others.
+     *
+     * @param causes All causes.
+     * @param singleLineCauses Collection to put list of causes with single line indication.
+     * @param notOnlySingleLineCauses Collection to put other causes.
+     */
+    private static void splitCauses(Collection<FailureCause> causes,
+                                    List<FailureCause> singleLineCauses,
+                                    List<FailureCause> notOnlySingleLineCauses) {
+        for (FailureCause cause : causes) {
+            boolean atLeastOneNonSignalLine = false;
+            for (Indication indication : cause.getIndications()) {
+                if (indication instanceof MultilineBuildLogIndication) {
+                    atLeastOneNonSignalLine = true;
+                    break;
+                }
+            }
+
+            if (atLeastOneNonSignalLine) {
+                notOnlySingleLineCauses.add(cause);
+            } else {
+                singleLineCauses.add(cause);
             }
         }
-        if (logger.isLoggable(Level.FINER)) {
-            logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]
-                    {build.getFullDisplayName(),
-                            cause.getName(),
-                            String.valueOf(System.currentTimeMillis() - start), });
+    }
+
+    /**
+     *
+     * Parse any indication.
+     *
+     * @param build current build.
+     * @param buildLog build log for providing feedback.
+     * @param indication indication to be found.
+     * @param causeName name of cause this indication belongs to.
+     * @return a found indication, null otherwise.
+     */
+    private static FoundIndication parseIndication(Run build,
+                                                   PrintStream buildLog,
+                                                   Indication indication,
+                                                   String causeName) {
+        long start = System.currentTimeMillis();
+
+        final FoundIndication foundIndication = findIndication(indication, build, buildLog);
+        if (foundIndication != null) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
+                        causeName,
+                        String.valueOf(System.currentTimeMillis() - start), });
+            }
         }
-        return foundIndicationList;
+
+        return foundIndication;
+    }
+
+    /**
+     *
+     * Parses all causes with only single line indications.
+     *
+     * @param build current build.
+     * @param buildLog build log for providing feedback.
+     * @param singleLineCauses list of causes to be found.
+     * @return a list of causes with found indication, could be empty.
+     */
+    private static List<FoundFailureCause> parseSingleLineCauses(Run build,
+                                              PrintStream buildLog,
+                                              List<FailureCause> singleLineCauses) {
+        final List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(build.getLogReader());
+            foundFailureCauses.addAll(
+                    FailureReader.scanSingleLinePatterns(
+                            singleLineCauses,
+                            build,
+                            reader,
+                            build.getLogFile().getName()));
+        } catch (IOException e) {
+            buildLog.print("[BFA] Exception during parsing file: " + e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed to close the reader. ", e);
+                }
+            }
+        }
+        return foundFailureCauses;
     }
 
     /**

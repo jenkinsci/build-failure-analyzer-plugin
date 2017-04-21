@@ -27,8 +27,12 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -149,52 +153,62 @@ public abstract class FailureReader {
     }
 
     /**
-     * Scans one file for the required pattern.
-     * @param build the build we are processing.
-     * @param reader the reader to read from.
-     * @param currentFile the file path of the file we want to scan.
-     * @return a FoundIndication if we find the pattern, null if not.
-     * @throws IOException if problems occur in the reader handling.
+     * Checks all patterns one-by-one for entire file.
+     *
+     * @param causes list of failure causes that we a looking for.
+     * @param build current build.
+     * @param reader file reader.
+     * @param currentFile file name.
+     * @return found indications.
+     * @throws IOException Exception.
      */
-    protected FoundIndication scanOneFile(Run build, BufferedReader reader, String currentFile)
-            throws IOException {
+   public static List<FoundFailureCause> scanSingleLinePatterns(List<FailureCause> causes,
+                                                              Run build,
+                                                              BufferedReader reader,
+                                                              String currentFile) throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
-        FoundIndication foundIndication = null;
-        boolean found = false;
-        final Pattern pattern = indication.getPattern();
-        String line;
-        int currentLine = 1;
+        final long adjustedFileTimeout = TIMEOUT_FILE * getTotalNumberOfPatterns(causes);
+
+        Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<FailureCause, List<FoundIndication>>();
+        Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<FailureCause, List<Indication>>();
+
         timerThread.start();
         try {
             long startTime = System.currentTimeMillis();
+            int currentLine = 1;
+            String line;
             while ((line = reader.readLine()) != null) {
-                try {
-                    if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
-                        found = true;
-                        break;
-                    }
-                } catch (RuntimeException e) {
-                    if (e.getCause() instanceof InterruptedException) {
-                        logger.warning("Timeout scanning for indication '" + indication.toString() + "' for file "
-                                + currentFile + ":" + currentLine);
-                    } else {
-                        // This is not a timeout exception
-                        throw e;
+                for (FailureCause cause : causes) {
+                    for (Indication indication : cause.getIndications()) {
+                        try {
+                            List<Indication> wasBefore = firstOccurrences.get(cause);
+                            if (wasBefore == null || !wasBefore.contains(indication)) {
+                                if (processIndication(build, currentFile, resultMap, line, cause, indication)) {
+                                    wasBefore = new ArrayList<Indication>();
+                                    wasBefore.add(indication);
+                                    firstOccurrences.put(cause, wasBefore);
+                                }
+                            }
+                        } catch (RuntimeException e) {
+                            if (e.getCause() instanceof InterruptedException) {
+                                logger.warning("Timeout scanning for indication '" + indication.toString() + "'"
+                                        + " for file " + currentFile + ":" + currentLine);
+                            } else {
+                                // This is not a timeout exception
+                                throw e;
+                            }
+                        }
+                        currentLine++;
+                        timerThread.touch();
+                        if (System.currentTimeMillis() - startTime > adjustedFileTimeout) {
+                            logger.warning("File timeout scanning for indication '" + indication.toString() + "'"
+                                    + " for file " + currentFile + ":" + currentLine);
+                            return convertToFoundFailureCauses(resultMap);
+                        }
                     }
                 }
-                currentLine++;
-                timerThread.touch();
-                if (System.currentTimeMillis() - startTime > TIMEOUT_FILE) {
-                    logger.warning("File timeout scanning for indication '" + indication.toString() + "' for file "
-                            + currentFile);
-                    break;
-                }
             }
-            if (found) {
-                String cleanLine = ConsoleNote.removeNotes(line);
-                foundIndication = new FoundIndication(build, pattern.toString(), currentFile, cleanLine);
-            }
-            return foundIndication;
+            return convertToFoundFailureCauses(resultMap);
         } finally {
             timerThread.requestStop();
             timerThread.interrupt();
@@ -206,6 +220,91 @@ public abstract class FailureReader {
             // reset the interrupt
             Thread.interrupted();
         }
+    }
+
+    /**
+     * Calculates total number of patterns in list of causes.
+     *
+     * @param causes list of failure causes that we a looking for.
+     * @return total number of patterns.
+     */
+    private static int getTotalNumberOfPatterns(List<FailureCause> causes) {
+        int total = 0;
+        for (FailureCause cause : causes) {
+            total += cause.getIndications().size();
+        }
+        return total;
+    }
+
+    /**
+     *
+     * Updates map of found failure causes if pattern matches the line
+     *
+     * @param build current build
+     * @param currentFile current file
+     * @param causeIndicationsMap result map
+     * @param line line with content
+     * @param cause current cause
+     * @param indication indication that should be checked
+     * @return true if new indication was found
+     */
+    private static boolean processIndication(Run build,
+                                             String currentFile,
+                                             Map<FailureCause, List<FoundIndication>> causeIndicationsMap,
+                                             String line,
+                                             FailureCause cause,
+                                             Indication indication) {
+        Pattern pattern = indication.getPattern();
+
+        if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
+            FoundIndication foundIndication = new FoundIndication(
+                                                    build,
+                                                    pattern.toString(),
+                                                    currentFile,
+                                                    ConsoleNote.removeNotes(line));
+
+
+            putToMapWithList(causeIndicationsMap, cause, foundIndication);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Put FoundIndication to List of according FailureCause
+     * @param causeIndicationsMap result map
+     * @param cause Failure cause that would be used as key
+     * @param foundIndication Found indication that would be pushed to map
+     */
+    private static void putToMapWithList(Map<FailureCause,
+                                         List<FoundIndication>> causeIndicationsMap,
+                                         FailureCause cause,
+                                         FoundIndication foundIndication) {
+        if (causeIndicationsMap.containsKey(cause)) {
+            causeIndicationsMap.get(cause).add(foundIndication);
+        } else {
+            List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
+            foundIndications.add(foundIndication);
+            causeIndicationsMap.put(cause, foundIndications);
+        }
+    }
+
+    /**
+     * Converts from a map with a FailureCause as key
+     * and a list of FoundIndications as value
+     * to a list of FoundFailureCauses
+     *
+     * @param causes input data
+     * @return List of FoundFailureCauses that was generated from input data
+     */
+    private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> causes) {
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(causes.size());
+
+        for (FailureCause failureCause : causes.keySet()) {
+            foundFailureCauses.add(new FoundFailureCause(failureCause, causes.get(failureCause)));
+        }
+
+        return foundFailureCauses;
     }
 
     /**
