@@ -587,7 +587,7 @@ public class PluginImpl extends Plugin {
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
-        int thrkeepAliveTime = o.getInt("maximumNumberOfWorkerThreads");
+        int thrkeepAliveTime = o.getInt("threadKeepAliveTime");
         int jobShutdownTimeWait = o.getInt("waitForJobShutdownTime");
         int corePoolNumberOfThreads = o.getInt("corePoolNumberOfThreads");
         if (scanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
