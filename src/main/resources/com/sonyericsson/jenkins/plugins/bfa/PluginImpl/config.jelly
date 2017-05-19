@@ -116,7 +116,7 @@
             <f:checkbox name="doNotAnalyzeAbortedJob" checked="${it.doNotAnalyzeAbortedJob}" default="false"/>
         </f:entry>
         <f:entry title="${%Max size of log file}"
-            description="${%Log file with size that exceed limit would not be scanned, 0 - disable this check}">
+            description="${%maxLogSize}">
             <f:textbox name="maxLogSize"
                        value="${it.maxLogSize}"
                        default="${it.DEFAULT_MAX_LOG_SIZE}"/>
