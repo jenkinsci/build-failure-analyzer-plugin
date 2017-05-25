@@ -36,6 +36,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.kohsuke.stapler.QueryParameter;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -117,8 +118,25 @@ public abstract class Indication implements Describable<Indication>, Serializabl
          *
          * @return the list of descriptors.
          */
-        public static ExtensionList<IndicationDescriptor> getAll() {
+        private static ExtensionList<IndicationDescriptor> getAll() {
             return Hudson.getInstance().getExtensionList(IndicationDescriptor.class);
+        }
+
+        /**
+         * Provides a filtered list of all registered descriptors of this type.
+         * Plugins implementing IndicationFilter are allowed to hide existing
+         * Indicators from selection in the Cause Management UI.
+         *
+         * @return the list of filtered descriptors.
+         */
+        public static ExtensionList<IndicationDescriptor> getFiltered() {
+            ExtensionList<IndicationDescriptor> filteredIndications = getAll();
+            for (IndicationFilter filter : IndicationFilter.all()) {
+                for (IndicationDescriptor indicationDescriptor : filter.getBlockedIndicators()) {
+                    filteredIndications.remove(indicationDescriptor);
+                }
+            }
+            return filteredIndications;
         }
 
         /**
