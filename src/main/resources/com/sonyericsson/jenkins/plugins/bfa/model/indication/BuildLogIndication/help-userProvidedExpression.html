@@ -1,6 +1,8 @@
 <div>
     <p>A <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html#sum" target="_blank">regular
         expression</a> to find in the build log.</p>
+    <p>The regular expression should match the entire line, so if you are looking for FATAL first in the line
+        but don't know what comes after it, your expression should be ^FATAL.*</p>
     <p>Substitutions may be made within the description with placeholders of the form <code>${I,G}</code>, where
         <code>I</code> is the indication number and <code>G</code> is the captured group within the indication
         expression. e.g., <code>${1,1}</code> would be replaced with the first indication's first captured group
