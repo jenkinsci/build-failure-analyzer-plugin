@@ -187,6 +187,19 @@ public class BuildFailureScanner extends RunListener<Run> {
                 printDownstream(buildLog, downstreamFailureCauses);
             }
 
+            if (PluginImpl.getInstance().isEnableBuildDescription() && !foundCauseList.isEmpty()) {
+              // create a build description text from the list of failures.
+              String buildDescription = "<mark><b>";
+              if (foundCauseList.get(0).getCategories() != null) {
+                buildDescription = buildDescription.concat(foundCauseList.get(0).getCategories().get(0));
+                buildDescription = buildDescription.concat(": ");
+              }
+              buildDescription = buildDescription.concat("</b> <i>");
+              buildDescription = buildDescription.concat(foundCauseList.get(0).getDescription());
+              buildDescription = buildDescription.concat("</i></mark>");
+              build.setDescription(buildDescription);
+            }
+
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
