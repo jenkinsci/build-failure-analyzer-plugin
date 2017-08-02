@@ -133,6 +133,7 @@ public class PluginImpl extends Plugin {
 
     private int nrOfScanThreads;
     private int maxLogSize;
+    private Boolean enableBuildDescription;
 
     private Boolean graphsEnabled;
 
@@ -485,6 +486,19 @@ public class PluginImpl extends Plugin {
 
 
     /**
+     * If enableBuildDescription is enabled or not. Build Descriptions will be set to a concatenated
+     * list of the failure descriptions as a convenience.
+     * @return True if enabled.
+     */
+    public boolean isEnableBuildDescription() {
+      if (enableBuildDescription == null) {
+        return false;
+      } else {
+        return enableBuildDescription;
+      }
+    }
+
+    /**
      * Checks if the build with certain result should be analyzed or not.
      *
      * @param result the result
@@ -584,6 +598,7 @@ public class PluginImpl extends Plugin {
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
         testResultCategories = o.getString("testResultCategories");
         maxLogSize = o.optInt("maxLogSize");
+        enableBuildDescription = o.getBoolean("enableBuildDescription");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
