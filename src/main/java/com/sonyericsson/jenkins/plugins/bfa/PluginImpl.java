@@ -486,6 +486,15 @@ public class PluginImpl extends Plugin {
 
 
     /**
+     * Set option to append failure causes to job's build description
+     *
+     * @param enableBuildDescription should build description option be turned on
+     */
+    public void setEnableBuildDescription(Boolean enableBuildDescription) {
+      this.enableBuildDescription = enableBuildDescription;
+    }
+
+    /**
      * If enableBuildDescription is enabled or not. Build Descriptions will be set to a concatenated
      * list of the failure descriptions as a convenience.
      * @return True if enabled.
