@@ -517,9 +517,8 @@ public class BuildFailureScanner extends RunListener<Run> {
 
         // Append this build description to any pre-existing build description
         if (!(build.getDescription() == null) && !build.getDescription().isEmpty()) {
-            buildDescription = build.getDescription().concat("<br>\n");
+            buildDescription = build.getDescription().concat("<br>\n").concat(buildDescription);
         }
-        buildDescription.concat(buildDescription);
         return buildDescription;
     }
 }
