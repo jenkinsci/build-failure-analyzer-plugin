@@ -255,6 +255,7 @@ public class PluginImplHudsonTest {
     private JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
         JSONObject form = new JSONObject();
         form.put("noCausesMessage", expectedNoCauseMessage);
+        form.put("noCausesEnabled", true);
         form.put("globalEnabled", true);
         form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);

@@ -32,6 +32,10 @@
                  description="${%Whether to display graphs or not. NOTE: The selected storage type must support this!}">
             <f:checkbox name="graphsEnabled" checked="${it.graphsEnabled}" default="true"/>
         </f:entry>
+        <f:entry title="${%Enable text when no failure causes are found}"
+                 description="${%Whether to display the no problems identified message at all}">
+            <f:checkbox name="noCausesEnabled" checked="${it.noCausesEnabled}" default="true"/>
+        </f:entry>
         <f:entry title="${%Text when no failure causes are found}"
                  description="${%If no problems are identified, this text will be shown on the build page}">
             <f:textbox name="noCausesMessage" value="${it.noCausesMessage}"/>

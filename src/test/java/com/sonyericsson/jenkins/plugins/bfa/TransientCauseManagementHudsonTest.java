@@ -34,6 +34,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Item;
 import hudson.model.Result;
 import hudson.tasks.Shell;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -64,7 +65,7 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
     public void testOnAProject() throws Exception {
         FreeStyleProject project = createFreeStyleProject("nils-job");
         project.getBuildersList().add(new Shell("env | sort"));
-        project = configRoundtrip(project);
+        project = (FreeStyleProject)configRoundtrip((Item)project);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo("/" + project.getUrl());
         try {

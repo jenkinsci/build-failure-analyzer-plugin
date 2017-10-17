@@ -120,6 +120,7 @@ public class PluginImpl extends Plugin {
      */
     protected static final int MINIMUM_NR_OF_SCAN_THREADS = 1;
 
+    private Boolean noCausesEnabled;
     private String noCausesMessage;
 
     private Boolean globalEnabled;
@@ -321,6 +322,28 @@ public class PluginImpl extends Plugin {
      */
     public String getNoCausesMessage() {
         return noCausesMessage;
+    }
+
+    /**
+     * Whether to display in the build page when no causes are identified.
+     *
+     * @return true if on.
+     */
+    public boolean isNoCausesEnabled() {
+        if (noCausesEnabled == null) {
+            return true;
+        } else {
+            return noCausesEnabled;
+        }
+    }
+
+    /**
+     * Sets whether the "no indications found" message should be shown in the job page when no causes are found.
+     *
+     * @param noCausesEnabled on or off. null == on.
+     */
+    public void setNoCausesEnabled(Boolean noCausesEnabled) {
+        this.noCausesEnabled = noCausesEnabled;
     }
 
     /**
@@ -577,6 +600,7 @@ public class PluginImpl extends Plugin {
     @Override
     public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
         noCausesMessage = o.getString("noCausesMessage");
+        noCausesEnabled = o.getBoolean("noCausesEnabled");
         globalEnabled = o.getBoolean("globalEnabled");
         doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
