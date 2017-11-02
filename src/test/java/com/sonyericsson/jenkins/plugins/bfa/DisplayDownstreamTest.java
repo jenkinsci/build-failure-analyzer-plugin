@@ -38,12 +38,14 @@ import hudson.matrix.MatrixRun;
 import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.Functions;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.BlockingBehaviour;
 import hudson.plugins.parameterizedtrigger.CurrentBuildParameters;
 import hudson.plugins.parameterizedtrigger.TriggerBuilder;
 import hudson.tasks.Shell;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -52,6 +54,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assume.assumeFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -89,6 +92,8 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testFailureCauseDisplayData() throws Exception {
+        assumeFalse(Functions.isWindows());
+
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
 
@@ -114,6 +119,8 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testMatrixNoIdentifiedCause() throws Exception {
+        assumeFalse(Functions.isWindows());
+
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
 
@@ -145,6 +152,7 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testMatrixIdentifiedCause() throws Exception {
+        assumeFalse(Functions.isWindows());
 
         Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         FailureCause failureCause = BuildFailureScannerHudsonTest.
@@ -185,6 +193,8 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testIdentifiedTwoCauses() throws Exception {
+        assumeFalse(Functions.isWindows());
+
         final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
         final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
 
