@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 import hudson.model.Cause;
+import hudson.model.ParameterValue;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -51,6 +52,7 @@ public class Statistics {
     private String result;
     private UpstreamCause upstreamCause;
     private List<FailureCauseStatistics> failureCauseStatisticsList;
+    private List<ParameterValue> parameters;
 
     /**
      * Getter for the project name.
@@ -74,6 +76,14 @@ public class Statistics {
      */
     public String getDisplayName() {
         return displayName;
+    }
+
+    /**
+     * Getter for the build display name.
+     * @return the build display name.
+     */
+    public List<ParameterValue> getParameters() {
+        return parameters;
     }
 
      /**
@@ -165,6 +175,7 @@ public class Statistics {
      * @param result the result of the build.
      * @param upstreamCause the upstream cause of the current build, if any.
      * @param failureCauseStatistics the statistics for the FailureCauses.
+     * @param parameters the list of job parameters
      */
     @JsonCreator
     public Statistics(@JsonProperty("projectName")    String projectName,
@@ -178,7 +189,8 @@ public class Statistics {
                       @JsonProperty("timeZoneOffset") int timeZoneOffset,
                       @JsonProperty("result")         String result,
                       @JsonProperty("upstreamCause")  UpstreamCause upstreamCause,
-                      @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics) {
+                      @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics,
+                      @JsonProperty("parameters")     List<ParameterValue> parameters) {
         this.projectName = projectName;
         this.buildNumber = buildNumber;
         this.displayName = displayName;
@@ -195,6 +207,40 @@ public class Statistics {
         this.result = result;
         this.upstreamCause = upstreamCause;
         this.failureCauseStatisticsList = failureCauseStatistics;
+        this.parameters = parameters;
+    }
+
+    /**
+     * @deprecated, kept for backwards compatibility.
+     * @param projectName the project name.
+     * @param buildNumber the build number.
+     * @param displayName the build display name.
+     * @param startingTime the starting time.
+     * @param duration the duration.
+     * @param triggerCauses the causes that triggered this build.
+     * @param nodeName the name of the node this build ran on.
+     * @param master the master this build ran on.
+     * @param timeZoneOffset the time zone offset.
+     * @param result the result of the build.
+     * @param upstreamCause the upstream cause of the current build, if any.
+     * @param failureCauseStatistics the statistics for the FailureCauses.
+     */
+    @Deprecated
+    public Statistics(@JsonProperty("projectName")    String projectName,
+                      @JsonProperty("buildNumber")    int buildNumber,
+                      @JsonProperty("displayName")    String displayName,
+                      @JsonProperty("startingTime")   Date startingTime,
+                      @JsonProperty("duration")       long duration,
+                      @JsonProperty("triggerCauses")  List<String> triggerCauses,
+                      @JsonProperty("slaveHostName")  String nodeName,
+                      @JsonProperty("master")         String master,
+                      @JsonProperty("timeZoneOffset") int timeZoneOffset,
+                      @JsonProperty("result")         String result,
+                      @JsonProperty("upstreamCause")  UpstreamCause upstreamCause,
+                      @JsonProperty("failureCauses")  List<FailureCauseStatistics> failureCauseStatistics) {
+        this(projectName, buildNumber, displayName, startingTime, duration,
+             triggerCauses, nodeName, master, timeZoneOffset,
+             result, upstreamCause, failureCauseStatistics, null);
     }
 
         /**
@@ -222,7 +268,7 @@ public class Statistics {
                       String result,
                       List<FailureCauseStatistics> failureCauseStatistics) {
         this(projectName, buildNumber, null, startingTime, duration, triggerCauses, nodeName, master, timeZoneOffset,
-             result, null, failureCauseStatistics);
+             result, null, failureCauseStatistics, null);
     }
 
     /**

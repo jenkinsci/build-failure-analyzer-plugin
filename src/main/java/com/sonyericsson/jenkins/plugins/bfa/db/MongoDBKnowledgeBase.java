@@ -44,6 +44,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
+import hudson.model.ParameterValue;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
@@ -114,6 +115,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private String dbName;
     private String userName;
     private Secret password;
+    private String uri;
     private boolean enableStatistics;
     private boolean successfulLogging;
 
@@ -482,6 +484,16 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             cause.put("build", upstreamCause.getUpstreamBuild());
         }
         object.put("upstreamCause", cause);
+
+        DBObject parameters = null;
+        if (stat.getParameters() != null) {
+            parameters = new BasicDBObject();
+            for(ParameterValue item: stat.getParameters()) {
+              parameters.put(item.getName(), item.getValue());
+            }
+        }
+        object.put("parameters", parameters);
+
         object.put("result", stat.getResult());
         List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
         addFailureCausesToDBObject(object, failureCauseStatisticsList);

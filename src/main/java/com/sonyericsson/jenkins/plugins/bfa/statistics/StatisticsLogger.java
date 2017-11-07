@@ -33,6 +33,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.Node;
 import hudson.model.Run;
+import hudson.model.ParametersAction;
+import hudson.model.ParameterValue;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -135,6 +137,10 @@ public final class StatisticsLogger {
 
             String result = build.getResult().toString();
             List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();
+
+            ParametersAction pa = build.getAction(ParametersAction.class);
+            List<ParameterValue> parameters = pa.getParameters();
+
             List<String> causeIds = new LinkedList<String>();
             for (FoundFailureCause cause : causes) {
                 FailureCauseStatistics stats = new FailureCauseStatistics(cause.getId(), cause.getIndications());
@@ -147,7 +153,7 @@ public final class StatisticsLogger {
             Statistics.UpstreamCause suc = new Statistics.UpstreamCause(uc);
             Statistics obj = new Statistics(projectName, buildNumber, displayName, startingTime, duration,
                                             triggerCauses, nodeName, master, timeZoneOffset, result, suc,
-                                            failureCauseStatistics);
+                                            failureCauseStatistics, parameters);
 
             PluginImpl p = PluginImpl.getInstance();
             KnowledgeBase kb = p.getKnowledgeBase();
