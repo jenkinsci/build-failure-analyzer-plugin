@@ -23,12 +23,14 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Shell;
 
 import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;
 
+import static org.junit.Assume.assumeFalse;
 /**
  * Test Failure Cause project action.
  */
@@ -41,6 +43,7 @@ public class FailureCauseProjectActionHudsonTest extends HudsonTestCase {
      */
     @Test
     public void testShowLastFailureOnProjectPage() throws Exception {
+        assumeFalse(Functions.isWindows());
         FreeStyleProject project = createFreeStyleProject();
         project.getBuildersList().add(new Shell("test $BUILD_NUMBER -eq 2"));
         project.scheduleBuild2(0).get();

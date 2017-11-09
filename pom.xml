@@ -229,7 +229,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkMode>always</forkMode>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
             <plugin>
@@ -347,6 +348,11 @@
                     <!-- Optional directory to put findbugs xdoc xml report -->
                     <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.3</version>
             </plugin>
         </plugins>
     </reporting>
