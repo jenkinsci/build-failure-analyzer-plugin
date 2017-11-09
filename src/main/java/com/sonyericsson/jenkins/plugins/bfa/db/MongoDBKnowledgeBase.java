@@ -31,6 +31,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
@@ -114,6 +115,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private String dbName;
     private String userName;
     private Secret password;
+    private String uri;
     private boolean enableStatistics;
     private boolean successfulLogging;
 
@@ -474,6 +476,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         object.put("duration", stat.getDuration());
         object.put("timeZoneOffset", stat.getTimeZoneOffset());
         object.put("triggerCauses", stat.getTriggerCauses());
+        object.put("parameters", stat.getParameters());
         DBObject cause = null;
         if (stat.getUpstreamCause() != null) {
             cause = new BasicDBObject();
