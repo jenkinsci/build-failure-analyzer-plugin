@@ -169,7 +169,7 @@ public class FailureReaderTest {
         FoundIndication indication = scan(new BuildLogIndication(".*non existing string"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 5000 && elapsedTime <= 12000);
         assertNull("Did not expect to find an indication", indication);
     }
 
