@@ -55,6 +55,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import hudson.Extension;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
@@ -80,8 +82,18 @@ public class BuildFailureScanner extends RunListener<Run> {
     public static final int ORDINAL = 11003;
     private static final Logger logger = Logger.getLogger(BuildFailureScanner.class.getName());
 
-    private static final ThreadPoolExecutor THREAD_POOL_EXECUTOR = (ThreadPoolExecutor)Executors.
-            newFixedThreadPool(PluginImpl.getInstance().getNrOfScanThreads());
+    private static ThreadPoolExecutor threadPoolExecutor;
+
+    /**
+     * Creates the shared thread pool after extensions have been made available.
+     */
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    @SuppressWarnings("unused")
+    public static void initThreadPool() {
+        threadPoolExecutor = (ThreadPoolExecutor)Executors.newFixedThreadPool(
+                PluginImpl.getInstance().getNrOfScanThreads()
+        );
+    }
 
     @Override
     public void onStarted(Run build, TaskListener listener) {
@@ -216,8 +228,8 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     private static List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
                                                       final Run build, final PrintStream buildLog) {
-        THREAD_POOL_EXECUTOR.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
-        THREAD_POOL_EXECUTOR.setMaximumPoolSize(PluginImpl.getInstance().getNrOfScanThreads());
+        threadPoolExecutor.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
+        threadPoolExecutor.setMaximumPoolSize(PluginImpl.getInstance().getNrOfScanThreads());
 
         buildLog.println("[BFA] Scanning build for known causes...");
         long start = System.currentTimeMillis();
@@ -271,7 +283,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                 new ArrayList<FoundFailureCause>());
 
         if (!singleLineCauses.isEmpty()) {
-            scanningTasks.add(THREAD_POOL_EXECUTOR.submit(new Runnable() {
+            scanningTasks.add(threadPoolExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
                     foundFailureCauses.addAll(parseSingleLineCauses(build, buildLog, singleLineCauses));
@@ -281,7 +293,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         }
 
         for (final FailureCause cause : notOnlySingleLineCauses) {
-            scanningTasks.add(THREAD_POOL_EXECUTOR.submit(new Runnable() {
+            scanningTasks.add(threadPoolExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
                     final List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
