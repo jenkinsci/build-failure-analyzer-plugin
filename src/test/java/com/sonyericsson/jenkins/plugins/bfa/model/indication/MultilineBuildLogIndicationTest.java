@@ -138,7 +138,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * @throws Exception if so.
      */
     public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
-        MatrixProject matrixProject = createMatrixProject();
+        MatrixProject matrixProject = jenkins.createProject(MatrixProject.class, createUniqueProjectName());
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));

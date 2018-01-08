@@ -209,7 +209,7 @@ public class BuildLogIndicationTest {
      */
     @Test
     public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
-        MatrixProject matrixProject = j.createMatrixProject();
+        MatrixProject matrixProject = j.createProject(MatrixProject.class);
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));

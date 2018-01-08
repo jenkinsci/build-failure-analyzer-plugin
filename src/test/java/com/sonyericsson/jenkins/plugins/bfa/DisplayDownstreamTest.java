@@ -273,7 +273,7 @@ public class DisplayDownstreamTest {
         //TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary
         jenkins.getInstance().setNodes(jenkins.getInstance().getNodes()); // update nodes configuration
 
-        matrixProject = jenkins.createMatrixProject(MATRIX_PROJECT_NEWS);
+        matrixProject = jenkins.createProject(MatrixProject.class, MATRIX_PROJECT_NEWS);
 
         AxisList axes = new AxisList();
         axes.add(new Axis("X", "EAST", "WEST"));

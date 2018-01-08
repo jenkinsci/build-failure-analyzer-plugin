@@ -66,7 +66,7 @@ public class FailureCauseMatrixAggregatorTest {
      */
     @Test
     public void testAggregateFailureCauses() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+        MatrixProject matrix = jenkins.createProject(MatrixProject.class);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         matrix.getBuildersList().add(new MockBuilder(Result.FAILURE));
@@ -84,7 +84,7 @@ public class FailureCauseMatrixAggregatorTest {
      */
     @Test
     public void testAggregateFailureCausesWhenNotFailed() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+        MatrixProject matrix = jenkins.createProject(MatrixProject.class);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
@@ -100,7 +100,7 @@ public class FailureCauseMatrixAggregatorTest {
      */
     @Test
     public void testAggregateIgnoreAbortedCauses() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+        MatrixProject matrix = jenkins.createProject(MatrixProject.class);
         PluginImpl.getInstance().setDoNotAnalyzeAbortedJob(true);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));

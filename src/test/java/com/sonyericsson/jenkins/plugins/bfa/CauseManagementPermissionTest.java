@@ -84,9 +84,9 @@ public class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.selectSingleNode("//h1[.='List of Failure Causes']"));
+        assertNotNull(page.querySelector("//h1[.='List of Failure Causes']"));
         // Checks the "Create New" button is NOT available
-        assertNull(page.selectSingleNode("//a[.='Create new']"));
+        assertNull(page.querySelector("//a[.='Create new']"));
     }
 
     /**
@@ -104,9 +104,9 @@ public class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.selectSingleNode("//h1[.='Update Failure Causes']"));
+        assertNotNull(page.querySelector("//h1[.='Update Failure Causes']"));
         // Checks the "Create New" button is available
-        assertNotNull(page.selectSingleNode("//a[.='Create new']"));
+        assertNotNull(page.querySelector("//a[.='Create new']"));
     }
 
     /**
@@ -124,8 +124,8 @@ public class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.selectSingleNode("//h1[.='Update Failure Causes']"));
+        assertNotNull(page.querySelector("//h1[.='Update Failure Causes']"));
         // Checks the "Create New" button is available
-        assertNotNull(page.selectSingleNode("//a[.='Create new']"));
+        assertNotNull(page.querySelector("//a[.='Create new']"));
     }
 }

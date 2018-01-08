@@ -71,9 +71,10 @@ public class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
+
     assertNotNull("Couldn't find the failure cause image in columnwithouttext view",
-            page.selectSingleNode("//img[@Title='Failure Builder']"));
-    assertNull(page.selectSingleNode("//*[.='Failure Builder']"));
+            page.querySelector("//img[@Title='Failure Builder']"));
+    assertNull(page.querySelector("//*[.='Failure Builder']"));
   }
 
   /**
@@ -95,8 +96,8 @@ public class FailureCauseColumnTest {
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithtext");
     assertNotNull("Couldn't find the failure cause image in columnwithtext view",
-        page.selectSingleNode("//img[@Title='Failure Builder']"));
-    assertNotNull(page.selectSingleNode("//*[.='Failure Builder']"));
+        page.querySelector("//img[@Title='Failure Builder']"));
+    assertNotNull(page.querySelector("//*[.='Failure Builder']"));
   }
 
 }

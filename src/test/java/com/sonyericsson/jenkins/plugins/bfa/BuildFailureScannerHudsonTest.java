@@ -137,7 +137,7 @@ public class BuildFailureScannerHudsonTest {
         assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        HtmlElement focus = document.getOneHtmlElementByAttribute("span", "id", id);
         assertNotNull(focus);
 
         List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
@@ -176,7 +176,7 @@ public class BuildFailureScannerHudsonTest {
         assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        HtmlElement focus = document.getOneHtmlElementByAttribute("span", "id", id);
         assertNotNull(focus);
 
         List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
@@ -228,7 +228,7 @@ public class BuildFailureScannerHudsonTest {
         assertTrue(causeDescriptions.remove(description));
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        HtmlElement focus = document.getOneHtmlElementByAttribute("span", "id", id);
         assertNotNull(focus);
 
         foundFailureCause = causeListFromAction.get(1);
@@ -236,7 +236,7 @@ public class BuildFailureScannerHudsonTest {
         assertTrue(causeDescriptions.remove(description));
         foundIndication = foundFailureCause.getIndications().get(0);
         id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        focus = document.getElementById(id);
+        focus = document.getOneHtmlElementByAttribute("span", "id", id);
         assertNotNull(focus);
         assertTrue(causeDescriptions.isEmpty());
 
