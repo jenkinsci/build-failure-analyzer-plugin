@@ -11,14 +11,18 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.580.1</version>
-        <!--<relativePath>../pom.xml</relativePath>-->
+        <version>3.2</version>
+        <relativePath />
     </parent>
 
     <properties>
+        <jenkins.version>2.7.3</jenkins.version>
+        <java.level>7</java.level>
+        <no-test-jar>false</no-test-jar>
+        <findbugs.failOnError>false</findbugs.failOnError>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <powermock.version>1.5.6</powermock.version>
-        <mockito.version>1.9.5</mockito.version>
+        <powermock.version>1.6.2</powermock.version>
+        <mockito.version>1.10.19</mockito.version>
         <findbugs.version>3.0.1</findbugs.version>
         <checkstyle.version>2.13</checkstyle.version>
     </properties>
@@ -82,6 +86,24 @@
     </pluginRepositories>
 
     <dependencies>
+        <dependency>
+            <!-- Require upper bound dependencies -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+        </dependency>
+        <dependency>
+            <!-- Require upper bound dependencies -->
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <!-- Require upper bound dependencies -->
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.6</version>
+        </dependency>
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
             <artifactId>gerrit-trigger</artifactId>
@@ -189,7 +211,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>

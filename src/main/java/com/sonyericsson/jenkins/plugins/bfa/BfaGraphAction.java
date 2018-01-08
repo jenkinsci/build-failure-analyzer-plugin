@@ -89,7 +89,8 @@ public abstract class BfaGraphAction implements RootAction {
     protected static final int DEFAULT_GRAPH_HEIGHT = 500;
 
     /**
-     * Constant for "ABORTED"-cause (used to exclude such {@link FailureCause}s).
+     * Constant for "ABORTED"-cause
+     * (used to exclude such {@link com.sonyericsson.jenkins.plugins.bfa.model.FailureCause}s).
      */
     protected static final String EXCLUDE_ABORTED = "ABORTED";
 

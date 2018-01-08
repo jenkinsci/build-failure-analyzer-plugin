@@ -39,7 +39,7 @@ public enum GraphType {
     BAR_CHART_CAUSES_SMALL(1),
 
     /**
-     * Constant for bar chart with {@link FailureCause}s.
+     * Constant for bar chart with {@link com.sonyericsson.jenkins.plugins.bfa.model.FailureCause}s.
      */
     BAR_CHART_CAUSES(2),
 
@@ -54,7 +54,7 @@ public enum GraphType {
     BAR_CHART_BUILD_NBRS(4),
 
     /**
-     * Constant for pie chart with {@link FailureCause}s.
+     * Constant for pie chart with {@link com.sonyericsson.jenkins.plugins.bfa.model.FailureCause}s.
      */
     PIE_CHART_CAUSES(5),
 
@@ -64,7 +64,7 @@ public enum GraphType {
     PIE_CHART_CATEGORIES(6),
 
     /**
-     * Constant for time series chart with {@link FailureCause}s.
+     * Constant for time series chart with {@link com.sonyericsson.jenkins.plugins.bfa.model.FailureCause}s.
      */
     TIME_SERIES_CHART_CAUSES(7),
 
