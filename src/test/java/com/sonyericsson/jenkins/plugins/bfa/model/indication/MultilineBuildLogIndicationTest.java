@@ -212,6 +212,7 @@ public class MultilineBuildLogIndicationTest {
      * Tests that the doMatchText method behaves correctly when the pattern is valid but the string is an invalid url,
      * i.e. a malformed url or a url which does not refer to any Jenkins build.
      */
+    @Test
     public void testDoMatchTextUrlInvalid() {
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
