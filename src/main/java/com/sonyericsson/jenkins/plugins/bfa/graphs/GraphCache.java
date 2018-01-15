@@ -119,7 +119,7 @@ public final class GraphCache {
      * Get the Graph corresponding to the specified key.
      * If there is no cached graph for the specified key
      * (or it has been invalidated) the specified
-     * Callable<Graph> will be called.
+     * {@code Callable<Graph>} will be called.
      * @param key The key for the graph
      * @param callable A callback to construct the graph that wasn't cached
      * @return A cached graph, or a new graph if there was no cached instance

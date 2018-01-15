@@ -29,6 +29,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -42,7 +43,6 @@ import hudson.model.Result;
 import hudson.util.FormValidation;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 
 import java.io.BufferedReader;
@@ -69,7 +69,7 @@ public class BuildLogIndicationTest {
      */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule j = new JenkinsRule();
+    public JenkinsRuleWithMatrixSupport j = new JenkinsRuleWithMatrixSupport();
 
     /**
      * Tests that the BuildLogFailureReader can find the string in the build log.

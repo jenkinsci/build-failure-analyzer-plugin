@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.MultilineBuildLogFailureReader;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -41,13 +42,25 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.FormValidation;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.MockBuilder;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the MultilineBuildLogIndication.
  */
-public class MultilineBuildLogIndicationTest extends HudsonTestCase {
+public class MultilineBuildLogIndicationTest {
+
+    /**
+     * Jenkins Rule, cpt. Checkstyle Obvious
+     */
+    @Rule
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
+    public JenkinsRuleWithMatrixSupport j = new JenkinsRuleWithMatrixSupport();
 
     private static final String TEST_STRING = "teststring\nis here";
     private static final String FIRST_LINE_TEST_STRING = "teststring";
@@ -58,10 +71,11 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * Tests that the MultilineBuildLogFailureReader can find the string in the build log.
      * @throws Exception if so.
      */
+    @Test
     public void testMultilineBuildLogFailureReaderSuccessful() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
-        FreeStyleBuild build = buildAndAssertSuccess(project);
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
         MultilineBuildLogIndication indication = new MultilineBuildLogIndication("teststring.*here");
         MultilineBuildLogFailureReader reader = new MultilineBuildLogFailureReader(indication);
         FoundIndication found = reader.scan(build, System.out);
@@ -72,10 +86,11 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * Tests that the MultilineBuildLogFailureReader doesn't find the string in the build log.
      * @throws Exception if so.
      */
+    @Test
     public void testMultilineBuildLogFailureReaderUnsuccessful() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
-        FreeStyleBuild build = buildAndAssertSuccess(project);
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
         MultilineBuildLogIndication indication = new MultilineBuildLogIndication("correct horse battery staple");
         MultilineBuildLogFailureReader reader = new MultilineBuildLogFailureReader(indication);
         FoundIndication found = reader.scan(build, System.out);
@@ -85,6 +100,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string matches the pattern.
      */
+    @Test
     public void testDoMatchTextPlainTextOk() {
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
               new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
@@ -97,6 +113,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string does not
      * match the pattern.
      */
+    @Test
     public void testDoMatchTextPlainTextWarning() {
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
@@ -110,11 +127,12 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * to a freestyle build whose log contains a line that matches the pattern.
      * @throws Exception if so.
      */
+    @Test
     public void testDoMatchTextUrlValidOkFreestyleProject() throws Exception {
-        FreeStyleProject freeStyleProject = createFreeStyleProject();
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
-        FreeStyleBuild freeStyleBuild = buildAndAssertSuccess(freeStyleProject);
-        String buildUrl = getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
+        FreeStyleBuild freeStyleBuild = j.buildAndAssertSuccess(freeStyleProject);
+        String buildUrl = j.getURL() + freeStyleBuild.getUrl(); // buildUrl will end with /1/
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
         FormValidation formValidation = indicationDescriptor.doMatchText("teststring.*here", buildUrl, true);
@@ -137,15 +155,16 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * to a matrix build whose log contains a line that matches the pattern.
      * @throws Exception if so.
      */
+    @Test
     public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
-        MatrixProject matrixProject = createMatrixProject();
+        MatrixProject matrixProject = j.createMatrixProject();
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));
         matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
         Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
         MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
-        String buildUrl = getURL() + build.getUrl();
+        String buildUrl = j.getURL() + build.getUrl();
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
         FormValidation formValidation = indicationDescriptor.doMatchText("Started by.*", buildUrl, true);
@@ -164,7 +183,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
 
         List<MatrixRun> matrixRuns = build.getRuns();
         for (MatrixRun matrixRun : matrixRuns) {
-            buildUrl = getURL() + matrixRun.getUrl();
+            buildUrl = j.getURL() + matrixRun.getUrl();
             formValidation = indicationDescriptor.doMatchText("Simulating.*", buildUrl, true);
             assertEquals("Simulating a specific result code FAILURE", formValidation.getMessage());
             assertEquals(FormValidation.Kind.OK, formValidation.kind);
@@ -176,13 +195,14 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * to a build whose log does not contain any line that matches the pattern.
      * @throws Exception if so.
      */
+    @Test
     public void testDoMatchTextUrlValidWarning() throws Exception {
-        FreeStyleProject freeStyleProject = createFreeStyleProject();
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = freeStyleProject.scheduleBuild2(0, new Cause.UserCause()).get();
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();
-        String buildUrl = getURL() + freeStyleBuild.getUrl();
+        String buildUrl = j.getURL() + freeStyleBuild.getUrl();
         FormValidation formValidation = indicationDescriptor.doMatchText("hi", buildUrl, true);
         assertEquals(Messages.StringDoesNotMatchPattern(), formValidation.getMessage());
         assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
@@ -192,6 +212,7 @@ public class MultilineBuildLogIndicationTest extends HudsonTestCase {
      * Tests that the doMatchText method behaves correctly when the pattern is valid but the string is an invalid url,
      * i.e. a malformed url or a url which does not refer to any Jenkins build.
      */
+    @Test
     public void testDoMatchTextUrlInvalid() {
         MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor indicationDescriptor =
                 new MultilineBuildLogIndication.MultilineBuildLogIndicationDescriptor();

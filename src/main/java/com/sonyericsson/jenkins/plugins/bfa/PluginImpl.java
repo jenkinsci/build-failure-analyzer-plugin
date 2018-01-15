@@ -503,7 +503,7 @@ public class PluginImpl extends Plugin {
      *
      * @param build the build
      * @return true if it should be scanned.
-     * @see {@link #shouldScan(Job)}
+     * @see #shouldScan(Job)
      */
     public static boolean shouldScan(Run build) {
         return shouldScan(build.getParent());
