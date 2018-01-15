@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
             <artifactId>gerrit-trigger</artifactId>
-            <version>2.27.2-20180115.173211-1</version>
+            <version>2.27.2</version>
             <optional>true</optional>
             <exclusions>
                 <exclusion>
