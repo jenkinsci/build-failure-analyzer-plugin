@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 
 /**
  * Get downstream builds for the Parameterized Trigger Plugin.
- * <p/>
  * We want to avoid having dependencies to other plugins thus using reflection.
  *
  * @author Jan-Olof Sivtoft
