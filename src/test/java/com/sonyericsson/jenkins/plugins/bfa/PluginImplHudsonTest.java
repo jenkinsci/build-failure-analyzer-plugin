@@ -224,7 +224,7 @@ public class PluginImplHudsonTest {
         HtmlTable table = page.getDocumentElement().getOneHtmlElementByAttribute("table", "name", "knowledgeBase");
         assertSame("The table should be inside the dropDownContainer", container, table.getParentNode().getParentNode());
         HtmlTableCell cell = table.getCellAt(1, 2);
-        HtmlTextInput someStringInput = (HtmlTextInput)cell.getAllHtmlChildElements().iterator().next();
+        HtmlTextInput someStringInput = (HtmlTextInput)cell.getHtmlElementDescendants().iterator().next();
         assertEquals(knowledgeBase.getSomeString(), someStringInput.getText());
     }
 
