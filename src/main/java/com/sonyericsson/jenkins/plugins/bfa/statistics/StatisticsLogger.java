@@ -137,7 +137,7 @@ public final class StatisticsLogger {
             String master;
 
 
-            String result = "Unknown";
+            String result = "Running";
             final Result buildResult = build.getResult();
             if (buildResult != null) {
                 result = buildResult.toString();
