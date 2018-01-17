@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -241,7 +242,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         HtmlAnchor firstCauseLink = (HtmlAnchor)table.getCellAt(1, 0).getFirstChild();
         HtmlPage editPage = firstCauseLink.click();
 
-        HtmlElement modList = editPage.getElementById("modifications");
+        DomElement modList = editPage.getElementById("modifications");
         int firstNbrOfModifications = modList.getChildNodes().size();
 
         editPage.getElementByName("_.comment").setTextContent("new comment");
@@ -270,7 +271,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         Whitebox.setInternalState(PluginImpl.getInstance(), kb);
         WebClient web = createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
-        HtmlElement element =  page.getElementById("errorMessage");
+        DomElement element =  page.getElementById("errorMessage");
         assertNotNull(element);
     }
 

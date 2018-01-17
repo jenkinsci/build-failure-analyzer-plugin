@@ -31,7 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import hudson.matrix.MatrixRun;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 import java.io.IOException;
 import java.util.List;

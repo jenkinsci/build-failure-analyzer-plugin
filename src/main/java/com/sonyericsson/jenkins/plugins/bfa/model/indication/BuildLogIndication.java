@@ -31,6 +31,7 @@ import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
 import hudson.model.Hudson;
+import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Run;
@@ -265,7 +266,7 @@ public class BuildLogIndication extends Indication {
                          * We matched a folders job. Let's get the jobs up to the part were the next
                          * iteration can be continued from
                          */
-                        String fullFolderName = "";
+                        StringBuilder fullFolderName = new StringBuilder();
                         /* The interestingJobParts string created below is meant to discard everything
                          * that comes before the first '/job' occurrent which is either nothing or the
                          * prefix from where jenkins is served, ie: http://localhost/jenkins/job/<job>/<buildNumber>
@@ -273,11 +274,15 @@ public class BuildLogIndication extends Indication {
                         String[] interestingJobParts = urlParts[0].split("/job/", 2);
                         String[] jobParts = interestingJobParts[interestingJobParts.length - 1].split("/job/");
                         for (String part: jobParts) {
-                            fullFolderName += "/" + part;
+                            fullFolderName.append("/").append(part);
                         }
-                        getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName);
+                        getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName.toString());
                     } else {
                         getItemInstance = (ItemGroup)Jenkins.getInstance();
+                    }
+
+                    if (getItemInstance == null) {
+                        throw new AssertionError("Folder not found!");
                     }
 
                     /*
@@ -289,20 +294,24 @@ public class BuildLogIndication extends Indication {
                        Type 3: .../<job>/<buildNumber>/<matrixInfo>/
                      */
 
-                    if (getItemInstance.getItem(urlParts[2]) instanceof Job
+                    final Item itemFromPart2 = getItemInstance.getItem(urlParts[2]);
+                    if (itemFromPart2 instanceof Job
                             && isValidBuildId(urlParts[3])) {
-                        Job project = (Job)getItemInstance.getItem(urlParts[2]);
+                        Job project = (Job)itemFromPart2;
                         build = getBuildById(project, urlParts[3]);
-                    } else if (getItemInstance.getItem(urlParts[1]) instanceof MatrixProject
-                            && isValidBuildId(urlParts[3])) {
-                        MatrixProject project = (MatrixProject)getItemInstance.getItem(urlParts[1]);
-                        MatrixConfiguration configuration = project.getItem(urlParts[2]);
-                        build = getBuildById(configuration, urlParts[3]);
-                    } else if (getItemInstance.getItem(urlParts[1]) instanceof MatrixProject
-                            && isValidBuildId(urlParts[2])) {
-                        MatrixProject matrixProject = (MatrixProject)getItemInstance.getItem(urlParts[1]);
-                        MatrixConfiguration configuration = matrixProject.getItem(urlParts[3]);
-                        build = getBuildById(configuration, urlParts[2]);
+                    } else {
+                        final Item itemFromPart1 = getItemInstance.getItem(urlParts[1]);
+                        if (itemFromPart1 instanceof MatrixProject
+                                && isValidBuildId(urlParts[3])) {
+                            MatrixProject project = (MatrixProject)itemFromPart1;
+                            MatrixConfiguration configuration = project.getItem(urlParts[2]);
+                            build = getBuildById(configuration, urlParts[3]);
+                        } else if (itemFromPart1 instanceof MatrixProject
+                                && isValidBuildId(urlParts[2])) {
+                            MatrixProject matrixProject = (MatrixProject)itemFromPart1;
+                            MatrixConfiguration configuration = matrixProject.getItem(urlParts[3]);
+                            build = getBuildById(configuration, urlParts[2]);
+                        }
                     }
                     if (build != null) {
                         try {

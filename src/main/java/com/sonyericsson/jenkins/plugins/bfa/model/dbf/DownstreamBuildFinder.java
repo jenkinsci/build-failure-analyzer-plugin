@@ -38,7 +38,6 @@ import java.util.List;
 /**
  * There is no general way to find downstream build in Jenkins Core. Different
  * plugin have there own way of keeping this information.
- * <p/>
  * Extend this class and implement
  * {@link #getDownstreamBuilds(hudson.model.Run)}
  * in a way suitable for the plugin

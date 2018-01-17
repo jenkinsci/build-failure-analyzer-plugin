@@ -310,8 +310,9 @@ public class PluginImpl extends Plugin {
         PluginImpl plugin = jenkins.getPlugin(PluginImpl.class);
         if (plugin == null) {
             throw new AssertionError("Not here yet.");
+        } else {
+            return plugin;
         }
-        return plugin;
     }
 
     /**
@@ -503,7 +504,7 @@ public class PluginImpl extends Plugin {
      *
      * @param build the build
      * @return true if it should be scanned.
-     * @see {@link #shouldScan(Job)}
+     * @see #shouldScan(Job)
      */
     public static boolean shouldScan(Run build) {
         return shouldScan(build.getParent());

@@ -166,7 +166,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Validates this FailureCause. Checks for: {@link #doCheckName(String)}, {@link #doCheckDescription(String)},
-     * Indications.size > 0. and {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication#validate()}.
+     * Indications.size &gt; 0. and {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication#validate()}.
      *
      * @param newName        the name to validate
      * @param newDescription the description
@@ -659,7 +659,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
         @Override
         public String getDisplayName() {
-            return null;
+            return "";
         }
 
         /**

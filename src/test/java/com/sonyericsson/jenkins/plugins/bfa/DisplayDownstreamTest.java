@@ -30,6 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -48,7 +49,6 @@ import hudson.tasks.Shell;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +72,7 @@ public class DisplayDownstreamTest {
      */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRuleWithMatrixSupport jenkins = new JenkinsRuleWithMatrixSupport();
 
     private MatrixProject matrixProject;
 

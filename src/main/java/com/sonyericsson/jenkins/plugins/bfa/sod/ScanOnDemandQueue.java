@@ -122,8 +122,8 @@ public final class ScanOnDemandQueue {
 
     /**
      * Shuts down the executor(s).
-     * Gracefully waits for {@link #WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT} seconds for all jobs to finish
-     * before forcefully shutting them down.
+     * Gracefully waits for {@link ScanOnDemandVariables#getSodWaitForJobShutdownTimeout()}
+     * seconds for all jobs to finish before forcefully shutting them down.
      */
     public static void shutdown() {
         if (instance != null && instance.executor != null) {
