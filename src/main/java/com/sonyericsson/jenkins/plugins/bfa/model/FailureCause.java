@@ -659,7 +659,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
         @Override
         public String getDisplayName() {
-            return null;
+            return "";
         }
 
         /**

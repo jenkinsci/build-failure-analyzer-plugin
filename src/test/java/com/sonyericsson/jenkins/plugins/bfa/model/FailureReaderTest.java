@@ -269,20 +269,9 @@ public class FailureReaderTest {
             }
 
             StringBuilder str = new StringBuilder(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
+            for (int i = 0; i < 20; i++) {
+                str.append(line);
+            }
             return str.toString();
         }
     }

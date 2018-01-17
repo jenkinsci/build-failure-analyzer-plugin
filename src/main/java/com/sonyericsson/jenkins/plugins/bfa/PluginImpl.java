@@ -310,8 +310,9 @@ public class PluginImpl extends Plugin {
         PluginImpl plugin = jenkins.getPlugin(PluginImpl.class);
         if (plugin == null) {
             throw new AssertionError("Not here yet.");
+        } else {
+            return plugin;
         }
-        return plugin;
     }
 
     /**

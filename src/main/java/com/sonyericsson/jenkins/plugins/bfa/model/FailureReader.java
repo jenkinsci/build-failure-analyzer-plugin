@@ -300,8 +300,8 @@ public abstract class FailureReader {
     private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> causes) {
         List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(causes.size());
 
-        for (FailureCause failureCause : causes.keySet()) {
-            foundFailureCauses.add(new FoundFailureCause(failureCause, causes.get(failureCause)));
+        for (Map.Entry<FailureCause, List<FoundIndication>> entry : causes.entrySet()) {
+            foundFailureCauses.add(new FoundFailureCause(entry.getKey(), entry.getValue()));
         }
 
         return foundFailureCauses;
