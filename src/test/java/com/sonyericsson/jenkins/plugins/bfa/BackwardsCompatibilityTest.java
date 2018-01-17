@@ -134,6 +134,7 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
     public void testMatrix120() throws InterruptedException {
         MatrixProject project = (MatrixProject)jenkins.getItem("mymatrix");
         MatrixBuild build = project.getBuildByNumber(1);
+        MatrixBuild build2 = project.getBuildByNumber(2);
         OldDataConverter.getInstance().waitForInitialCompletion();
         FailureCauseMatrixBuildAction matrixBuildAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNotNull(matrixBuildAction);
@@ -148,7 +149,6 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
         assertEquals(runs.get(3).getProject().getCombination().toString(), runIds.get(3));
         assertNotNull(Whitebox.getInternalState(matrixBuildAction, "build"));
 
-        MatrixBuild build2 = project.getBuildByNumber(2);
         List<MatrixRun> aggregatedRuns2 = FailureCauseMatrixAggregator.getRuns(build2);
         FailureCauseMatrixBuildAction matrixBuildAction2 = build2.getAction(FailureCauseMatrixBuildAction.class);
         assertNotNull(matrixBuildAction2);
