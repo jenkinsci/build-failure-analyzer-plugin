@@ -28,6 +28,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
@@ -35,6 +36,7 @@ import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
 import net.vz.mongodb.jackson.WriteResult;
+import org.acegisecurity.Authentication;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,19 +81,23 @@ public class DynamoDBKnowledgeBaseTest {
     private JacksonDBCollection<Statistics, String> statisticsCollection;
     private DynamoDBKnowledgeBase kb;
     private List<Indication> indications;
+    private List<FailureCauseModification> modifications;
     private Indication indication;
     private FailureCause mockedCause;
     private Statistics mockedStatistics;
-    private static final int PORT = 27017;
 
     /**
      * Common stuff to set up for the tests.
      */
     @Before
     public void setUp() {
+        Authentication mockAuth = mock(Authentication.class);
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
-        kb = new DynamoDBKnowledgeBase("localhost", 8000, "failureCauses");
+        PowerMockito.when(Jenkins.getAuthentication()).thenReturn(mockAuth);
+        PowerMockito.when(mockAuth.getName()).thenReturn("tester");
+        DynamoDBKnowledgeBase.DynamoDBKnowledgeBaseDescriptor foo = new DynamoDBKnowledgeBase.DynamoDBKnowledgeBaseDescriptor();
+        kb = new DynamoDBKnowledgeBase("", "", "default");
 //        collection = mock(JacksonDBCollection.class);
 //        statisticsCollection = mock(JacksonDBCollection.class);
 //        Whitebox.setInternalState(kb, "jacksonCollection", collection);
@@ -114,7 +120,7 @@ public class DynamoDBKnowledgeBaseTest {
     public void testFindOneCause() throws Exception {
 //        when(collection.findOneById(anyString())).thenReturn(mockedCause);
         FailureCause fetchedCause = kb.getCause("2ce2ae7b-7f66-4a8c-984a-802a43d3a9a4");
-//        assertNotNull("The fetched cause should not be null", fetchedCause);
+        assertNotNull("The fetched cause should not be null", fetchedCause);
 //        assertSame(mockedCause, fetchedCause);
     }
 
@@ -165,8 +171,12 @@ public class DynamoDBKnowledgeBaseTest {
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
+        modifications = new LinkedList<FailureCauseModification>();
+        FailureCauseModification modification = new FailureCauseModification("ken", new Date());
+        modifications.add(modification);
+
         mockedCause = new FailureCause(null, "myFailureCause", "description", "comment", new Date(),
-                "category", indications, null);
+                "category", indications, modifications);
         kb.saveCause(mockedCause);
 
 
@@ -228,8 +238,26 @@ public class DynamoDBKnowledgeBaseTest {
      *
      * @throws Exception if so.
      */
+//    @Test
+//    public void testCreateTables() throws Exception {
+//        kb.createTable();
+//    }
+
     @Test
-    public void testCreateTables() throws Exception {
-        kb.createTables();
+    public void getCauses() throws Exception {
+        Collection<FailureCause> causes = kb.getCauses();
+        System.out.println("foo");
+    }
+
+    @Test
+    public void getShallowCauses() throws Exception {
+        Collection<FailureCause> causes = kb.getShallowCauses();
+        System.out.println("foo");
+    }
+
+    @Test
+    public void removeCause() throws Exception {
+        FailureCause cause = kb.removeCause("bc3e1c3d-222e-43dd-8efc-2ddec79485b0");
+        System.out.println("foo");
     }
 }

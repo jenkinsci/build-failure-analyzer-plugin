@@ -58,6 +58,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,6 +92,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     private List<Indication> indications;
     @DynamoDBAttribute(attributeName = "modifications")
     private List<FailureCauseModification> modifications;
+    @DynamoDBAttribute(attributeName = "_removed")
+    private Map<String,String> removed;
 
     /**
      * Standard data bound constructor.
@@ -404,6 +408,39 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      */
     public void setComment(String comment) { this.comment = comment; }
+
+    /**
+     * Getter for removed info.
+     *
+     * @return the removed info.
+     */
+    public Map<String, String> getRemoved() {
+        return removed;
+    }
+
+    /**
+     * Setter for the comment.
+     *
+     */
+    public void setRemoved() {
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        df.setTimeZone(tz);
+        String nowAsISO = df.format(new Date());
+
+        Map<String, String> removedInfo = new HashMap<>();
+        removedInfo.put("by", Jenkins.getAuthentication().getName());
+        removedInfo.put("timestamp", nowAsISO);
+        this.removed = removedInfo;
+    }
+
+    /**
+     * Setter for the comment.
+     *
+     */
+    public void setRemoved(Map<String, String> removedInfo) {
+        this.removed = removedInfo;
+    }
 
     /**
      * Getter for the last occurrence.

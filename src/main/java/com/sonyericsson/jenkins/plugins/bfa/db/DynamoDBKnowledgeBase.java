@@ -1,33 +1,76 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import hudson.Extension;
 import hudson.model.Descriptor;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 
+import javax.xml.stream.events.Attribute;
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
+    private static final String DYNAMODB_DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
+    public static final String DYNAMODB_DEFAULT_CREDENTIALS_PATH = System.getProperty("user.home") + "/.aws/credentials";
+    private static final String DYNAMODB_DEFAULT_CREDENTIAL_PROFILE = "default";
+    static final Map<String, Condition> NOT_REMOVED_FILTER_EXPRESSION = new HashMap<String, Condition>(){{
+        put("_removed", new Condition().withComparisonOperator("NULL"));
+    }};
+
     private static AmazonDynamoDB dynamoDB;
     private static DynamoDBMapper dbMapper;
-    private String host;
-    private int port;
-    private String tableName;
+    private String region;
+    private String credentialsPath;
+    private String credentialsProfile;
 
     @DataBoundConstructor
-    public DynamoDBKnowledgeBase(String host, int port, String tableName) {
-        this.host = host;
-        this.port = port;
-        this.tableName = tableName;
+    public DynamoDBKnowledgeBase(String region, String credentialsPath, String credentialsProfile) {
+        if (region == null || region.isEmpty()) {
+            region = DYNAMODB_DEFAULT_REGION;
+        }
+        if (credentialsPath == null || credentialsPath.isEmpty()) {
+            credentialsPath = DYNAMODB_DEFAULT_CREDENTIALS_PATH;
+        }
+        if (credentialsProfile == null || credentialsProfile.isEmpty()) {
+            credentialsProfile = DYNAMODB_DEFAULT_CREDENTIAL_PROFILE;
+        }
+
+        this.region = region;
+        this.credentialsPath = credentialsPath;
+        this.credentialsProfile = credentialsProfile;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public String getCredentialsPath() {
+        return credentialsPath;
+    }
+
+    public String getCredentialsProfile() {
+        return credentialsProfile;
     }
 
     /**
@@ -39,7 +82,13 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getCauses() throws Exception {
-        return null;
+        try {
+            DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            scan.setScanFilter(NOT_REMOVED_FILTER_EXPRESSION);
+            return getDbMapper().scan(FailureCause.class, scan);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -51,7 +100,15 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getCauseNames() throws Exception {
-        return null;
+        try {
+            DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            scan.addExpressionAttributeNamesEntry("#n", "name");
+            scan.setProjectionExpression("id,#n");
+            scan.setScanFilter(NOT_REMOVED_FILTER_EXPRESSION);
+            return getDbMapper().scan(FailureCause.class, scan);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -66,7 +123,17 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getShallowCauses() throws Exception {
-        return null;
+        try {
+            DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            scan.addExpressionAttributeNamesEntry("#n", "name");
+            scan.addExpressionAttributeNamesEntry("#c", "comment");
+            scan.addExpressionAttributeNamesEntry("#r", "_removed");
+            scan.setProjectionExpression("id,#n,description,categories,#c,modifications,lastOccurred");
+            scan.setFilterExpression(" attribute_not_exists(#r) ");
+            return getDbMapper().scan(FailureCause.class, scan);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -99,7 +166,7 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * Removes the cause from the knowledge base.
+     * Marks the cause as removed in the knowledge base.
      *
      * @param id the id of the cause to remove.
      * @return the removed FailureCause.
@@ -107,7 +174,14 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public FailureCause removeCause(String id) throws Exception {
-        return null;
+        try {
+            FailureCause cause = getDbMapper().load(FailureCause.class, id);
+            cause.setRemoved();
+            getDbMapper().save(cause);
+            return cause;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -122,11 +196,6 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public FailureCause saveCause(FailureCause cause) throws Exception {
         try {
-            ListTablesResult tables = getDynamoDb().listTables();
-            if (!tables.getTableNames().contains(tableName)) {
-                createTables();
-            }
-
             getDbMapper().save(cause);
         } catch (Exception e) {
             throw e;
@@ -229,7 +298,7 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
             return dynamoDB;
         }
 
-        ProfileCredentialsProvider credentialsProvider = new ProfileCredentialsProvider();
+        ProfileCredentialsProvider credentialsProvider = new ProfileCredentialsProvider(credentialsPath, credentialsProfile);
         try {
             credentialsProvider.getCredentials();
         } catch (Exception e) {
@@ -242,43 +311,134 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
         dynamoDB = AmazonDynamoDBClientBuilder.standard()
                 .withCredentials(credentialsProvider)
-                .withRegion("us-west-2")
-//                .withEndpointConfiguration(
-//                        new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
+                .withRegion(region)
                 .build();
 
         return dynamoDB;
     }
 
-    public void createTables() {
+    private void createTable(CreateTableRequest request) {
         try {
+            String tableName = request.getTableName();
             AmazonDynamoDB db = getDynamoDb();
-            CreateTableRequest causeTableRequest = new CreateTableRequest()
-                    .withTableName(tableName)
-                    .withKeySchema(new KeySchemaElement().withAttributeName("id").withKeyType(KeyType.HASH))
-                    .withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S))
-                    .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-
-            TableUtils.createTableIfNotExists(db, causeTableRequest);
+            request.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+            TableUtils.createTableIfNotExists(db, request);
             TableUtils.waitUntilActive(db, tableName);
-
-            dynamoDB.listTables();
 
         } catch (Exception e) {
             throw new AmazonClientException(e);
         }
     }
 
-    public DynamoDBMapper getDbMapper() {
+    private DynamoDBMapper getDbMapper() {
         if (dbMapper != null) {
             return dbMapper;
         }
         dbMapper = new DynamoDBMapper(getDynamoDb());
+        createTable(dbMapper.generateCreateTableRequest(FailureCause.class));
+
         return dbMapper;
     }
 
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
-        return null;
+        return Jenkins.getInstance().getDescriptorByType(DynamoDBKnowledgeBaseDescriptor.class);
+    }
+
+    /**
+     * Descriptor for {@link DynamoDBKnowledgeBase}.
+     */
+    @Extension
+    public static class DynamoDBKnowledgeBaseDescriptor extends KnowledgeBaseDescriptor {
+
+        @Override
+        public String getDisplayName() {
+            return Messages.DynamoDBKnowledgeBase_DisplayName();
+        }
+
+        /**
+         * Convenience method for jelly.
+         * @return the default region.
+         */
+        public String getDefaultRegion() {
+            return DYNAMODB_DEFAULT_REGION;
+        }
+
+        /**
+         * Convenience method for jelly.
+         * @return the default region.
+         */
+        public String getDefaultCredentialsPath() {
+            return DYNAMODB_DEFAULT_CREDENTIALS_PATH;
+        }
+
+        /**
+         * Convenience method for jelly.
+         * @return the default region.
+         */
+        public String getDefaultCredentialProfile() {
+            return DYNAMODB_DEFAULT_CREDENTIAL_PROFILE;
+        }
+
+        public ListBoxModel doFillRegionItems() {
+            ListBoxModel items = new ListBoxModel();
+            for (Region r:RegionUtils.getRegions()) {
+                String regionName = r.getName();
+                items.add(regionName, regionName);
+            }
+            return items;
+        }
+
+        /**
+         * Checks that the credential file exists.
+         *
+         * @param value the pattern to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public FormValidation doCheckCredentialsPath(@QueryParameter("value") final String value) {
+            File f = new File(value);
+            if(!f.exists()) {
+                return FormValidation.error("Credential file does not exist!");
+            }
+
+            if (f.isDirectory()) {
+                return FormValidation.error("Credential file can not be a directory!");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
+         * Checks that the credential profile is set.
+         *
+         * @param value the pattern to check.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        public FormValidation doCheckCredentialsProfile(@QueryParameter("value") final String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.warning("No credential profile entered, using \"default\" profile");
+            }
+
+            return FormValidation.ok();
+        }
+
+        /**
+         * Tests if the provided parameters can connect to the DynamoDB service.
+         * @param region the region name.
+         * @return {@link FormValidation#ok() } if can be done,
+         *         {@link FormValidation#error(java.lang.String) } otherwise.
+         */
+        public FormValidation doTestConnection(
+                @QueryParameter("region") final String region,
+                @QueryParameter("credentialsPath") final String credentialsPath,
+                @QueryParameter("credentialProfile") final String credentialProfile
+                ) {
+            DynamoDBKnowledgeBase base = new DynamoDBKnowledgeBase(region, credentialsPath, credentialProfile);
+            try {
+                base.getDynamoDb();
+            } catch (Exception e) {
+                return FormValidation.error(e, Messages.DynamoDBKnowledgeBase_ConnectionError());
+            }
+            return FormValidation.ok(Messages.DynamoDBKnowledgeBase_ConnectionOK());
+        }
     }
 }
