@@ -128,6 +128,8 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     public Collection<FailureCause> getShallowCauses() throws Exception {
         try {
             DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            // The following attributes are reserved words in Dynamo, so we need to substitute the actual name for
+            // something safe
             scan.addExpressionAttributeNamesEntry("#n", "name");
             scan.addExpressionAttributeNamesEntry("#c", "comment");
             scan.addExpressionAttributeNamesEntry("#r", "_removed");
@@ -215,7 +217,43 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
+        if (oldKnowledgeBase instanceof DynamoDBKnowledgeBase) {
+            convertFromAbstract(oldKnowledgeBase);
+            convertRemoved((DynamoDBKnowledgeBase)oldKnowledgeBase);
+        } else {
+            for (FailureCause cause : oldKnowledgeBase.getCauseNames()) {
+                saveCause(cause);
+            }
+        }
+    }
 
+    /**
+     * Copies all causes flagged as removed from the old database to this one.
+     *
+     * @param oldKnowledgeBase the old database.
+     * @throws Exception if something goes wrong.
+     */
+    protected void convertRemoved(DynamoDBKnowledgeBase oldKnowledgeBase) throws Exception {
+        Collection<FailureCause> removed = oldKnowledgeBase.getRemovedCauses();
+        for (FailureCause obj : removed) {
+            saveCause(obj);
+        }
+    }
+
+    /**
+     * Gets all causes flagged as removed in a "raw" JSON format.
+     *
+     * @return the list of removed causes.
+     * @throws Exception if so.
+     */
+    protected Collection<FailureCause> getRemovedCauses() throws Exception {
+        try {
+            DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            scan.setFilterExpression(" attribute_exists(#r) ");
+            return getDbMapper().scan(FailureCause.class, scan);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -302,7 +340,7 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
     }
 
-    public AmazonDynamoDB getDynamoDb() {
+    private AmazonDynamoDB getDynamoDb() {
         if (dynamoDB != null) {
             return dynamoDB;
         }
