@@ -24,6 +24,18 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
+import com.amazonaws.services.dynamodbv2.datamodeling.marshallers.ObjectToMapMarshaller;
+import com.amazonaws.services.dynamodbv2.datamodeling.marshallers.ObjectToStringMarshaller;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.internal.InternalUtils;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -32,6 +44,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
+import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.vz.mongodb.jackson.DBCursor;
 import net.vz.mongodb.jackson.JacksonDBCollection;
@@ -42,6 +55,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -51,16 +65,11 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.*;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertSame;
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.powermock.api.mockito.PowerMockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.*;
 
 
 /**
@@ -69,13 +78,17 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, Jenkins.DescriptorImpl.class})
 @PowerMockIgnore( {"javax.*"})
+@PrepareForTest({DynamoDBKnowledgeBase.class, Jenkins.class, Jenkins.DescriptorImpl.class})
 public class DynamoDBKnowledgeBaseTest {
 
 
     @Mock
     private Jenkins jenkins;
+    @Mock
+    private DynamoDBMapper dbMapper;
+    @Mock
+    private AmazonDynamoDB db;
 
     private JacksonDBCollection<FailureCause, String> collection;
     private JacksonDBCollection<Statistics, String> statisticsCollection;
@@ -90,25 +103,48 @@ public class DynamoDBKnowledgeBaseTest {
      * Common stuff to set up for the tests.
      */
     @Before
-    public void setUp() {
+    public void setUp() throws Exception{
         Authentication mockAuth = mock(Authentication.class);
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
         PowerMockito.when(Jenkins.getAuthentication()).thenReturn(mockAuth);
         PowerMockito.when(mockAuth.getName()).thenReturn("tester");
-        DynamoDBKnowledgeBase.DynamoDBKnowledgeBaseDescriptor foo = new DynamoDBKnowledgeBase.DynamoDBKnowledgeBaseDescriptor();
-        kb = new DynamoDBKnowledgeBase("", "", "default");
-//        collection = mock(JacksonDBCollection.class);
+
+//        PowerMockito.doReturn(discriptor).when(jenkins).getDescriptorByType(FailureCause.FailureCauseDescriptor.class);
+
+
+        kb = PowerMockito.spy(new DynamoDBKnowledgeBase("", "", "default"));
+        db = mock(AmazonDynamoDB.class);
+        dbMapper = spy(new DynamoDBMapper(db));
+        PowerMockito.doReturn(dbMapper).when(kb, "getDbMapper");
+
+        //        collection = mock(JacksonDBCollection.class);
 //        statisticsCollection = mock(JacksonDBCollection.class);
 //        Whitebox.setInternalState(kb, "jacksonCollection", collection);
 //        Whitebox.setInternalState(kb, "jacksonStatisticsCollection", statisticsCollection);
-//        indications = new LinkedList<Indication>();
-//        indication = new BuildLogIndication("something");
-//        indications.add(indication);
-//        mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
-//                "category", indications, null);
+        indications = new LinkedList<Indication>();
+        indication = new BuildLogIndication("something");
+        indications.add(indication);
+//        mockedCause = createFailureCause(null);
 //        mockedStatistics = new Statistics("projectName", 1, "", null, 1, null, "nodeName", "master", 0, "result",
 //                null, null);
+    }
+
+    public FailureCause createFailureCause(String id) throws Exception{
+        return new FailureCause(id, "myFailureCause", "description", "comment", new Date(),
+                "category", indications, null);
+    }
+
+    public void mockScanRequest(Collection<FailureCause> causes) throws Exception {
+        DynamoDBMapperTableModel fcModel = dbMapper.getTableModel(FailureCause.class);
+        Collection<Map<String, AttributeValue>> convertedFcs = new ArrayList<>();
+        for (FailureCause fc:causes) {
+            Map<String, AttributeValue> convertedFc = fcModel.convert(fc);
+            convertedFcs.add(convertedFc);
+        }
+
+        ScanResult mockedScanResult = spy(new ScanResult()).withItems(convertedFcs);
+        doReturn(mockedScanResult).when(db, "scan", Matchers.any());
     }
 
     /**
@@ -118,10 +154,12 @@ public class DynamoDBKnowledgeBaseTest {
      */
     @Test
     public void testFindOneCause() throws Exception {
-//        when(collection.findOneById(anyString())).thenReturn(mockedCause);
-        FailureCause fetchedCause = kb.getCause("2ce2ae7b-7f66-4a8c-984a-802a43d3a9a4");
+        String id = "2ce2ae7b-7f66-4a8c-984a-802a43d3a9a4";
+        FailureCause mockedCause = createFailureCause(id);
+        doReturn(mockedCause).when(dbMapper).load(FailureCause.class, id);
+        FailureCause fetchedCause = kb.getCause(id);
         assertNotNull("The fetched cause should not be null", fetchedCause);
-//        assertSame(mockedCause, fetchedCause);
+        assertSame(mockedCause, fetchedCause);
     }
 
     /**
@@ -131,17 +169,43 @@ public class DynamoDBKnowledgeBaseTest {
      */
     @Test
     public void testGetCauseNames() throws Exception {
-        DBCursor<FailureCause> cursor = mock(DBCursor.class);
-        List<FailureCause> list = new LinkedList<FailureCause>();
-        list.add(mockedCause);
-        when(cursor.next()).thenReturn(mockedCause);
-        when(cursor.hasNext()).thenReturn(true, false);
-        doReturn(cursor).when(collection).find(Matchers.<DBObject>any(), Matchers.<DBObject>any());
+        Collection<FailureCause> expectedCauses = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Integer id = i;
+            FailureCause cause = new FailureCause(id.toString(), "myFailureCause" + id.toString(), "description", "comment", new Date(),
+                    "category", indications, null);
+
+            // Null all fields except for Id and Name, as we are requesting only those two fields
+            cause.setDescription(null);
+            cause.setComment(null);
+            cause.setLastOccurred(null);
+            cause.setCategories(null);
+            cause.setIndications(null);
+            cause.setModifications(null);
+
+            expectedCauses.add(cause);
+        }
+
+        mockScanRequest(expectedCauses);
+        DynamoDBScanExpression scanExpression = PowerMockito.spy(new DynamoDBScanExpression());
+        whenNew(DynamoDBScanExpression.class).withAnyArguments().thenReturn(scanExpression);
+
         Collection<FailureCause> fetchedCauses = kb.getCauseNames();
-        assertNotNull("The fetched cause should not be null", fetchedCauses);
-        Iterator fetch = fetchedCauses.iterator();
-        assertTrue(fetch.hasNext());
-        assertSame(mockedCause, fetch.next());
+
+        Mockito.verify(scanExpression).addExpressionAttributeNamesEntry("#n", "name");
+        Mockito.verify(scanExpression).setProjectionExpression("id,#n");
+        Mockito.verify(scanExpression).setScanFilter(DynamoDBKnowledgeBase.NOT_REMOVED_FILTER_EXPRESSION);
+
+        assertNotNull("The fetched cause should not be null", fetchedCauses);;
+        // Convert fetchedCauses to list, because PaginatedList does not allow iterators
+        List<FailureCause> actualCauses = new ArrayList<>(fetchedCauses);
+        assertEquals(actualCauses, actualCauses);
+
+        for (FailureCause ac:actualCauses) {
+            assertNotNull("Id should not be null", ac.getId());
+            assertNotNull("Name should not be null", ac.getName());
+            assertNull("Description should be null", ac.getDescription());
+        }
     }
 
     /**
@@ -151,14 +215,13 @@ public class DynamoDBKnowledgeBaseTest {
      */
     @Test
     public void testAddCause() throws Exception {
-        WriteResult<FailureCause, String> result = mock(WriteResult.class);
-        when(result.getSavedObject()).thenReturn(mockedCause);
-        MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
-        Whitebox.setInternalState(kb, cache);
-        doReturn(result).when(collection).insert(Matchers.<FailureCause>any());
-        FailureCause addedCause = kb.addCause(mockedCause);
+        // This is not a very effective test, since addCause is just a passthrough to saveCause
+        FailureCause noIdCause = createFailureCause(null);
+        FailureCause idCause = createFailureCause("foo");
+        doReturn(idCause).when(kb).saveCause(noIdCause);
+        FailureCause addedCause = kb.addCause(noIdCause);
         assertNotNull(addedCause);
-        assertSame(mockedCause, addedCause);
+        assertNotSame(noIdCause, addedCause);
     }
 
     /**
@@ -168,26 +231,11 @@ public class DynamoDBKnowledgeBaseTest {
      */
     @Test
     public void testSaveCause() throws Exception {
-        indications = new LinkedList<Indication>();
-        indication = new BuildLogIndication("something");
-        indications.add(indication);
-        modifications = new LinkedList<FailureCauseModification>();
-        FailureCauseModification modification = new FailureCauseModification("ken", new Date());
-        modifications.add(modification);
-
-        mockedCause = new FailureCause(null, "myFailureCause", "description", "comment", new Date(),
-                "category", indications, modifications);
-        kb.saveCause(mockedCause);
-
-
-//        WriteResult<FailureCause, String> result = mock(WriteResult.class);
-//        when(result.getSavedObject()).thenReturn(mockedCause);
-//        MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
-//        Whitebox.setInternalState(kb, cache);
-//        doReturn(result).when(collection).save(Matchers.<FailureCause>any());
-//        FailureCause addedCause = kb.saveCause(mockedCause);
-//        assertNotNull(addedCause);
-//        assertSame(mockedCause, addedCause);
+        FailureCause cause = createFailureCause("foo");
+        doNothing().when(dbMapper).save(cause);
+        FailureCause savedCause = kb.saveCause(cause);
+        assertNotNull(savedCause);
+        assertSame(cause, savedCause);
     }
 
     /**
@@ -195,21 +243,21 @@ public class DynamoDBKnowledgeBaseTest {
      *
      * @throws Exception if unable to fetch statistics.
      */
-    @Test
+//    @Test
     public void testGetStatistics() throws Exception {
-        DBCursor<Statistics> cursor = mock(DBCursor.class);
-        List<Statistics> list = new LinkedList<Statistics>();
-        list.add(mockedStatistics);
-
-        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject>any());
-        when(cursor.limit(anyInt())).thenReturn(cursor);
-        when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
-        when(cursor.toArray()).thenReturn(list);
-
-        List<Statistics> fetchedStatistics = kb.getStatistics(null, 1);
-        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
-        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
-        assertSame(mockedStatistics, fetchedStatistics.get(0));
+//        DBCursor<Statistics> cursor = mock(DBCursor.class);
+//        List<Statistics> list = new LinkedList<Statistics>();
+//        list.add(mockedStatistics);
+//
+//        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject>any());
+//        when(cursor.limit(anyInt())).thenReturn(cursor);
+//        when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
+//        when(cursor.toArray()).thenReturn(list);
+//
+//        List<Statistics> fetchedStatistics = kb.getStatistics(null, 1);
+//        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
+//        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
+//        assertSame(mockedStatistics, fetchedStatistics.get(0));
     }
 
     /**
@@ -223,15 +271,15 @@ public class DynamoDBKnowledgeBaseTest {
         kb.getCauseNames();
     }
 
-    /**
-     * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testGetDynamoDB() throws Exception {
-        kb.getDynamoDb();
-    }
+//    /**
+//     * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
+//     *
+//     * @throws Exception if so.
+//     */
+//    @Test
+//    public void testGetDynamoDB() throws Exception {
+//        kb.getDynamoDb();
+//    }
 
     /**
      * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
@@ -245,6 +293,8 @@ public class DynamoDBKnowledgeBaseTest {
 
     @Test
     public void getCauses() throws Exception {
+        DynamoDBMapper mapper = mock(DynamoDBMapper.class);
+//        doReturn().when(mapper).save();
         Collection<FailureCause> causes = kb.getCauses();
         System.out.println("foo");
     }
@@ -258,6 +308,12 @@ public class DynamoDBKnowledgeBaseTest {
     @Test
     public void removeCause() throws Exception {
         FailureCause cause = kb.removeCause("bc3e1c3d-222e-43dd-8efc-2ddec79485b0");
+        System.out.println("foo");
+    }
+
+    @Test
+    public void getCategories() throws Exception {
+        List<String> foo = kb.getCategories();
         System.out.println("foo");
     }
 }
