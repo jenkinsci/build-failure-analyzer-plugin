@@ -5,6 +5,7 @@ import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
@@ -39,7 +41,8 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }};
 
     private static AmazonDynamoDB dynamoDB;
-    private static DynamoDBMapper dbMapper;
+    private DynamoDBMapper dbMapper;
+
     private String region;
     private String credentialsPath;
     private String credentialsProfile;
@@ -223,7 +226,19 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public List<String> getCategories() throws Exception {
-        return null;
+        try {
+            DynamoDBScanExpression scan = new DynamoDBScanExpression();
+            scan.setProjectionExpression("categories");
+            scan.setFilterExpression(" attribute_exists(categories) ");
+            List<FailureCause> causes = getDbMapper().scan(FailureCause.class, scan);
+            Set<String> categories = new HashSet<>();
+            for (FailureCause c:causes) {
+                categories.addAll(c.getCategories());
+            }
+            return new ArrayList<>(categories);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -288,12 +303,6 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }
 
     public AmazonDynamoDB getDynamoDb() {
-        /*
-         * The ProfileCredentialsProvider will return your [default]
-         * credential profile by reading from the credentials file located at
-         * (~/.aws/credentials).
-         */
-
         if (dynamoDB != null) {
             return dynamoDB;
         }
@@ -317,6 +326,16 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         return dynamoDB;
     }
 
+    private DynamoDBMapper getDbMapper() {
+        if (dbMapper != null) {
+            return dbMapper;
+        }
+        dbMapper = new DynamoDBMapper(getDynamoDb());
+        createTable(dbMapper.generateCreateTableRequest(FailureCause.class));
+
+        return dbMapper;
+    }
+
     private void createTable(CreateTableRequest request) {
         try {
             String tableName = request.getTableName();
@@ -328,16 +347,6 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         } catch (Exception e) {
             throw new AmazonClientException(e);
         }
-    }
-
-    private DynamoDBMapper getDbMapper() {
-        if (dbMapper != null) {
-            return dbMapper;
-        }
-        dbMapper = new DynamoDBMapper(getDynamoDb());
-        createTable(dbMapper.generateCreateTableRequest(FailureCause.class));
-
-        return dbMapper;
     }
 
     @Override
