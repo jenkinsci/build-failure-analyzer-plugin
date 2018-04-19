@@ -58,6 +58,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -700,6 +702,28 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     @DynamoDBIgnore
     public FailureCauseDescriptor getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(FailureCauseDescriptor.class);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof FailureCause)) {
+            return false;
+        }
+
+        Field[] fields = this.getClass().getDeclaredFields();
+        for (Field f:fields) {
+            try {
+                if (f.get(this) == null && f.get(o) == null) {
+                    continue;
+                }
+                if (!f.get(this).equals(f.get(o))) {
+                    return false;
+                }
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
