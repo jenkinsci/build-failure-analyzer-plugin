@@ -106,6 +106,15 @@ public abstract class Indication implements Describable<Indication>, Serializabl
         return getUserProvidedExpression();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Indication)) {
+            return false;
+        }
+
+        return this.pattern.equals(((Indication) o).pattern);
+    }
+
     /**
      * The descriptor for this indicator.
      */
