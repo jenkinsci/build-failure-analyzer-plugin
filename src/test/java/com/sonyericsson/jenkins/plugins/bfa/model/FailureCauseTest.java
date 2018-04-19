@@ -51,9 +51,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.junit.matchers.JUnitMatchers.hasItems;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -459,6 +457,30 @@ public class FailureCauseTest {
         FailureCause cause = new FailureCause("A Name", "The Description");
         cause.setId(origId);
         cause.doConfigSubmit(request, response);
+    }
+
+    public FailureCause getCauseForEquality(String name, Date date, List<Indication> i) {
+
+        return new FailureCause(name, "myFailureCause", "description", "comment", date,
+                "category", i, null);
+    }
+
+    @Test
+    public void testEquals() throws Exception {
+        Date d = new Date();
+        Indication i = new BuildLogIndication("something");
+        FailureCause cause1 = getCauseForEquality("foo", d, Collections.singletonList(i));
+        FailureCause cause2 = getCauseForEquality("foo", d, Collections.singletonList(i));
+        assertTrue(cause1.equals(cause2));
+    }
+
+    @Test
+    public void testNotEquals() throws Exception {
+        Date d = new Date();
+        Indication i = new BuildLogIndication("something");
+        FailureCause cause1 = getCauseForEquality("foo1", d, Collections.singletonList(i));
+        FailureCause cause2 = getCauseForEquality("foo2", d, Collections.singletonList(i));
+        assertTrue(cause1.equals(cause2));
     }
 
     /**

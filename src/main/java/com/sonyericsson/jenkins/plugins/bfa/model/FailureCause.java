@@ -24,8 +24,8 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.type.TypeReference;
-import com.fasterxml.jackson.databind.type.MapType;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -356,7 +356,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * The id.
-     *
+     * @param id String
      */
     @Id
     @ObjectId
@@ -375,7 +375,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Setter for the name.
-     *
+     * @param name String
      */
     public void setName(String name) {
         this.name = name;
@@ -392,7 +392,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Setter for the description.
-     *
+     * @param description String
      */
     public void setDescription(String description) { this.description =  description; }
 
@@ -407,7 +407,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Setter for the comment.
-     *
+     * @param comment String
      */
     public void setComment(String comment) { this.comment = comment; }
 
@@ -421,8 +421,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     }
 
     /**
-     * Setter for the comment.
-     *
+     * Setter for removed. This creates the removed info before setting it
      */
     public void setRemoved() {
         TimeZone tz = TimeZone.getTimeZone("UTC");
@@ -433,12 +432,12 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         Map<String, String> removedInfo = new HashMap<>();
         removedInfo.put("by", Jenkins.getAuthentication().getName());
         removedInfo.put("timestamp", nowAsISO);
-        this.removed = removedInfo;
+        setRemoved(removedInfo);
     }
 
     /**
-     * Setter for the comment.
-     *
+     * Setter for removed, when removed is defined elsewhere
+     * @param removedInfo map containing "by" and "timestamp" keys
      */
     public void setRemoved(Map<String, String> removedInfo) {
         this.removed = removedInfo;
@@ -500,7 +499,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Setter for the list of modifications.
-     *
+     * @param modifications List of {@link FailureCauseModification}
      */
     public void setModifications(List<FailureCauseModification> modifications) {
         this.modifications = modifications;
@@ -650,7 +649,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     /**
      * Setter for the list of indications.
-     *
+     * @param indications List of {@link Indication}
      */
     public void setIndications(List<Indication> indications) { this.indications = indications; }
 
@@ -706,24 +705,23 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     @Override
     public boolean equals(Object o) {
+        if (o == this) return true;
         if (!(o instanceof FailureCause)) {
             return false;
         }
 
+        FailureCause fc = (FailureCause) o;
+
         Field[] fields = this.getClass().getDeclaredFields();
+        EqualsBuilder eb = new EqualsBuilder();
         for (Field f:fields) {
             try {
-                if (f.get(this) == null && f.get(o) == null) {
-                    continue;
-                }
-                if (!f.get(this).equals(f.get(o))) {
-                    return false;
-                }
+                eb.append(f.get(this), f.get(fc));
             } catch (IllegalArgumentException | IllegalAccessException e) {
                 return false;
             }
         }
-        return true;
+        return eb.isEquals();
     }
 
     /**

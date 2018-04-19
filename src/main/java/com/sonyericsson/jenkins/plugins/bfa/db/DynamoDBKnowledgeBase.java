@@ -5,8 +5,9 @@ import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
-import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
@@ -22,19 +23,25 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-
-import javax.xml.stream.events.Attribute;
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+/**
+ * Handling of the Amazon Web Services DynamoDB way of saving the knowledge base.
+ *
+ * @author Ken Petti &lt;kpetti@constantcontact.com&gt;
+ */
 public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
     private static final String DYNAMODB_DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
-    public static final String DYNAMODB_DEFAULT_CREDENTIALS_PATH = System.getProperty("user.home") + "/.aws/credentials";
+    private static final String DYNAMODB_DEFAULT_CREDENTIALS_PATH =
+            System.getProperty("user.home") + "/.aws/credentials";
     private static final String DYNAMODB_DEFAULT_CREDENTIAL_PROFILE = "default";
     static final Map<String, Condition> NOT_REMOVED_FILTER_EXPRESSION = new HashMap<String, Condition>(){{
         put("_removed", new Condition().withComparisonOperator("NULL"));
@@ -47,6 +54,36 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     private String credentialsPath;
     private String credentialsProfile;
 
+    /**
+     * Getter for the DynamoDB region.
+     * @return the region.
+     */
+    public String getRegion() {
+        return region;
+    }
+
+    /**
+     * Getter for the AWS credentials path.
+     * @return the credentialsPath.
+     */
+    public String getCredentialsPath() {
+        return credentialsPath;
+    }
+
+    /**
+     * Getter for the AWS credentials profile.
+     * @return the credentialsProfile string.
+     */
+    public String getCredentialsProfile() {
+        return credentialsProfile;
+    }
+
+    /**
+     * Standard constructor.
+     * @param region the AWS region to connect to DynamoDB with.
+     * @param credentialsPath the path to a local file containing AWS credentials.
+     * @param credentialsProfile the AWS credential profile to use for connecting to DynamoDB.
+     */
     @DataBoundConstructor
     public DynamoDBKnowledgeBase(String region, String credentialsPath, String credentialsProfile) {
         if (region == null || region.isEmpty()) {
@@ -62,18 +99,6 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         this.region = region;
         this.credentialsPath = credentialsPath;
         this.credentialsProfile = credentialsProfile;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    public String getCredentialsPath() {
-        return credentialsPath;
-    }
-
-    public String getCredentialsProfile() {
-        return credentialsProfile;
     }
 
     /**
@@ -287,7 +312,14 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public boolean equals(KnowledgeBase oldKnowledgeBase) {
-        return false;
+        if (getClass().isInstance(oldKnowledgeBase)) {
+            DynamoDBKnowledgeBase oldDynamoDBKnowledgeBase = (DynamoDBKnowledgeBase)oldKnowledgeBase;
+            return oldDynamoDBKnowledgeBase.getRegion().equals(region)
+                    && oldDynamoDBKnowledgeBase.getCredentialsPath().equals(credentialsPath)
+                    && oldDynamoDBKnowledgeBase.getCredentialsProfile().equals(credentialsProfile);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -340,19 +372,25 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
     }
 
+    /**
+     * Get an instance of {@link AmazonDynamoDB}. Connects to the defined region with the defined AWS
+     * credentials file/profile. If this has been called before, it will return the cached version.
+     * @return instance of AmazonDynamoDB
+     */
     private AmazonDynamoDB getDynamoDb() {
         if (dynamoDB != null) {
             return dynamoDB;
         }
 
-        ProfileCredentialsProvider credentialsProvider = new ProfileCredentialsProvider(credentialsPath, credentialsProfile);
+        ProfileCredentialsProvider credentialsProvider =
+                new ProfileCredentialsProvider(credentialsPath, credentialsProfile);
         try {
             credentialsProvider.getCredentials();
         } catch (Exception e) {
             throw new AmazonClientException(
-                    "Cannot load the credentials from the credential profiles file. " +
-                            "Please make sure that your credentials file is at the correct " +
-                            "location (~/.aws/credentials), and is in valid format.",
+                    "Cannot load the credentials from the credential profiles file. "
+                            + "Please make sure that your credentials file is at the correct "
+                            + "location (~/.aws/credentials), and is in valid format.",
                     e);
         }
 
@@ -374,11 +412,16 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         return dbMapper;
     }
 
+    /**
+     * Creates a DynamoDB table.
+     * @param request {@link CreateTableRequest}
+     */
     private void createTable(CreateTableRequest request) {
         try {
             String tableName = request.getTableName();
             AmazonDynamoDB db = getDynamoDb();
-            request.setProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+            request.setProvisionedThroughput(new ProvisionedThroughput()
+                    .withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
             TableUtils.createTableIfNotExists(db, request);
             TableUtils.waitUntilActive(db, tableName);
 
@@ -387,6 +430,10 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         }
     }
 
+    /**
+     * Use Jenkins to get and instance of {@link DynamoDBKnowledgeBaseDescriptor}
+     * @return Descriptor
+     */
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(DynamoDBKnowledgeBaseDescriptor.class);
@@ -471,6 +518,8 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         /**
          * Tests if the provided parameters can connect to the DynamoDB service.
          * @param region the region name.
+         * @param credentialsPath the filepath to credentials.
+         * @param credentialProfile the credential profile to use.
          * @return {@link FormValidation#ok() } if can be done,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */

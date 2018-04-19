@@ -29,8 +29,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
@@ -54,7 +52,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import java.util.*;
 
 import static junit.framework.Assert.*;
-import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.*;
 
 
@@ -79,7 +76,7 @@ public class DynamoDBKnowledgeBaseTest {
     private List<Indication> indications;
     private Indication indication;
     private Statistics mockedStatistics;
-    private String mockJenkinsUserName;
+    private String mockJenkinsUserName = "tester";
 
     /**
      * Common stuff to set up for the tests.
@@ -176,7 +173,7 @@ public class DynamoDBKnowledgeBaseTest {
         assertNotNull("The fetched cause should not be null", fetchedCauses);;
         // Convert fetchedCauses to list, because PaginatedList does not allow iterators
         List<FailureCause> actualCauses = new ArrayList<>(fetchedCauses);
-        assertEquals(expectedCauses, actualCauses);
+        assertTrue(CollectionUtils.isEqualCollection(expectedCauses, actualCauses));
     }
 
     /**

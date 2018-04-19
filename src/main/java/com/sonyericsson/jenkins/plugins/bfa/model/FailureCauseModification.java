@@ -57,6 +57,9 @@ public class FailureCauseModification implements Serializable {
         }
     }
 
+    /**
+     * Empty constructor used for DynamoDB converting.
+     */
     @DataBoundConstructor
     public FailureCauseModification() {};
 
@@ -75,7 +78,7 @@ public class FailureCauseModification implements Serializable {
 
     /**
      * Setter for the time.
-     *
+     * @param time {@link Date}
      */
     public void setTime(Date time) { this.time = time; }
 
@@ -90,7 +93,7 @@ public class FailureCauseModification implements Serializable {
 
     /**
      * Setter for the user.
-     *
+     * @param user String of user name
      */
     public void setUser(String user) { this.user = user; }
 

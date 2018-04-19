@@ -108,11 +108,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Indication)) {
-            return false;
-        }
-
-        return this.pattern.equals(((Indication) o).pattern);
+        return o instanceof Indication && this.getPattern().equals(((Indication) o).getPattern());
     }
 
     /**
