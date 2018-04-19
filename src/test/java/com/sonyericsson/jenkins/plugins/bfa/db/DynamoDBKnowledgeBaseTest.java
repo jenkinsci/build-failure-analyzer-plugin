@@ -27,29 +27,18 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
-import com.amazonaws.services.dynamodbv2.datamodeling.marshallers.ObjectToMapMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.marshallers.ObjectToStringMarshaller;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.internal.InternalUtils;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
-import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import net.vz.mongodb.jackson.DBCursor;
-import net.vz.mongodb.jackson.JacksonDBCollection;
-import net.vz.mongodb.jackson.WriteResult;
 import org.acegisecurity.Authentication;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,15 +49,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.reflect.Whitebox;
 
 
 import java.util.*;
 
 import static junit.framework.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.powermock.api.mockito.PowerMockito.*;
 
 
@@ -82,7 +68,6 @@ import static org.powermock.api.mockito.PowerMockito.*;
 @PrepareForTest({DynamoDBKnowledgeBase.class, Jenkins.class, Jenkins.DescriptorImpl.class})
 public class DynamoDBKnowledgeBaseTest {
 
-
     @Mock
     private Jenkins jenkins;
     @Mock
@@ -90,52 +75,52 @@ public class DynamoDBKnowledgeBaseTest {
     @Mock
     private AmazonDynamoDB db;
 
-    private JacksonDBCollection<FailureCause, String> collection;
-    private JacksonDBCollection<Statistics, String> statisticsCollection;
     private DynamoDBKnowledgeBase kb;
     private List<Indication> indications;
-    private List<FailureCauseModification> modifications;
     private Indication indication;
-    private FailureCause mockedCause;
     private Statistics mockedStatistics;
+    private String mockJenkinsUserName;
 
     /**
      * Common stuff to set up for the tests.
      */
     @Before
     public void setUp() throws Exception{
+        // Mock interactions with Jenkins
         Authentication mockAuth = mock(Authentication.class);
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
         PowerMockito.when(Jenkins.getAuthentication()).thenReturn(mockAuth);
-        PowerMockito.when(mockAuth.getName()).thenReturn("tester");
+        PowerMockito.when(mockAuth.getName()).thenReturn(mockJenkinsUserName);
 
-//        PowerMockito.doReturn(discriptor).when(jenkins).getDescriptorByType(FailureCause.FailureCauseDescriptor.class);
-
-
+        // Mock DynamoDB and DBMapper
         kb = PowerMockito.spy(new DynamoDBKnowledgeBase("", "", "default"));
         db = mock(AmazonDynamoDB.class);
         dbMapper = spy(new DynamoDBMapper(db));
         PowerMockito.doReturn(dbMapper).when(kb, "getDbMapper");
 
-        //        collection = mock(JacksonDBCollection.class);
-//        statisticsCollection = mock(JacksonDBCollection.class);
-//        Whitebox.setInternalState(kb, "jacksonCollection", collection);
-//        Whitebox.setInternalState(kb, "jacksonStatisticsCollection", statisticsCollection);
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
-//        mockedCause = createFailureCause(null);
-//        mockedStatistics = new Statistics("projectName", 1, "", null, 1, null, "nodeName", "master", 0, "result",
-//                null, null);
     }
 
+    /**
+     * Helper to create a FailureCause during testing
+     * @param id string id FailureCause to return
+     * @return FailureCause
+     * @throws Exception if so.
+     */
     public FailureCause createFailureCause(String id) throws Exception{
         return new FailureCause(id, "myFailureCause", "description", "comment", new Date(),
                 "category", indications, null);
     }
 
-    public void mockScanRequest(Collection<FailureCause> causes) throws Exception {
+    /**
+     * Sets up a mock scan result, which DynamoDB uses when creating a paginated list of results
+     * @param causes collection of FailureCauses
+     * @throws Exception if so.
+     */
+    public void mockScanResult(Collection<FailureCause> causes) throws Exception {
         DynamoDBMapperTableModel fcModel = dbMapper.getTableModel(FailureCause.class);
         Collection<Map<String, AttributeValue>> convertedFcs = new ArrayList<>();
         for (FailureCause fc:causes) {
@@ -174,24 +159,16 @@ public class DynamoDBKnowledgeBaseTest {
             Integer id = i;
             FailureCause cause = new FailureCause(id.toString(), "myFailureCause" + id.toString(), "description", "comment", new Date(),
                     "category", indications, null);
-
-            // Null all fields except for Id and Name, as we are requesting only those two fields
-            cause.setDescription(null);
-            cause.setComment(null);
-            cause.setLastOccurred(null);
-            cause.setCategories(null);
-            cause.setIndications(null);
-            cause.setModifications(null);
-
             expectedCauses.add(cause);
         }
 
-        mockScanRequest(expectedCauses);
+        mockScanResult(expectedCauses);
         DynamoDBScanExpression scanExpression = PowerMockito.spy(new DynamoDBScanExpression());
         whenNew(DynamoDBScanExpression.class).withAnyArguments().thenReturn(scanExpression);
 
         Collection<FailureCause> fetchedCauses = kb.getCauseNames();
 
+        // Ensure the scan filtering is actually called
         Mockito.verify(scanExpression).addExpressionAttributeNamesEntry("#n", "name");
         Mockito.verify(scanExpression).setProjectionExpression("id,#n");
         Mockito.verify(scanExpression).setScanFilter(DynamoDBKnowledgeBase.NOT_REMOVED_FILTER_EXPRESSION);
@@ -199,13 +176,7 @@ public class DynamoDBKnowledgeBaseTest {
         assertNotNull("The fetched cause should not be null", fetchedCauses);;
         // Convert fetchedCauses to list, because PaginatedList does not allow iterators
         List<FailureCause> actualCauses = new ArrayList<>(fetchedCauses);
-        assertEquals(actualCauses, actualCauses);
-
-        for (FailureCause ac:actualCauses) {
-            assertNotNull("Id should not be null", ac.getId());
-            assertNotNull("Name should not be null", ac.getName());
-            assertNull("Description should be null", ac.getDescription());
-        }
+        assertEquals(expectedCauses, actualCauses);
     }
 
     /**
@@ -238,82 +209,91 @@ public class DynamoDBKnowledgeBaseTest {
         assertSame(cause, savedCause);
     }
 
-    /**
-     * Tests fetching statistics.
-     *
-     * @throws Exception if unable to fetch statistics.
-     */
-//    @Test
-    public void testGetStatistics() throws Exception {
-//        DBCursor<Statistics> cursor = mock(DBCursor.class);
-//        List<Statistics> list = new LinkedList<Statistics>();
-//        list.add(mockedStatistics);
-//
-//        doReturn(cursor).when(statisticsCollection).find(Matchers.<DBObject>any());
-//        when(cursor.limit(anyInt())).thenReturn(cursor);
-//        when(cursor.sort(any(DBObject.class))).thenReturn(cursor);
-//        when(cursor.toArray()).thenReturn(list);
-//
-//        List<Statistics> fetchedStatistics = kb.getStatistics(null, 1);
-//        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
-//        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
-//        assertSame(mockedStatistics, fetchedStatistics.get(0));
+    @Test
+    public void testGetShallowCauses() throws Exception {
+        Collection<FailureCause> expectedCauses = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Integer id = i;
+            FailureCause cause = createFailureCause(id.toString());
+            expectedCauses.add(cause);
+        }
+
+        mockScanResult(expectedCauses);
+        DynamoDBScanExpression scanExpression = PowerMockito.spy(new DynamoDBScanExpression());
+        whenNew(DynamoDBScanExpression.class).withAnyArguments().thenReturn(scanExpression);
+
+        Collection<FailureCause> fetchedCauses = kb.getShallowCauses();
+        Mockito.verify(scanExpression).addExpressionAttributeNamesEntry("#n", "name");
+        Mockito.verify(scanExpression).addExpressionAttributeNamesEntry("#c", "comment");
+        Mockito.verify(scanExpression).addExpressionAttributeNamesEntry("#r", "_removed");
+        Mockito.verify(scanExpression).setProjectionExpression("id,#n,description,categories,#c,modifications,lastOccurred");
+        Mockito.verify(scanExpression).setFilterExpression(" attribute_not_exists(#r) ");
+
+        assertNotNull("The fetched cause should not be null", fetchedCauses);;
+        // Convert fetchedCauses to list, because PaginatedList does not allow iterators
+        List<FailureCause> actualCauses = new ArrayList<>(fetchedCauses);
+        assertEquals(expectedCauses, actualCauses);
     }
 
     /**
-     * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
-     *
+     * Test that the cause gets updated with removed info
      * @throws Exception if so.
      */
-    @Test(expected = MongoException.class)
-    public void testThrowMongo() throws Exception {
-        when(collection.find(Matchers.<DBObject>any(), Matchers.<DBObject>any())).thenThrow(MongoException.class);
-        kb.getCauseNames();
-    }
-
-//    /**
-//     * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
-//     *
-//     * @throws Exception if so.
-//     */
-//    @Test
-//    public void testGetDynamoDB() throws Exception {
-//        kb.getDynamoDb();
-//    }
-
-    /**
-     * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
-     *
-     * @throws Exception if so.
-     */
-//    @Test
-//    public void testCreateTables() throws Exception {
-//        kb.createTable();
-//    }
-
     @Test
-    public void getCauses() throws Exception {
-        DynamoDBMapper mapper = mock(DynamoDBMapper.class);
-//        doReturn().when(mapper).save();
-        Collection<FailureCause> causes = kb.getCauses();
-        System.out.println("foo");
+    public void testRemoveCause() throws Exception {
+        String id = "test";
+        FailureCause cause = createFailureCause(id);
+
+        doReturn(cause).when(dbMapper).load(FailureCause.class, id);
+        doNothing().when(dbMapper).save(cause);
+        FailureCause actualCause = kb.removeCause(id);
+        assertNotNull(actualCause);
+        assertSame(cause, actualCause);
+        assertNotNull(actualCause.getRemoved());
+        assertEquals(mockJenkinsUserName, actualCause.getRemoved().get("by"));
     }
 
     @Test
-    public void getShallowCauses() throws Exception {
-        Collection<FailureCause> causes = kb.getShallowCauses();
-        System.out.println("foo");
+    public void testGetCategories() throws Exception {
+        List<String> expectedCategories = new ArrayList<>();
+        expectedCategories.add("category0");
+        expectedCategories.add("category1");
+        expectedCategories.add("category2");
+
+        Collection<FailureCause> causes = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Integer id = i;
+            FailureCause cause = new FailureCause(id.toString(), "myFailureCause" + id.toString(), "description", "comment", new Date(),
+                    "category" + id.toString(), indications, null);
+            causes.add(cause);
+        }
+
+        mockScanResult(causes);
+        DynamoDBScanExpression scanExpression = PowerMockito.spy(new DynamoDBScanExpression());
+        whenNew(DynamoDBScanExpression.class).withAnyArguments().thenReturn(scanExpression);
+
+        List<String> actualCategories = kb.getCategories();
+        Mockito.verify(scanExpression).setProjectionExpression("categories");
+        Mockito.verify(scanExpression).setFilterExpression(" attribute_exists(categories) ");
+        assertNotNull(actualCategories);
+
+        // Values should be the same, but might be in different order
+        assertTrue(CollectionUtils.isEqualCollection(expectedCategories, actualCategories));
     }
 
     @Test
-    public void removeCause() throws Exception {
-        FailureCause cause = kb.removeCause("bc3e1c3d-222e-43dd-8efc-2ddec79485b0");
-        System.out.println("foo");
-    }
+    public void testConvertFrom() throws Exception {
+        LocalFileKnowledgeBase localKb = spy(new LocalFileKnowledgeBase());
+        Collection<FailureCause> causes = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Integer id = i;
+            FailureCause cause = createFailureCause(id.toString());
+            causes.add(cause);
+        }
 
-    @Test
-    public void getCategories() throws Exception {
-        List<String> foo = kb.getCategories();
-        System.out.println("foo");
+        doReturn(causes).when(localKb).getCauseNames();
+        doReturn(createFailureCause("foo")).when(kb).saveCause(Matchers.any(FailureCause.class));
+        kb.convertFrom(localKb);
+        Mockito.verify(kb, Mockito.times(3)).saveCause(Matchers.any(FailureCause.class));
     }
 }
