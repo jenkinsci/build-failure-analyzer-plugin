@@ -459,28 +459,40 @@ public class FailureCauseTest {
         cause.doConfigSubmit(request, response);
     }
 
+    /**
+     * Helper to return instance of {@link FailureCause}
+     * @param name name of the cause
+     * @param date instance of {@link Date}
+     * @param i list of {@link Indication}
+     * @return {@link FailureCause}
+     */
     public FailureCause getCauseForEquality(String name, Date date, List<Indication> i) {
-
         return new FailureCause(name, "myFailureCause", "description", "comment", date,
                 "category", i, null);
     }
 
+    /**
+     * Test two {@link FailureCause} instances are equal
+     */
     @Test
-    public void testEquals() throws Exception {
+    public void testEquals() {
         Date d = new Date();
         Indication i = new BuildLogIndication("something");
         FailureCause cause1 = getCauseForEquality("foo", d, Collections.singletonList(i));
         FailureCause cause2 = getCauseForEquality("foo", d, Collections.singletonList(i));
-        assertTrue(cause1.equals(cause2));
+        assertEquals(cause1, cause2);
     }
 
+    /**
+     * Test two {@link FailureCause} instances are not equal
+     */
     @Test
-    public void testNotEquals() throws Exception {
+    public void testNotEquals(){
         Date d = new Date();
         Indication i = new BuildLogIndication("something");
         FailureCause cause1 = getCauseForEquality("foo1", d, Collections.singletonList(i));
         FailureCause cause2 = getCauseForEquality("foo2", d, Collections.singletonList(i));
-        assertTrue(cause1.equals(cause2));
+        assertNotEquals(cause1, cause2);
     }
 
     /**

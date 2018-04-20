@@ -711,7 +711,6 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
 
         FailureCause fc = (FailureCause) o;
-
         Field[] fields = this.getClass().getDeclaredFields();
         EqualsBuilder eb = new EqualsBuilder();
         for (Field f:fields) {
