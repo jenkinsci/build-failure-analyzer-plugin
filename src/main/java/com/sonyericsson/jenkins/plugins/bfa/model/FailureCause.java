@@ -437,7 +437,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     public void setRemoved() {
         TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        // Quoted "Z" to indicate UTC, no timezone offset
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         df.setTimeZone(tz);
         String nowAsISO = df.format(new Date());
 
