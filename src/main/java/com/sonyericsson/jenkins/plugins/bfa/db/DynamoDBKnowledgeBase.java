@@ -323,6 +323,30 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
+     * Overrides base Object equals.
+     * @param other object to check
+     * @return boolean if values are equal
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof KnowledgeBase) {
+            return this.equals((KnowledgeBase)other);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Makes checkstyle happy.
+     * @return hashcode of class
+     */
+    @Override
+    public int hashCode() {
+        //Making checkstyle happy.
+        return getClass().getName().hashCode();
+    }
+
+    /**
      * Called when the KnowledgeBase should be up and running.
      *
      * @throws Exception if anything goes wrong during the startup.
@@ -402,6 +426,10 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
         return dynamoDB;
     }
 
+    /**
+     * Get a cached or new instance of {@link DynamoDBMapper}.
+     * @return dbMapper
+     */
     private DynamoDBMapper getDbMapper() {
         if (dbMapper != null) {
             return dbMapper;
@@ -431,7 +459,7 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * Use Jenkins to get and instance of {@link DynamoDBKnowledgeBaseDescriptor}
+     * Use Jenkins to get and instance of {@link DynamoDBKnowledgeBaseDescriptor}.
      * @return Descriptor
      */
     @Override
@@ -474,6 +502,10 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
             return DYNAMODB_DEFAULT_CREDENTIAL_PROFILE;
         }
 
+        /**
+         * Get a list of valid AWS regions for Jelly.
+         * @return ListBoxModel containing AWS regions
+         */
         public ListBoxModel doFillRegionItems() {
             ListBoxModel items = new ListBoxModel();
             for (Region r:RegionUtils.getRegions()) {

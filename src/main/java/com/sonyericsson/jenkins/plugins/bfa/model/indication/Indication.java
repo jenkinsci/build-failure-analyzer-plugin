@@ -109,7 +109,17 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     @Override
     public boolean equals(Object o) {
         return o instanceof Indication && this.getUserProvidedExpression().equals(
-                ((Indication) o).getUserProvidedExpression());
+                ((Indication)o).getUserProvidedExpression());
+    }
+
+    /**
+     * Makes checkstyle happy.
+     * @return hashcode of class
+     */
+    @Override
+    public int hashCode() {
+        //Making checkstyle happy.
+        return getClass().getName().hashCode();
     }
 
     /**
