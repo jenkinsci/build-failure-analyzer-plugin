@@ -39,6 +39,7 @@ import java.util.Set;
  */
 public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
+    private static final long serialVersionUID = 1;
     private static final String DYNAMODB_DEFAULT_REGION = Regions.DEFAULT_REGION.getName();
     private static final String DYNAMODB_DEFAULT_CREDENTIALS_PATH =
             System.getProperty("user.home") + "/.aws/credentials";
@@ -48,7 +49,7 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
     }};
 
     private static AmazonDynamoDB dynamoDB;
-    private DynamoDBMapper dbMapper;
+    private transient DynamoDBMapper dbMapper;
 
     private String region;
     private String credentialsPath;
@@ -106,11 +107,10 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * phase hence it should be returned as quickly as possible, so the list could be cached.
      *
      * @return the full list of causes.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     // TODO: 4/19/18 Add caching here
     @Override
-    public Collection<FailureCause> getCauses() throws UnsupportedOperationException {
+    public Collection<FailureCause> getCauses() {
         DynamoDBScanExpression scan = new DynamoDBScanExpression();
         scan.setScanFilter(NOT_REMOVED_FILTER_EXPRESSION);
         return getDbMapper().scan(FailureCause.class, scan);
@@ -121,10 +121,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * they will be used for editing. The objects returned should contain at least the id and the name of the cause.
      *
      * @return the full list of the names and ids of the causes.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     @Override
-    public Collection<FailureCause> getCauseNames() throws UnsupportedOperationException {
+    public Collection<FailureCause> getCauseNames() {
         DynamoDBScanExpression scan = new DynamoDBScanExpression();
         scan.addExpressionAttributeNamesEntry("#n", "name");
         scan.setProjectionExpression("id,#n");
@@ -139,11 +138,10 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * comment, lastOccurred and categories are preferred as well.
      *
      * @return a shallow list of all causes.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      * @see #getCauseNames()
      */
     @Override
-    public Collection<FailureCause> getShallowCauses() throws UnsupportedOperationException {
+    public Collection<FailureCause> getShallowCauses() {
         DynamoDBScanExpression scan = new DynamoDBScanExpression();
         // The following attributes are reserved words in Dynamo, so we need to substitute the actual name for
         // something safe
@@ -161,10 +159,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      *
      * @param id the id of the cause.
      * @return the cause or null if a cause with that id could not be found.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     @Override
-    public FailureCause getCause(String id) throws UnsupportedOperationException {
+    public FailureCause getCause(String id) {
         return getDbMapper().load(FailureCause.class, id);
     }
 
@@ -173,10 +170,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      *
      * @param cause the cause to add.
      * @return the same cause but with a new id.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     @Override
-    public FailureCause addCause(FailureCause cause) throws UnsupportedOperationException {
+    public FailureCause addCause(FailureCause cause) {
         return saveCause(cause);
     }
 
@@ -185,10 +181,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      *
      * @param id the id of the cause to remove.
      * @return the removed FailureCause.
-     * @throws UnsupportedOperationException if so.
      */
     @Override
-    public FailureCause removeCause(String id) throws UnsupportedOperationException {
+    public FailureCause removeCause(String id) {
         FailureCause cause = getDbMapper().load(FailureCause.class, id);
         cause.setRemoved();
         getDbMapper().save(cause);
@@ -202,10 +197,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      *
      * @param cause the cause to add.
      * @return the same cause but with a new id.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     @Override
-    public FailureCause saveCause(FailureCause cause) throws UnsupportedOperationException {
+    public FailureCause saveCause(FailureCause cause) {
         getDbMapper().save(cause);
         return cause;
     }
@@ -233,9 +227,8 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * Copies all causes flagged as removed from the old database to this one.
      *
      * @param oldKnowledgeBase the old database.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
-    private void convertRemoved(DynamoDBKnowledgeBase oldKnowledgeBase) throws UnsupportedOperationException {
+    private void convertRemoved(DynamoDBKnowledgeBase oldKnowledgeBase) {
         Collection<FailureCause> removed = oldKnowledgeBase.getRemovedCauses();
         for (FailureCause obj : removed) {
             saveCause(obj);
@@ -246,9 +239,8 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * Gets all causes flagged as removed in a "raw" JSON format.
      *
      * @return the list of removed causes.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
-    private Collection<FailureCause> getRemovedCauses() throws UnsupportedOperationException {
+    private Collection<FailureCause> getRemovedCauses() {
         DynamoDBScanExpression scan = new DynamoDBScanExpression();
         scan.setFilterExpression(" attribute_exists(#r) ");
         return getDbMapper().scan(FailureCause.class, scan);
@@ -258,10 +250,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
      * Gets the unique categories of all FailureCauses.
      *
      * @return the list of categories.
-     * @throws UnsupportedOperationException if DynamoDB does not support the load/scan/save request.
      */
     @Override
-    public List<String> getCategories() throws UnsupportedOperationException {
+    public List<String> getCategories() {
         DynamoDBScanExpression scan = new DynamoDBScanExpression();
         scan.setProjectionExpression("categories");
         scan.setFilterExpression(" attribute_exists(categories) ");
@@ -317,11 +308,9 @@ public class DynamoDBKnowledgeBase extends KnowledgeBase {
 
     /**
      * Called when the KnowledgeBase should be up and running.
-     *
-     * @throws AmazonClientException if anything goes wrong during the startup.
      */
     @Override
-    public void start() throws AmazonClientException {
+    public void start() {
         getDynamoDb();
     }
 

@@ -80,7 +80,7 @@ public class FailureCauseModification implements Serializable {
      * Setter for the time.
      * @param time {@link Date}
      */
-    public void setTime(Date time) { this.time = time; }
+    public void setTime(Date time) { this.time = new Date(time.getTime()); }
 
     /**
      * Getter for the user.
