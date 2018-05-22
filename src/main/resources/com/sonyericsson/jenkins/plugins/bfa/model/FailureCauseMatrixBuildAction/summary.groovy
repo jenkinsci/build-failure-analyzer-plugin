@@ -124,7 +124,7 @@ def displayCauses(cause, run, indent, links) {
                 br {}
                 br {}
                 b(style: "font-weight: normal") {
-                    text(cause.description)
+                    raw(app.markupFormatter.translate(cause.description))
                 }
                 br {}
                 cause.getIndications().each { indication ->
