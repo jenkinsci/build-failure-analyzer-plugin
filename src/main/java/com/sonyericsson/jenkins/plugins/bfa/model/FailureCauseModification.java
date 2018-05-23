@@ -23,8 +23,10 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -34,6 +36,7 @@ import java.util.Date;
  *
  * @author Felix Hall &lt;felix.hall@sonymobile.com&gt;
  */
+@DynamoDBDocument
 public class FailureCauseModification implements Serializable {
     private String user;
     private Date time;
@@ -55,6 +58,12 @@ public class FailureCauseModification implements Serializable {
     }
 
     /**
+     * Empty constructor used for DynamoDB converting.
+     */
+    @DataBoundConstructor
+    public FailureCauseModification() {};
+
+    /**
      * Getter for the time.
      *
      * @return The time at which the modification was done.
@@ -68,6 +77,12 @@ public class FailureCauseModification implements Serializable {
     }
 
     /**
+     * Setter for the time.
+     * @param time {@link Date}
+     */
+    public void setTime(Date time) { this.time = new Date(time.getTime()); }
+
+    /**
      * Getter for the user.
      *
      * @return The user who made the modification.
@@ -75,5 +90,11 @@ public class FailureCauseModification implements Serializable {
     public String getUser() {
         return user;
     }
+
+    /**
+     * Setter for the user.
+     * @param user String of user name
+     */
+    public void setUser(String user) { this.user = user; }
 
 }

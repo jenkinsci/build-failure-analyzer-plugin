@@ -52,8 +52,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertSame;
 import static org.junit.matchers.JUnitMatchers.hasItems;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -459,6 +460,42 @@ public class FailureCauseTest {
         FailureCause cause = new FailureCause("A Name", "The Description");
         cause.setId(origId);
         cause.doConfigSubmit(request, response);
+    }
+
+    /**
+     * Helper to return instance of {@link FailureCause}.
+     * @param name name of the cause
+     * @param date instance of {@link Date}
+     * @param i list of {@link Indication}
+     * @return {@link FailureCause}
+     */
+    public FailureCause getCauseForEquality(String name, Date date, List<Indication> i) {
+        return new FailureCause(name, "myFailureCause", "description", "comment", date,
+                "category", i, null);
+    }
+
+    /**
+     * Test two {@link FailureCause} instances are equal.
+     */
+    @Test
+    public void testEquals() {
+        Date d = new Date();
+        Indication i = new BuildLogIndication("something");
+        FailureCause cause1 = getCauseForEquality("foo", d, Collections.singletonList(i));
+        FailureCause cause2 = getCauseForEquality("foo", d, Collections.singletonList(i));
+        assertEquals(cause1, cause2);
+    }
+
+    /**
+     * Test two {@link FailureCause} instances are not equal.
+     */
+    @Test
+    public void testNotEquals(){
+        Date d = new Date();
+        Indication i = new BuildLogIndication("something");
+        FailureCause cause1 = getCauseForEquality("foo1", d, Collections.singletonList(i));
+        FailureCause cause2 = getCauseForEquality("foo2", d, Collections.singletonList(i));
+        assertNotEquals(cause1, cause2);
     }
 
     /**
