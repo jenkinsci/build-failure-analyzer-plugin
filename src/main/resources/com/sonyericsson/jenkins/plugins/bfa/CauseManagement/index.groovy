@@ -158,7 +158,7 @@ l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
             if (lastOccurred == new Date(0)) {
                 lastOccurredString = "Never";
             }
-            td{
+            td(data: lastOccurred){
                 text(lastOccurredString)
             }
           }
