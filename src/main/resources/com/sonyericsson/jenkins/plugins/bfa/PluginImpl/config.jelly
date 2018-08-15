@@ -61,6 +61,22 @@
                  description="${%enableGerritTriggerDescription}">
             <f:checkbox name="gerritTriggerEnabled" checked="${it.gerritTriggerEnabled}" default="true"/>
         </f:entry>
+        <f:entry title="${%Send notifications to Slack}"
+                 description="${%enableSlackNotificationsDescription}">
+            <f:checkbox name="slackNotifEnabled" checked="${it.slackNotifEnabled}" default="false"/>
+        </f:entry>
+        <f:advanced>
+	    	<f:section title="${%Build failure analyzer - Slack options}">
+	            <f:entry title="${%Slack Channel}"
+	                     description="${%Slack channel to use for notification of build failures. Overrides slack channel specified in Global Slack Notifier settings. Ex:#build-failures }">
+	        		<f:textbox name="slackChannelName" value="${it.slackChannelName}" default="${it.DEFAULT_SLACK_CHANNEL}"/>
+	        	</f:entry>
+	        	<f:entry title="${%Failure Cause Categories}"
+	                     description="${%Instruct plugin to only notify slack channel of failures listed as part of a certain category. Use space-separated list. Default: ALL}">
+	                <f:textbox name="slackFailureCategories" value="${it.slackFailureCategories}" default="${it.DEFAULT_SLACK_FAILURE_CATEGORIES}"/>
+	        	</f:entry>
+	        </f:section>
+        </f:advanced>
         <f:entry title="${%Concurrent scans}"
                  description="${%nrOfScanThreadsDescription}">
             <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${it.nrOfScanThreads}"/>
