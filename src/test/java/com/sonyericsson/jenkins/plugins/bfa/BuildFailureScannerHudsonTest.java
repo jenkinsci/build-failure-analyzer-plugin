@@ -51,6 +51,7 @@ import hudson.model.Result;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.junit.JUnitResultArchiver;
 import jenkins.model.Jenkins;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -63,6 +64,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -91,7 +93,6 @@ import static org.mockito.Mockito.when;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-
 public class BuildFailureScannerHudsonTest {
 
     /**
@@ -253,6 +254,125 @@ public class BuildFailureScannerHudsonTest {
         HtmlElement error = errorElements.get(0);
         assertNotNull(error);
         assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+    }
+
+    /**
+     * Test to ensure one failure category can be specified, and if all build failures
+     * are to be reported, a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testSingleCategoryALLSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        PrintStream buildLog = null;
+
+        boolean result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "\"job/test0/1/", buildLog);
+
+        assertEquals(true, result);
+    }
+
+    /**
+     * Test to ensure multiple failure categories can be specified, and if at least one of the categories
+     * match a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testMultiCategoryFailureSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
+        testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "git");
+        FoundFailureCause testFailureCause2 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
+
+        boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        PrintStream buildLog = null;
+
+        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+
+        assertEquals(true, result);
+    }
+
+    /**
+     * Test to ensure single failure category can be specified, and if none of the categories
+     * match no new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testSingleNonChosenCategoryFailureSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1);
+
+        boolean notifySlackOfAllFailures = false;
+        List<String> slackFailureCauseCategories = Arrays.asList("git");
+        PrintStream buildLog = null;
+
+        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+
+        assertEquals(false, result);
+    }
+
+    /**
+     * Test to ensure multiple failure categories can be specified, and if none of the categories
+     * match no new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testMultiNonChosenCategoryFailureSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
+        testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "code");
+        FoundFailureCause testFailureCause2 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
+
+        boolean notifySlackOfAllFailures = false;
+        List<String> slackFailureCauseCategories = Arrays.asList("git");
+        PrintStream buildLog = null;
+
+        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+
+        assertEquals(false, result);
+    }
+
+    /**
+     * Test to ensure a single failure cause category can be chosen in the slack configuration
+     * section of the BFA plugin.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testSingleChosenCategoryFailureSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = false;
+        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        PrintStream buildLog = null;
+
+        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "\"job/test0/1/", buildLog);
+
+        assertEquals(true, result);
     }
 
     /**

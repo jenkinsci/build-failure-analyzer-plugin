@@ -84,6 +84,16 @@ public class PluginImpl extends Plugin {
     private static final int BYTES_IN_MEGABYTE = 1024 * 1024;
 
     /**
+     * Default slack channel to use.
+     */
+    public static final String DEFAULT_SLACK_CHANNEL =  "";
+
+    /**
+     * Default value for which failure categories to notify slack.
+     */
+    public static final String DEFAULT_SLACK_FAILURE_CATEGORIES = "ALL";
+
+    /**
      * The permission group for all permissions related to this plugin.
      */
     public static final PermissionGroup PERMISSION_GROUP =
@@ -126,6 +136,9 @@ public class PluginImpl extends Plugin {
     private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
+    private Boolean slackNotifEnabled;
+    private String slackChannelName;
+    private String slackFailureCategories;
 
     private transient CopyOnWriteList<FailureCause> causes;
 
@@ -431,12 +444,78 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Send notifications to Slack.
+     *
+     * @return true if on.
+     */
+    public boolean isSlackNotifEnabled() {
+        if (slackNotifEnabled == null) {
+            return false;
+        } else {
+            return slackNotifEnabled;
+        }
+    }
+
+    /**
+     * Get configured slack channel.
+     *
+     * @return String - Slack Channel.
+     */
+    public String getSlackChannelName() {
+        if (slackChannelName == null) {
+            return DEFAULT_SLACK_CHANNEL;
+        } else {
+            return slackChannelName;
+        }
+    }
+
+    /**
+     * Get configured slack failure cause categories.
+     *
+     * @return String - Space separated list of failure cause categories.
+     */
+    public String getSlackFailureCategories() {
+        if (slackFailureCategories == null) {
+            return DEFAULT_SLACK_FAILURE_CATEGORIES;
+        } else {
+            return slackFailureCategories;
+        }
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on, cause descriptions will be forwarded to Gerrit-Trigger-Plugin.
      *
      * @param gerritTriggerEnabled on or off. null == on.
      */
     public void setGerritTriggerEnabled(Boolean gerritTriggerEnabled) {
         this.gerritTriggerEnabled = gerritTriggerEnabled;
+    }
+
+    /**
+     * Sets if this feature is enabled or not. When on, selected failures will be sent to Slack channel.
+     *
+     * @param slackNotifEnabled on or off. null == off.
+     */
+    public void setSlackNotifEnabled(Boolean slackNotifEnabled) {
+        this.slackNotifEnabled = slackNotifEnabled;
+    }
+
+    /**
+     * Set configured slack channel.
+     *
+     * @param slackChannelName null = DEFAULT_SLACK_CHANNEL
+     */
+    public void setSlackChannel(String slackChannelName) {
+        this.slackChannelName = slackChannelName;
+    }
+
+    /**
+     * Set configured slack failure cause categories.
+     *
+     * @param slackFailureCategories - Space seperated list of failure cause categories.
+     */
+    public void setslackFailureCategories(String slackFailureCategories) {
+        this.slackFailureCategories = slackFailureCategories;
     }
 
     /**
@@ -581,12 +660,15 @@ public class PluginImpl extends Plugin {
         globalEnabled = o.getBoolean("globalEnabled");
         doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
         gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
+        slackNotifEnabled = o.getBoolean("slackNotifEnabled");
         graphsEnabled = o.getBoolean("graphsEnabled");
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
         testResultCategories = o.getString("testResultCategories");
         maxLogSize = o.optInt("maxLogSize");
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
+        slackChannelName = o.getString("slackChannelName");
+        slackFailureCategories = o.getString("slackFailureCategories");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
         int thrkeepAliveTime = o.getInt("threadKeepAliveTime");
         int jobShutdownTimeWait = o.getInt("waitForJobShutdownTime");
