@@ -138,7 +138,7 @@ public class MongoDBKnowledgeBaseCache {
                         cachedFailureCauses = list;
                         categories = jacksonCollection.distinct("categories");
                     } catch (MongoException e) {
-                        logger.log(Level.SEVERE, "MongoException caught when updating cache: " + e);
+                        logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
                     } catch (InterruptedException e) {
                         logger.log(Level.WARNING, "Updater thread interrupted", e);
                     }
