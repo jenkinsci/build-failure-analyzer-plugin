@@ -24,6 +24,9 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
@@ -37,7 +40,6 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -61,6 +63,7 @@ public class BuildLogIndication extends Indication {
      *
      * @param pattern the string value to search for.
      */
+    @JsonCreator
     @DataBoundConstructor
     public BuildLogIndication(@JsonProperty("pattern") String pattern) {
         super(pattern);
@@ -74,11 +77,13 @@ public class BuildLogIndication extends Indication {
     }
 
     @Override
+    @JsonIgnore
     public FailureReader getReader() {
         return new BuildLogFailureReader(this);
     }
 
     @Override
+    @JsonIgnore
     public Pattern getPattern() {
         if (compiled == null) {
             compiled = Pattern.compile(getUserProvidedExpression());
@@ -87,6 +92,7 @@ public class BuildLogIndication extends Indication {
     }
 
     @Override
+    @JsonIgnore
     public IndicationDescriptor getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(BuildLogIndicationDescriptor.class);
     }

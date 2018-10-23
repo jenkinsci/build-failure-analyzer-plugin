@@ -17,7 +17,7 @@
 
     <properties>
         <jenkins.version>2.7.3</jenkins.version>
-        <java.level>7</java.level>
+        <java.level>8</java.level>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <powermock.version>1.6.6</powermock.version>
         <checkstyle.version>2.13</checkstyle.version>
@@ -82,23 +82,23 @@
     </pluginRepositories>
 
     <dependencies>
-        <dependency>
-            <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
-            <artifactId>gerrit-trigger</artifactId>
-            <version>2.27.2</version>
-            <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>net.sf.json-lib</groupId>
-                    <artifactId>json-lib</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Provided by the plugin -->
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>-->
+            <!--<artifactId>gerrit-trigger</artifactId>-->
+            <!--<version>2.27.2</version>-->
+            <!--<optional>true</optional>-->
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<groupId>net.sf.json-lib</groupId>-->
+                    <!--<artifactId>json-lib</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--&lt;!&ndash; Provided by the plugin &ndash;&gt;-->
+                    <!--<groupId>org.apache.httpcomponents</groupId>-->
+                    <!--<artifactId>httpclient</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>token-macro</artifactId>
@@ -129,18 +129,17 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>2.11.2</version>
+            <version>3.8.2</version>
         </dependency>
         <dependency>
-            <groupId>net.vz.mongodb.jackson</groupId>
-            <artifactId>mongo-jackson-mapper</artifactId>
-            <version>1.4.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.codehaus.jackson</groupId>
-                    <artifactId>jackson-mapper-asl</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.mongojack</groupId>
+            <artifactId>mongojack</artifactId>
+            <version>2.9.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.9.3</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
