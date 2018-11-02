@@ -295,13 +295,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         this.indications = newIndications;
 
         String user = null;
-        try {
-            user = User.current().getId();
-        } catch (NullPointerException npe) {
-            logger.log(Level.INFO,
-                    "Failed to get user for Failure Cause modification");
+        User current = User.current();
+        if (current != null) {
+            user = current.getId();
         }
-
+        
         this.modifications.add(0, new FailureCauseModification(user, new Date()));
 
         if (newId == null) {
