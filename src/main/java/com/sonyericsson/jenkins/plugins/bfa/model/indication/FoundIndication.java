@@ -24,18 +24,17 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
+import hudson.model.Run;
 
 import java.util.List;
-
-import hudson.model.Run;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import static java.lang.Math.max;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+
+import static java.lang.Math.max;
 
 /**
  * Found Indication of an unsuccessful build.
@@ -45,10 +44,6 @@ import java.util.regex.Pattern;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FoundIndication {
 
-    /**
-     * The platform file encoding. We assume that Jenkins uses it when writing the logs.
-     */
-    protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
     /**
      * @deprecated, kept for backwards compatibility.
