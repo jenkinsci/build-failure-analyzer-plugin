@@ -1057,17 +1057,20 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private MongoClient getMongoConnection() {
         if (mongo == null) {
-            char[] pwd = password.getPlainText().toCharArray();
+            if (password != null && password.getPlainText() != null) {
+                char[] pwd = password.getPlainText().toCharArray();
+                MongoCredential credential = MongoCredential.createCredential(userName, dbName, pwd);
 
-            MongoCredential credential = MongoCredential.createCredential(userName, dbName, pwd);
-
-            mongo = new MongoClient(
-                    new ServerAddress(host, port),
-                    credential,
-                    MongoClientOptions
-                            .builder()
-                            .build()
-            );
+                mongo = new MongoClient(
+                        new ServerAddress(host, port),
+                        credential,
+                        MongoClientOptions
+                                .builder()
+                                .build()
+                );
+            } else {
+                mongo = new MongoClient(host, port);
+            }
         }
         return mongo;
     }
