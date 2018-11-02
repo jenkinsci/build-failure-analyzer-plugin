@@ -1066,7 +1066,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     credential,
                     MongoClientOptions
                             .builder()
-                            .sslEnabled(false)
                             .build()
             );
         }

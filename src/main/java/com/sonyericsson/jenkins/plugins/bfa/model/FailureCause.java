@@ -299,7 +299,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         if (current != null) {
             user = current.getId();
         }
-        
+
         this.modifications.add(0, new FailureCauseModification(user, new Date()));
 
         if (newId == null) {
