@@ -82,23 +82,23 @@
     </pluginRepositories>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>-->
-            <!--<artifactId>gerrit-trigger</artifactId>-->
-            <!--<version>2.27.2</version>-->
-            <!--<optional>true</optional>-->
-            <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>net.sf.json-lib</groupId>-->
-                    <!--<artifactId>json-lib</artifactId>-->
-                <!--</exclusion>-->
-                <!--<exclusion>-->
-                    <!--&lt;!&ndash; Provided by the plugin &ndash;&gt;-->
-                    <!--<groupId>org.apache.httpcomponents</groupId>-->
-                    <!--<artifactId>httpclient</artifactId>-->
-                <!--</exclusion>-->
-            <!--</exclusions>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
+            <artifactId>gerrit-trigger</artifactId>
+            <version>2.27.5</version>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.sf.json-lib</groupId>
+                    <artifactId>json-lib</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- Provided by the plugin -->
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>token-macro</artifactId>
