@@ -112,8 +112,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param modifications the modification history of this FailureCause.
      */
     @JsonCreator
-    public FailureCause(@Id @ObjectId @JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("description")
-    String description, @JsonProperty("comment") String comment, @JsonProperty("occurred") Date lastOccurred,
+    public FailureCause(@Id @ObjectId @JsonProperty("id") String id,
+                        @JsonProperty("name") String name,
+                        @JsonProperty("description") String description,
+                        @JsonProperty("comment") String comment,
+                        @JsonProperty("occurred") Date lastOccurred,
                         @JsonProperty("categories") List<String> categories,
                         @JsonProperty("indications") List<Indication> indications,
                         @JsonProperty("modifications") List<FailureCauseModification> modifications) {
