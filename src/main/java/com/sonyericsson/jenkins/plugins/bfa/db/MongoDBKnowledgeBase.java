@@ -63,7 +63,6 @@ import org.mongojack.DBCursor;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -81,7 +80,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.naming.AuthenticationException;
 
 import static java.util.Arrays.asList;
 
@@ -183,7 +181,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public synchronized void start() throws UnknownHostException, AuthenticationException {
+    public synchronized void start() {
         initCache();
     }
 
@@ -197,10 +195,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     /**
      * Initializes the cache if it is null.
-     * @throws UnknownHostException if we cannot connect to the database.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private void initCache() throws UnknownHostException, AuthenticationException {
+    private void initCache() {
         if (cache == null) {
             cache = new MongoDBKnowledgeBaseCache(getJacksonCollection());
             cache.start();
@@ -211,11 +207,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see KnowledgeBase#getCauses()
      * Can throw MongoException if unknown fields exist in the database.
      * @return the full list of causes.
-     * @throws UnknownHostException if a connection to the host cannot be made.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
     @Override
-    public Collection<FailureCause> getCauses() throws UnknownHostException, AuthenticationException {
+    public Collection<FailureCause> getCauses() {
         initCache();
         return cache.getCauses();
     }
@@ -224,11 +218,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see KnowledgeBase#getCauseNames()
      * Can throw MongoException if unknown fields exist in the database.
      * @return the full list of the names and ids of the causes..
-     * @throws UnknownHostException if a connection to the host cannot be made.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
     @Override
-    public Collection<FailureCause> getCauseNames() throws UnknownHostException, AuthenticationException {
+    public Collection<FailureCause> getCauseNames() {
         List<FailureCause> list = new LinkedList<FailureCause>();
         DBObject keys = new BasicDBObject();
         keys.put("name", 1);
@@ -241,8 +233,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public Collection<FailureCause> getShallowCauses() throws Exception {
-        List<FailureCause> list = new LinkedList<FailureCause>();
+    public Collection<FailureCause> getShallowCauses() {
+        List<FailureCause> list = new LinkedList<>();
         DBObject keys = new BasicDBObject();
         keys.put("name", 1);
         keys.put("description", 1);
@@ -260,7 +252,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause getCause(String id) throws UnknownHostException, AuthenticationException {
+    public FailureCause getCause(String id) {
         FailureCause returnCase = null;
         try {
             returnCase = getJacksonCollection().findOneById(id);
@@ -272,12 +264,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause addCause(FailureCause cause) throws UnknownHostException, AuthenticationException {
+    public FailureCause addCause(FailureCause cause) {
         return addCause(cause, true);
     }
 
     @Override
-    public FailureCause removeCause(String id) throws Exception {
+    public FailureCause removeCause(String id) {
         BasicDBObject idq = new BasicDBObject("_id", new ObjectId(id));
         BasicDBObject removedInfo = new BasicDBObject("timestamp", new Date());
         removedInfo.put("by", Jenkins.getAuthentication().getName());
@@ -297,13 +289,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      *
      * @return the added FailureCause.
      *
-     * @throws UnknownHostException If a connection to the Mongo database cannot be made.
-     * @throws javax.naming.AuthenticationException if we cannot authenticate towards the database.
-     *
      * @see MongoDBKnowledgeBase#addCause(FailureCause)
      */
-    public FailureCause addCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
-            AuthenticationException {
+    public FailureCause addCause(FailureCause cause, boolean doUpdate) {
         WriteResult<FailureCause, String> result = getJacksonCollection().insert(cause);
         if (doUpdate) {
             initCache();
@@ -313,7 +301,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause saveCause(FailureCause cause) throws UnknownHostException, AuthenticationException {
+    public FailureCause saveCause(FailureCause cause) {
         return saveCause(cause, true);
     }
 
@@ -326,13 +314,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      *
      * @return the saved FailureCause.
      *
-     * @throws UnknownHostException If a connection to the Mongo database cannot be made.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
-     *
      * @see MongoDBKnowledgeBase#saveCause(FailureCause)
      */
-    public FailureCause saveCause(FailureCause cause, boolean doUpdate) throws UnknownHostException,
-            AuthenticationException {
+    public FailureCause saveCause(FailureCause cause, boolean doUpdate) {
         WriteResult<FailureCause, String> result =  getJacksonCollection().save(cause);
         if (doUpdate) {
             initCache();
@@ -370,7 +354,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public List<String> getCategories() throws UnknownHostException, AuthenticationException {
+    public List<String> getCategories() {
         initCache();
         return cache.getCategories();
     }
@@ -466,7 +450,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void saveStatistics(Statistics stat) throws UnknownHostException, AuthenticationException {
+    public void saveStatistics(Statistics stat) {
         DBObject object = new BasicDBObject();
         object.put("projectName", stat.getProjectName());
         object.put("buildNumber", stat.getBuildNumber());
@@ -493,8 +477,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
        }
 
     @Override
-    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit)
-            throws UnknownHostException, AuthenticationException {
+    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) {
         DBObject matchFields = generateMatchFields(filter);
         DBCursor<Statistics> dbCursor = getJacksonStatisticsCollection().find(matchFields);
         BasicDBObject buildNumberDescending = new BasicDBObject("buildNumber", -1);
@@ -891,44 +874,36 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         DBObject group = new BasicDBObject("$group", groupFields);
 
         AggregationOutput output;
-        try {
-            output = getStatisticsCollection().aggregate(match, unwind, group);
-            for (DBObject result : output.results()) {
-                int number = (Integer)result.get("number");
+        output = getStatisticsCollection().aggregate(match, unwind, group);
+        for (DBObject result : output.results()) {
+            int number = (Integer)result.get("number");
 
-                TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
+            TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
 
-                BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
-                DBRef failureRef = (DBRef)groupedAttrs.get("failureCause");
-                String id = failureRef.getId().toString();
-                FailureCause failureCause = getCause(id);
+            BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
+            DBRef failureRef = (DBRef)groupedAttrs.get("failureCause");
+            String id = failureRef.getId().toString();
+            FailureCause failureCause = getCause(id);
 
-                if (byCategories) {
-                    if (failureCause.getCategories() != null) {
-                        for (String category : failureCause.getCategories()) {
-                            MultiKey multiKey = new MultiKey(category, period);
-                            FailureCauseTimeInterval interval = categoryTable.get(multiKey);
-                            if (interval == null) {
-                                interval = new FailureCauseTimeInterval(period, category, number);
-                                categoryTable.put(multiKey, interval);
-                                failureCauseIntervals.add(interval);
-                            } else {
-                                interval.addNumber(number);
-                            }
+            if (byCategories) {
+                if (failureCause.getCategories() != null) {
+                    for (String category : failureCause.getCategories()) {
+                        MultiKey multiKey = new MultiKey(category, period);
+                        FailureCauseTimeInterval interval = categoryTable.get(multiKey);
+                        if (interval == null) {
+                            interval = new FailureCauseTimeInterval(period, category, number);
+                            categoryTable.put(multiKey, interval);
+                            failureCauseIntervals.add(interval);
+                        } else {
+                            interval.addNumber(number);
                         }
                     }
-                } else {
-                    FailureCauseTimeInterval timeInterval = new FailureCauseTimeInterval(period, failureCause.getName(),
-                            failureCause.getId(), number);
-                    failureCauseIntervals.add(timeInterval);
                 }
+            } else {
+                FailureCauseTimeInterval timeInterval = new FailureCauseTimeInterval(period, failureCause.getName(),
+                        failureCause.getId(), number);
+                failureCauseIntervals.add(timeInterval);
             }
-        } catch (UnknownHostException e) {
-            logger.fine("Unable to get failure causes by time");
-            e.printStackTrace();
-        } catch (AuthenticationException e) {
-            logger.fine("Unable to get failure causes by time");
-            e.printStackTrace();
         }
 
         return failureCauseIntervals;
@@ -985,13 +960,13 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void removeBuildfailurecause(Run build) throws Exception {
+    public void removeBuildfailurecause(Run build) {
         BasicDBObject searchObj = new BasicDBObject();
         searchObj.put("projectName", build.getParent().getFullName());
         searchObj.put("buildNumber", build.getNumber());
         searchObj.put("master", BfaUtils.getMasterName());
         com.mongodb.DBCursor dbcursor = getStatisticsCollection().find(searchObj);
-        if (dbcursor != null && dbcursor.size() > 0) {
+        if (dbcursor.size() > 0) {
             while (dbcursor.hasNext()) {
                 getStatisticsCollection().remove(dbcursor.next());
                 logger.log(Level.INFO, build.getDisplayName() + " build failure cause removed");
@@ -1006,11 +981,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Adds the FailureCauses from the list to the DBObject.
      * @param object the DBObject to add to.
      * @param failureCauseStatisticsList the list of FailureCauseStatistics to add.
-     * @throws UnknownHostException If the mongoDB host cannot be found.
-     * @throws AuthenticationException if the mongoDB authentication fails.
      */
-    private void addFailureCausesToDBObject(DBObject object, List<FailureCauseStatistics> failureCauseStatisticsList)
-            throws UnknownHostException, AuthenticationException {
+    private void addFailureCausesToDBObject(DBObject object, List<FailureCauseStatistics> failureCauseStatisticsList) {
         if (failureCauseStatisticsList != null && !failureCauseStatisticsList.isEmpty()) {
             List<DBObject> failureCauseStatisticsObjects = new LinkedList<DBObject>();
 
@@ -1125,11 +1097,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     /**
      * Gets the JacksonDBCollection for Statistics.
      * @return The jackson db collection.
-     * @throws UnknownHostException if the host cannot be found.
-     * @throws AuthenticationException if we cannot authenticate towards the database.
      */
-    private synchronized JacksonDBCollection<Statistics, String> getJacksonStatisticsCollection()
-            throws UnknownHostException, AuthenticationException {
+    private synchronized JacksonDBCollection<Statistics, String> getJacksonStatisticsCollection() {
         if (jacksonStatisticsCollection == null) {
             if (statisticsCollection == null) {
                 statisticsCollection = getStatisticsCollection();
