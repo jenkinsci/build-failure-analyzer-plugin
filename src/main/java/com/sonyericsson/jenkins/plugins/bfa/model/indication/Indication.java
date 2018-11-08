@@ -38,7 +38,6 @@ import hudson.util.FormValidation;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -100,23 +99,6 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     @Override
     public String toString() {
         return getUserProvidedExpression();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Indication that = (Indication) o;
-        return Objects.equals(pattern, that.pattern);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(pattern);
     }
 
     /**
