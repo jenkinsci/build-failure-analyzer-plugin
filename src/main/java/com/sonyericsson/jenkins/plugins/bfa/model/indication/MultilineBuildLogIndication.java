@@ -55,13 +55,6 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
         super(pattern);
     }
 
-    /**
-     * Default constructor.
-     * <strong>Do not use this unless you are a serializer.</strong>
-     */
-    public MultilineBuildLogIndication() {
-    }
-
     @Override
     public FailureReader getReader() {
         return new MultilineBuildLogFailureReader(this);

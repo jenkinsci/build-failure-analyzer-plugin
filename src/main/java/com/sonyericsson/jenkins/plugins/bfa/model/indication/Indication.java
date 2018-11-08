@@ -38,6 +38,7 @@ import hudson.util.FormValidation;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -60,12 +61,6 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     @JsonCreator
     public Indication(@JsonProperty("pattern") String pattern) {
         this.pattern = pattern;
-    }
-
-    /**
-     * Default constructor. <strong>Do not use this unless you are a serializer.</strong>
-     */
-    protected Indication() {
     }
 
     /**
@@ -105,6 +100,23 @@ public abstract class Indication implements Describable<Indication>, Serializabl
     @Override
     public String toString() {
         return getUserProvidedExpression();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Indication that = (Indication) o;
+        return Objects.equals(pattern, that.pattern);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pattern);
     }
 
     /**
