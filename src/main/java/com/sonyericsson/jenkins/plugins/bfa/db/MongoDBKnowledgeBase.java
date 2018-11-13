@@ -613,21 +613,14 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public Date getLatestFailureForCause(String id) {
-
-        DBObject causeToMatch = new BasicDBObject("$ref", "failureCauses");
-        causeToMatch.put("$id", new ObjectId(id));
-
-        DBObject causeList = new BasicDBObject("failureCauses.failureCause", causeToMatch);
-
-        DBObject match = new BasicDBObject("$match", causeList);
-        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("startingTime", -1));
-        DBObject limit = new BasicDBObject("$limit", 1);
-
-        AggregationOutput output;
         try {
-            output = getStatisticsCollection().aggregate(match, sort, limit);
+            DBObject match = new BasicDBObject("failureCauses.failureCause.$id", new ObjectId(id));
+            com.mongodb.DBCursor output = getStatisticsCollection()
+                    .find(match)
+                    .sort(new BasicDBObject("startingTime", -1))
+                    .limit(1);
 
-            for (DBObject result : output.results()) {
+            for (DBObject result : output) {
                 Date startingTime = (Date)result.get("startingTime");
 
                 if (startingTime != null) {
