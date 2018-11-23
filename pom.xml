@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>1.21.0-hmcts</version>
+    <version>1.21.1-hmcts</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
