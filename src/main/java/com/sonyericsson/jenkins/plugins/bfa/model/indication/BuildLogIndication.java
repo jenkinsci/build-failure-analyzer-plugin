@@ -251,7 +251,7 @@ public class BuildLogIndication extends Indication {
                 @QueryParameter("testText") String testText,
                 @QueryParameter("textSourceIsUrl") final boolean textSourceIsUrl) {
             if (textSourceIsUrl) {
-                testText = testText.replaceAll("/\\./", "/");
+                testText = testText.replaceAll("/\\./", "/").replaceAll("/view/change-requests", "");
                 Matcher urlMatcher = URL_PATTERN.matcher(testText);
                 if (urlMatcher.matches()) {
                     String[] urlParts = new String[NUM_OF_URL_PARTS];

@@ -25,7 +25,6 @@
 package com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
-import hudson.Functions
 
 def f = namespace(lib.FormTagLib)
 def j = namespace(lib.JenkinsTagLib)
@@ -70,7 +69,7 @@ def displayData(failureCauseDisplayData, run, linkTree, indent) {
                     text(_("No identified problem"))
                 }
                 h4(style: "margin-left:  20px; font-weight: normal") {
-                    text(_(PluginImpl.getInstance().noCausesMessage))
+                    raw(app.markupFormatter.translate(PluginImpl.getInstance().noCausesMessage))
                 }
             }
         }
