@@ -44,7 +44,13 @@ import static java.lang.Math.max;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FoundIndication {
 
+
+    /**
+     * The platform file encoding. We assume that Jenkins uses it when writing the logs.
+     */
+    protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
+
     /**
      * @deprecated, kept for backwards compatibility.
      */
