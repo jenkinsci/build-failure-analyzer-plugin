@@ -11,7 +11,7 @@ recognition of why the build failed.
   - sandell.robert@gmail.com
 
 * Tomas Westling 
-  - tomas.westling@sonymobile.com
+  - tomas.westling@axis.com
 
 ## Community Resources
  * [Wiki](https://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer)
