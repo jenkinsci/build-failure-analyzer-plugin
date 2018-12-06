@@ -158,7 +158,8 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     @Test
     public void testGetLatestFailureForCause() throws Exception {
         setUpTwoCauses();
-        assertEquals(now, knowledgeBase.getLatestFailureForCause(ID1));
+
+        assertEquals(EmbeddedMongoStatisticsTest.now, knowledgeBase.getLatestFailureForCause(ID1));
         assertEquals(lastHour, knowledgeBase.getLatestFailureForCause(ID2));
     }
 

@@ -24,6 +24,10 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
@@ -37,7 +41,6 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -51,6 +54,7 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public class BuildLogIndication extends Indication {
 
     private static final long serialVersionUID = -2889792693081908532L;
@@ -61,24 +65,20 @@ public class BuildLogIndication extends Indication {
      *
      * @param pattern the string value to search for.
      */
+    @JsonCreator
     @DataBoundConstructor
     public BuildLogIndication(@JsonProperty("pattern") String pattern) {
         super(pattern);
     }
 
-    /**
-     * Default constructor.
-     * <strong>Do not use this unless you are a serializer.</strong>
-     */
-    public BuildLogIndication() {
-    }
-
     @Override
+    @JsonIgnore
     public FailureReader getReader() {
         return new BuildLogFailureReader(this);
     }
 
     @Override
+    @JsonIgnore
     public Pattern getPattern() {
         if (compiled == null) {
             compiled = Pattern.compile(getUserProvidedExpression());
@@ -87,6 +87,7 @@ public class BuildLogIndication extends Indication {
     }
 
     @Override
+    @JsonIgnore
     public IndicationDescriptor getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(BuildLogIndicationDescriptor.class);
     }

@@ -23,6 +23,11 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -40,18 +45,13 @@ import hudson.model.User;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import net.vz.mongodb.jackson.Id;
-import net.vz.mongodb.jackson.ObjectId;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonIgnoreType;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.mongojack.Id;
+import org.mongojack.ObjectId;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -112,8 +112,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param modifications the modification history of this FailureCause.
      */
     @JsonCreator
-    public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
-    String description, @JsonProperty("comment") String comment, @JsonProperty("occurred") Date lastOccurred,
+    public FailureCause(@Id @ObjectId @JsonProperty("id") String id,
+                        @JsonProperty("name") String name,
+                        @JsonProperty("description") String description,
+                        @JsonProperty("comment") String comment,
+                        @JsonProperty("occurred") Date lastOccurred,
                         @JsonProperty("categories") List<String> categories,
                         @JsonProperty("indications") List<Indication> indications,
                         @JsonProperty("modifications") List<FailureCauseModification> modifications) {
@@ -295,11 +298,9 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         this.indications = newIndications;
 
         String user = null;
-        try {
-            user = User.current().getId();
-        } catch (NullPointerException npe) {
-            logger.log(Level.INFO,
-                    "Failed to get user for Failure Cause modification");
+        User current = User.current();
+        if (current != null) {
+            user = current.getId();
         }
 
         this.modifications.add(0, new FailureCauseModification(user, new Date()));
