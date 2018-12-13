@@ -23,16 +23,20 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
+import com.google.common.collect.ListMultimap;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandTask;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * The Build Failure Analyzer token for TokenMacro consumers.
@@ -94,15 +98,33 @@ public class Token extends DataBoundTokenMacro {
     public String evaluate(final AbstractBuild<?, ?> build, final TaskListener listener, final String macroName)
         throws MacroEvaluationException, IOException, InterruptedException {
 
-        // Scan the build now.
-        new ScanOnDemandTask(build).run();
+        return evaluate(build);
+    }
 
-        final FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+    @Override
+    public String evaluate(final Run<?, ?> run, final FilePath workspace, final TaskListener listener,
+                           final String macroName, final Map<String, String> arguments,
+                           final ListMultimap<String, String> argumentMultimap)
+            throws MacroEvaluationException, IOException, InterruptedException {
+
+        return evaluate(run);
+    }
+
+    /**
+     * @param run The run to analyze
+     * @return The results of the build failure analyzer
+     */
+    private String evaluate(final Run<?, ?> run) {
+
+        // Scan the build now.
+        new ScanOnDemandTask(run).run();
+
+        final FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {
             return renderer.render(action);
         }
 
-        final FailureCauseMatrixBuildAction matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
+        final FailureCauseMatrixBuildAction matrixAction = run.getAction(FailureCauseMatrixBuildAction.class);
         if (matrixAction != null) {
             return renderer.render(matrixAction);
         }
