@@ -23,7 +23,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.tokens;
 
-import com.google.common.collect.ListMultimap;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandTask;
@@ -36,7 +35,6 @@ import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * The Build Failure Analyzer token for TokenMacro consumers.
@@ -103,8 +101,7 @@ public class Token extends DataBoundTokenMacro {
 
     @Override
     public String evaluate(final Run<?, ?> run, final FilePath workspace, final TaskListener listener,
-                           final String macroName, final Map<String, String> arguments,
-                           final ListMultimap<String, String> argumentMultimap)
+                           final String macroName)
             throws MacroEvaluationException, IOException, InterruptedException {
 
         return evaluate(run);
