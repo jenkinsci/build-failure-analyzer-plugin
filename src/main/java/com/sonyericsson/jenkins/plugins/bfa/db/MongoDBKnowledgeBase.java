@@ -1022,7 +1022,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private MongoClient getMongoConnection() {
         if (mongo == null) {
-            if (password != null && password.getPlainText() != null) {
+            if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
                 MongoCredential credential = MongoCredential.createCredential(userName, dbName, pwd);
 
