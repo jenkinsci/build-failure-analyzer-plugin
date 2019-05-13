@@ -31,11 +31,13 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
+import com.thoughtworks.xstream.XStream;
+import hudson.Extension;
 import hudson.ExtensionList;
-import hudson.Plugin;
-import hudson.PluginManager;
-import hudson.PluginWrapper;
-import hudson.model.Descriptor;
+import hudson.XmlFile;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.init.Terminator;
 import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -43,12 +45,15 @@ import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
+import hudson.util.XStream2;
+import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +62,9 @@ import java.util.logging.Logger;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImpl extends Plugin {
+@Extension
+@Symbol("buildFailureAnalyzer")
+public class PluginImpl extends GlobalConfiguration {
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
 
@@ -144,9 +151,17 @@ public class PluginImpl extends Plugin {
      */
     private ScanOnDemandVariables sodVariables;
 
+    public PluginImpl() {
+        load();
+    }
+
     @Override
-    public void start() throws Exception {
-        super.start();
+    protected XmlFile getConfigFile() {
+        return new XmlFile(XSTREAM, new File(Jenkins.getInstance().getRootDir(),"build-failure-analyzer.xml")); // for backward compatibility
+    }
+
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    public void start() {
         logger.finer("[BFA] Starting...");
         load();
         if (noCausesMessage == null) {
@@ -199,9 +214,8 @@ public class PluginImpl extends Plugin {
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        super.stop();
+    @Terminator
+    public void stop() {
         ScanOnDemandQueue.shutdown();
         knowledgeBase.stop();
     }
@@ -212,22 +226,23 @@ public class PluginImpl extends Plugin {
      * @return the base URI.
      */
     public static String getStaticResourcesBase() {
-        if (staticResourcesBase == null) {
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-            if (pluginManager != null) {
-                PluginWrapper wrapper = pluginManager.getPlugin(PluginImpl.class);
-                if (wrapper != null) {
-                    staticResourcesBase = "/plugin/" + wrapper.getShortName();
-                }
-            }
-            //Did we really find it?
-            if (staticResourcesBase == null) {
-                //This is not the preferred way since the module name could change,
-                //But in some unit test cases we cannot reach the plug-in info.
-                return "/plugin/build-failure-analyzer";
-            }
-        }
-        return staticResourcesBase;
+        return "TODO";
+//        if (staticResourcesBase == null) {
+//            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+//            if (pluginManager != null) {
+////                PluginWrapper wrapper = pluginManager.getPlugin(PluginImpl.class);
+//                if (wrapper != null) {
+//                    staticResourcesBase = "/plugin/" + wrapper.getShortName();
+//                }
+//            }
+//            //Did we really find it?
+//            if (staticResourcesBase == null) {
+//                //This is not the preferred way since the module name could change,
+//                //But in some unit test cases we cannot reach the plug-in info.
+//                return "/plugin/build-failure-analyzer";
+//            }
+//        }
+//        return staticResourcesBase;
     }
 
     /**
@@ -303,16 +318,7 @@ public class PluginImpl extends Plugin {
      */
     @Nonnull
     public static PluginImpl getInstance() {
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            throw new AssertionError("Jenkins is not here yet.");
-        }
-        PluginImpl plugin = jenkins.getPlugin(PluginImpl.class);
-        if (plugin == null) {
-            throw new AssertionError("Not here yet.");
-        } else {
-            return plugin;
-        }
+        return ExtensionList.lookup(PluginImpl.class).get(0);
     }
 
     /**
@@ -576,7 +582,7 @@ public class PluginImpl extends Plugin {
 
 
     @Override
-    public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
+    public boolean configure(StaplerRequest req, JSONObject o) {
         noCausesMessage = o.getString("noCausesMessage");
         globalEnabled = o.getBoolean("globalEnabled");
         doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
@@ -640,7 +646,7 @@ public class PluginImpl extends Plugin {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Could not start new knowledge base, reverting ", e);
                 save();
-                return;
+                return true;
             }
             if (o.getBoolean("convertOldKb")) {
                 try {
@@ -654,5 +660,12 @@ public class PluginImpl extends Plugin {
         }
 
         save();
+        return true;
+    }
+
+    private static final XStream XSTREAM = new XStream2();
+
+    static {
+        XSTREAM.alias("buildFailureAnalyzer", PluginImpl.class);
     }
 }

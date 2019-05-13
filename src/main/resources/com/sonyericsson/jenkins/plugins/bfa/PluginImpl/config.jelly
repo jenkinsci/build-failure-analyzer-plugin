@@ -27,20 +27,20 @@
     <f:section title="${%Build failure analyzer}">
         <f:entry title="${%Enabled}"
                  description="${%If builds should be scanned or not.}">
-            <f:checkbox name="globalEnabled" checked="${it.globalEnabled}" default="true"/>
+            <f:checkbox name="globalEnabled" checked="${descriptor.globalEnabled}" default="true"/>
         </f:entry>
         <f:entry title="${%Enable graphs}"
                  description="${%Whether to display graphs or not. NOTE: The selected storage type must support this!}">
-            <f:checkbox name="graphsEnabled" checked="${it.graphsEnabled}" default="true"/>
+            <f:checkbox name="graphsEnabled" checked="${descriptor.graphsEnabled}" default="true"/>
         </f:entry>
         <f:entry title="${%Text when no failure causes are found}"
                  description="${%If no problems are identified, this text will be shown on the build page}">
-            <f:textbox name="noCausesMessage" value="${it.noCausesMessage}"/>
+            <f:textbox name="noCausesMessage" value="${descriptor.noCausesMessage}"/>
         </f:entry>
         <f:dropdownList name="knowledgeBase" title="${%Storage type}" help="${descriptor.getHelpFile('knowledgeBase')}">
-            <j:set var="current" value="${it.getKnowledgeBase()}"/>
+            <j:set var="current" value="${descriptor.getKnowledgeBase()}"/>
             <j:set var="defaultDescriptor" value="com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase.LocalFileKnowledgeBaseDescriptor"/>
-            <j:forEach var="descriptor" items="${it.getKnowledgeBaseDescriptors()}" varStatus="loop">
+            <j:forEach var="descriptor" items="${descriptor.getKnowledgeBaseDescriptors()}" varStatus="loop">
                 <f:dropdownListBlock value="${loop.index}" title="${descriptor.displayName}"
                                      selected="${current.descriptor==descriptor || (current==null and descriptor==defaultDescriptor)}"
                                      staplerClass="${descriptor.clazz.name}"
@@ -59,21 +59,21 @@
         </f:entry>
         <f:entry title="${%Send notifications to Gerrit-Trigger-plugin}"
                  description="${%enableGerritTriggerDescription}">
-            <f:checkbox name="gerritTriggerEnabled" checked="${it.gerritTriggerEnabled}" default="true"/>
+            <f:checkbox name="gerritTriggerEnabled" checked="${descriptor.gerritTriggerEnabled}" default="true"/>
         </f:entry>
         <f:entry title="${%Concurrent scans}"
                  description="${%nrOfScanThreadsDescription}">
-            <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${it.nrOfScanThreads}"/>
+            <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${descriptor.nrOfScanThreads}"/>
         </f:entry>
         <f:block>
             <table>
                 <f:optionalBlock name="testResultParsingEnabled"
                                  title="${%testResultParsingEnabledDescription}"
-                                 checked="${it.testResultParsingEnabled}"
+                                 checked="${descriptor.testResultParsingEnabled}"
                                  inline="true">
                     <f:entry title="Categories"
                              description="${%testResultCategoriesDescription}">
-                        <f:textbox name="testResultCategories" value="${it.testResultCategories}"/>
+                        <f:textbox name="testResultCategories" value="${descriptor.testResultCategories}"/>
                     </f:entry>
                 </f:optionalBlock>
             </table>
@@ -83,44 +83,44 @@
         <f:section title="${%Scan non-scanned builds}">
             <f:entry title="${%Minimum number of Worker Threads}"
                      description="${%Minimum number of worker threads allotted for failure scan options}">
-                <f:textbox name="minimumNumberOfWorkerThreads"
-                           value="${it.sodVariables.minimumSodWorkerThreads}"
-                           default="${it.sodVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS}"/>
+                <f:number name="minimumNumberOfWorkerThreads"
+                           value="${descriptor.sodVariables.minimumSodWorkerThreads}"
+                           default="${descriptor.sodVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS}"/>
             </f:entry>
             <f:entry title="${%Maximum number of Worker Threads}"
                 description="${%Maximum number of worker threads allotted for failure scan options}">
-                <f:textbox name="maximumNumberOfWorkerThreads"
-                           value="${it.sodVariables.maximumSodWorkerThreads}"
-                           default="${it.sodVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS}"/>
+                <f:number name="maximumNumberOfWorkerThreads"
+                           value="${descriptor.sodVariables.maximumSodWorkerThreads}"
+                           default="${descriptor.sodVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS}"/>
             </f:entry>
             <f:entry title="${%Thread keep alive time}"
                 description="${%Thread keep alive time for failure scan options}">
-                <f:textbox name="threadKeepAliveTime"
-                           value="${it.sodVariables.sodThreadKeepAliveTime}"
-                           default="${it.sodVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME}"/>
+                <f:number name="threadKeepAliveTime"
+                           value="${descriptor.sodVariables.sodThreadKeepAliveTime}"
+                           default="${descriptor.sodVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME}"/>
             </f:entry>
             <f:entry title="${%Wait for job shutdown timeout}"
                 description="${%Wait for job shutdown timeout for failure scan options}">
-                <f:textbox name="waitForJobShutdownTime"
-                           value="${it.sodVariables.sodWaitForJobShutdownTimeout}"
-                           default="${it.sodVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT}"/>
+                <f:number name="waitForJobShutdownTime"
+                           value="${descriptor.sodVariables.sodWaitForJobShutdownTimeout}"
+                           default="${descriptor.sodVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT}"/>
             </f:entry>
             <f:entry title="${%Corepool number of Threads}"
                 description="${%Corepool number of worker threads allotted for failure scan options}">
-                <f:textbox name="corePoolNumberOfThreads"
-                           value="${it.sodVariables.sodCorePoolNumberOfThreads}"
-                           default="${it.sodVariables.DEFAULT_SOD_COREPOOL_THREADS}"/>
+                <f:number name="corePoolNumberOfThreads"
+                           value="${descriptor.sodVariables.sodCorePoolNumberOfThreads}"
+                           default="${descriptor.sodVariables.DEFAULT_SOD_COREPOOL_THREADS}"/>
             </f:entry>
         </f:section>
         <f:entry title="${%Do not analyze aborted jobs}"
                                 help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
-            <f:checkbox name="doNotAnalyzeAbortedJob" checked="${it.doNotAnalyzeAbortedJob}" default="false"/>
+            <f:checkbox name="doNotAnalyzeAbortedJob" checked="${descriptor.doNotAnalyzeAbortedJob}" default="false"/>
         </f:entry>
         <f:entry title="${%Max size of log file}"
             description="${%maxLogSize}">
             <f:textbox name="maxLogSize"
-                       value="${it.maxLogSize}"
-                       default="${it.DEFAULT_MAX_LOG_SIZE}"/>
+                       value="${descriptor.maxLogSize}"
+                       default="${descriptor.DEFAULT_MAX_LOG_SIZE}"/>
         </f:entry>
     </f:advanced>
 </j:jelly>
