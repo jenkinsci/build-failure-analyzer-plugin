@@ -11,8 +11,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.2</version>
-        <!--<relativePath>../pom.xml</relativePath>-->
+        <version>3.43</version>
     </parent>
 
     <properties>
@@ -157,12 +156,16 @@
             <version>11.0.1</version>
         </dependency>
         <dependency>
-            <!-- Dependency bound conflict between MQ notifier and JTH -->
-            <!-- TODO: remove once MQ Notifier is updated -->
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
+            <version>3.7</version>
         </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.6</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
@@ -303,24 +306,6 @@
                         <configuration>
                             <violationSeverity>warning</violationSeverity>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <configuration>
-                    <xmlOutput>true</xmlOutput>
-                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
-                    <!-- Optional directory to put findbugs xdoc xml report -->
-                    <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>findbugs</goal>
-                        </goals>
-                        <phase>test</phase>
                     </execution>
                 </executions>
             </plugin>
