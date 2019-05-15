@@ -50,6 +50,8 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
@@ -151,15 +153,28 @@ public class PluginImpl extends GlobalConfiguration {
      */
     private ScanOnDemandVariables sodVariables;
 
+    /**
+     * Default constructor.
+     */
+    @DataBoundConstructor
     public PluginImpl() {
         load();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected XmlFile getConfigFile() {
-        return new XmlFile(XSTREAM, new File(Jenkins.getInstance().getRootDir(),"build-failure-analyzer.xml")); // for backward compatibility
+        return new XmlFile(
+                XSTREAM,
+                new File(Jenkins.getInstance().getRootDir(), "build-failure-analyzer.xml")
+        ); // for backward compatibility
     }
 
+    /**
+     * Starts the knowledge base.
+     */
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
     public void start() {
         logger.finer("[BFA] Starting...");
@@ -172,27 +187,6 @@ public class PluginImpl extends GlobalConfiguration {
         }
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
-        }
-        sodVariables = new ScanOnDemandVariables();
-        if (sodVariables.getMinimumSodWorkerThreads() < 1) {
-            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.
-                    DEFAULT_MINIMUM_SOD_WORKER_THREADS);
-        }
-        if (sodVariables.getMaximumSodWorkerThreads() < 1) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.
-                    DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        }
-        if (sodVariables.getSodThreadKeepAliveTime() < 1) {
-            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.
-                    DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
-        }
-        if (sodVariables.getSodWaitForJobShutdownTimeout() < 1) {
-            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
-                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
-        }
-        if (sodVariables.getSodCorePoolNumberOfThreads() < 1) {
-            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.
-                    DEFAULT_SOD_COREPOOL_THREADS);
         }
 
         if (knowledgeBase == null) {
@@ -214,6 +208,9 @@ public class PluginImpl extends GlobalConfiguration {
         }
     }
 
+    /**
+     * Run on Jenkins shutdown.
+     */
     @Terminator
     public void stop() {
         ScanOnDemandQueue.shutdown();
@@ -366,6 +363,42 @@ public class PluginImpl extends GlobalConfiguration {
     }
 
     /**
+     * Sets if graphs are enabled.
+     * @param graphsEnabled the graph flag
+     */
+    @DataBoundSetter
+    public void setGraphsEnabled(Boolean graphsEnabled) {
+        this.graphsEnabled = graphsEnabled;
+    }
+
+    /**
+     * Sets the no causes message.
+     * @param noCausesMessage the no causes message
+     */
+    @DataBoundSetter
+    public void setNoCausesMessage(String noCausesMessage) {
+        this.noCausesMessage = noCausesMessage;
+    }
+
+    /**
+     * Sets the knowledge base.
+     * @param knowledgeBase the knowledge base
+     */
+    @DataBoundSetter
+    public void setKnowledgeBase(KnowledgeBase knowledgeBase) {
+        this.knowledgeBase = knowledgeBase;
+    }
+
+    /**
+     * Sets the scan on demand variables.
+     * @param sodVariables the variables
+     */
+    @DataBoundSetter
+    public void setSodVariables(ScanOnDemandVariables sodVariables) {
+        this.sodVariables = sodVariables;
+    }
+
+    /**
      * If failed test cases should be represented as failure causes.
      *
      * @return True if enabled.
@@ -487,6 +520,10 @@ public class PluginImpl extends GlobalConfiguration {
      * @return value
      */
     public int getMaxLogSize() {
+        if (maxLogSize < 0) {
+            return DEFAULT_MAX_LOG_SIZE;
+        }
+
         return maxLogSize;
     }
 
@@ -583,80 +620,19 @@ public class PluginImpl extends GlobalConfiguration {
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject o) {
-        noCausesMessage = o.getString("noCausesMessage");
-        globalEnabled = o.getBoolean("globalEnabled");
-        doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
-        gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
-        graphsEnabled = o.getBoolean("graphsEnabled");
-        testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
-        testResultCategories = o.getString("testResultCategories");
-        maxLogSize = o.optInt("maxLogSize");
-        int scanThreads = o.getInt("nrOfScanThreads");
-        int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
-        int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
-        int thrkeepAliveTime = o.getInt("threadKeepAliveTime");
-        int jobShutdownTimeWait = o.getInt("waitForJobShutdownTime");
-        int corePoolNumberOfThreads = o.getInt("corePoolNumberOfThreads");
-        if (scanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
-            nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
-        } else {
-            nrOfScanThreads = scanThreads;
-        }
+        req.bindJSON(this, o);
 
-        if (maxLogSize < 0) {
-            maxLogSize = DEFAULT_MAX_LOG_SIZE;
-        }
-
-        if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
-            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
-        } else {
-            sodVariables.setSodCorePoolNumberOfThreads(corePoolNumberOfThreads);
-        }
-
-        if (jobShutdownTimeWait < ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT) {
-            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
-                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
-        } else {
-            sodVariables.setSodWaitForJobShutdownTimeout(jobShutdownTimeWait);
-        }
-        if (thrkeepAliveTime < ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME) {
-            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
-        } else {
-            sodVariables.setSodThreadKeepAliveTime(thrkeepAliveTime);
-        }
-        if (minSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMinimumSodWorkerThreads(minSodWorkerThreads);
-        }
-        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
-        }
-        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
-        }
-        KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
-        if (base != null && !knowledgeBase.equals(base)) {
-            try {
-                base.start();
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Could not start new knowledge base, reverting ", e);
-                save();
-                return true;
-            }
+        KnowledgeBase existingKb = this.knowledgeBase;
+        if (existingKb != null && !existingKb.equals(knowledgeBase)) {
             if (o.getBoolean("convertOldKb")) {
                 try {
-                    base.convertFrom(knowledgeBase);
+                    knowledgeBase.start();
+                    knowledgeBase.convertFrom(existingKb);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Could not convert knowledge base ", e);
                 }
+                knowledgeBase.stop();
             }
-            knowledgeBase.stop();
-            knowledgeBase = base;
         }
 
         save();
