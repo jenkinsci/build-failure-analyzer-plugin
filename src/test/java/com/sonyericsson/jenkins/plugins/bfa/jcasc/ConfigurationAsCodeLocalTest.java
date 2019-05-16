@@ -1,4 +1,4 @@
-package com.sonyericsson.jenkins.plugins.jcasc;
+package com.sonyericsson.jenkins.plugins.bfa.jcasc;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
@@ -22,7 +22,7 @@ public class ConfigurationAsCodeLocalTest {
             "occurred, please add a suitable Cause for it.";
 
     @ClassRule
-    @ConfiguredWithCode("/com/sonyericsson/jenkins/plugins/bfa/jcasc/jcasc-local.yml")
+    @ConfiguredWithCode("jcasc-local.yml")
     public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
 
     @Test
@@ -56,7 +56,7 @@ public class ConfigurationAsCodeLocalTest {
 
         String exported = toYamlString(yourAttribute);
 
-        String expected = toStringFromYamlFile(this, "/com/sonyericsson/jenkins/plugins/bfa/jcasc/jcasc-local-expected.yml");
+        String expected = toStringFromYamlFile(this, "jcasc-local-expected.yml");
 
         assertThat(exported, is(expected));
     }
