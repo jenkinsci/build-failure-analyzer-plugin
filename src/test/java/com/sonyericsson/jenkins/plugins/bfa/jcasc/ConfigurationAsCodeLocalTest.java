@@ -1,6 +1,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.jcasc;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
@@ -14,6 +15,7 @@ import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 
 public class ConfigurationAsCodeLocalTest {
@@ -33,7 +35,7 @@ public class ConfigurationAsCodeLocalTest {
         assertThat(plugin.isGerritTriggerEnabled(), is(true));
         assertThat(plugin.isGlobalEnabled(), is(true));
         assertThat(plugin.isGraphsEnabled(), is(false));
-//        assertThat(plugin.getKnowledgeBase(), is("localFile"));
+        assertThat(plugin.getKnowledgeBase(), instanceOf(LocalFileKnowledgeBase.class));
         assertThat(plugin.getNoCausesMessage(), is(NO_CAUSES_MESSAGE));
 
         assertThat(plugin.getNrOfScanThreads(), is(6));
