@@ -22,7 +22,7 @@ public class ConfigurationAsCodeLocalTest {
             "occurred, please add a suitable Cause for it.";
 
     @ClassRule
-    @ConfiguredWithCode("jcasc-local.yml")
+    @ConfiguredWithCode("/com/sonyericsson/jenkins/plugins/bfa/jcasc/jcasc-local.yml")
     public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
 
     @Test
@@ -33,7 +33,7 @@ public class ConfigurationAsCodeLocalTest {
         assertThat(plugin.isGerritTriggerEnabled(), is(true));
         assertThat(plugin.isGlobalEnabled(), is(true));
         assertThat(plugin.isGraphsEnabled(), is(false));
-        assertThat(plugin.getKnowledgeBase(), is("localFile"));
+//        assertThat(plugin.getKnowledgeBase(), is("localFile"));
         assertThat(plugin.getNoCausesMessage(), is(NO_CAUSES_MESSAGE));
 
         assertThat(plugin.getNrOfScanThreads(), is(6));
@@ -56,7 +56,7 @@ public class ConfigurationAsCodeLocalTest {
 
         String exported = toYamlString(yourAttribute);
 
-        String expected = toStringFromYamlFile(this, "expected_output.yaml");
+        String expected = toStringFromYamlFile(this, "/com/sonyericsson/jenkins/plugins/bfa/jcasc/jcasc-local-expected.yml");
 
         assertThat(exported, is(expected));
     }
