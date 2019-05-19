@@ -1,0 +1,29 @@
+unclassified:
+  buildFailureAnalyzer:
+    doNotAnalyzeAbortedJob: true
+    gerritTriggerEnabled: true
+    globalEnabled: true
+    graphsEnabled: false
+    knowledgeBase:
+      mongoDB:
+        dbName: "bfa"
+        enableStatistics: true
+        host: "localhost"
+        userName: bfa
+        password: changeme
+        port: 27017
+        successfulLogging: false
+    maxLogSize: 10
+    noCausesMessage: "No problems were identified. If you know why this problem occurred,\
+      \ please add a suitable Cause for it."
+    nrOfScanThreads: 6
+    sodVariables:
+      maximumSodWorkerThreads: 4
+      minimumSodWorkerThreads: 2
+      sodCorePoolNumberOfThreads: 6
+      sodThreadKeepAliveTime: 17
+      sodWaitForJobShutdownTimeout: 32
+    testResultCategories: "hgjghhlllllaa"
+    testResultParsingEnabled: true
+
+
