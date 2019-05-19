@@ -1159,7 +1159,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @param value the database name to check.
          * @return {@link hudson.util.FormValidation#ok()} if everything is well.
          */
-        public FormValidation doCheckDBName(@QueryParameter("value") String value) {
+        public FormValidation doCheckDbName(@QueryParameter("value") String value) {
             if (value == null || value.isEmpty()) {
                 return FormValidation.error("Please provide a database name!");
             } else {
