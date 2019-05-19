@@ -122,8 +122,6 @@ public class PluginImpl extends GlobalConfiguration {
     private static final String DEFAULT_NO_CAUSES_MESSAGE = "No problems were identified. "
             + "If you know why this problem occurred, please add a suitable Cause for it.";
 
-    private static String staticResourcesBase = null;
-
     /**
      * Minimum allowed value for {@link #nrOfScanThreads}.
      */
@@ -223,23 +221,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return the base URI.
      */
     public static String getStaticResourcesBase() {
-        return "TODO";
-//        if (staticResourcesBase == null) {
-//            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-//            if (pluginManager != null) {
-////                PluginWrapper wrapper = pluginManager.getPlugin(PluginImpl.class);
-//                if (wrapper != null) {
-//                    staticResourcesBase = "/plugin/" + wrapper.getShortName();
-//                }
-//            }
-//            //Did we really find it?
-//            if (staticResourcesBase == null) {
-//                //This is not the preferred way since the module name could change,
-//                //But in some unit test cases we cannot reach the plug-in info.
-//                return "/plugin/build-failure-analyzer";
-//            }
-//        }
-//        return staticResourcesBase;
+        return "/plugin/build-failure-analyzer";
     }
 
     /**
