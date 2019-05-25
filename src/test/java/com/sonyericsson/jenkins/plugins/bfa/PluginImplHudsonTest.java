@@ -44,7 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
-import org.powermock.reflect.Whitebox;
 
 import java.util.List;
 
@@ -53,8 +52,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,53 +100,6 @@ public class PluginImplHudsonTest {
     }
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with the same
-     * KnowledgeBase as before.
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testConfigure() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        String expectedNoCauseMessage = "I am blinded!";
-        StaplerRequest sreq = mock(StaplerRequest.class);
-        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
-
-        JSONObject form = createForm(expectedNoCauseMessage, PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, null);
-
-        PluginImpl.getInstance().configure(sreq, form);
-
-
-        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
-    }
-
-    /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
-     * with the same KnowledgeBase as before. And nrOfScanThreads set/"hacked" to -1
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testConfigureLowScanThreads() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        String expectedNoCauseMessage = "I am blinded!";
-        StaplerRequest sreq = mock(StaplerRequest.class);
-        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
-
-        JSONObject form = createForm(expectedNoCauseMessage, -1, null);
-
-        PluginImpl.getInstance().configure(sreq, form);
-
-
-        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
-        assertEquals(PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, PluginImpl.getInstance().getNrOfScanThreads());
-    }
-
-    /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with a new
      * KnowledgeBase type.
      *
@@ -153,48 +107,21 @@ public class PluginImplHudsonTest {
      */
     @Test
     public void testConfigureConvert() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        PluginImpl instance = PluginImpl.getInstance();
+        KnowledgeBase prevKnowledgeBase = instance.getKnowledgeBase();
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
         cause = prevKnowledgeBase.addCause(cause);
         StaplerRequest sreq = mock(StaplerRequest.class);
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello");
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
         JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
+        doAnswer(invocationOnMock -> {
+            instance.setKnowledgeBase(knowledgeBase);
+            return null;
+        }).when(sreq).bindJSON(eq(instance), eq(form));
 
-        PluginImpl.getInstance().configure(sreq, form);
-
-        assertNotSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertSame(knowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertEquals(1, knowledgeBase.getCauses().size());
-        assertSame(cause, knowledgeBase.getCauses().iterator().next());
-
-        //Check that the config page contains what we expect as well.
-        HtmlPage page = jenkins.createWebClient().goTo("configure");
-        assertConfigPageRendering(knowledgeBase, page);
-    }
-
-    /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with the same
-     * KnowledgeBase type but different configuration.
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testConfigureConvertSameType() throws Exception {
-        DifferentKnowledgeBase prevKnowledgeBase = new DifferentKnowledgeBase("Original");
-        FailureCause cause = new FailureCause("Olle", "Olle");
-        cause.addIndication(new BuildLogIndication(".*olle"));
-        cause = prevKnowledgeBase.addCause(cause);
-        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, prevKnowledgeBase);
-        StaplerRequest sreq = mock(StaplerRequest.class);
-        DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello Again");
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
-
-        JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
-
-        PluginImpl.getInstance().configure(sreq, form);
+        instance.configure(sreq, form);
 
         assertNotSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
         assertSame(knowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
@@ -247,7 +174,7 @@ public class PluginImplHudsonTest {
     /**
      * Creates a form to send to the configure method.
      *
-     * @param expectedNoCauseMessage the text for {@link PluginImpl#noCausesMessage}.
+     * @param expectedNoCauseMessage the text for noCausesMessage.
      * @param convert                if convertion should be run or not, set to null no not put the value in the form.
      * @param nrOfScanThreads           the number of threads.
      * @return the form data.
