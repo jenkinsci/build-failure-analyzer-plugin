@@ -623,7 +623,4 @@ public class PluginImpl extends GlobalConfiguration {
 
     private static final XStream XSTREAM = new XStream2();
 
-    static {
-        XSTREAM.alias("buildFailureAnalyzer", PluginImpl.class);
-    }
 }
