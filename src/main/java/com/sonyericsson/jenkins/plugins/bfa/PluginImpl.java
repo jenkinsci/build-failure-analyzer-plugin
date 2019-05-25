@@ -602,9 +602,9 @@ public class PluginImpl extends GlobalConfiguration {
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject o) {
+        KnowledgeBase existingKb = this.knowledgeBase;
         req.bindJSON(this, o);
 
-        KnowledgeBase existingKb = this.knowledgeBase;
         if (existingKb != null && !existingKb.equals(knowledgeBase)) {
             if (o.getBoolean("convertOldKb")) {
                 try {
