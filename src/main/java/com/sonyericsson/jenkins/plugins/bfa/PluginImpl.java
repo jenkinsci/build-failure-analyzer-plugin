@@ -50,6 +50,8 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -231,6 +233,46 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public ScanOnDemandVariables getSodVariables() {
         return sodVariables;
+    }
+
+    /**
+     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getMinimumSodWorkerThreads() {
+        return sodVariables.getMinimumSodWorkerThreads();
+    }
+
+    /**
+     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getMaximumSodWorkerThreads() {
+        return sodVariables.getMaximumSodWorkerThreads();
+    }
+
+    /**
+     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getSodThreadKeepAliveTime() {
+        return sodVariables.getSodThreadKeepAliveTime();
+    }
+
+    /**
+     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getSodWaitForJobShutdownTimeout() {
+        return sodVariables.getSodWaitForJobShutdownTimeout();
+    }
+
+    /**
+     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getSodCorePoolNumberOfThreads() {
+        return sodVariables.getSodCorePoolNumberOfThreads();
     }
 
     /**
