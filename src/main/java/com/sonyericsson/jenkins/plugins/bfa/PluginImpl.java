@@ -165,7 +165,7 @@ public class PluginImpl extends GlobalConfiguration {
      * {@inheritDoc}
      */
     @Override
-    protected XmlFile getConfigFile() {
+    public XmlFile getConfigFile() {
         return new XmlFile(
                 XSTREAM,
                 new File(Jenkins.getInstance().getRootDir(), "build-failure-analyzer.xml")
