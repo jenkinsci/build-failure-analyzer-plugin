@@ -1,11 +1,8 @@
 package com.sonyericsson.jenkins.plugins.bfa.jcasc;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
-import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
-import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
-import hudson.util.Secret;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
@@ -18,20 +15,26 @@ import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 
+/**
+ * Checks configuration as code integration for mongo DB.
+ */
 public class ConfigurationAsCodeMongoTest {
 
-    private static final String NO_CAUSES_MESSAGE = "No problems were identified. If you know why this problem " +
-            "occurred, please add a suitable Cause for it.";
-
+    /**
+     * Jenkins rule.
+     */
     @ClassRule
     @ConfiguredWithCode("jcasc-mongo.yml")
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
 
+    /**
+     * Support config as code import.
+     */
     @Test
-    public void should_support_configuration_as_code() {
+    public void shouldSupportConfigurationAsCode() {
         PluginImpl plugin = PluginImpl.getInstance();
 
         assertThat(plugin.isDoNotAnalyzeAbortedJob(), is(true));
@@ -39,7 +42,7 @@ public class ConfigurationAsCodeMongoTest {
         assertThat(plugin.isGlobalEnabled(), is(true));
         assertThat(plugin.isGraphsEnabled(), is(false));
 
-        MongoDBKnowledgeBase knowledgeBase = (MongoDBKnowledgeBase) plugin.getKnowledgeBase();
+        MongoDBKnowledgeBase knowledgeBase = (MongoDBKnowledgeBase)plugin.getKnowledgeBase();
         assertThat(knowledgeBase.getHost(), is("localhost"));
         assertThat(knowledgeBase.getDbName(), is("bfa"));
         assertThat(knowledgeBase.isStatisticsEnabled(), is(true));
@@ -47,22 +50,34 @@ public class ConfigurationAsCodeMongoTest {
         assertThat(knowledgeBase.getPassword().getPlainText(), is("changeme"));
         assertThat(knowledgeBase.isSuccessfulLoggingEnabled(), is(false));
 
-        assertThat(plugin.getNoCausesMessage(), is(NO_CAUSES_MESSAGE));
+        assertThat(plugin.getNoCausesMessage(), is(ConfigurationAsCodeLocalTest.NO_CAUSES_MESSAGE));
 
-        assertThat(plugin.getNrOfScanThreads(), is(6));
+        assertThat(plugin.getNrOfScanThreads(), is(ConfigurationAsCodeLocalTest.EXPECTED_SCAN_THREADS));
+
         ScanOnDemandVariables sodVariables = plugin.getSodVariables();
-        assertThat(sodVariables.getMaximumSodWorkerThreads(), is(4));
-        assertThat(sodVariables.getMinimumSodWorkerThreads(), is(2));
-        assertThat(sodVariables.getSodCorePoolNumberOfThreads(), is(6));
-        assertThat(sodVariables.getSodThreadKeepAliveTime(), is(17));
-        assertThat(sodVariables.getSodWaitForJobShutdownTimeout(), is(32));
+
+        assertThat(sodVariables.getMaximumSodWorkerThreads(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_MAXIMUM_SOD_WORKER_THREADS));
+        assertThat(sodVariables.getMinimumSodWorkerThreads(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_MINIMUM_SOD_WORKER_THREADS));
+        assertThat(sodVariables.getSodCorePoolNumberOfThreads(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_SOD_CORE_POOL_NUMBER_OF_THREADS));
+        assertThat(sodVariables.getSodThreadKeepAliveTime(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_SOD_THREAD_KEEP_ALIVE_TIME));
+        assertThat(sodVariables.getSodWaitForJobShutdownTimeout(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_SOD_JOB_SHUTDOWN_TIMEOUT));
 
         assertThat(plugin.getTestResultCategories(), is("hgjghhlllllaa"));
         assertThat(plugin.isTestResultParsingEnabled(), is(true));
     }
 
+    /**
+     * Support config as code export.
+     *
+     * @throws Exception if so.
+     */
     @Test
-    public void should_support_configuration_export() throws Exception {
+    public void shouldSupportConfigurationExport() throws Exception {
         ConfiguratorRegistry registry = ConfiguratorRegistry.get();
         ConfigurationContext context = new ConfigurationContext(registry);
         CNode yourAttribute = getUnclassifiedRoot(context).get("buildFailureAnalyzer");

@@ -237,6 +237,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     *
+     * @return minimum sod worker threads
      */
     @Restricted(NoExternalUse.class)
     public int getMinimumSodWorkerThreads() {
@@ -245,6 +247,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     *
+     * @return maximum sod worker threads
      */
     @Restricted(NoExternalUse.class)
     public int getMaximumSodWorkerThreads() {
@@ -253,6 +257,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     *
+     * @return sod thread keep alive time
      */
     @Restricted(NoExternalUse.class)
     public int getSodThreadKeepAliveTime() {
@@ -261,6 +267,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     *
+     * @return sod wait for job shutdown timeout
      */
     @Restricted(NoExternalUse.class)
     public int getSodWaitForJobShutdownTimeout() {
@@ -269,6 +277,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
+     *
+     * @return sod core pool number of threads
      */
     @Restricted(NoExternalUse.class)
     public int getSodCorePoolNumberOfThreads() {

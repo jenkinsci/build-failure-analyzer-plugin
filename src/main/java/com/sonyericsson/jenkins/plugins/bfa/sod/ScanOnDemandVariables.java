@@ -63,6 +63,9 @@ public class ScanOnDemandVariables {
     private int sodWaitForJobShutdownTimeout;
     private int sodCorePoolNumberOfThreads;
 
+    /**
+     * Data bound constructor (used by jcasc).
+     */
     @DataBoundConstructor
     public ScanOnDemandVariables() {
     }
