@@ -85,7 +85,7 @@ public enum GraphType {
      * Standard constructor.
      * @param value integer representation of enum
      */
-    private GraphType(int value) {
+    GraphType(int value) {
         this.value = value;
     }
 

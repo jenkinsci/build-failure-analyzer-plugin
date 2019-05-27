@@ -19,7 +19,7 @@
         <java.level>8</java.level>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <powermock.version>1.6.6</powermock.version>
-        <checkstyle.version>2.13</checkstyle.version>
+        <checkstyle.version>3.1.0</checkstyle.version>
         <configuration-as-code.version>1.15</configuration-as-code.version>
     </properties>
 
@@ -298,6 +298,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${checkstyle.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.21</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <configLocation>swe_checkstyle.xml</configLocation>
                     <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
