@@ -242,6 +242,10 @@ public class PluginImpl extends GlobalConfiguration {
      */
     @Restricted(NoExternalUse.class)
     public int getMinimumSodWorkerThreads() {
+        if (sodVariables == null) {
+            return ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS;
+        }
+
         return sodVariables.getMinimumSodWorkerThreads();
     }
 
@@ -252,6 +256,10 @@ public class PluginImpl extends GlobalConfiguration {
      */
     @Restricted(NoExternalUse.class)
     public int getMaximumSodWorkerThreads() {
+        if (sodVariables == null) {
+            return ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS;
+        }
+
         return sodVariables.getMaximumSodWorkerThreads();
     }
 
@@ -262,6 +270,10 @@ public class PluginImpl extends GlobalConfiguration {
      */
     @Restricted(NoExternalUse.class)
     public int getSodThreadKeepAliveTime() {
+        if (sodVariables == null) {
+            return ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME;
+        }
+
         return sodVariables.getSodThreadKeepAliveTime();
     }
 
@@ -272,6 +284,10 @@ public class PluginImpl extends GlobalConfiguration {
      */
     @Restricted(NoExternalUse.class)
     public int getSodWaitForJobShutdownTimeout() {
+        if (sodVariables == null) {
+            return ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT;
+        }
+
         return sodVariables.getSodWaitForJobShutdownTimeout();
     }
 
@@ -282,6 +298,10 @@ public class PluginImpl extends GlobalConfiguration {
      */
     @Restricted(NoExternalUse.class)
     public int getSodCorePoolNumberOfThreads() {
+        if (sodVariables == null) {
+            return ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS;
+        }
+
         return sodVariables.getSodCorePoolNumberOfThreads();
     }
 
