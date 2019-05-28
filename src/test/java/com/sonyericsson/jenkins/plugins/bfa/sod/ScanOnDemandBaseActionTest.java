@@ -41,6 +41,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -65,6 +66,11 @@ public class ScanOnDemandBaseActionTest {
      */
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @Before
+    public void setup() {
+        PluginImpl.getInstance().setSodVariables(new ScanOnDemandVariables());
+    }
 
     private static final String TO_PRINT = "ERROR";
     /**

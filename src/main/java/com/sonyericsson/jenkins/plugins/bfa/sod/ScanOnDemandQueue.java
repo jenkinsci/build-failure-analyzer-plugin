@@ -87,19 +87,20 @@ public final class ScanOnDemandQueue {
      *
      */
     protected void startQueue() {
+        PluginImpl instance = PluginImpl.getInstance();
         if (executor == null) {
             logger.debug("Starting the sending thread pool.");
             executor = new ThreadPoolExecutor(
-                    PluginImpl.getInstance().getSodVariables().getMinimumSodWorkerThreads(),
-                    PluginImpl.getInstance().getSodVariables().getMinimumSodWorkerThreads(),
-                    PluginImpl.getInstance().getSodVariables().getSodThreadKeepAliveTime(), TimeUnit.MINUTES,
-                    new LinkedBlockingQueue<Runnable>());
+                    instance.getSodVariables().getMinimumSodWorkerThreads(),
+                    instance.getSodVariables().getMinimumSodWorkerThreads(),
+                    instance.getSodVariables().getSodThreadKeepAliveTime(), TimeUnit.MINUTES,
+                    new LinkedBlockingQueue<>());
             executor.allowCoreThreadTimeOut(true);
             executor.prestartCoreThread();
             logger.info("SendQueue started! Current pool size: {}", executor.getPoolSize());
         }
-        executor.setMaximumPoolSize(PluginImpl.getInstance().getSodVariables().getMaximumSodWorkerThreads());
-        executor.setCorePoolSize(PluginImpl.getInstance().getSodVariables().getSodCorePoolNumberOfThreads());
+        executor.setMaximumPoolSize(instance.getSodVariables().getMaximumSodWorkerThreads());
+        executor.setCorePoolSize(instance.getSodVariables().getSodCorePoolNumberOfThreads());
         logger.debug("SendQueue running. Current pool size: {}. Current Queue size: {}",
                 executor.getPoolSize(), getQueueSize());
         logger.debug("Nr of active pool-threads: {}", executor.getActiveCount());
