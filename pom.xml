@@ -118,7 +118,7 @@
         <dependency>
             <groupId>com.sonymobile.jenkins.plugins.mq</groupId>
             <artifactId>mq-notifier</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.8</version>
             <optional>true</optional>
         </dependency>
         <dependency>
