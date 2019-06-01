@@ -36,11 +36,15 @@ import java.util.regex.Pattern;
 
 import static java.lang.Math.max;
 
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
 /**
  * Found Indication of an unsuccessful build.
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@ExportedBean
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FoundIndication {
 
@@ -96,6 +100,7 @@ public class FoundIndication {
      *
      * @return the file in which we found the match.
      */
+    @Exported
     public String getMatchingFile() {
         return matchingFile;
     }
@@ -105,6 +110,7 @@ public class FoundIndication {
      *
      * @return the pattern.
      */
+    @Exported
     public String getPattern() {
         return pattern;
     }
@@ -114,6 +120,7 @@ public class FoundIndication {
      *
      * @return the build.
      */
+    @Exported
     public Run getBuild() {
         return build;
     }
@@ -123,6 +130,7 @@ public class FoundIndication {
      *
      * @return the matching String.
      */
+    @Exported
     public String getMatchingString() {
         return matchingString;
     }
@@ -131,6 +139,7 @@ public class FoundIndication {
      * Getter for the first matching line (useful with multi-line build log indications.
      * @return the first line from {@code getMatchingString()}.
      */
+    @Exported
     public String getFirstMatchingLine() {
         final Scanner scanner = new Scanner(matchingString);
         try {
@@ -189,6 +198,7 @@ public class FoundIndication {
      *
      * @return the hash of the line of text.
      */
+    @Exported
     public int getMatchingHash() {
         if (matchingString != null) {
             return matchingString.hashCode();
