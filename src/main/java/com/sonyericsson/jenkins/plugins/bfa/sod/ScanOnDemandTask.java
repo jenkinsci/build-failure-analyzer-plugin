@@ -105,23 +105,15 @@ public class ScanOnDemandTask implements Runnable {
      * @param run the non-scanned/scanned build to scan/rescan.
      */
     public void scanBuild(Run run) {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(run.getLogFile(), true);
-            PrintStream buildLog = new PrintStream(fos, true, "UTF8");
+        try (
+                FileOutputStream fos = new FileOutputStream(run.getLogFile(), true);
+                PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+        ){
             PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(run);
             BuildFailureScanner.scanIfNotScanned(run, buildLog);
             run.save();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the build log file " + run.getLogFile(), e);
-                }
-            }
         }
     }
 }
