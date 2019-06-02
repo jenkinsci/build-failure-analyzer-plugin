@@ -26,6 +26,8 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -65,8 +67,6 @@ import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
-
-import javax.annotation.Nonnull;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -110,13 +110,21 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     @Override
-    public void onCompleted(Run build, @Nonnull TaskListener listener) {
-        logger.entering(getClass().getName(), "onCompleted");
+    public void onFinalized(Run build) {
+        logger.entering(getClass().getName(), "onFinalized");
 
-        if (PluginImpl.isSizeInLimit(build)) {
-            scanIfNotScanned(build, listener.getLogger());
-        } else {
-            listener.getLogger().println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+
+        try (
+                FileOutputStream fos = new FileOutputStream(build.getLogFile(), true);
+                PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+        ) {
+            if (PluginImpl.isSizeInLimit(build)) {
+                scanIfNotScanned(build, buildLog);
+            } else {
+                buildLog.println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Could not get the log file for the build" + build.getFullDisplayName(), e);
         }
     }
 
