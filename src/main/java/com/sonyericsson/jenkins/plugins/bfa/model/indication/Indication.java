@@ -46,7 +46,7 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class", visible = true)
 public abstract class Indication implements Describable<Indication>, Serializable {
 
     /**
