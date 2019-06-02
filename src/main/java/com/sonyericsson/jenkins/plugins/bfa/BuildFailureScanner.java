@@ -423,7 +423,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                             singleLineCauses,
                             build,
                             reader,
-                            build.getLogFile().getName()));
+                            "log"));
         } catch (IOException e) {
             buildLog.print("[BFA] Exception during parsing file: " + e);
         } finally {
