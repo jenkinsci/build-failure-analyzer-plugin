@@ -26,6 +26,9 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -114,7 +117,17 @@ public class BuildFailureScanner extends RunListener<Run> {
         logger.entering(getClass().getName(), "onCompleted");
 
         if (PluginImpl.isSizeInLimit(build)) {
-            scanIfNotScanned(build, listener.getLogger());
+            File file = new File(build.getRootDir(), ScanLogAction.FILE_NAME);
+
+
+            try (
+                    FileOutputStream fos = new FileOutputStream(file, true);
+                    PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+            ) {
+                scanIfNotScanned(build, buildLog);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
+            }
         } else {
             listener.getLogger().println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
         }
@@ -157,6 +170,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param buildLog log to write information to.
      */
     public static void scan(Run build, PrintStream buildLog) {
+        build.addOrReplaceAction(new ScanLogAction(build));
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseListToLog = findCauses(causes, build, buildLog);

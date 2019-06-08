@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.sonyericsson.jenkins.plugins.bfa.ScanLogAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScanner;
@@ -31,6 +32,7 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.Run;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -105,10 +107,11 @@ public class ScanOnDemandTask implements Runnable {
      * @param run the non-scanned/scanned build to scan/rescan.
      */
     public void scanBuild(Run run) {
+        File file = new File(run.getRootDir(), ScanLogAction.FILE_NAME);
         try (
-                FileOutputStream fos = new FileOutputStream(run.getLogFile(), true);
+                FileOutputStream fos = new FileOutputStream(file, true);
                 PrintStream buildLog = new PrintStream(fos, true, "UTF8")
-        ){
+        ) {
             PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(run);
             BuildFailureScanner.scanIfNotScanned(run, buildLog);
             run.save();
