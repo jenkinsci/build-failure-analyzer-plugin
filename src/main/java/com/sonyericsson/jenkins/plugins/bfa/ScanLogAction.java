@@ -5,7 +5,6 @@ import hudson.model.Run;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -29,7 +28,7 @@ public class ScanLogAction implements Action {
     @Nonnull
     @Override
     public String getDisplayName() {
-        return "Failure Scan Log";
+        return Messages.ScanLogAction_DisplayName();
     }
 
     public Run getRun() {
@@ -39,7 +38,7 @@ public class ScanLogAction implements Action {
     @CheckForNull
     @Override
     public String getUrlName() {
-        return "failure-cause-management-log";
+        return "failure-cause-scan-log";
     }
 
     public String getLogText() throws IOException {
