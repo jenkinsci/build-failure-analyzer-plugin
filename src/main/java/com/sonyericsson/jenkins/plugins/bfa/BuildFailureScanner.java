@@ -115,20 +115,18 @@ public class BuildFailureScanner extends RunListener<Run> {
     public void onCompleted(Run build, @Nonnull TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
 
-        if (PluginImpl.isSizeInLimit(build)) {
-            File file = new File(build.getRootDir(), ScanLogAction.FILE_NAME);
-
-
-            try (
-                    FileOutputStream fos = new FileOutputStream(file, true);
-                    PrintStream buildLog = new PrintStream(fos, true, "UTF8")
-            ) {
-                scanIfNotScanned(build, buildLog);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
+        File file = new File(build.getRootDir(), ScanLogAction.FILE_NAME);
+        try (
+                FileOutputStream fos = new FileOutputStream(file, true);
+                PrintStream bfaLog = new PrintStream(fos, true, "UTF8")
+        ) {
+            if (PluginImpl.isSizeInLimit(build)) {
+                scanIfNotScanned(build, bfaLog);
+            } else {
+                bfaLog.println("Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
             }
-        } else {
-            listener.getLogger().println("Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
         }
     }
 
