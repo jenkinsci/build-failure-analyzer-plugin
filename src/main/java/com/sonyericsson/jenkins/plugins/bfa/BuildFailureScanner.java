@@ -107,7 +107,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to add a ScannerJobProperty to "
                         + build.getParent().getFullDisplayName(), e);
-                listener.getLogger().println("[BFA] WARNING! Failed to add the scanner property to this job.");
+                listener.getLogger().println("WARNING! Failed to add the scanner property to this job.");
             }
         }
     }
@@ -129,7 +129,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                 logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
             }
         } else {
-            listener.getLogger().println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+            listener.getLogger().println("Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
         }
     }
 
@@ -197,7 +197,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             List<FailureCauseDisplayData> downstreamFailureCauses = data.getDownstreamFailureCauses();
 
             if (!downstreamFailureCauses.isEmpty()) {
-                buildLog.println("[BFA] Found downstream Failure causes ...");
+                buildLog.println("Found downstream Failure causes ...");
                 printDownstream(buildLog, downstreamFailureCauses);
             }
 
@@ -219,9 +219,9 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
             FailureCauseDisplayData.Links links = displayData.getLinks();
             if (!displayData.getFoundFailureCauses().isEmpty()) {
-                buildLog.println("[BFA] See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
+                buildLog.println("See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
                 for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
-                    String foundString = "[BFA] " + foundCause.getName();
+                    String foundString = foundCause.getName();
                     if (foundCause.getCategories() != null) {
                         foundString += " from category " + foundCause.getCategories().get(0);
                     }
@@ -245,33 +245,33 @@ public class BuildFailureScanner extends RunListener<Run> {
         threadPoolExecutor.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
         threadPoolExecutor.setMaximumPoolSize(PluginImpl.getInstance().getNrOfScanThreads());
 
-        buildLog.println("[BFA] Scanning build for known causes...");
+        buildLog.println("Scanning build for known causes...");
         long start = System.currentTimeMillis();
         final List<FoundFailureCause> foundFailureCauseList = findIndications(causes, build, buildLog);
 
         long time = System.currentTimeMillis() - start;
         if (logger.isLoggable(Level.FINER)) {
-            logger.log(Level.FINER, "[BFA] [{0}] {1}ms", new Object[]
+            logger.log(Level.FINER, "[{0}] {1}ms", new Object[]
                     {build.getFullDisplayName(),
                             String.valueOf(time), });
         }
 
         if (!foundFailureCauseList.isEmpty()) {
-            buildLog.println("[BFA] Found failure cause(s):");
+            buildLog.println("Found failure cause(s):");
             for (FoundFailureCause foundCause : foundFailureCauseList) {
                 if (foundCause.getCategories() == null) {
-                    buildLog.println("[BFA] " + foundCause.getName());
+                    buildLog.println(foundCause.getName());
                 } else {
-                    buildLog.println("[BFA] "
+                    buildLog.println(""
                                  + foundCause.getName() + " from category "
                                  + foundCause.getCategories().get(0));
                 }
             }
 
         } else {
-            buildLog.println("[BFA] No failure causes found");
+            buildLog.println("No failure causes found");
         }
-        buildLog.println("[BFA] Done. " + TimeUnit.MILLISECONDS.toSeconds(time) + "s");
+        buildLog.println("Done. " + TimeUnit.MILLISECONDS.toSeconds(time) + "s");
         return foundFailureCauseList;
     }
 
@@ -348,15 +348,15 @@ public class BuildFailureScanner extends RunListener<Run> {
                 try {
                     scanningTask.get();
                 } catch (ExecutionException e) {
-                    buildLog.print("[BFA] task failed due exception: " + e);
+                    buildLog.print("task failed due exception: " + e);
                 }
             }
         } catch (InterruptedException e) {
-            buildLog.print("[BFA] was interrupted: " + e);
+            buildLog.print("was interrupted: " + e);
             for (Future<?> scanningTask : scanningTasks) {
                 scanningTask.cancel(true);
             }
-            buildLog.print("[BFA] all bfa tasks were cancelled");
+            buildLog.print("all bfa tasks were cancelled");
         }
     }
 
@@ -407,7 +407,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         final FoundIndication foundIndication = findIndication(indication, build, buildLog);
         if (foundIndication != null) {
             if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "[BFA] [{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
+                logger.log(Level.FINER, "[{0}] [{1}] {2}ms", new Object[]{build.getFullDisplayName(),
                         causeName,
                         String.valueOf(System.currentTimeMillis() - start), });
             }
@@ -439,7 +439,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                             reader,
                             "log"));
         } catch (IOException e) {
-            buildLog.print("[BFA] Exception during parsing file: " + e);
+            buildLog.print("Exception during parsing file: " + e);
         } finally {
             if (reader != null) {
                 try {
@@ -481,7 +481,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (AbstractTestResultAction testAction : testActions) {
             List<? extends TestResult> failedTests = testAction.getFailedTests();
             for (TestResult test : failedTests) {
-                buildLog.println("[BFA] Found failed test case: " + test.getName());
+                buildLog.println("Found failed test case: " + test.getName());
                 FailureCause failureCause = new FailureCause(null,
                         test.getName(), test.getErrorStackTrace(), "", null,
                         PluginImpl.getInstance().getTestResultCategories(), null, null);
