@@ -167,7 +167,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param buildLog log to write information to.
      */
     public static void scan(Run build, PrintStream buildLog) {
-        build.addOrReplaceAction(new ScanLogAction(build));
+        build.addOrReplaceAction(new ScanLogAction());
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseListToLog = findCauses(causes, build, buildLog);
