@@ -3,10 +3,10 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import hudson.model.Run;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 import jenkins.model.RunAction2;
+import org.apache.commons.io.FileUtils;
 
 /**
  * The Action for adding a link to the analysis for each run.
@@ -61,8 +61,7 @@ public class ScanLogAction implements RunAction2 {
      * @throws IOException if the log can't be found
      */
     public String getLogText() throws IOException {
-        return Files.lines(new File(run.getRootDir(), FILE_NAME).toPath())
-                .collect(Collectors.joining("\n"));
+        return FileUtils.readFileToString(new File(run.getRootDir(), FILE_NAME), StandardCharsets.UTF_8);
     }
 
     /**
