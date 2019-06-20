@@ -101,6 +101,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     static final BasicDBObject NOT_REMOVED_QUERY = new BasicDBObject("_removed", new BasicDBObject("$exists", false));
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
+    private static final int CONNECT_TIMEOUT = 5000;
+    private static final int SERVER_SELECTION_TIMEOUT = 5000;
 
     private transient MongoClient mongo;
     private transient DB db;
@@ -1024,8 +1026,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         if (mongo == null) {
             MongoClientOptions mongoClientOptions = MongoClientOptions
                     .builder()
-                    .connectTimeout(5000)
-                    .serverSelectionTimeout(5000)
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .serverSelectionTimeout(SERVER_SELECTION_TIMEOUT)
                     .build();
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();

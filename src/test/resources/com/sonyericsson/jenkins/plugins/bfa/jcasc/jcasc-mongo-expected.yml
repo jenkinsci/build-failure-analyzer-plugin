@@ -12,8 +12,7 @@ knowledgeBase:
     successfulLogging: false
     userName: "bfa"
 maxLogSize: 10
-noCausesMessage: "No problems were identified. If you know why this problem occurred,\
-  \ please add a suitable Cause for it."
+noCausesMessage: "No problems were identified. Please contribute  causes to help others"
 nrOfScanThreads: 6
 sodVariables:
   maximumSodWorkerThreads: 4
