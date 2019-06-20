@@ -66,6 +66,7 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 
 /**
@@ -110,21 +111,35 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     @Override
+    public void onCompleted(Run run, @Nonnull TaskListener listener) {
+        if (run instanceof AbstractBuild) {
+            logger.entering(getClass().getName(), "onCompleted");
+
+            doScan(run, listener.getLogger());
+        }
+    }
+
+    @Override
     public void onFinalized(Run build) {
-        logger.entering(getClass().getName(), "onFinalized");
+        if (!(build instanceof AbstractBuild)) {
+            logger.entering(getClass().getName(), "onFinalized");
 
-
-        try (
-                FileOutputStream fos = new FileOutputStream(build.getLogFile(), true);
-                PrintStream buildLog = new PrintStream(fos, true, "UTF8")
-        ) {
-            if (PluginImpl.isSizeInLimit(build)) {
-                scanIfNotScanned(build, buildLog);
-            } else {
-                buildLog.println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
+            try (
+                    FileOutputStream fos = new FileOutputStream(build.getLogFile(), true);
+                    PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+            ) {
+                doScan(build, buildLog);
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Could not get the log file for the build" + build.getFullDisplayName(), e);
             }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Could not get the log file for the build" + build.getFullDisplayName(), e);
+        }
+    }
+
+    private void doScan(Run build, PrintStream buildLog) {
+        if (PluginImpl.isSizeInLimit(build)) {
+            scanIfNotScanned(build, buildLog);
+        } else {
+            buildLog.println("[BFA] Log exceeds limit: " + PluginImpl.getInstance().getMaxLogSize() + "MB");
         }
     }
 
