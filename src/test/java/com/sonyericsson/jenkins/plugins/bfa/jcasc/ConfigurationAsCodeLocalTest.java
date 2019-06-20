@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
  */
 public class ConfigurationAsCodeLocalTest {
 
-    static final String NO_CAUSES_MESSAGE = "No problems were identified. If you know why this problem "
+    static final String NO_CAUSES_MESSAGE = "No problems were identified. Please contribute failure causes to help others "
             + "occurred, please add a suitable Cause for it.";
     static final int EXPECTED_SCAN_THREADS = 6;
     static final int EXPECTED_MAXIMUM_SOD_WORKER_THREADS = 4;
