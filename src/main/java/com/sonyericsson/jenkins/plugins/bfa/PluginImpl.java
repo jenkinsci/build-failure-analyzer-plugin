@@ -178,7 +178,6 @@ public class PluginImpl extends GlobalConfiguration {
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
     public void start() {
         logger.finer("[BFA] Starting...");
-        load();
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
         }
