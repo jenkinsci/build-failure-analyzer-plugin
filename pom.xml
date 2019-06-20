@@ -11,8 +11,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.2</version>
-        <!--<relativePath>../pom.xml</relativePath>-->
+        <version>3.43</version>
     </parent>
 
     <properties>
@@ -20,7 +19,7 @@
         <java.level>8</java.level>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <powermock.version>1.6.6</powermock.version>
-        <checkstyle.version>2.13</checkstyle.version>
+        <checkstyle.version>3.1.0</checkstyle.version>
     </properties>
 
     <licenses>
@@ -157,12 +156,16 @@
             <version>11.0.1</version>
         </dependency>
         <dependency>
-            <!-- Dependency bound conflict between MQ notifier and JTH -->
-            <!-- TODO: remove once MQ Notifier is updated -->
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
+            <version>3.7</version>
         </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.6</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
@@ -280,6 +283,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${checkstyle.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.21</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <configLocation>swe_checkstyle.xml</configLocation>
                     <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
@@ -303,24 +313,6 @@
                         <configuration>
                             <violationSeverity>warning</violationSeverity>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <configuration>
-                    <xmlOutput>true</xmlOutput>
-                    <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
-                    <!-- Optional directory to put findbugs xdoc xml report -->
-                    <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>findbugs</goal>
-                        </goals>
-                        <phase>test</phase>
                     </execution>
                 </executions>
             </plugin>

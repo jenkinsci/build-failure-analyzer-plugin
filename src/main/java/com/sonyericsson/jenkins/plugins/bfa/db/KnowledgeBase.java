@@ -173,12 +173,6 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public abstract void stop();
 
-    @Override
-    public int hashCode() {
-        //Making checkstyle happy.
-        return super.hashCode();
-    }
-
     /**
      * If Statistics logging is enabled on this knowledge base or not.
      *
