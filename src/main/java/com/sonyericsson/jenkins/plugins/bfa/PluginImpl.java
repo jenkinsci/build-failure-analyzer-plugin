@@ -149,7 +149,7 @@ public class PluginImpl extends GlobalConfiguration {
     /**
      * ScanOnDemandVariable instance.
      */
-    private ScanOnDemandVariables sodVariables;
+    private ScanOnDemandVariables sodVariables = new ScanOnDemandVariables();
 
     /**
      * Default constructor.
@@ -157,6 +157,14 @@ public class PluginImpl extends GlobalConfiguration {
     @DataBoundConstructor
     public PluginImpl() {
         load();
+    }
+
+    protected Object readResolve() {
+        if (sodVariables == null) {
+            this.sodVariables = new ScanOnDemandVariables();
+        }
+
+        return this;
     }
 
     /**
