@@ -190,7 +190,7 @@ public class BuildLogIndication extends Indication {
              *
              * @param name the name of this StringBuildId.
              */
-            private StringBuildId(String name) {
+            StringBuildId(String name) {
                 this.name = name;
             }
 

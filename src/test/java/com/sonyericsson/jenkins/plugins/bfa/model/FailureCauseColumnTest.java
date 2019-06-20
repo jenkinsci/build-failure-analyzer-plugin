@@ -72,7 +72,7 @@ public class FailureCauseColumnTest {
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
     assertNotNull("Couldn't find the failure cause image in columnwithouttext view",
-            page.getFirstByXPath("//img[@Title='Failure Builder']"));
+            page.getFirstByXPath("//img[@title='Failure Builder']"));
     assertNull(page.getDocumentElement().getFirstByXPath("//*[.='Failure Builder']"));
   }
 
@@ -94,8 +94,9 @@ public class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithtext");
+    System.out.println(page.getTextContent());
     assertNotNull("Couldn't find the failure cause image in columnwithtext view",
-        page.getFirstByXPath("//img[@Title='Failure Builder']"));
+        page.getFirstByXPath("//img[@title='Failure Builder']"));
     assertNotNull(page.getFirstByXPath("//*[.='Failure Builder']"));
   }
 
