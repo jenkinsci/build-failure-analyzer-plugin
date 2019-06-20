@@ -106,7 +106,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to add a ScannerJobProperty to "
                         + build.getParent().getFullDisplayName(), e);
-                listener.getLogger().println("WARNING! Failed to add the scanner property to this job.");
+                listener.getLogger().println("[BFA] WARNING! Failed to add the scanner property to this job.");
             }
         }
     }
