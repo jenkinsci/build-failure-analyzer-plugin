@@ -1022,6 +1022,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private MongoClient getMongoConnection() {
         if (mongo == null) {
+            MongoClientOptions mongoClientOptions = MongoClientOptions
+                    .builder()
+                    .connectTimeout(5000)
+                    .serverSelectionTimeout(5000)
+                    .build();
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
                 MongoCredential credential = MongoCredential.createCredential(userName, dbName, pwd);
@@ -1029,12 +1034,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 mongo = new MongoClient(
                         new ServerAddress(host, port),
                         credential,
-                        MongoClientOptions
-                                .builder()
-                                .build()
+                        mongoClientOptions
                 );
             } else {
-                mongo = new MongoClient(host, port);
+                mongo = new MongoClient(new ServerAddress(host, port), mongoClientOptions);
             }
         }
         return mongo;
@@ -1190,7 +1193,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
                     Secret.fromString(password), false, false);
             try {
-                base.getCollection();
+                DBObject ping = new BasicDBObject("ping", "1");
+                DB db = base.getDb();
+                db.command(ping);
             } catch (Exception e) {
                 return FormValidation.error(e, Messages.MongoDBKnowledgeBase_ConnectionError());
             }
