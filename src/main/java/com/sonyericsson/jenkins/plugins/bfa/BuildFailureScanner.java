@@ -84,6 +84,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     public static final int ORDINAL = 11003;
     private static final Logger logger = Logger.getLogger(BuildFailureScanner.class.getName());
+    private static final String LOG_FILE_NAME = "log";
 
     private static ThreadPoolExecutor threadPoolExecutor;
 
@@ -438,7 +439,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                             singleLineCauses,
                             build,
                             reader,
-                            "log"));
+                            LOG_FILE_NAME));
         } catch (IOException e) {
             logToScanLog(scanLog, "Exception during parsing file: " + e);
         } finally {
