@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
@@ -39,7 +40,8 @@ import java.util.regex.Pattern;
  *
  * @author Andrew Bayer
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class", visible = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MultilineBuildLogIndication extends BuildLogIndication {
 
     private static final long serialVersionUID = 8436383594898812087L;
