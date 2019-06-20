@@ -167,7 +167,7 @@ public class PluginImpl extends GlobalConfiguration {
     @Override
     public XmlFile getConfigFile() {
         return new XmlFile(
-                XSTREAM,
+                Jenkins.XSTREAM,
                 new File(Jenkins.getInstance().getRootDir(), "build-failure-analyzer.xml")
         ); // for backward compatibility
     }
@@ -691,7 +691,4 @@ public class PluginImpl extends GlobalConfiguration {
         save();
         return true;
     }
-
-    private static final XStream XSTREAM = new XStream2();
-
 }
