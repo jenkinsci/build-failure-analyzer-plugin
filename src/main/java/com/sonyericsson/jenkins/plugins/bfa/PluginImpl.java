@@ -44,20 +44,17 @@ import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
-
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The main thing.
@@ -238,76 +235,6 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public ScanOnDemandVariables getSodVariables() {
         return sodVariables;
-    }
-
-    /**
-     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
-     *
-     * @return minimum sod worker threads
-     */
-    @Restricted(NoExternalUse.class)
-    public int getMinimumSodWorkerThreads() {
-        if (sodVariables == null) {
-            return ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS;
-        }
-
-        return sodVariables.getMinimumSodWorkerThreads();
-    }
-
-    /**
-     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
-     *
-     * @return maximum sod worker threads
-     */
-    @Restricted(NoExternalUse.class)
-    public int getMaximumSodWorkerThreads() {
-        if (sodVariables == null) {
-            return ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS;
-        }
-
-        return sodVariables.getMaximumSodWorkerThreads();
-    }
-
-    /**
-     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
-     *
-     * @return sod thread keep alive time
-     */
-    @Restricted(NoExternalUse.class)
-    public int getSodThreadKeepAliveTime() {
-        if (sodVariables == null) {
-            return ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME;
-        }
-
-        return sodVariables.getSodThreadKeepAliveTime();
-    }
-
-    /**
-     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
-     *
-     * @return sod wait for job shutdown timeout
-     */
-    @Restricted(NoExternalUse.class)
-    public int getSodWaitForJobShutdownTimeout() {
-        if (sodVariables == null) {
-            return ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT;
-        }
-
-        return sodVariables.getSodWaitForJobShutdownTimeout();
-    }
-
-    /**
-     * Used by jelly for loading the view, it can't seem to handle retrieving from the nested field.
-     *
-     * @return sod core pool number of threads
-     */
-    @Restricted(NoExternalUse.class)
-    public int getSodCorePoolNumberOfThreads() {
-        if (sodVariables == null) {
-            return ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS;
-        }
-
-        return sodVariables.getSodCorePoolNumberOfThreads();
     }
 
     /**

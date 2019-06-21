@@ -23,6 +23,9 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -31,7 +34,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  *
  * @author Shemeer S &lt;shemeer.x.sulaiman@sonymobile.com&gt;
  */
-public class ScanOnDemandVariables {
+public class ScanOnDemandVariables extends AbstractDescribableImpl<ScanOnDemandVariables> {
 
     /**
      * Minimum number of worker threads.
@@ -182,4 +185,11 @@ public class ScanOnDemandVariables {
         return sodWaitForJobShutdownTimeout;
     }
 
+    /**
+     * Descriptor for {@link ScanOnDemandVariables}.
+     */
+    @Extension
+    public static class DescriptorImpl extends Descriptor<ScanOnDemandVariables> {
+
+    }
 }

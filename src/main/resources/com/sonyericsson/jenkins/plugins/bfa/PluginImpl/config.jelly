@@ -23,7 +23,7 @@
   ~ THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <f:section title="${%Build failure analyzer}">
         <f:entry title="${%Enabled}"
                  description="${%If builds should be scanned or not.}">
@@ -68,27 +68,10 @@
         </f:block>
     </f:section>
     <f:advanced>
-        <f:section title="${%Scan non-scanned builds}" name="sodVariables">
-            <f:entry title="${%Minimum number of Worker Threads}"
-                     description="${%Minimum number of worker threads allotted for failure scan options}">
-                <f:number field="minimumSodWorkerThreads" />
-            </f:entry>
-            <f:entry title="${%Maximum number of Worker Threads}"
-                description="${%Maximum number of worker threads allotted for failure scan options}">
-                <f:number field="maximumSodWorkerThreads" />
-            </f:entry>
-            <f:entry title="${%Thread keep alive time}"
-                description="${%Thread keep alive time for failure scan options}">
-                <f:number field="sodThreadKeepAliveTime" />
-            </f:entry>
-            <f:entry title="${%Wait for job shutdown timeout}"
-                description="${%Wait for job shutdown timeout for failure scan options}">
-                <f:number field="sodWaitForJobShutdownTimeout" />
-            </f:entry>
-            <f:entry title="${%Corepool number of Threads}"
-                description="${%Corepool number of worker threads allotted for failure scan options}">
-                <f:number field="sodCorePoolNumberOfThreads" />
-            </f:entry>
+        <f:section title="${%Scan non-scanned builds}">
+            <f:property field="sodVariables">
+                <st:include page="config.jelly" />
+            </f:property>
         </f:section>
         <f:entry title="${%Do not analyze aborted jobs}"
                                 help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
