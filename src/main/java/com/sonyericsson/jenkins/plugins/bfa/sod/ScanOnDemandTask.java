@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.sonyericsson.jenkins.plugins.bfa.ScanLogAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.BuildFailureScanner;
@@ -31,6 +32,7 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.Run;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -105,23 +107,16 @@ public class ScanOnDemandTask implements Runnable {
      * @param run the non-scanned/scanned build to scan/rescan.
      */
     public void scanBuild(Run run) {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(run.getLogFile(), true);
-            PrintStream buildLog = new PrintStream(fos, true, "UTF8");
+        File file = new File(run.getRootDir(), ScanLogAction.FILE_NAME);
+        try (
+                FileOutputStream fos = new FileOutputStream(file, true);
+                PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+        ) {
             PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(run);
             BuildFailureScanner.scanIfNotScanned(run, buildLog);
             run.save();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get the causes from the knowledge base", e);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed to close the build log file " + run.getLogFile(), e);
-                }
-            }
         }
     }
 }

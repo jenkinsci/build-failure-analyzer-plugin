@@ -547,7 +547,7 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public static boolean isSizeInLimit(Run build) {
         return getInstance().getMaxLogSize() == 0
-                || getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
+                || getInstance().getMaxLogSize() > (build.getLogText().length() / BYTES_IN_MEGABYTE);
     }
 
     /**
