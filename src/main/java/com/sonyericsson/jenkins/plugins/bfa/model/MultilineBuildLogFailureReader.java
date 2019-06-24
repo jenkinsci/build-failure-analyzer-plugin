@@ -62,11 +62,10 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      */
     @Override
     public FoundIndication scan(Run build) throws IOException {
-        String currentfile = build.getLogFile().getName();
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
-            return scanMultiLineOneFile(build, reader, currentfile);
+            return scanMultiLineOneFile(build, reader, "log");
         } finally {
             if (reader != null) {
                 try {
@@ -89,12 +88,11 @@ public class MultilineBuildLogFailureReader extends FailureReader {
      */
     public FoundIndication scan(Run build, PrintStream buildLog) {
         FoundIndication foundIndication = null;
-        String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;
         long start = System.currentTimeMillis();
         try {
             reader = new BufferedReader(build.getLogReader());
-            foundIndication = scanMultiLineOneFile(build, reader, currentFile);
+            foundIndication = scanMultiLineOneFile(build, reader, "log");
         } catch (IOException ioe) {
             logger.log(Level.SEVERE, "[BFA] I/O problems during indication analysis: ", ioe);
             buildLog.println("[BFA] I/O problems during indication analysis.");
