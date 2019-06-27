@@ -44,6 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
+import org.powermock.reflect.Whitebox;
 
 import java.util.List;
 
@@ -52,9 +53,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * TestCases for {@link PluginImpl}.
@@ -122,6 +126,43 @@ public class PluginImplHudsonTest {
 
         assertNotSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
         assertSame(knowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
+        assertEquals(1, knowledgeBase.getCauses().size());
+        assertSame(cause, knowledgeBase.getCauses().iterator().next());
+
+        //Check that the config page contains what we expect as well.
+        HtmlPage page = jenkins.createWebClient().goTo("configure");
+        assertConfigPageRendering(knowledgeBase, page);
+    }
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with the same
+     * KnowledgeBase type but different configuration.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureConvertSameType() throws Exception {
+        DifferentKnowledgeBase prevKnowledgeBase = new DifferentKnowledgeBase("Original");
+        FailureCause cause = new FailureCause("Olle", "Olle");
+        cause.addIndication(new BuildLogIndication(".*olle"));
+        cause = prevKnowledgeBase.addCause(cause);
+        PluginImpl instance = PluginImpl.getInstance();
+        Whitebox.setInternalState(instance, KnowledgeBase.class, prevKnowledgeBase);
+        StaplerRequest sreq = mock(StaplerRequest.class);
+        DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello Again");
+        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
+
+        doAnswer(invocationOnMock -> {
+            instance.setKnowledgeBase(knowledgeBase);
+            return null;
+        }).when(sreq).bindJSON(eq(instance), any());
+
+        JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
+
+        instance.configure(sreq, form);
+
+        assertNotSame(prevKnowledgeBase, instance.getKnowledgeBase());
+        assertSame(knowledgeBase, instance.getKnowledgeBase());
         assertEquals(1, knowledgeBase.getCauses().size());
         assertSame(cause, knowledgeBase.getCauses().iterator().next());
 
