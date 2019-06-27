@@ -41,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIn
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+import com.timgroup.statsd.StatsDClient;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -56,8 +57,10 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 import org.jvnet.hudson.test.TestBuilder;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
@@ -83,6 +86,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+
 
 //CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: TestData.
 
@@ -109,6 +114,7 @@ public class BuildFailureScannerHudsonTest {
     private static final String FORMATTED_DESCRIPTION = "The error was: brief";
 
     private boolean hasCalledStatistics = false;
+    private boolean hasCalledIncrement = false;
 
     /**
      * Happy test that should find one failure indication in the build.
@@ -470,6 +476,68 @@ public class BuildFailureScannerHudsonTest {
             Thread.sleep(twoSeconds);
         }
         verify(base).saveStatistics(argThat(new IsValidStatisticsObject()));
+    }
+
+    /**
+     * Tests that the statsdClient is called for each FoundCause.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testStatsdLoggingWhenEnabled() throws Exception {
+        FailureCause cause = configureCauseAndIndication();
+
+        StatsDClient client = mock(StatsDClient.class);
+        Whitebox.setInternalState(PluginImpl.getInstance(), client);
+        Whitebox.setInternalState(PluginImpl.getInstance(), "statsdEnabled", true);
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                hasCalledIncrement = true;
+                return null;
+            }
+        }).when(client).incrementCounter(Matchers.<String>any());
+
+        FreeStyleProject project = createProject();
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        long time = System.currentTimeMillis();
+        while (System.currentTimeMillis() < time + 30000) {
+            if (hasCalledIncrement) {
+                break;
+            }
+            final int twoSeconds = 2000;
+            Thread.sleep(twoSeconds);
+        }
+
+        ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+        verify(client).incrementCounter(argument.capture());
+
+        assertEquals("test0.causes.error", argument.getValue());
+    }
+
+    /**
+     * Tests that the statsdClient is not called when isStatsdEnabled is false.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testStatsdLoggingWhenNotEnabled() throws Exception {
+        FailureCause cause = configureCauseAndIndication();
+
+        StatsDClient client = mock(StatsDClient.class);
+        Whitebox.setInternalState(PluginImpl.getInstance(), client);
+        Whitebox.setInternalState(PluginImpl.getInstance(), "statsdEnabled", false);
+
+        FreeStyleProject project = createProject();
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        verify(client, never()).incrementCounter(Mockito.anyString());
     }
 
     /**

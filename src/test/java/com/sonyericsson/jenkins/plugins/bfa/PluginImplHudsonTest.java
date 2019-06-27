@@ -267,6 +267,10 @@ public class PluginImplHudsonTest {
         form.put("threadKeepAliveTime", ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
         form.put("waitForJobShutdownTime", ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
         form.put("corePoolNumberOfThreads", ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
+        form.put("statsdEnabled", false);
+        form.put("statsdHost", "");
+        form.put("statsdPort", 0);
+        form.put("statsdPrefix", "");
         if (convert != null) {
             form.put("convertOldKb", convert);
         }

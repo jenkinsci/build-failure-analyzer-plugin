@@ -215,6 +215,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             }
 
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
         }
@@ -279,7 +280,6 @@ public class BuildFailureScanner extends RunListener<Run> {
                                  + foundCause.getCategories().get(0));
                 }
             }
-
         } else {
             logToScanLog(scanLog, "No failure causes found");
         }

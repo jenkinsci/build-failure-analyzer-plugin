@@ -31,6 +31,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import hudson.ExtensionList;
 import hudson.Plugin;
 import hudson.PluginManager;
@@ -143,6 +145,14 @@ public class PluginImpl extends Plugin {
      * ScanOnDemandVariable instance.
      */
     private ScanOnDemandVariables sodVariables;
+
+    private boolean statsdEnabled;
+
+    private String statsdPrefix;
+    private String statsdHost;
+    private int statsdPort;
+
+    private StatsDClient statsdClient;
 
     @Override
     public void start() throws Exception {
@@ -373,6 +383,27 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Whether or not to log statistics using Statsd.
+     *
+     * @return True if enabled.
+     */
+    public boolean isStatsdEnabled() {
+            return statsdEnabled;
+    }
+
+    /**
+     * Returns an instance of statsdClient pre-configured using statsdPrefix, statsdHost and statsdPort.
+     *
+     * @return an instance of StatsDClient
+     */
+    public StatsDClient getStatsDClient() {
+        if (statsdClient == null) {
+            statsdClient = new NonBlockingStatsDClient(statsdPrefix, statsdHost, statsdPort);
+        }
+        return statsdClient;
+    }
+
+    /**
      * Get categories to be assigned to failure causes representing failed test cases.
      *
      * @return the categories.
@@ -585,6 +616,12 @@ public class PluginImpl extends Plugin {
         testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
         testResultCategories = o.getString("testResultCategories");
         maxLogSize = o.optInt("maxLogSize");
+
+        statsdEnabled = o.optBoolean("statsdEnabled", false);
+        statsdHost = o.getString("statsdHost");
+        statsdPort = o.getInt("statsdPort");
+        statsdPrefix = o.getString("statsdPrefix");
+
         int scanThreads = o.getInt("nrOfScanThreads");
         int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
         int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");

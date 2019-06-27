@@ -99,6 +99,17 @@ public class FoundFailureCause {
     }
 
     /**
+     * Getter for a sluggified version of the name.
+     * Used by the StatsdLoggingWork as the key to send to graphite.
+     *
+     * @return the sluggified version of the name
+     */
+    @Exported
+    public String getSlugName() {
+        return name.toLowerCase().replace(' ', '-');
+    }
+
+    /**
      * Getter for the description.
      *
      * @return the description.

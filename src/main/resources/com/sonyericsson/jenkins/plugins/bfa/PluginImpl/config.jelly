@@ -78,6 +78,9 @@
                 </f:optionalBlock>
             </table>
         </f:block>
+        <f:entry title="${%Use statsd to log statistics}">
+            <f:checkbox name="statsdEnabled" checked="${it.statsdEnabled}" default="false"/>
+        </f:entry>
     </f:section>
     <f:advanced>
         <f:section title="${%Scan non-scanned builds}">
@@ -122,5 +125,25 @@
                        value="${it.maxLogSize}"
                        default="${it.DEFAULT_MAX_LOG_SIZE}"/>
         </f:entry>
+        <f:section title="${%Statsd logging}">
+            <f:entry title="${%Stastd prefix}"
+                    description="${%Statsd prefix}">
+                <f:textbox name="statsdPrefix"
+                           value="${it.statsdPrefix}"
+                           default=""/>
+            </f:entry>
+            <f:entry title="${%Stastd host}"
+                    description="${%Statsd host}">
+                <f:textbox name="statsdHost"
+                           value="${it.statsdHost}"
+                           default=""/>
+            </f:entry>
+            <f:entry title="${%Stastd port}"
+                    description="${%Statsd port}">
+                <f:textbox name="statsdPort"
+                           value="${it.statsdPort}"
+                           default=""/>
+            </f:entry>
+        </f:section>
     </f:advanced>
 </j:jelly>
