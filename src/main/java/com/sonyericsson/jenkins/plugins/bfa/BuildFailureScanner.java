@@ -67,9 +67,8 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
-import jenkins.model.Jenkins;
-
 import javax.annotation.Nonnull;
+import jenkins.model.Jenkins;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -114,9 +113,24 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     @Override
-    public void onCompleted(Run build, @Nonnull TaskListener listener) {
-        logger.entering(getClass().getName(), "onCompleted");
+    public void onCompleted(Run run, @Nonnull TaskListener listener) {
+        if (run instanceof AbstractBuild) {
+            logger.entering(getClass().getName(), "onCompleted");
 
+            doScan(run);
+        }
+    }
+
+    @Override
+    public void onFinalized(Run run) {
+        if (!(run instanceof AbstractBuild)) {
+            logger.entering(getClass().getName(), "onFinalized");
+
+            doScan(run);
+        }
+    }
+
+    private void doScan(Run build) {
         File file = new File(build.getRootDir(), ScanLogAction.FILE_NAME);
         try (
                 FileOutputStream fos = new FileOutputStream(file, true);
