@@ -23,6 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -50,19 +52,6 @@ import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import jenkins.model.Jenkins;
-import org.apache.commons.collections.keyvalue.MultiKey;
-import org.bson.types.ObjectId;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.Hour;
-import org.jfree.data.time.Month;
-import org.jfree.data.time.TimePeriod;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.mongojack.DBCursor;
-import org.mongojack.JacksonDBCollection;
-import org.mongojack.WriteResult;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -80,6 +69,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jenkins.model.Jenkins;
+import org.apache.commons.collections.keyvalue.MultiKey;
+import org.bson.types.ObjectId;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.Month;
+import org.jfree.data.time.TimePeriod;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.mongojack.DBCursor;
+import org.mongojack.JacksonDBCollection;
+import org.mongojack.WriteResult;
+import org.mongojack.internal.MongoJackModule;
 
 import static java.util.Arrays.asList;
 
@@ -101,6 +103,15 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     static final BasicDBObject NOT_REMOVED_QUERY = new BasicDBObject("_removed", new BasicDBObject("$exists", false));
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
+    private static final int CONNECT_TIMEOUT = 5000;
+    private static final int SERVER_SELECTION_TIMEOUT = 5000;
+
+    private static final TypeFactory TYPE_FACTORY = TypeFactory.defaultInstance()
+            .withClassLoader(MongoDBKnowledgeBase.class.getClassLoader());
+
+    private static final ObjectMapper OBJECT_MAPPER = MongoJackModule
+            .configure(new ObjectMapper())
+            .setTypeFactory(TYPE_FACTORY);
 
     private transient MongoClient mongo;
     private transient DB db;
@@ -1024,8 +1035,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         if (mongo == null) {
             MongoClientOptions mongoClientOptions = MongoClientOptions
                     .builder()
-                    .connectTimeout(5000)
-                    .serverSelectionTimeout(5000)
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .serverSelectionTimeout(SERVER_SELECTION_TIMEOUT)
                     .build();
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
@@ -1085,7 +1096,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             if (collection == null) {
                 collection = getCollection();
             }
-            jacksonCollection = JacksonDBCollection.wrap(collection, FailureCause.class, String.class);
+            jacksonCollection = JacksonDBCollection.wrap(collection, FailureCause.class, String.class, OBJECT_MAPPER);
         }
         return jacksonCollection;
     }
@@ -1099,7 +1110,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             if (statisticsCollection == null) {
                 statisticsCollection = getStatisticsCollection();
             }
-            jacksonStatisticsCollection = JacksonDBCollection.wrap(statisticsCollection, Statistics.class, String.class);
+            jacksonStatisticsCollection = JacksonDBCollection.wrap(statisticsCollection, Statistics.class, String.class,
+                    OBJECT_MAPPER);
         }
         return jacksonStatisticsCollection;
     }
@@ -1162,7 +1174,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @param value the database name to check.
          * @return {@link hudson.util.FormValidation#ok()} if everything is well.
          */
-        public FormValidation doCheckDBName(@QueryParameter("value") String value) {
+        public FormValidation doCheckDbName(@QueryParameter("value") String value) {
             if (value == null || value.isEmpty()) {
                 return FormValidation.error("Please provide a database name!");
             } else {

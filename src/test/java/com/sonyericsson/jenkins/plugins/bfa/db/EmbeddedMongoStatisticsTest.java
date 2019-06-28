@@ -32,6 +32,7 @@ import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics.UpstreamCause;
 import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
+import jenkins.model.Jenkins;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.Hour;
 import org.jfree.data.time.TimePeriod;
@@ -43,6 +44,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +63,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -71,7 +74,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
  *
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(PluginImpl.class)
+@PrepareForTest(value = {PluginImpl.class, Jenkins.class})
 @PowerMockIgnore("javax.management.*") //Solves PowerMock issue 277
 public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     // CS IGNORE MagicNumber FOR NEXT 600 LINES. REASON: Test data.
@@ -109,6 +112,11 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         hourPeriod2 = new Hour();
         filter1 = new GraphFilterBuilder();
         filter2 = new GraphFilterBuilder();
+
+        Jenkins mockJenkins = mock(Jenkins.class);
+        mockStatic(Jenkins.class);
+        when(Jenkins.getInstance()).thenReturn(mockJenkins);
+        when(mockJenkins.getRootDir()).thenReturn(new File(""));
 
         PluginImpl plugin = new PluginImpl();
         mockStatic(PluginImpl.class);
