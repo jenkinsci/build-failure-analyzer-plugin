@@ -210,7 +210,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             List<FailureCauseDisplayData> downstreamFailureCauses = data.getDownstreamFailureCauses();
 
             if (!downstreamFailureCauses.isEmpty()) {
-                logToScanLog(scanLog,"Found downstream Failure causes ...");
+                logToScanLog(scanLog, "Found downstream Failure causes ...");
                 printDownstream(scanLog, downstreamFailureCauses);
             }
 
@@ -232,7 +232,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
             FailureCauseDisplayData.Links links = displayData.getLinks();
             if (!displayData.getFoundFailureCauses().isEmpty()) {
-                logToScanLog(scanLog,"See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
+                logToScanLog(scanLog, "See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
                 for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
                     String foundString = foundCause.getName();
                     if (foundCause.getCategories() != null) {
