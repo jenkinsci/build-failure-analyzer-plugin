@@ -83,7 +83,16 @@ public class DisplayDownstreamTest {
     private static final String PROJECT_EW = "NORTH-WEST";
     private static final String PROJECT_SE = "SOUTH-EAST";
     private static final String PROJECT_SW = "SOUTH-WEST";
-    private static final String DEFAULT = Functions.isWindows() ? "echo I am %PROJECT_NAME%" : "echo I am ${PROJECT_NAME}";
+    private static final String DEFAULT;
+
+    static {
+        if (Functions.isWindows()) {
+            DEFAULT = "echo I am %PROJECT_NAME%";
+        } else {
+            DEFAULT = "echo I am ${PROJECT_NAME}";
+        }
+    }
+
     private static final String FAILED = "rapakalja";
 
     /**
@@ -348,10 +357,11 @@ public class DisplayDownstreamTest {
     private FreeStyleProject createFreestyleProjectWithShell(String name, String command)
             throws Exception {
         final FreeStyleProject project = jenkins.createFreeStyleProject(name);
-        if (Functions.isWindows())
+        if (Functions.isWindows()) {
             project.getBuildersList().add(new BatchFile(command));
-        else
+        } else {
             project.getBuildersList().add(new Shell(command));
+        }
         return project;
     }
 }
