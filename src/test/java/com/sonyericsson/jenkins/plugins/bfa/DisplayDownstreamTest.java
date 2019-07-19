@@ -47,6 +47,8 @@ import hudson.plugins.parameterizedtrigger.CurrentBuildParameters;
 import hudson.plugins.parameterizedtrigger.TriggerBuilder;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -194,6 +196,40 @@ public class DisplayDownstreamTest {
                 new BlockableBuildTriggerConfig(child1.getName() + ", " + child2.getName(),
                     new BlockingBehaviour(Result.FAILURE, Result.FAILURE, Result.FAILURE),
                     new ArrayList<AbstractBuildParameters>())));
+
+        final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
+        BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
+                "Other description", "Other comment", "Category", indication);
+
+        parent.scheduleBuild2(0).get();
+
+        final FailureCauseBuildAction buildAction = parent.getFirstBuild().getAction(FailureCauseBuildAction.class);
+        final FailureCauseDisplayData failureCauseDisplayData = buildAction.getFailureCauseDisplayData();
+        final List<FailureCauseDisplayData> downstreamCauses = failureCauseDisplayData.getDownstreamFailureCauses();
+
+        assertEquals(0, failureCauseDisplayData.getFoundFailureCauses().size());
+        assertEquals(2, downstreamCauses.size());
+
+        for (FailureCauseDisplayData causeDisplayData : downstreamCauses) {
+            final List<FoundFailureCause> causeListFromAction = causeDisplayData.getFoundFailureCauses();
+            assertEquals(1, causeListFromAction.size());
+            assertEquals(causeListFromAction.get(0).getName(), "Other cause");
+        }
+    }
+
+    /**
+     * Test FailureCauseDisplayData object population from pipeline (using build-cache-dbf).
+     *
+     * @throws Exception if failure cause cant be configured or build can't
+     *                   be executed
+     */
+    @Test
+    public void testIdentifiedTwoCausesFromPipeline() throws Exception {
+        final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
+        final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
+
+        final WorkflowJob parent = jenkins.createProject(WorkflowJob.class, "parent");
+        parent.setDefinition(new CpsFlowDefinition("try {build('child1')} catch (e) {};build('child2')", true));
 
         final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
