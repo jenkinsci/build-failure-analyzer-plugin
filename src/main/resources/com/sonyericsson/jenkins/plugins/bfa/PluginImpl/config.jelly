@@ -54,6 +54,9 @@
         <f:entry title="${%Concurrent scans}" description="${%nrOfScanThreadsDescription}">
             <f:number field="nrOfScanThreads" clazz="required positive-number" />
         </f:entry>
+        <f:entry title="${%Generic categories}" description="${%genericCategoriesDescription}">
+            <f:textbox field="genericCategoriesAsString" />
+        </f:entry>
         <f:block>
             <table>
                 <f:optionalBlock name="testResultParsingEnabled"

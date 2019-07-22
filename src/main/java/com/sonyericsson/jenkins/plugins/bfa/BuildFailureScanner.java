@@ -25,25 +25,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -67,8 +48,28 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
-import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
+
+import javax.annotation.Nonnull;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Looks for Indications, trying to find the Cause of a problem.
@@ -201,6 +202,31 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList.addAll(findFailedTests(build, scanLog));
             } else {
                 foundCauseList = foundCauseListToLog;
+            }
+
+            List<String> genericCategories = PluginImpl.getInstance().getGenericCategories();
+
+            if (!genericCategories.isEmpty()) {
+                // move all generic cause from the list to a second list
+                List<FoundFailureCause> foundGenericCauses = new ArrayList<>();
+
+                for (Iterator<FoundFailureCause> iterator = foundCauseList.iterator(); iterator.hasNext();) {
+                    FoundFailureCause cause = iterator.next();
+                    if (!Collections.disjoint(cause.getCategories(), genericCategories)) {
+                        iterator.remove();
+                        foundGenericCauses.add(cause);
+                    }
+                }
+
+                if (!foundGenericCauses.isEmpty()) {
+                    // we have at least one generic cause
+                    if (!foundCauseList.isEmpty()) {
+                        logToScanLog(scanLog, "Removing generic causes");
+                    } else {
+                        // we have ONLY generic causes
+                        foundCauseList = foundGenericCauses;
+                    }
+                }
             }
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
