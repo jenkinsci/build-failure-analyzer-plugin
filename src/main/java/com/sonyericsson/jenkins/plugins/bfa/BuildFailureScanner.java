@@ -204,27 +204,27 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList = foundCauseListToLog;
             }
 
-            List<String> genericCategories = PluginImpl.getInstance().getGenericCategories();
+            List<String> fallbackCategories = PluginImpl.getInstance().getFallbackCategories();
 
-            if (!genericCategories.isEmpty()) {
+            if (!fallbackCategories.isEmpty()) {
                 // move all generic cause from the list to a second list
-                List<FoundFailureCause> foundGenericCauses = new ArrayList<>();
+                List<FoundFailureCause> foundFallbackCauses = new ArrayList<>();
 
                 for (Iterator<FoundFailureCause> iterator = foundCauseList.iterator(); iterator.hasNext();) {
                     FoundFailureCause cause = iterator.next();
-                    if (!Collections.disjoint(cause.getCategories(), genericCategories)) {
+                    if (!Collections.disjoint(cause.getCategories(), fallbackCategories)) {
                         iterator.remove();
-                        foundGenericCauses.add(cause);
+                        foundFallbackCauses.add(cause);
                     }
                 }
 
-                if (!foundGenericCauses.isEmpty()) {
+                if (!foundFallbackCauses.isEmpty()) {
                     // we have at least one generic cause
                     if (!foundCauseList.isEmpty()) {
                         logToScanLog(scanLog, "Removing generic causes");
                     } else {
                         // we have ONLY generic causes
-                        foundCauseList = foundGenericCauses;
+                        foundCauseList = foundFallbackCauses;
                     }
                 }
             }

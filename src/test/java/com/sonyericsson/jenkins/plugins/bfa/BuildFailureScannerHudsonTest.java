@@ -157,10 +157,14 @@ public class BuildFailureScannerHudsonTest {
      */
     @Test
     public void testOnlyOneGenericIndicationFound() throws Exception {
-        PluginImpl.getInstance().setGenericCategoriesAsString("Generic");
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
 
-        FailureCause genericFailureCause = configureCauseAndIndication("Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*"));
-        FailureCause specificFailureCause = configureCauseAndIndication("Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*"));
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
 
         FreeStyleProject project = createProject("Generic Error\nUnknown Error");
 
@@ -169,7 +173,9 @@ public class BuildFailureScannerHudsonTest {
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
 
-        List<FoundFailureCause> causeListFromAction = build.getAction(FailureCauseBuildAction.class).getFoundFailureCauses();
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
         assertTrue(findCauseInList(causeListFromAction, genericFailureCause));
         assertFalse(findCauseInList(causeListFromAction, specificFailureCause));
     }
@@ -181,10 +187,14 @@ public class BuildFailureScannerHudsonTest {
      */
     @Test
     public void testGenericFailureCauseIsDroppedForSpecificOne() throws Exception {
-        PluginImpl.getInstance().setGenericCategoriesAsString("Generic");
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
 
-        FailureCause genericFailureCause = configureCauseAndIndication("Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*"));
-        FailureCause specificFailureCause = configureCauseAndIndication("Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*"));
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
 
         FreeStyleProject project = createProject("Generic Error\nSpecific Error");
 
@@ -193,7 +203,9 @@ public class BuildFailureScannerHudsonTest {
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
 
-        List<FoundFailureCause> causeListFromAction = build.getAction(FailureCauseBuildAction.class).getFoundFailureCauses();
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
         assertFalse(findCauseInList(causeListFromAction, genericFailureCause));
         assertTrue(findCauseInList(causeListFromAction, specificFailureCause));
     }

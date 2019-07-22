@@ -54,8 +54,8 @@
         <f:entry title="${%Concurrent scans}" description="${%nrOfScanThreadsDescription}">
             <f:number field="nrOfScanThreads" clazz="required positive-number" />
         </f:entry>
-        <f:entry title="${%Generic categories}" description="${%genericCategoriesDescription}">
-            <f:textbox field="genericCategoriesAsString" />
+        <f:entry title="${%Fallback categories}" description="${%fallbackCategoriesDescription}">
+            <f:textbox field="fallbackCategoriesAsString" />
         </f:entry>
         <f:block>
             <table>

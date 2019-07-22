@@ -136,8 +136,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     private Boolean gerritTriggerEnabled;
 
-    private String genericCategoriesAsString;
-    private transient List<String> genericCategories;
+    private String fallbackCategoriesAsString;
+    private transient List<String> fallbackCategories;
 
     private transient CopyOnWriteList<FailureCause> causes;
 
@@ -398,17 +398,17 @@ public class PluginImpl extends GlobalConfiguration {
      * @param categories The space separated list of generic categories
      */
     @DataBoundSetter
-    public void setGenericCategoriesAsString(String categories) {
-        this.genericCategoriesAsString = categories;
+    public void setFallbackCategoriesAsString(String categories) {
+        this.fallbackCategoriesAsString = categories;
         if (categories == null) {
-            genericCategories = Collections.emptyList();
+            fallbackCategories = Collections.emptyList();
         } else {
-            genericCategories = Arrays.asList(Util.tokenize(categories));
+            fallbackCategories = Arrays.asList(Util.tokenize(categories));
         }
     }
 
-    public String getGenericCategoriesAsString() {
-        return Util.join(getGenericCategories(), " ");
+    public String getFallbackCategoriesAsString() {
+        return Util.join(getFallbackCategories(), " ");
     }
 
     /**
@@ -437,15 +437,15 @@ public class PluginImpl extends GlobalConfiguration {
      * Get the categories that are considered generic.
      * @return a list of generic categories, never null.
      */
-    public List<String> getGenericCategories() {
-        if (genericCategories == null) {
-            if (genericCategoriesAsString == null) {
-                genericCategories = Collections.emptyList();
+    public List<String> getFallbackCategories() {
+        if (fallbackCategories == null) {
+            if (fallbackCategoriesAsString == null) {
+                fallbackCategories = Collections.emptyList();
             } else {
-                genericCategories = Arrays.asList(Util.tokenize(genericCategoriesAsString));
+                fallbackCategories = Arrays.asList(Util.tokenize(fallbackCategoriesAsString));
             }
         }
-        return genericCategories;
+        return fallbackCategories;
     }
 
     /**
