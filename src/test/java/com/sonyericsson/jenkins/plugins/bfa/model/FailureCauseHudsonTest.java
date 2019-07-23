@@ -25,14 +25,17 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
+import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.WebResponseListener;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -55,6 +58,9 @@ import static org.junit.Assert.fail;
  */
 public class FailureCauseHudsonTest {
 
+    /**
+     * The simulated Jenkins instance.
+     */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -144,7 +150,7 @@ public class FailureCauseHudsonTest {
     }
 
     /**
-     * Test for JENKINS-47027
+     * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
      *
      * @throws Exception if so.
      */
@@ -153,18 +159,57 @@ public class FailureCauseHudsonTest {
         JenkinsRule.WebClient client = jenkins.createWebClient();
         client.setAjaxController(new NicelyResynchronizingAjaxController());
 
-        WebResponseListener.StatusListener statusListener = new WebResponseListener.StatusListener(500);
+        WebResponseListener.StatusListener serverErrors =
+                new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        WebResponseListener.StatusListener success = new WebResponseListener.StatusListener(HttpStatus.SC_OK);
 
-        client.addWebResponseListener(statusListener);
+        client.addWebResponseListener(serverErrors);
+        client.addWebResponseListener(success);
 
         client.loadDownloadedResponses();
         HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/new");
-
 
         HtmlInput input = page.getFormByName("causeForm").getInputByName("_.name");
         input.setValueAttribute("Mööp");
         input.fireEvent("change");
 
-        assertTrue(statusListener.getResponses().isEmpty());
+        assertTrue(serverErrors.getResponses().isEmpty());
+        WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);
+
+        assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
+                "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkName"));
+        assertEquals(webResponse.getContentAsString(), "<div/>");
+    }
+
+    /**
+     * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoCheckDescriptionViaWebForm() throws Exception {
+        JenkinsRule.WebClient client = jenkins.createWebClient();
+        client.setAjaxController(new NicelyResynchronizingAjaxController());
+
+        WebResponseListener.StatusListener serverErrors =
+                new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        WebResponseListener.StatusListener success = new WebResponseListener.StatusListener(HttpStatus.SC_OK);
+
+        client.addWebResponseListener(serverErrors);
+        client.addWebResponseListener(success);
+
+        client.loadDownloadedResponses();
+        HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/new");
+
+        HtmlTextArea input = page.getFormByName("causeForm").getTextAreaByName("_.description");
+        input.setText("Mööp");
+        input.fireEvent("change");
+
+        assertTrue(serverErrors.getResponses().isEmpty());
+        WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);
+
+        assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
+                "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkDescription"));
+        assertEquals(webResponse.getContentAsString(), "<div/>");
     }
 }

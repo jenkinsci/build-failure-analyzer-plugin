@@ -58,6 +58,7 @@ import static org.junit.matchers.JUnitMatchers.hasItems;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -73,6 +74,7 @@ public class FailureCauseTest {
 
     private PluginImpl pluginMock;
     private KnowledgeBase baseMock;
+    private FailureCause.FailureCauseDescriptor descriptor;
 
     /**
      * Runs before every test.
@@ -84,6 +86,15 @@ public class FailureCauseTest {
         pluginMock = PowerMockito.mock(PluginImpl.class);
         mockStatic(PluginImpl.class);
         when(PluginImpl.getInstance()).thenReturn(pluginMock);
+
+        Jenkins jenkinsMock = mock(Jenkins.class);
+        mockStatic(Jenkins.class);
+        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
+        doCallRealMethod().when(Jenkins.class);
+        Jenkins.checkGoodName(any());
+
+        descriptor = new FailureCause.FailureCauseDescriptor();
+        when(jenkinsMock.getDescriptorByType(FailureCause.FailureCauseDescriptor.class)).thenReturn(descriptor);
     }
 
     /**
@@ -112,7 +123,6 @@ public class FailureCauseTest {
         categories.add(compCrashed);
         categories.add(otherError);
         when(baseMock.getCategories()).thenReturn(categories);
-        FailureCause.FailureCauseDescriptor descriptor = new FailureCause.FailureCauseDescriptor();
         AutoCompletionCandidates candidates = descriptor.doAutoCompleteCategories("comp");
         List<String> values = candidates.getValues();
         assertEquals("Two autocompletion candidates should have been found", 2, values.size());
@@ -192,81 +202,76 @@ public class FailureCauseTest {
     }
 
     /**
-     * Test for {@link FailureCause#doCheckDescription(String)} with an empty description.
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)} with an empty description.
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckDescriptionEmpty() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckDescription("");
+        FormValidation validation = descriptor.doCheckDescription("");
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Test for {@link FailureCause#doCheckDescription(String)}. With the reserved "new" description ({@link
-     * CauseManagement#NEW_CAUSE_DESCRIPTION}).
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)}.
+     * With the reserved "new" description ({@link CauseManagement#NEW_CAUSE_DESCRIPTION}).
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckDescriptionReserved() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckDescription(CauseManagement.NEW_CAUSE_DESCRIPTION);
+        FormValidation validation = descriptor.doCheckDescription(CauseManagement.NEW_CAUSE_DESCRIPTION);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Happy test for {@link FailureCause#doCheckDescription(String)}.
+     * Happy test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)}.
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckDescription() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckDescription("My <b>Description</b>");
+        FormValidation validation = descriptor.doCheckDescription("My <b>Description</b>");
         assertSame(FormValidation.Kind.OK, validation.kind);
     }
 
     /**
-     * Test for {@link FailureCause#doCheckName(String)} with an empty name.
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} with an empty name.
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckNameEmpty() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckName("");
+        FormValidation validation = descriptor.doCheckName("", null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Test for {@link FailureCause#doCheckName(String)} with the reserved "new" name ({@link
-     * CauseManagement#NEW_CAUSE_NAME}).
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)}
+     * with the reserved "new" name ({@link CauseManagement#NEW_CAUSE_NAME}).
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckNameReserved() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckName(CauseManagement.NEW_CAUSE_NAME);
+        FormValidation validation = descriptor.doCheckName(CauseManagement.NEW_CAUSE_NAME, null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Test for {@link FailureCause#doCheckName(String)} with bad characters in the name.
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} with bad characters in the name.
      *
      * @throws Exception if so.
      */
     @Test
     public void testDoCheckNameNoneGood() throws Exception {
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckName("[Name]");
+        FormValidation validation = descriptor.doCheckName("[Name]", null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Test for {@link FailureCause#doCheckName(String)} when there already exists a cause with the same name.
+     * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} when
+     * there already exists a cause with the same name.
      *
      * @throws Exception if so.
      */
@@ -282,13 +287,12 @@ public class FailureCauseTest {
 
         when(pluginMock.getKnowledgeBase()).thenReturn(base);
 
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckName("BName");
+        FormValidation validation = descriptor.doCheckName("BName", null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
 
     /**
-     * Happy test for {@link FailureCause#doCheckName(String)}.
+     * Happy test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)}.
      *
      * @throws Exception if so.
      */
@@ -296,8 +300,7 @@ public class FailureCauseTest {
     public void testDoCheckName() throws Exception {
         LocalFileKnowledgeBase base = new LocalFileKnowledgeBase();
         when(pluginMock.getKnowledgeBase()).thenReturn(base);
-        FailureCause cause = new FailureCause();
-        FormValidation validation = cause.doCheckName("Some name");
+        FormValidation validation = descriptor.doCheckName("Some name", null);
         assertSame(FormValidation.Kind.OK, validation.kind);
     }
 
@@ -309,9 +312,6 @@ public class FailureCauseTest {
      */
     @Test
     public void testDoConfigSubmitNewOk() throws Exception {
-        Jenkins jenkinsMock = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
 
         mockEmptyKnowledgeBase();
 
@@ -345,10 +345,6 @@ public class FailureCauseTest {
      */
     @Test
     public void testDoConfigSubmitSaveOk() throws Exception {
-        Jenkins jenkinsMock = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
-
         mockEmptyKnowledgeBase();
 
         String id = "abc";
@@ -381,10 +377,6 @@ public class FailureCauseTest {
      */
     @Test(expected = Failure.class)
     public void testDoConfigSubmitSaveWrongId() throws Exception {
-        Jenkins jenkinsMock = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
-
         mockEmptyKnowledgeBase();
 
         String origId = "abc";
@@ -411,10 +403,6 @@ public class FailureCauseTest {
      */
     @Test(expected = Failure.class)
     public void testDoConfigSubmitNewWithId() throws Exception {
-        Jenkins jenkinsMock = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
-
         mockEmptyKnowledgeBase();
 
         String origId = "";
@@ -441,10 +429,6 @@ public class FailureCauseTest {
      */
     @Test(expected = Failure.class)
     public void testDoConfigSubmitNewCloneAttempt() throws Exception {
-        Jenkins jenkinsMock = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
-
         mockEmptyKnowledgeBase();
 
         String origId = "abc";
