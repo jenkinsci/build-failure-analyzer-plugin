@@ -670,23 +670,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          * @return the AutoCompletionCandidates.
          */
         public AutoCompletionCandidates doAutoCompleteCategories(@QueryParameter String value) {
-            List<String> categories;
-            try {
-                categories = PluginImpl.getInstance().getKnowledgeBase().getCategories();
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
-                return null;
-            }
-            AutoCompletionCandidates candidates = new AutoCompletionCandidates();
-            if (categories == null) {
-                return candidates;
-            }
-            for (String category : categories) {
-                if (category.toLowerCase().startsWith(value.toLowerCase())) {
-                    candidates.add(category);
-                }
-            }
-            return candidates;
+            return PluginImpl.getInstance().getCategoryAutoCompletionCandidates(value);
         }
     }
 }

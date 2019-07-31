@@ -103,6 +103,7 @@ public class FailureCauseTest {
     @Test
     public void testAutoCompletionHappy() throws Exception {
         mockEmptyKnowledgeBase();
+        when(pluginMock.getCategoryAutoCompletionCandidates(any())).thenCallRealMethod();
         List<String> categories = new LinkedList<String>();
         String compFail = "compilationFailure";
         String compCrashed = "computerCrashed";
