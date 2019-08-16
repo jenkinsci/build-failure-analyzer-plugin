@@ -14,7 +14,9 @@ import java.util.List;
  */
 @Extension(optional = true)
 public class BuildCacheDBF extends DownstreamBuildFinder {
-
+    static {
+        BuildCache.getCache();
+    }
     @Override
     public List<Run<?, ?>> getDownstreamBuilds(Run build) {
         //noinspection unchecked
