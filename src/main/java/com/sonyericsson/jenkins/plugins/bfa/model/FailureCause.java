@@ -50,7 +50,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.verb.POST;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.mongojack.Id;
 import org.mongojack.ObjectId;
 
@@ -199,6 +199,31 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
             }
         }
         return FormValidation.ok();
+    }
+
+    /**
+     * Form validation for {@link #description}. Checks for not empty and not "Description..."
+     *
+     * @param value the form value.
+     * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckDescription(String)} instead
+     */
+    @Deprecated
+    public FormValidation doCheckDescription(@QueryParameter final String value) {
+        return getDescriptor().doCheckDescription(value);
+    }
+
+    /**
+     * Form validation for {@link #name}. Checks for not empty, not "New...", {@link Jenkins#checkGoodName(String)} and
+     * that it is unique based on the cache of existing causes.
+     *
+     * @param value the form value.
+     * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckName(String, String)} instead
+     */
+    @Deprecated
+    public FormValidation doCheckName(@QueryParameter final String value) {
+        return getDescriptor().doCheckName(value, id);
     }
 
     /**
@@ -622,7 +647,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          * @param value the form value.
          * @return {@link hudson.util.FormValidation#ok()} if everything is well.
          */
-        @POST
+        @RequirePOST
         public FormValidation doCheckDescription(@QueryParameter final String value) {
             if (Util.fixEmpty(value) == null) {
                 return FormValidation.error("You should provide a description.");
@@ -642,7 +667,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          * @param id The id (if changing an existing cause).
          * @return {@link hudson.util.FormValidation#ok()} if everything is well.
          */
-        @POST
+        @RequirePOST
         public FormValidation doCheckName(
                 @QueryParameter final String value,
                 @QueryParameter final String id) {
