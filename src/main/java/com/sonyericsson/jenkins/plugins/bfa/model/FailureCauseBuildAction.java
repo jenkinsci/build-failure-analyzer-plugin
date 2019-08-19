@@ -100,7 +100,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      *
      * @return the FoundFailureCauses.
      */
-    @Exported
+    @Exported(visibility=2)
     public List<FoundFailureCause> getFoundFailureCauses() {
         return foundFailureCauses;
     }
@@ -205,7 +205,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      *
      * @return the FailureCauseDisplayData.
      */
-    @Exported
+    @Exported(visibility=2)
     public FailureCauseDisplayData getFailureCauseDisplayData() {
         FailureCauseDisplayData failureCauseDisplayData
                 = getDownstreamData(this, 0);

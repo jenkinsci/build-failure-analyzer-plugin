@@ -83,7 +83,7 @@ public class FoundFailureCause {
      *
      * @return the id.
      */
-    @Exported
+    @Exported(visibility=3)
     public String getId() {
         return id;
     }
@@ -93,7 +93,7 @@ public class FoundFailureCause {
      *
      * @return the name.
      */
-    @Exported
+    @Exported(visibility=3)
     public String getName() {
         return name;
     }
@@ -103,7 +103,7 @@ public class FoundFailureCause {
      *
      * @return the description.
      */
-    @Exported
+    @Exported(visibility=3)
     public String getDescription() {
         return description;
     }
@@ -113,7 +113,7 @@ public class FoundFailureCause {
      *
      * @return the categories.
      */
-    @Exported
+    @Exported(visibility=3)
     public List<String> getCategories() {
         return categories;
     }
@@ -123,7 +123,7 @@ public class FoundFailureCause {
      *
      * @return the list.
      */
-    @Exported
+    @Exported(visibility=3)
     public List<FoundIndication> getIndications() {
         if (indications == null) {
             indications = new LinkedList<FoundIndication>();
