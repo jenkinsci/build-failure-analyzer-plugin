@@ -74,6 +74,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -147,6 +148,66 @@ public class BuildFailureScannerHudsonTest {
 
         assertNotNull(error);
         assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+    }
+
+    /**
+     * Happy test that should find one generic failure indication in the build.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testOnlyOneGenericIndicationFound() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nUnknown Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, genericFailureCause));
+        assertFalse(findCauseInList(causeListFromAction, specificFailureCause));
+    }
+
+    /**
+     * Happy test that should replace the generic failure indication with the specific one.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testGenericFailureCauseIsDroppedForSpecificOne() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nSpecific Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertFalse(findCauseInList(causeListFromAction, genericFailureCause));
+        assertTrue(findCauseInList(causeListFromAction, specificFailureCause));
     }
 
     /**

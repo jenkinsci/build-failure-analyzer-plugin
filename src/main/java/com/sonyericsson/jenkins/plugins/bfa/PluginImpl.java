@@ -33,10 +33,12 @@ import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.Util;
 import hudson.XmlFile;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.init.Terminator;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -44,17 +46,22 @@ import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main thing.
@@ -130,6 +137,9 @@ public class PluginImpl extends GlobalConfiguration {
     private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
+
+    private String fallbackCategoriesAsString;
+    private transient List<String> fallbackCategories;
 
     private transient CopyOnWriteList<FailureCause> causes;
 
@@ -385,6 +395,25 @@ public class PluginImpl extends GlobalConfiguration {
     }
 
     /**
+     * Sets the categories to be considered as generic. Causes with generic categories will only be found if
+     * there are no other, non-generic causes.
+     * @param categories The space separated list of generic categories
+     */
+    @DataBoundSetter
+    public void setFallbackCategoriesAsString(String categories) {
+        this.fallbackCategoriesAsString = categories;
+        if (categories == null) {
+            fallbackCategories = Collections.emptyList();
+        } else {
+            fallbackCategories = Arrays.asList(Util.tokenize(categories));
+        }
+    }
+
+    public String getFallbackCategoriesAsString() {
+        return Util.join(getFallbackCategories(), " ");
+    }
+
+    /**
      * If failed test cases should be represented as failure causes.
      *
      * @return True if enabled.
@@ -404,6 +433,21 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public String getTestResultCategories() {
         return testResultCategories;
+    }
+
+    /**
+     * Get the categories that are considered generic.
+     * @return a list of generic categories, never null.
+     */
+    public List<String> getFallbackCategories() {
+        if (fallbackCategories == null) {
+            if (fallbackCategoriesAsString == null) {
+                fallbackCategories = Collections.emptyList();
+            } else {
+                fallbackCategories = Arrays.asList(Util.tokenize(fallbackCategoriesAsString));
+            }
+        }
+        return fallbackCategories;
     }
 
     /**
@@ -476,7 +520,6 @@ public class PluginImpl extends GlobalConfiguration {
         }
         return nrOfScanThreads;
     }
-
 
     /**
      * The number of threads to have in the pool for each build. Used by the {@link BuildFailureScanner}.
@@ -624,4 +667,46 @@ public class PluginImpl extends GlobalConfiguration {
         save();
         return true;
     }
+
+    /**
+     * Does the auto completion for categories, matching with any category already present in the knowledge base.
+     *
+     * @param prefix the input prefix.
+     * @return the AutoCompletionCandidates.
+     */
+    public AutoCompletionCandidates getCategoryAutoCompletionCandidates(String prefix) {
+        List<String> categories;
+        try {
+            categories = PluginImpl.getInstance().getKnowledgeBase().getCategories();
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
+            return null;
+        }
+        AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+        if (categories != null) {
+            for (String category : categories) {
+                if (category.toLowerCase().startsWith(prefix.toLowerCase())) {
+                    candidates.add(category);
+                }
+            }
+        }
+        for (String category : getFallbackCategories()) {
+            if (category.toLowerCase().startsWith(prefix.toLowerCase()) && !candidates.getValues().contains(category)) {
+                candidates.add(category);
+            }
+        }
+        return candidates;
+    }
+
+    /**
+     * Does the auto completion for categories, matching with any category already present in the knowledge base.
+     *
+     * @param value the input value.
+     * @return the AutoCompletionCandidates.
+     */
+    public AutoCompletionCandidates doAutoCompleteFallbackCategoriesAsString(@QueryParameter String value) {
+        return getCategoryAutoCompletionCandidates(value);
+    }
+
+
 }
