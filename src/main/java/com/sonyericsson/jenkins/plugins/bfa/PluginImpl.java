@@ -675,9 +675,10 @@ public class PluginImpl extends GlobalConfiguration {
      * @return the AutoCompletionCandidates.
      */
     public AutoCompletionCandidates getCategoryAutoCompletionCandidates(String prefix) {
+        Jenkins.getInstance().checkPermission(UPDATE_PERMISSION);
         List<String> categories;
         try {
-            categories = PluginImpl.getInstance().getKnowledgeBase().getCategories();
+            categories = getKnowledgeBase().getCategories();
         } catch (Exception e) {
             logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
             return null;

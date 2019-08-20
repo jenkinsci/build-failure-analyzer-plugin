@@ -649,6 +649,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          */
         @RequirePOST
         public FormValidation doCheckDescription(@QueryParameter final String value) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (Util.fixEmpty(value) == null) {
                 return FormValidation.error("You should provide a description.");
             }
@@ -671,6 +672,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         public FormValidation doCheckName(
                 @QueryParameter final String value,
                 @QueryParameter final String id) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (Util.fixEmpty(value) == null) {
                 return FormValidation.error("You must provide a name for the failure cause!");
             }
