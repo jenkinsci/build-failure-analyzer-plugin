@@ -50,6 +50,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.mongojack.Id;
 import org.mongojack.ObjectId;
 
@@ -168,7 +169,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     }
 
     /**
-     * Validates this FailureCause. Checks for: {@link #doCheckName(String)}, {@link #doCheckDescription(String)},
+     * Validates this FailureCause. Checks for: {@link FailureCauseDescriptor#doCheckName(String, String)},
+     * {@link FailureCauseDescriptor#doCheckDescription(String)},
      * Indications.size &gt; 0. and {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication#validate()}.
      *
      * @param newName        the name to validate
@@ -179,11 +181,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     public FormValidation validate(String newName,
                                    String newDescription,
                                    List<Indication> newIndications) {
-        FormValidation nameVal = doCheckName(newName);
+        FormValidation nameVal = getDescriptor().doCheckName(newName, id);
         if (nameVal.kind != FormValidation.Kind.OK) {
             return nameVal;
         }
-        FormValidation descriptionVal = doCheckDescription(newDescription);
+        FormValidation descriptionVal = getDescriptor().doCheckDescription(newDescription);
         if (descriptionVal.kind != FormValidation.Kind.OK) {
             return descriptionVal;
         }
@@ -204,15 +206,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param value the form value.
      * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckDescription(String)} instead
      */
+    @Deprecated
     public FormValidation doCheckDescription(@QueryParameter final String value) {
-        if (Util.fixEmpty(value) == null) {
-            return FormValidation.error("You should provide a description.");
-        }
-        if (CauseManagement.NEW_CAUSE_DESCRIPTION.equalsIgnoreCase(value.trim())) {
-            return FormValidation.error("Bad description.");
-        }
-        return FormValidation.ok();
+        return getDescriptor().doCheckDescription(value);
     }
 
     /**
@@ -221,31 +219,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param value the form value.
      * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckName(String, String)} instead
      */
+    @Deprecated
     public FormValidation doCheckName(@QueryParameter final String value) {
-        if (Util.fixEmpty(value) == null) {
-            return FormValidation.error("You must provide a name for the failure cause!");
-        }
-        if (CauseManagement.NEW_CAUSE_NAME.equalsIgnoreCase(value)) {
-            return FormValidation.error("Reserved name!");
-        }
-        try {
-            Jenkins.checkGoodName(value);
-        } catch (Failure failure) {
-            return FormValidation.error(failure, failure.getMessage());
-        }
-        //Use the cache it's hopefully good enough
-        try {
-            for (FailureCause other : PluginImpl.getInstance().getKnowledgeBase().getCauses()) {
-                if ((id == null || !id.equals(other.getId())) && value.equals(other.getName())) {
-                    return FormValidation.error("There is another cause with that name.");
-                }
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to get causes list to evaluate name! ", e);
-        }
-        return FormValidation.ok();
+        return getDescriptor().doCheckName(value, id);
     }
 
     /**
@@ -661,6 +639,63 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         @Override
         public String getDisplayName() {
             return "";
+        }
+
+        /**
+         * Form validation for {@link #description}. Checks for not empty and not "Description..."
+         *
+         * @param value the form value.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        @RequirePOST
+        public FormValidation doCheckDescription(@QueryParameter final String value) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            if (Util.fixEmpty(value) == null) {
+                return FormValidation.error("You should provide a description.");
+            }
+            if (CauseManagement.NEW_CAUSE_DESCRIPTION.equalsIgnoreCase(value.trim())) {
+                return FormValidation.error("Bad description.");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
+         * Form validation for {@link #name}. Checks for not empty, not "New...",
+         * {@link Jenkins#checkGoodName(String)} and
+         * that it is unique based on the cache of existing causes.
+         *
+         * @param value the form value.
+         * @param id The id (if changing an existing cause).
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        @RequirePOST
+        public FormValidation doCheckName(
+                @QueryParameter final String value,
+                @QueryParameter final String id) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            if (Util.fixEmpty(value) == null) {
+                return FormValidation.error("You must provide a name for the failure cause!");
+            }
+            if (CauseManagement.NEW_CAUSE_NAME.equalsIgnoreCase(value)) {
+                return FormValidation.error("Reserved name!");
+            }
+            try {
+                Jenkins.checkGoodName(value);
+            } catch (Failure failure) {
+                return FormValidation.error(failure, failure.getMessage());
+            }
+            //Use the cache it's hopefully good enough
+            try {
+                for (FailureCause other : PluginImpl.getInstance().getKnowledgeBase().getCauses()) {
+                    if ((id == null || !id.equals(other.getId())) && value.equals(other.getName())) {
+                        return FormValidation.error("There is another cause with that name.");
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to get causes list to evaluate name! ", e);
+            }
+            return FormValidation.ok();
         }
 
         /**
