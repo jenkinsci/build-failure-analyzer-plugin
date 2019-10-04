@@ -167,7 +167,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                     if (build instanceof AbstractBuild) {
                         ComputerGraphAction.invalidateNodeGraphCache(((AbstractBuild)build).getBuiltOn());
                     }
-                } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLoggingEnabled()) {
+                } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLogging()) {
                     final List<FoundFailureCause> emptyCauseList
                         = Collections.synchronizedList(new LinkedList<FoundFailureCause>());
                     StatisticsLogger.getInstance().log(build, emptyCauseList);

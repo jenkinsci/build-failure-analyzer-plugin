@@ -97,9 +97,9 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
     public void testTableViewNavigation() throws Exception {
         KnowledgeBase kb = PluginImpl.getInstance().getKnowledgeBase();
 
-        //Overriding isStatisticsEnabled in order to display all fields on the management page:
+        //Overriding isEnableStatistics in order to display all fields on the management page:
         KnowledgeBase mockKb = spy(kb);
-        when(mockKb.isStatisticsEnabled()).thenReturn(true);
+        when(mockKb.isEnableStatistics()).thenReturn(true);
         Whitebox.setInternalState(PluginImpl.getInstance(), "knowledgeBase", mockKb);
 
         List<String> myCategories = new LinkedList<String>();

@@ -354,7 +354,7 @@ public class PluginImpl extends GlobalConfiguration {
         if (graphsEnabled == null || knowledgeBase == null) {
             return false;
         } else {
-            return knowledgeBase.isStatisticsEnabled() && graphsEnabled;
+            return knowledgeBase.isEnableStatistics() && graphsEnabled;
         }
     }
 

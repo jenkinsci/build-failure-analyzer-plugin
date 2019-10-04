@@ -39,10 +39,10 @@
         <f:password field="password" />
     </f:entry>
     <f:entry title="${%Enable statistics logging}">
-        <f:checkbox field="enableStatistics" default="true" />
+        <f:checkbox field="enableStatistics" default="true"/>
     </f:entry>
     <f:entry title="${%Enable statistics logging of successful builds}">
-        <f:checkbox field="successfulLogging" default="false" />
+        <f:checkbox field="successfulLogging" default="false"/>
     </f:entry>
     <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="host,port,dbName,userName,password"/>
 </j:jelly>
