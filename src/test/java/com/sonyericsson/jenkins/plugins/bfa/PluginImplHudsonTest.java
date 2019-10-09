@@ -26,11 +26,13 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
@@ -39,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
 import hudson.ExtensionList;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,9 +53,11 @@ import java.util.List;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -169,6 +174,55 @@ public class PluginImplHudsonTest {
         //Check that the config page contains what we expect as well.
         HtmlPage page = jenkins.createWebClient().goTo("configure");
         assertConfigPageRendering(knowledgeBase, page);
+    }
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests that a LocalFileKnowledgebase is preserved through a reconfigure without changes.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureIdenticalLocalKB() throws Exception {
+        LocalFileKnowledgeBase prevKnowledgeBase = new LocalFileKnowledgeBase();
+        FailureCause cause = new FailureCause("Olle", "Olle");
+        cause.addIndication(new BuildLogIndication(".*olle"));
+        prevKnowledgeBase.addCause(cause);
+        PluginImpl instance = PluginImpl.getInstance();
+        instance.setKnowledgeBase(prevKnowledgeBase);
+        HtmlForm form = jenkins.createWebClient().goTo("configure").getFormByName("config");
+        jenkins.submit(form);
+        LocalFileKnowledgeBase knowledgeBase = (LocalFileKnowledgeBase)instance.getKnowledgeBase();
+
+        //assert that nothing in the KB has changed, since a change was made from one Local KB to another.
+        assertSame(prevKnowledgeBase, knowledgeBase);
+        assertEquals(1, knowledgeBase.getCauses().size());
+        assertSame(cause, knowledgeBase.getCauses().iterator().next());
+    }
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests that a MongoDBKnowledgebase is preserved through a reconfigure without changes.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureIdenticalMongoKB() throws Exception {
+        MongoDBKnowledgeBase prevKnowledgeBase = new MongoDBKnowledgeBase("host",
+                27017,
+                "dbname",
+                "username",
+                Secret.fromString("password"),
+                false,
+                true);
+        PluginImpl instance = PluginImpl.getInstance();
+        instance.setKnowledgeBase(prevKnowledgeBase);
+        HtmlForm form = jenkins.createWebClient().goTo("configure").getFormByName("config");
+        jenkins.submit(form);
+        MongoDBKnowledgeBase newkb = (MongoDBKnowledgeBase)instance.getKnowledgeBase();
+        assertSame(prevKnowledgeBase, newkb);
+        //make sure that the values are preserved and not replaced by defaults.
+        assertFalse(newkb.isEnableStatistics());
+        assertTrue(newkb.isSuccessfulLogging());
     }
 
     /**
