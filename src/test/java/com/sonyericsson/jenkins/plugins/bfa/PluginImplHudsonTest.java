@@ -199,6 +199,8 @@ public class PluginImplHudsonTest {
         assertSame(cause, knowledgeBase.getCauses().iterator().next());
     }
 
+    //CS IGNORE MagicNumber FOR NEXT 17 LINES. REASON: Random test data
+
     /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
      * Tests that a MongoDBKnowledgebase is preserved through a reconfigure without changes.
