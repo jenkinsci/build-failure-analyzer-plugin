@@ -45,10 +45,10 @@ public class ConfigurationAsCodeMongoTest {
         MongoDBKnowledgeBase knowledgeBase = (MongoDBKnowledgeBase)plugin.getKnowledgeBase();
         assertThat(knowledgeBase.getHost(), is("localhost"));
         assertThat(knowledgeBase.getDbName(), is("bfa"));
-        assertThat(knowledgeBase.isStatisticsEnabled(), is(true));
+        assertThat(knowledgeBase.isEnableStatistics(), is(true));
         assertThat(knowledgeBase.getUserName(), is("bfa"));
         assertThat(knowledgeBase.getPassword().getPlainText(), is("changeme"));
-        assertThat(knowledgeBase.isSuccessfulLoggingEnabled(), is(false));
+        assertThat(knowledgeBase.isSuccessfulLogging(), is(false));
 
         assertThat(plugin.getNoCausesMessage(), is(ConfigurationAsCodeLocalTest.NO_CAUSES_MESSAGE));
 

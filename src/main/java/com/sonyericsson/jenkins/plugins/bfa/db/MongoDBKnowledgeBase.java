@@ -451,12 +451,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public boolean isStatisticsEnabled() {
+    public boolean isEnableStatistics() {
         return enableStatistics;
     }
 
     @Override
-    public boolean isSuccessfulLoggingEnabled() {
+    public boolean isSuccessfulLogging() {
         return successfulLogging;
     }
 

@@ -354,7 +354,7 @@ public class PluginImpl extends GlobalConfiguration {
         if (graphsEnabled == null || knowledgeBase == null) {
             return false;
         } else {
-            return knowledgeBase.isStatisticsEnabled() && graphsEnabled;
+            return knowledgeBase.isEnableStatistics() && graphsEnabled;
         }
     }
 
@@ -649,21 +649,33 @@ public class PluginImpl extends GlobalConfiguration {
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject o) {
-        KnowledgeBase existingKb = this.knowledgeBase;
+        KnowledgeBase existingKb = knowledgeBase;
         req.bindJSON(this, o);
 
-        if (existingKb != null && !existingKb.equals(knowledgeBase)) {
+        if (knowledgeBase != null && !existingKb.equals(knowledgeBase)) {
+            try {
+                knowledgeBase.start();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Could not start new knowledge base, reverting ", e);
+                // since the knowledgebase is already overwritten via req.bindJSON, we need to
+                // restore the old if the new one can't be started
+                knowledgeBase = existingKb;
+                save();
+                return true;
+            }
             if (o.getBoolean("convertOldKb")) {
                 try {
-                    knowledgeBase.start();
                     knowledgeBase.convertFrom(existingKb);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Could not convert knowledge base ", e);
                 }
-                knowledgeBase.stop();
             }
+            existingKb.stop();
+        } else {
+            // Since we now overwrite the existing knowledgebase immediately, we need to put it
+            // back if it was equal to the old one, or if the new one is null.
+            knowledgeBase = existingKb;
         }
-
         save();
         return true;
     }

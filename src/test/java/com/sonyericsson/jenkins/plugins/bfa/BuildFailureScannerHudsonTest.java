@@ -507,9 +507,9 @@ public class BuildFailureScannerHudsonTest {
         List<FailureCause> causes = new LinkedList<FailureCause>();
         causes.add(cause);
         KnowledgeBase base = mock(KnowledgeBase.class);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         when(base.getCauses()).thenReturn(causes);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
