@@ -360,10 +360,12 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Sets if graphs are enabled.
+     * Default value is false.
+     *
      * @param graphsEnabled the graph flag
      */
     @DataBoundSetter
-    public void setGraphsEnabled(Boolean graphsEnabled) {
+    public void setGraphsEnabled(boolean graphsEnabled) {
         this.graphsEnabled = graphsEnabled;
     }
 
@@ -461,19 +463,21 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Sets if this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
+     * Default value is true.
      *
-     * @param globalEnabled on or off. null == on.
+     * @param globalEnabled on or off.
      */
-    public void setGlobalEnabled(Boolean globalEnabled) {
+    public void setGlobalEnabled(boolean globalEnabled) {
         this.globalEnabled = globalEnabled;
     }
 
     /**
      * Sets if failed test cases should be represented as failure causes or not.
+     * Default value is false.
      *
-     * @param testResultParsingEnabled on or off. null == off.
+     * @param testResultParsingEnabled on or off.
      */
-    public void setTestResultParsingEnabled(Boolean testResultParsingEnabled) {
+    public void setTestResultParsingEnabled(boolean testResultParsingEnabled) {
         this.testResultParsingEnabled = testResultParsingEnabled;
     }
 
@@ -501,10 +505,11 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Sets if this feature is enabled or not. When on, cause descriptions will be forwarded to Gerrit-Trigger-Plugin.
+     * Default value is true.
      *
-     * @param gerritTriggerEnabled on or off. null == on.
+     * @param gerritTriggerEnabled on or off.
      */
-    public void setGerritTriggerEnabled(Boolean gerritTriggerEnabled) {
+    public void setGerritTriggerEnabled(boolean gerritTriggerEnabled) {
         this.gerritTriggerEnabled = gerritTriggerEnabled;
     }
 
