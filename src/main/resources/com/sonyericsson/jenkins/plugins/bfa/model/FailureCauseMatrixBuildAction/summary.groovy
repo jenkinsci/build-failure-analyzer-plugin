@@ -34,36 +34,36 @@ index = 1
 
 def rootFailureDisplayData = my.getFailureCauseDisplayData()
 if (! (rootFailureDisplayData.getFoundFailureCauses().empty
-	&& rootFailureDisplayData.getDownstreamFailureCauses().empty
-	&& !PluginImpl.getInstance().isNoCausesEnabled())) {
+    && rootFailureDisplayData.getDownstreamFailureCauses().empty
+    && !PluginImpl.getInstance().isNoCausesEnabled())) {
 
-	tr {
-	    td {
-	        img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
-	    }
-	    td(style: "vertical-align: middle;") {
-	        h2(_("Identified problems"))
-	    }
-	}
+    tr {
+        td {
+            img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
+        }
+        td(style: "vertical-align: middle;") {
+            h2(_("Identified problems"))
+        }
+    }
 
-	my.getRunsWithAction().each { run ->
-	    tr {
-	        td {}
-	        td(style: "font-size: larger; font-weight: bold") {
-	            text(_("Matrix build "))
-	            a(href: run.getParent().getCombination().toString()) {
-	                text(_(run.getFullDisplayName()))
-	            }
-	        }
-	    }
-	    displayData(my.getFailureCauseDisplayData(run), run, [], 0)
-	}
+    my.getRunsWithAction().each { run ->
+        tr {
+            td {}
+            td(style: "font-size: larger; font-weight: bold") {
+                text(_("Matrix build "))
+                a(href: run.getParent().getCombination().toString()) {
+                    text(_(run.getFullDisplayName()))
+                }
+            }
+        }
+        displayData(my.getFailureCauseDisplayData(run), run, [], 0)
+    }
 }
 
 def displayData(failureCauseDisplayData, run, linkTree, indent) {
 
     if (failureCauseDisplayData.getFoundFailureCauses().empty
-		&& failureCauseDisplayData.getDownstreamFailureCauses().empty) {
+            && failureCauseDisplayData.getDownstreamFailureCauses().empty) {
 
         if (indent > 0) {
             displayLinkTree(linkTree)

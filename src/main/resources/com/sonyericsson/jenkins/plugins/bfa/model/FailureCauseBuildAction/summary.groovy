@@ -33,25 +33,25 @@ index = 1
 
 def rootFailureDisplayData = my.getFailureCauseDisplayData()
 if (! (rootFailureDisplayData.getFoundFailureCauses().empty
-	   && rootFailureDisplayData.getDownstreamFailureCauses().empty
-	   && !PluginImpl.getInstance().isNoCausesEnabled())) {
+       && rootFailureDisplayData.getDownstreamFailureCauses().empty
+       && !PluginImpl.getInstance().isNoCausesEnabled())) {
 
-	tr {
-	    td {
-	        img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
-	    }
-	    td(style: "vertical-align: middle;") {
-	        h2(_("Identified problems"))
-	    }
-	}
+    tr {
+        td {
+            img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
+        }
+        td(style: "vertical-align: middle;") {
+            h2(_("Identified problems"))
+        }
+    }
 
-	displayData(rootFailureDisplayData, [], 0)
+    displayData(rootFailureDisplayData, [], 0)
 }
 
 def displayData(failureCauseDisplayData, linkTree, indent) {
 
     if (failureCauseDisplayData.getFoundFailureCauses().empty
-		&& failureCauseDisplayData.getDownstreamFailureCauses().empty) {
+            && failureCauseDisplayData.getDownstreamFailureCauses().empty) {
 
         if (indent > 0) {
             displayLinkTree(linkTree)
