@@ -64,7 +64,7 @@ def displayData(failureCauseDisplayData, linkTree, indent) {
                     text(_("No identified problem"))
                 }
                 h4(style: "margin-left: 10px; font-weight: normal") {
-                    text(_(PluginImpl.getInstance().noCausesMessage))
+                    raw(app.markupFormatter.translate(PluginImpl.getInstance().noCausesMessage))
                 }
             }
         }

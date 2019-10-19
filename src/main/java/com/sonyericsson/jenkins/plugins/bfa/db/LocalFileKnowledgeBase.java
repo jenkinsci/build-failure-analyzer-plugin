@@ -207,13 +207,13 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public boolean isStatisticsEnabled() {
+    public boolean isEnableStatistics() {
         //Not implemented
         return false;
     }
 
     @Override
-    public boolean isSuccessfulLoggingEnabled() {
+    public boolean isSuccessfulLogging() {
         //not implemented
         return false;
     }

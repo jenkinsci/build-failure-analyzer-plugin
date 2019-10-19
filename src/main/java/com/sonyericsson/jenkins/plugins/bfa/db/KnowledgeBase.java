@@ -173,26 +173,20 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      */
     public abstract void stop();
 
-    @Override
-    public int hashCode() {
-        //Making checkstyle happy.
-        return super.hashCode();
-    }
-
     /**
      * If Statistics logging is enabled on this knowledge base or not.
      *
      * @return true if so. False if not or not implemented.
      */
-    public abstract boolean isStatisticsEnabled();
+    public abstract boolean isEnableStatistics();
 
     /**
      * If all builds should be added to statistics logging, not just unsuccessful builds.
-     * Only relevant if {@link #isStatisticsEnabled()} is true.
+     * Only relevant if {@link #isEnableStatistics()} is true.
      *
      * @return true if set, false otherwise or if not implemented
      */
-    public abstract boolean isSuccessfulLoggingEnabled();
+    public abstract boolean isSuccessfulLogging();
 
     /**
      * Saves the Statistics.

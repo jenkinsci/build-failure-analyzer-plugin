@@ -31,11 +31,14 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
+import hudson.Extension;
 import hudson.ExtensionList;
-import hudson.Plugin;
-import hudson.PluginManager;
-import hudson.PluginWrapper;
-import hudson.model.Descriptor;
+import hudson.Util;
+import hudson.XmlFile;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.init.Terminator;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -43,12 +46,20 @@ import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.util.CopyOnWriteList;
+import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +68,9 @@ import java.util.logging.Logger;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImpl extends Plugin {
+@Extension
+@Symbol("buildFailureAnalyzer")
+public class PluginImpl extends GlobalConfiguration {
 
     private static final Logger logger = Logger.getLogger(PluginImpl.class.getName());
 
@@ -113,8 +126,6 @@ public class PluginImpl extends Plugin {
     private static final String DEFAULT_NO_CAUSES_MESSAGE = "No problems were identified. "
             + "If you know why this problem occurred, please add a suitable Cause for it.";
 
-    private static String staticResourcesBase = null;
-
     /**
      * Minimum allowed value for {@link #nrOfScanThreads}.
      */
@@ -127,6 +138,9 @@ public class PluginImpl extends Plugin {
     private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
+
+    private String fallbackCategoriesAsString;
+    private transient List<String> fallbackCategories;
 
     private transient CopyOnWriteList<FailureCause> causes;
 
@@ -143,13 +157,41 @@ public class PluginImpl extends Plugin {
     /**
      * ScanOnDemandVariable instance.
      */
-    private ScanOnDemandVariables sodVariables;
+    private ScanOnDemandVariables sodVariables = new ScanOnDemandVariables();
 
-    @Override
-    public void start() throws Exception {
-        super.start();
-        logger.finer("[BFA] Starting...");
+    /**
+     * Default constructor.
+     */
+    @DataBoundConstructor
+    public PluginImpl() {
         load();
+    }
+
+    protected Object readResolve() {
+        if (sodVariables == null) {
+            this.sodVariables = new ScanOnDemandVariables();
+        }
+
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public XmlFile getConfigFile() {
+        return new XmlFile(
+                Jenkins.XSTREAM,
+                new File(Jenkins.getInstance().getRootDir(), "build-failure-analyzer.xml")
+        ); // for backward compatibility
+    }
+
+    /**
+     * Starts the knowledge base.
+     */
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    public void start() {
+        logger.finer("[BFA] Starting...");
         if (noCausesMessage == null) {
             noCausesMessage = DEFAULT_NO_CAUSES_MESSAGE;
         }
@@ -158,27 +200,6 @@ public class PluginImpl extends Plugin {
         }
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
-        }
-        sodVariables = new ScanOnDemandVariables();
-        if (sodVariables.getMinimumSodWorkerThreads() < 1) {
-            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.
-                    DEFAULT_MINIMUM_SOD_WORKER_THREADS);
-        }
-        if (sodVariables.getMaximumSodWorkerThreads() < 1) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.
-                    DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        }
-        if (sodVariables.getSodThreadKeepAliveTime() < 1) {
-            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.
-                    DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
-        }
-        if (sodVariables.getSodWaitForJobShutdownTimeout() < 1) {
-            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
-                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
-        }
-        if (sodVariables.getSodCorePoolNumberOfThreads() < 1) {
-            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.
-                    DEFAULT_SOD_COREPOOL_THREADS);
         }
 
         if (knowledgeBase == null) {
@@ -200,9 +221,11 @@ public class PluginImpl extends Plugin {
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        super.stop();
+    /**
+     * Run on Jenkins shutdown.
+     */
+    @Terminator
+    public void stop() {
         ScanOnDemandQueue.shutdown();
         knowledgeBase.stop();
     }
@@ -213,22 +236,7 @@ public class PluginImpl extends Plugin {
      * @return the base URI.
      */
     public static String getStaticResourcesBase() {
-        if (staticResourcesBase == null) {
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-            if (pluginManager != null) {
-                PluginWrapper wrapper = pluginManager.getPlugin(PluginImpl.class);
-                if (wrapper != null) {
-                    staticResourcesBase = "/plugin/" + wrapper.getShortName();
-                }
-            }
-            //Did we really find it?
-            if (staticResourcesBase == null) {
-                //This is not the preferred way since the module name could change,
-                //But in some unit test cases we cannot reach the plug-in info.
-                return "/plugin/build-failure-analyzer";
-            }
-        }
-        return staticResourcesBase;
+        return "/plugin/build-failure-analyzer";
     }
 
     /**
@@ -304,15 +312,7 @@ public class PluginImpl extends Plugin {
      */
     @Nonnull
     public static PluginImpl getInstance() {
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            throw new AssertionError("Jenkins is not here yet.");
-        }
-        PluginImpl plugin = jenkins.getPlugin(PluginImpl.class);
-        if (plugin == null) {
-            throw new AssertionError("Not here yet.");
-        }
-        return plugin;
+        return ExtensionList.lookup(PluginImpl.class).get(0);
     }
 
     /**
@@ -339,10 +339,11 @@ public class PluginImpl extends Plugin {
 
     /**
      * Sets whether the "no indications found" message should be shown in the job page when no causes are found.
+     * Default value is true.
      *
-     * @param noCausesEnabled on or off. null == on.
+     * @param noCausesEnabled on or off.
      */
-    public void setNoCausesEnabled(Boolean noCausesEnabled) {
+    public void setNoCausesEnabled(boolean noCausesEnabled) {
         this.noCausesEnabled = noCausesEnabled;
     }
 
@@ -377,8 +378,63 @@ public class PluginImpl extends Plugin {
         if (graphsEnabled == null || knowledgeBase == null) {
             return false;
         } else {
-            return knowledgeBase.isStatisticsEnabled() && graphsEnabled;
+            return knowledgeBase.isEnableStatistics() && graphsEnabled;
         }
+    }
+
+    /**
+     * Sets if graphs are enabled.
+     * @param graphsEnabled the graph flag
+     */
+    @DataBoundSetter
+    public void setGraphsEnabled(Boolean graphsEnabled) {
+        this.graphsEnabled = graphsEnabled;
+    }
+
+    /**
+     * Sets the no causes message.
+     * @param noCausesMessage the no causes message
+     */
+    @DataBoundSetter
+    public void setNoCausesMessage(String noCausesMessage) {
+        this.noCausesMessage = noCausesMessage;
+    }
+
+    /**
+     * Sets the knowledge base.
+     * @param knowledgeBase the knowledge base
+     */
+    @DataBoundSetter
+    public void setKnowledgeBase(KnowledgeBase knowledgeBase) {
+        this.knowledgeBase = knowledgeBase;
+    }
+
+    /**
+     * Sets the scan on demand variables.
+     * @param sodVariables the variables
+     */
+    @DataBoundSetter
+    public void setSodVariables(ScanOnDemandVariables sodVariables) {
+        this.sodVariables = sodVariables;
+    }
+
+    /**
+     * Sets the categories to be considered as generic. Causes with generic categories will only be found if
+     * there are no other, non-generic causes.
+     * @param categories The space separated list of generic categories
+     */
+    @DataBoundSetter
+    public void setFallbackCategoriesAsString(String categories) {
+        this.fallbackCategoriesAsString = categories;
+        if (categories == null) {
+            fallbackCategories = Collections.emptyList();
+        } else {
+            fallbackCategories = Arrays.asList(Util.tokenize(categories));
+        }
+    }
+
+    public String getFallbackCategoriesAsString() {
+        return Util.join(getFallbackCategories(), " ");
     }
 
     /**
@@ -401,6 +457,21 @@ public class PluginImpl extends Plugin {
      */
     public String getTestResultCategories() {
         return testResultCategories;
+    }
+
+    /**
+     * Get the categories that are considered generic.
+     * @return a list of generic categories, never null.
+     */
+    public List<String> getFallbackCategories() {
+        if (fallbackCategories == null) {
+            if (fallbackCategoriesAsString == null) {
+                fallbackCategories = Collections.emptyList();
+            } else {
+                fallbackCategories = Arrays.asList(Util.tokenize(fallbackCategoriesAsString));
+            }
+        }
+        return fallbackCategories;
     }
 
     /**
@@ -474,7 +545,6 @@ public class PluginImpl extends Plugin {
         return nrOfScanThreads;
     }
 
-
     /**
      * The number of threads to have in the pool for each build. Used by the {@link BuildFailureScanner}.
      * Will throw an {@link IllegalArgumentException} if the parameter is less than {@link #MINIMUM_NR_OF_SCAN_THREADS}.
@@ -503,6 +573,10 @@ public class PluginImpl extends Plugin {
      * @return value
      */
     public int getMaxLogSize() {
+        if (maxLogSize < 0) {
+            return DEFAULT_MAX_LOG_SIZE;
+        }
+
         return maxLogSize;
     }
 
@@ -526,7 +600,7 @@ public class PluginImpl extends Plugin {
      *
      * @param build the build
      * @return true if it should be scanned.
-     * @see {@link #shouldScan(Job)}
+     * @see #shouldScan(Job)
      */
     public static boolean shouldScan(Run build) {
         return shouldScan(build.getParent());
@@ -540,7 +614,7 @@ public class PluginImpl extends Plugin {
      */
     public static boolean isSizeInLimit(Run build) {
         return getInstance().getMaxLogSize() == 0
-                || getInstance().getMaxLogSize() > (build.getLogFile().length() / BYTES_IN_MEGABYTE);
+                || getInstance().getMaxLogSize() > (build.getLogText().length() / BYTES_IN_MEGABYTE);
     }
 
     /**
@@ -598,84 +672,78 @@ public class PluginImpl extends Plugin {
 
 
     @Override
-    public void configure(StaplerRequest req, JSONObject o) throws Descriptor.FormException, IOException {
-        noCausesMessage = o.getString("noCausesMessage");
-        noCausesEnabled = o.getBoolean("noCausesEnabled");
-        globalEnabled = o.getBoolean("globalEnabled");
-        doNotAnalyzeAbortedJob = o.optBoolean("doNotAnalyzeAbortedJob", false);
-        gerritTriggerEnabled = o.getBoolean("gerritTriggerEnabled");
-        graphsEnabled = o.getBoolean("graphsEnabled");
-        testResultParsingEnabled = o.getBoolean("testResultParsingEnabled");
-        testResultCategories = o.getString("testResultCategories");
-        maxLogSize = o.optInt("maxLogSize");
-        int scanThreads = o.getInt("nrOfScanThreads");
-        int minSodWorkerThreads = o.getInt("minimumNumberOfWorkerThreads");
-        int maxSodWorkerThreads = o.getInt("maximumNumberOfWorkerThreads");
-        int thrkeepAliveTime = o.getInt("threadKeepAliveTime");
-        int jobShutdownTimeWait = o.getInt("waitForJobShutdownTime");
-        int corePoolNumberOfThreads = o.getInt("corePoolNumberOfThreads");
-        if (scanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
-            nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
-        } else {
-            nrOfScanThreads = scanThreads;
-        }
+    public boolean configure(StaplerRequest req, JSONObject o) {
+        KnowledgeBase existingKb = knowledgeBase;
+        req.bindJSON(this, o);
 
-        if (maxLogSize < 0) {
-            maxLogSize = DEFAULT_MAX_LOG_SIZE;
-        }
-
-        if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
-            sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
-        } else {
-            sodVariables.setSodCorePoolNumberOfThreads(corePoolNumberOfThreads);
-        }
-
-        if (jobShutdownTimeWait < ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT) {
-            sodVariables.setSodWaitForJobShutdownTimeout(ScanOnDemandVariables.
-                    DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT);
-        } else {
-            sodVariables.setSodWaitForJobShutdownTimeout(jobShutdownTimeWait);
-        }
-        if (thrkeepAliveTime < ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME) {
-            sodVariables.setSodThreadKeepAliveTime(ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);
-        } else {
-            sodVariables.setSodThreadKeepAliveTime(thrkeepAliveTime);
-        }
-        if (minSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMinimumSodWorkerThreads(minSodWorkerThreads);
-        }
-        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
-        }
-        if (maxSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
-            sodVariables.setMaximumSodWorkerThreads(ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
-        } else {
-            sodVariables.setMaximumSodWorkerThreads(maxSodWorkerThreads);
-        }
-        KnowledgeBase base = req.bindJSON(KnowledgeBase.class, o.getJSONObject("knowledgeBase"));
-        if (base != null && !knowledgeBase.equals(base)) {
+        if (knowledgeBase != null && !existingKb.equals(knowledgeBase)) {
             try {
-                base.start();
+                knowledgeBase.start();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Could not start new knowledge base, reverting ", e);
+                // since the knowledgebase is already overwritten via req.bindJSON, we need to
+                // restore the old if the new one can't be started
+                knowledgeBase = existingKb;
                 save();
-                return;
+                return true;
             }
             if (o.getBoolean("convertOldKb")) {
                 try {
-                    base.convertFrom(knowledgeBase);
+                    knowledgeBase.convertFrom(existingKb);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Could not convert knowledge base ", e);
                 }
             }
-            knowledgeBase.stop();
-            knowledgeBase = base;
+            existingKb.stop();
+        } else {
+            // Since we now overwrite the existing knowledgebase immediately, we need to put it
+            // back if it was equal to the old one, or if the new one is null.
+            knowledgeBase = existingKb;
         }
-
         save();
+        return true;
     }
+
+    /**
+     * Does the auto completion for categories, matching with any category already present in the knowledge base.
+     *
+     * @param prefix the input prefix.
+     * @return the AutoCompletionCandidates.
+     */
+    public AutoCompletionCandidates getCategoryAutoCompletionCandidates(String prefix) {
+        Jenkins.getInstance().checkPermission(UPDATE_PERMISSION);
+        List<String> categories;
+        try {
+            categories = getKnowledgeBase().getCategories();
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
+            return null;
+        }
+        AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+        if (categories != null) {
+            for (String category : categories) {
+                if (category.toLowerCase().startsWith(prefix.toLowerCase())) {
+                    candidates.add(category);
+                }
+            }
+        }
+        for (String category : getFallbackCategories()) {
+            if (category.toLowerCase().startsWith(prefix.toLowerCase()) && !candidates.getValues().contains(category)) {
+                candidates.add(category);
+            }
+        }
+        return candidates;
+    }
+
+    /**
+     * Does the auto completion for categories, matching with any category already present in the knowledge base.
+     *
+     * @param value the input value.
+     * @return the AutoCompletionCandidates.
+     */
+    public AutoCompletionCandidates doAutoCompleteFallbackCategoriesAsString(@QueryParameter String value) {
+        return getCategoryAutoCompletionCandidates(value);
+    }
+
+
 }

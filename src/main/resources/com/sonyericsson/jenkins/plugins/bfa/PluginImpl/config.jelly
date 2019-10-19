@@ -22,15 +22,16 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <f:section title="${%Build failure analyzer}">
         <f:entry title="${%Enabled}"
                  description="${%If builds should be scanned or not.}">
-            <f:checkbox name="globalEnabled" checked="${it.globalEnabled}" default="true"/>
+            <f:checkbox field="globalEnabled" default="true"/>
         </f:entry>
         <f:entry title="${%Enable graphs}"
                  description="${%Whether to display graphs or not. NOTE: The selected storage type must support this!}">
-            <f:checkbox name="graphsEnabled" checked="${it.graphsEnabled}" default="true"/>
+            <f:checkbox field="graphsEnabled" default="true"/>
         </f:entry>
         <f:entry title="${%Enable text when no failure causes are found}"
                  description="${%Whether to display the no problems identified message at all}">
@@ -38,23 +39,13 @@
         </f:entry>
         <f:entry title="${%Text when no failure causes are found}"
                  description="${%If no problems are identified, this text will be shown on the build page}">
-            <f:textbox name="noCausesMessage" value="${it.noCausesMessage}"/>
+            <f:textbox field="noCausesMessage" />
         </f:entry>
-        <f:dropdownList name="knowledgeBase" title="${%Storage type}" help="${descriptor.getHelpFile('knowledgeBase')}">
-            <j:set var="current" value="${it.getKnowledgeBase()}"/>
-            <j:set var="defaultDescriptor" value="com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase.LocalFileKnowledgeBaseDescriptor"/>
-            <j:forEach var="descriptor" items="${it.getKnowledgeBaseDescriptors()}" varStatus="loop">
-                <f:dropdownListBlock value="${loop.index}" title="${descriptor.displayName}"
-                                     selected="${current.descriptor==descriptor || (current==null and descriptor==defaultDescriptor)}"
-                                     staplerClass="${descriptor.clazz.name}"
-                                     lazy="descriptor">
-                    <l:ajax>
-                        <j:set var="instance" value="${current.descriptor==descriptor ? current : null}"/>
-                        <st:include from="${descriptor}" page="${descriptor.configPage}" />
-                    </l:ajax>
-                </f:dropdownListBlock>
-            </j:forEach>
-        </f:dropdownList>
+        <f:dropdownDescriptorSelector
+                field="knowledgeBase" title="${%Storage type}"
+                descriptors="${descriptor.getKnowledgeBaseDescriptors()}"
+                default="com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase.LocalFileKnowledgeBaseDescriptor"
+        />
         <f:entry title="${%Convert knowledge base}" description="${%Add the data from the old knowledge base to the new if changed}">
             <!-- Should the user make this decision each time? -->
             <f:checkbox name="convertOldKb" checked="true"/>
@@ -62,21 +53,22 @@
         </f:entry>
         <f:entry title="${%Send notifications to Gerrit-Trigger-plugin}"
                  description="${%enableGerritTriggerDescription}">
-            <f:checkbox name="gerritTriggerEnabled" checked="${it.gerritTriggerEnabled}" default="true"/>
+            <f:checkbox field="gerritTriggerEnabled"  default="true"/>
         </f:entry>
-        <f:entry title="${%Concurrent scans}"
-                 description="${%nrOfScanThreadsDescription}">
-            <f:textbox name="nrOfScanThreads" clazz="required positive-number" value="${it.nrOfScanThreads}"/>
+        <f:entry title="${%Concurrent scans}" description="${%nrOfScanThreadsDescription}">
+            <f:number field="nrOfScanThreads" clazz="required positive-number" />
+        </f:entry>
+        <f:entry title="${%Fallback categories}" description="${%fallbackCategoriesDescription}" >
+            <f:textbox field="fallbackCategoriesAsString" autoCompleteDelimChar=" " />
         </f:entry>
         <f:block>
             <table>
                 <f:optionalBlock name="testResultParsingEnabled"
                                  title="${%testResultParsingEnabledDescription}"
-                                 checked="${it.testResultParsingEnabled}"
+                                 checked="${descriptor.testResultParsingEnabled}"
                                  inline="true">
-                    <f:entry title="Categories"
-                             description="${%testResultCategoriesDescription}">
-                        <f:textbox name="testResultCategories" value="${it.testResultCategories}"/>
+                    <f:entry title="Categories" description="${%testResultCategoriesDescription}">
+                        <f:textbox field="testResultCategories" />
                     </f:entry>
                 </f:optionalBlock>
             </table>
@@ -84,46 +76,16 @@
     </f:section>
     <f:advanced>
         <f:section title="${%Scan non-scanned builds}">
-            <f:entry title="${%Minimum number of Worker Threads}"
-                     description="${%Minimum number of worker threads allotted for failure scan options}">
-                <f:textbox name="minimumNumberOfWorkerThreads"
-                           value="${it.sodVariables.minimumSodWorkerThreads}"
-                           default="${it.sodVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS}"/>
-            </f:entry>
-            <f:entry title="${%Maximum number of Worker Threads}"
-                description="${%Maximum number of worker threads allotted for failure scan options}">
-                <f:textbox name="maximumNumberOfWorkerThreads"
-                           value="${it.sodVariables.maximumSodWorkerThreads}"
-                           default="${it.sodVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS}"/>
-            </f:entry>
-            <f:entry title="${%Thread keep alive time}"
-                description="${%Thread keep alive time for failure scan options}">
-                <f:textbox name="threadKeepAliveTime"
-                           value="${it.sodVariables.sodThreadKeepAliveTime}"
-                           default="${it.sodVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME}"/>
-            </f:entry>
-            <f:entry title="${%Wait for job shutdown timeout}"
-                description="${%Wait for job shutdown timeout for failure scan options}">
-                <f:textbox name="waitForJobShutdownTime"
-                           value="${it.sodVariables.sodWaitForJobShutdownTimeout}"
-                           default="${it.sodVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT}"/>
-            </f:entry>
-            <f:entry title="${%Corepool number of Threads}"
-                description="${%Corepool number of worker threads allotted for failure scan options}">
-                <f:textbox name="corePoolNumberOfThreads"
-                           value="${it.sodVariables.sodCorePoolNumberOfThreads}"
-                           default="${it.sodVariables.DEFAULT_SOD_COREPOOL_THREADS}"/>
-            </f:entry>
+            <f:property field="sodVariables">
+                <st:include page="config.jelly" />
+            </f:property>
         </f:section>
         <f:entry title="${%Do not analyze aborted jobs}"
                                 help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
-            <f:checkbox name="doNotAnalyzeAbortedJob" checked="${it.doNotAnalyzeAbortedJob}" default="false"/>
+            <f:checkbox field="doNotAnalyzeAbortedJob" />
         </f:entry>
-        <f:entry title="${%Max size of log file}"
-            description="${%maxLogSize}">
-            <f:textbox name="maxLogSize"
-                       value="${it.maxLogSize}"
-                       default="${it.DEFAULT_MAX_LOG_SIZE}"/>
+        <f:entry title="${%Max size of log file}" description="${%maxLogSize}">
+            <f:textbox field="maxLogSize" />
         </f:entry>
     </f:advanced>
 </j:jelly>

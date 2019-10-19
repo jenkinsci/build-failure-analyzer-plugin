@@ -63,7 +63,6 @@ public class BuildLogFailureReader extends FailureReader {
      */
     @Override
     public FoundIndication scan(Run build) throws IOException {
-        String currentFile = build.getLogFile().getName();
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
@@ -74,7 +73,7 @@ public class BuildLogFailureReader extends FailureReader {
             List<FoundFailureCause> foundFailureCauses = FailureReader.scanSingleLinePatterns(causes,
                                                                                               build,
                                                                                               reader,
-                                                                                              currentFile);
+                                                                                              "log");
             if (foundFailureCauses.isEmpty()) {
                 return null;
             } else {

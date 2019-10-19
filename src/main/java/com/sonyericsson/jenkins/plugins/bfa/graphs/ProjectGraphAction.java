@@ -201,7 +201,7 @@ public class ProjectGraphAction extends BfaGraphAction {
      */
     public static void invalidateProjectGraphCache(Job project) {
         Pattern projectPattern = Pattern.compile("^.*" + ID_SEPARATOR
-                + project.getFullName() + ID_SEPARATOR + ".*$");
+                + Pattern.quote(project.getFullName()) + ID_SEPARATOR + ".*$");
         GraphCache.getInstance().invalidateMatching(projectPattern);
     }
 }

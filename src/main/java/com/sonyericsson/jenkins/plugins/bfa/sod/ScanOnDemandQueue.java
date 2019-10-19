@@ -87,19 +87,20 @@ public final class ScanOnDemandQueue {
      *
      */
     protected void startQueue() {
+        PluginImpl pluginImpl = PluginImpl.getInstance();
         if (executor == null) {
             logger.debug("Starting the sending thread pool.");
             executor = new ThreadPoolExecutor(
-                    PluginImpl.getInstance().getSodVariables().getMinimumSodWorkerThreads(),
-                    PluginImpl.getInstance().getSodVariables().getMinimumSodWorkerThreads(),
-                    PluginImpl.getInstance().getSodVariables().getSodThreadKeepAliveTime(), TimeUnit.MINUTES,
-                    new LinkedBlockingQueue<Runnable>());
+                    pluginImpl.getSodVariables().getMinimumSodWorkerThreads(),
+                    pluginImpl.getSodVariables().getMinimumSodWorkerThreads(),
+                    pluginImpl.getSodVariables().getSodThreadKeepAliveTime(), TimeUnit.MINUTES,
+                    new LinkedBlockingQueue<>());
             executor.allowCoreThreadTimeOut(true);
             executor.prestartCoreThread();
             logger.info("SendQueue started! Current pool size: {}", executor.getPoolSize());
         }
-        executor.setMaximumPoolSize(PluginImpl.getInstance().getSodVariables().getMaximumSodWorkerThreads());
-        executor.setCorePoolSize(PluginImpl.getInstance().getSodVariables().getSodCorePoolNumberOfThreads());
+        executor.setMaximumPoolSize(pluginImpl.getSodVariables().getMaximumSodWorkerThreads());
+        executor.setCorePoolSize(pluginImpl.getSodVariables().getSodCorePoolNumberOfThreads());
         logger.debug("SendQueue running. Current pool size: {}. Current Queue size: {}",
                 executor.getPoolSize(), getQueueSize());
         logger.debug("Nr of active pool-threads: {}", executor.getActiveCount());
@@ -122,8 +123,8 @@ public final class ScanOnDemandQueue {
 
     /**
      * Shuts down the executor(s).
-     * Gracefully waits for {@link #WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT} seconds for all jobs to finish
-     * before forcefully shutting them down.
+     * Gracefully waits for {@link ScanOnDemandVariables#getSodWaitForJobShutdownTimeout()}
+     * seconds for all jobs to finish before forcefully shutting them down.
      */
     public static void shutdown() {
         if (instance != null && instance.executor != null) {

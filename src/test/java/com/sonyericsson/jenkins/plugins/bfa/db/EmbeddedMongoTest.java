@@ -23,10 +23,6 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import java.io.IOException;
-
-import org.junit.Before;
-
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -37,6 +33,9 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
+import org.junit.Before;
+
+import java.io.IOException;
 
 /**
  * Abstract class to be extended for running tests with Embedded MongoDB.
@@ -83,7 +82,7 @@ public abstract class EmbeddedMongoTest {
             runtime = MongodStarter.getDefaultInstance();
         }
 
-        IMongodConfig conf = new MongodConfigBuilder().version(Version.Main.V2_4).build();
+        IMongodConfig conf = new MongodConfigBuilder().version(Version.Main.V3_6).build();
         MongodExecutable mongodExe = runtime.prepare(conf);
         mongodExe.start();
 

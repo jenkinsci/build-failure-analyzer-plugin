@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
@@ -73,6 +74,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -137,7 +139,7 @@ public class BuildFailureScannerHudsonTest {
         assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        DomElement focus = page.getElementById(id);
         assertNotNull(focus);
 
         List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
@@ -146,6 +148,66 @@ public class BuildFailureScannerHudsonTest {
 
         assertNotNull(error);
         assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+    }
+
+    /**
+     * Happy test that should find one generic failure indication in the build.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testOnlyOneGenericIndicationFound() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nUnknown Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, genericFailureCause));
+        assertFalse(findCauseInList(causeListFromAction, specificFailureCause));
+    }
+
+    /**
+     * Happy test that should replace the generic failure indication with the specific one.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testGenericFailureCauseIsDroppedForSpecificOne() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nSpecific Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertFalse(findCauseInList(causeListFromAction, genericFailureCause));
+        assertTrue(findCauseInList(causeListFromAction, specificFailureCause));
     }
 
     /**
@@ -176,7 +238,7 @@ public class BuildFailureScannerHudsonTest {
         assertEquals(FORMATTED_DESCRIPTION, foundFailureCause.getDescription());
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        DomElement focus = page.getElementById(id);
         assertNotNull(focus);
 
         List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", foundFailureCause.getName());
@@ -228,7 +290,7 @@ public class BuildFailureScannerHudsonTest {
         assertTrue(causeDescriptions.remove(description));
         FoundIndication foundIndication = foundFailureCause.getIndications().get(0);
         String id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        HtmlElement focus = document.getElementById(id);
+        DomElement focus = page.getElementById(id);
         assertNotNull(focus);
 
         foundFailureCause = causeListFromAction.get(1);
@@ -236,7 +298,7 @@ public class BuildFailureScannerHudsonTest {
         assertTrue(causeDescriptions.remove(description));
         foundIndication = foundFailureCause.getIndications().get(0);
         id = foundIndication.getMatchingHash() + foundFailureCause.getId();
-        focus = document.getElementById(id);
+        focus = page.getElementById(id);
         assertNotNull(focus);
         assertTrue(causeDescriptions.isEmpty());
 
@@ -470,9 +532,9 @@ public class BuildFailureScannerHudsonTest {
         List<FailureCause> causes = new LinkedList<FailureCause>();
         causes.add(cause);
         KnowledgeBase base = mock(KnowledgeBase.class);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         when(base.getCauses()).thenReturn(causes);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {

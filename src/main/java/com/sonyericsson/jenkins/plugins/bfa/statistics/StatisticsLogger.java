@@ -32,6 +32,7 @@ import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.Node;
+import hudson.model.Result;
 import hudson.model.Run;
 
 import java.util.Date;
@@ -89,7 +90,7 @@ public final class StatisticsLogger {
      * @param causes the list of causes.
      */
     public void log(Run build, List<FoundFailureCause> causes) {
-        if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+        if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
             queueExecutor.submit(new LoggingWork(build, causes));
         }
     }
@@ -128,12 +129,19 @@ public final class StatisticsLogger {
             if (build instanceof AbstractBuild) {
                 AbstractBuild abstractBuild = (AbstractBuild)build;
                 Node node = abstractBuild.getBuiltOn();
-                nodeName = node.getNodeName();
+                if (node != null) {
+                    nodeName = node.getNodeName();
+                }
             }
             int timeZoneOffset = TimeZone.getDefault().getRawOffset();
             String master;
 
-            String result = build.getResult().toString();
+
+            String result = "Running";
+            final Result buildResult = build.getResult();
+            if (buildResult != null) {
+                result = buildResult.toString();
+            }
             List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();
             List<String> causeIds = new LinkedList<String>();
             for (FoundFailureCause cause : causes) {

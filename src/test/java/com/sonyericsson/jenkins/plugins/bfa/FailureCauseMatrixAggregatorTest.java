@@ -24,6 +24,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -33,7 +34,6 @@ import hudson.model.Cause;
 import hudson.model.Result;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +56,7 @@ public class FailureCauseMatrixAggregatorTest {
      */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRuleWithMatrixSupport jenkins = new JenkinsRuleWithMatrixSupport();
 
     /**
      * Tests that an action is added when the builds fail.

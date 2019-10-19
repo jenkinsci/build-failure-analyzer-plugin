@@ -26,9 +26,9 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Cause;
@@ -130,10 +130,10 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
             //Some smoke test to see if it is the correct page
             HtmlAnchor newAnchor = getAnchorBySuffix(page, "new");
             assertThat("New Cause link is missing it's icon.",
-                    newAnchor.getStyleAttribute(), containsString("newinformation.png"));
-            DomNodeList<HtmlElement> elementsByTagName = page.getElementsByTagName("h1");
+                    newAnchor.toString(), containsString("newinformation.png"));
+            DomNodeList<DomElement> elementsByTagName = page.getElementsByTagName("h1");
             boolean headingFound = false;
-            for (HtmlElement element : elementsByTagName) {
+            for (DomElement element : elementsByTagName) {
                 if ("Update Failure Causes".equals(element.getTextContent())) {
                     headingFound = true;
                     break;

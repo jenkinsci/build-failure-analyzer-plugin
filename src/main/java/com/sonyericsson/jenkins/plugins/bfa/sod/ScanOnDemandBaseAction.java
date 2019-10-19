@@ -50,6 +50,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -111,8 +112,11 @@ public class ScanOnDemandBaseAction implements Action {
      * @return the full url
      * @see Job#getUrl()
      */
-    @Nonnull
+    @CheckForNull
     private String getFullUrl() {
+        if (getUrlName() == null) {
+            return null; //No permission
+        }
         return Functions.joinPath(project.getUrl(), getUrlName());
     }
 
@@ -279,9 +283,13 @@ public class ScanOnDemandBaseAction implements Action {
          * @return the full url
          * @see ScanOnDemandBaseAction#getFullUrl()
          */
-        @Nonnull
+        @CheckForNull
         public String getFullUrl() {
-            return Functions.joinPath(getParent().getFullUrl(), getUrlName());
+            final String fullUrl = getParent().getFullUrl();
+            if (fullUrl == null) {
+                return null;
+            }
+            return Functions.joinPath(fullUrl, getUrlName());
         }
 
         /**
@@ -332,7 +340,12 @@ public class ScanOnDemandBaseAction implements Action {
             if (ancestor == null) {
                 throw new IllegalStateException("Not within the path of ScanOnDemandBaseAction");
             }
-            return (ScanOnDemandBaseAction)ancestor.getObject();
+            final ScanOnDemandBaseAction object = (ScanOnDemandBaseAction)ancestor.getObject();
+            if (object == null) {
+                throw new IllegalStateException("Not within the path of ScanOnDemandBaseAction");
+            } else {
+                return object;
+            }
         }
 
         /**

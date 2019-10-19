@@ -26,13 +26,13 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.FreeStyleProject;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
@@ -51,7 +51,7 @@ public class FailureCauseColumnTest {
    */
   @Rule
   //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-  public JenkinsRule j = new JenkinsRule();
+  public JenkinsRuleWithMatrixSupport j = new JenkinsRuleWithMatrixSupport();
 
   /**
    * Happy test case with a view containing a {@link FailureCauseColumn}, text option being disabled.
@@ -72,8 +72,8 @@ public class FailureCauseColumnTest {
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
     assertNotNull("Couldn't find the failure cause image in columnwithouttext view",
-            page.selectSingleNode("//img[@Title='Failure Builder']"));
-    assertNull(page.selectSingleNode("//*[.='Failure Builder']"));
+            page.getFirstByXPath("//img[@title='Failure Builder']"));
+    assertNull(page.getDocumentElement().getFirstByXPath("//*[.='Failure Builder']"));
   }
 
   /**
@@ -94,9 +94,10 @@ public class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithtext");
+    System.out.println(page.getTextContent());
     assertNotNull("Couldn't find the failure cause image in columnwithtext view",
-        page.selectSingleNode("//img[@Title='Failure Builder']"));
-    assertNotNull(page.selectSingleNode("//*[.='Failure Builder']"));
+        page.getFirstByXPath("//img[@title='Failure Builder']"));
+    assertNotNull(page.getFirstByXPath("//*[.='Failure Builder']"));
   }
 
 }

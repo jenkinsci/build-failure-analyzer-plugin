@@ -69,7 +69,7 @@ public class FailureReaderTest {
          * Standard constructor.
          * @param indication the indication for the reader
          */
-        public TestReader(final Indication indication) {
+        TestReader(final Indication indication) {
             super(indication);
         }
 
@@ -246,7 +246,7 @@ public class FailureReaderTest {
          *
          * @see BufferedReader#BufferedReader(java.io.Reader, int)
          */
-        public QuadrupleDupleLineReader(BufferedReader in, int sz) {
+        QuadrupleDupleLineReader(BufferedReader in, int sz) {
             super(in, sz);
         }
 
@@ -257,7 +257,7 @@ public class FailureReaderTest {
          *
          * @see BufferedReader#BufferedReader(java.io.Reader)
          */
-        public QuadrupleDupleLineReader(BufferedReader in) {
+        QuadrupleDupleLineReader(BufferedReader in) {
             super(in);
         }
 
@@ -269,20 +269,9 @@ public class FailureReaderTest {
             }
 
             StringBuilder str = new StringBuilder(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
-            str.append(line);
+            for (int i = 0; i < 20; i++) {
+                str.append(line);
+            }
             return str.toString();
         }
     }

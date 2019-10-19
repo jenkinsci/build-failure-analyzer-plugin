@@ -26,11 +26,13 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
@@ -39,6 +41,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
 import hudson.ExtensionList;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,11 +53,15 @@ import java.util.List;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,53 +106,6 @@ public class PluginImplHudsonTest {
     }
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with the same
-     * KnowledgeBase as before.
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testConfigure() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        String expectedNoCauseMessage = "I am blinded!";
-        StaplerRequest sreq = mock(StaplerRequest.class);
-        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
-
-        JSONObject form = createForm(expectedNoCauseMessage, PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, null);
-
-        PluginImpl.getInstance().configure(sreq, form);
-
-
-        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
-    }
-
-    /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
-     * with the same KnowledgeBase as before. And nrOfScanThreads set/"hacked" to -1
-     *
-     * @throws Exception if so.
-     */
-    @Test
-    public void testConfigureLowScanThreads() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
-        String expectedNoCauseMessage = "I am blinded!";
-        StaplerRequest sreq = mock(StaplerRequest.class);
-        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
-
-        JSONObject form = createForm(expectedNoCauseMessage, -1, null);
-
-        PluginImpl.getInstance().configure(sreq, form);
-
-
-        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertEquals(expectedNoCauseMessage, PluginImpl.getInstance().getNoCausesMessage());
-        assertEquals(PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, PluginImpl.getInstance().getNrOfScanThreads());
-    }
-
-    /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with a new
      * KnowledgeBase type.
      *
@@ -153,17 +113,21 @@ public class PluginImplHudsonTest {
      */
     @Test
     public void testConfigureConvert() throws Exception {
-        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        PluginImpl instance = PluginImpl.getInstance();
+        KnowledgeBase prevKnowledgeBase = instance.getKnowledgeBase();
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
         cause = prevKnowledgeBase.addCause(cause);
         StaplerRequest sreq = mock(StaplerRequest.class);
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello");
-        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
         JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
+        doAnswer(invocationOnMock -> {
+            instance.setKnowledgeBase(knowledgeBase);
+            return null;
+        }).when(sreq).bindJSON(eq(instance), eq(form));
 
-        PluginImpl.getInstance().configure(sreq, form);
+        instance.configure(sreq, form);
 
         assertNotSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
         assertSame(knowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
@@ -187,23 +151,80 @@ public class PluginImplHudsonTest {
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
         cause = prevKnowledgeBase.addCause(cause);
-        Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, prevKnowledgeBase);
+        PluginImpl instance = PluginImpl.getInstance();
+        Whitebox.setInternalState(instance, KnowledgeBase.class, prevKnowledgeBase);
         StaplerRequest sreq = mock(StaplerRequest.class);
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello Again");
         when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
+        doAnswer(invocationOnMock -> {
+            instance.setKnowledgeBase(knowledgeBase);
+            return null;
+        }).when(sreq).bindJSON(eq(instance), any());
+
         JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
 
-        PluginImpl.getInstance().configure(sreq, form);
+        instance.configure(sreq, form);
 
-        assertNotSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
-        assertSame(knowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
+        assertNotSame(prevKnowledgeBase, instance.getKnowledgeBase());
+        assertSame(knowledgeBase, instance.getKnowledgeBase());
         assertEquals(1, knowledgeBase.getCauses().size());
         assertSame(cause, knowledgeBase.getCauses().iterator().next());
 
         //Check that the config page contains what we expect as well.
         HtmlPage page = jenkins.createWebClient().goTo("configure");
         assertConfigPageRendering(knowledgeBase, page);
+    }
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests that a LocalFileKnowledgebase is preserved through a reconfigure without changes.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureIdenticalLocalKB() throws Exception {
+        LocalFileKnowledgeBase prevKnowledgeBase = new LocalFileKnowledgeBase();
+        FailureCause cause = new FailureCause("Olle", "Olle");
+        cause.addIndication(new BuildLogIndication(".*olle"));
+        prevKnowledgeBase.addCause(cause);
+        PluginImpl instance = PluginImpl.getInstance();
+        instance.setKnowledgeBase(prevKnowledgeBase);
+        HtmlForm form = jenkins.createWebClient().goTo("configure").getFormByName("config");
+        jenkins.submit(form);
+        LocalFileKnowledgeBase knowledgeBase = (LocalFileKnowledgeBase)instance.getKnowledgeBase();
+
+        //assert that nothing in the KB has changed, since a change was made from one Local KB to another.
+        assertSame(prevKnowledgeBase, knowledgeBase);
+        assertEquals(1, knowledgeBase.getCauses().size());
+        assertSame(cause, knowledgeBase.getCauses().iterator().next());
+    }
+
+    //CS IGNORE MagicNumber FOR NEXT 17 LINES. REASON: Random test data
+
+    /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests that a MongoDBKnowledgebase is preserved through a reconfigure without changes.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureIdenticalMongoKB() throws Exception {
+        MongoDBKnowledgeBase prevKnowledgeBase = new MongoDBKnowledgeBase("host",
+                27017,
+                "dbname",
+                "username",
+                Secret.fromString("password"),
+                false,
+                true);
+        PluginImpl instance = PluginImpl.getInstance();
+        instance.setKnowledgeBase(prevKnowledgeBase);
+        HtmlForm form = jenkins.createWebClient().goTo("configure").getFormByName("config");
+        jenkins.submit(form);
+        MongoDBKnowledgeBase newkb = (MongoDBKnowledgeBase)instance.getKnowledgeBase();
+        assertSame(prevKnowledgeBase, newkb);
+        //make sure that the values are preserved and not replaced by defaults.
+        assertFalse(newkb.isEnableStatistics());
+        assertTrue(newkb.isSuccessfulLogging());
     }
 
     /**
@@ -224,7 +245,7 @@ public class PluginImplHudsonTest {
         HtmlTable table = page.getDocumentElement().getOneHtmlElementByAttribute("table", "name", "knowledgeBase");
         assertSame("The table should be inside the dropDownContainer", container, table.getParentNode().getParentNode());
         HtmlTableCell cell = table.getCellAt(1, 2);
-        HtmlTextInput someStringInput = (HtmlTextInput)cell.getAllHtmlChildElements().iterator().next();
+        HtmlTextInput someStringInput = (HtmlTextInput)cell.getHtmlElementDescendants().iterator().next();
         assertEquals(knowledgeBase.getSomeString(), someStringInput.getText());
     }
 
@@ -247,7 +268,7 @@ public class PluginImplHudsonTest {
     /**
      * Creates a form to send to the configure method.
      *
-     * @param expectedNoCauseMessage the text for {@link PluginImpl#noCausesMessage}.
+     * @param expectedNoCauseMessage the text for noCausesMessage.
      * @param convert                if convertion should be run or not, set to null no not put the value in the form.
      * @param nrOfScanThreads           the number of threads.
      * @return the form data.

@@ -26,8 +26,8 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.mongodb.MongoException;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import net.vz.mongodb.jackson.DBCursor;
-import net.vz.mongodb.jackson.JacksonDBCollection;
+import org.mongojack.DBCursor;
+import org.mongojack.JacksonDBCollection;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -138,7 +138,7 @@ public class MongoDBKnowledgeBaseCache {
                         cachedFailureCauses = list;
                         categories = jacksonCollection.distinct("categories");
                     } catch (MongoException e) {
-                        logger.log(Level.SEVERE, "MongoException caught when updating cache: " + e);
+                        logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
                     } catch (InterruptedException e) {
                         logger.log(Level.WARNING, "Updater thread interrupted", e);
                     }

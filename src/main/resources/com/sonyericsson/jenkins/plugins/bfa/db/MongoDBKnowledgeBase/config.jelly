@@ -21,30 +21,28 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:entry title="${%Host}">
-        <f:textbox name="host" value="${instance.host}"
-                checkUrl="'${rootURL}/plugin/build-failure-analyzer/knowledgeBaseDescriptor/MongoDBKnowledgeBaseDescriptor/checkHost?value='+escape(this.value)"/>
+        <f:textbox field="host" />
     </f:entry>
     <f:entry title="${%Port}">
-        <f:textbox name="port" value="${instance.port}" default="${descriptor.defaultPort}"
-                checkUrl="'${rootURL}/plugin/build-failure-analyzer/knowledgeBaseDescriptor/MongoDBKnowledgeBaseDescriptor/checkPort?value='+escape(this.value)"/>
+        <f:textbox field="port" default="${descriptor.defaultPort}" />
     </f:entry>
     <f:entry title="${%Database name}">
-        <f:textbox name="dbName" value="${instance.dbName}"
-                   checkUrl="'${rootURL}/plugin/build-failure-analyzer/knowledgeBaseDescriptor/MongoDBKnowledgeBaseDescriptor/checkDBName?value='+escape(this.value)"/>
+        <f:textbox field="dbName" />
     </f:entry>
     <f:entry title="${%Username}" description="${%MongoDBKnowledgeBase_UserNameDesc}">
-        <f:textbox name="userName" value="${instance.userName}"/>
+        <f:textbox field="userName" />
     </f:entry>
     <f:entry title="${%Password}" description="${%MongoDBKnowledgeBase_PasswordDesc}">
-        <f:password name="password" value="${instance.password}"/>
+        <f:password field="password" />
     </f:entry>
     <f:entry title="${%Enable statistics logging}">
-        <f:checkbox name="enableStatistics" default="true" checked="${instance.isStatisticsEnabled()}"/>
+        <f:checkbox field="enableStatistics" default="true"/>
     </f:entry>
     <f:entry title="${%Enable statistics logging of successful builds}">
-        <f:checkbox name="successfulLogging" default="false" checked="${instance.isSuccessfulLoggingEnabled()}"/>
+        <f:checkbox field="successfulLogging" default="false"/>
     </f:entry>
     <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="host,port,dbName,userName,password"/>
 </j:jelly>
