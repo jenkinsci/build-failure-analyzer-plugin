@@ -33,9 +33,7 @@ def l = namespace(lib.LayoutTagLib)
 index = 1
 
 def rootFailureDisplayData = my.getFailureCauseDisplayData()
-if (! (rootFailureDisplayData.getFoundFailureCauses().empty
-    && rootFailureDisplayData.getDownstreamFailureCauses().empty
-    && !PluginImpl.getInstance().isNoCausesEnabled())) {
+if (PluginImpl.getInstance().isNoCausesEnabled() || !rootFailureDisplayData.isEmpty()) {
 
     tr {
         td {
