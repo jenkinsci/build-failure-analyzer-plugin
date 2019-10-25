@@ -25,6 +25,7 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
+import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder;
 import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder;
@@ -33,6 +34,8 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
+
+import org.junit.After;
 import org.junit.Before;
 
 import java.io.IOException;
@@ -56,6 +59,9 @@ public abstract class EmbeddedMongoTest {
     private static final String DB_NAME = "jenkinsbfa";
 
     private static String mongoURL = System.getProperty(EmbeddedMongoTest.class.getName() + ".mongoURL");
+
+    private MongodExecutable mongodExe = null;
+    private MongodProcess mongodProc = null;
 
     /**
      * Sets up an instance of {@link MongoDBKnowledgeBase} backed up by a real MongoDB, to be used for testing.
@@ -83,11 +89,18 @@ public abstract class EmbeddedMongoTest {
         }
 
         IMongodConfig conf = new MongodConfigBuilder().version(Version.Main.V3_6).build();
-        MongodExecutable mongodExe = runtime.prepare(conf);
-        mongodExe.start();
+        mongodExe = runtime.prepare(conf);
+        mongodProc = mongodExe.start();
 
         int port = conf.net().getPort();
         knowledgeBase = new MongoDBKnowledgeBase(LOCALHOST, port, DB_NAME, null, null, true, false);
     }
 
+    @After
+    public void tearDown() {
+        if (this.mongodProc != null) {
+            this.mongodProc.stop();
+            this.mongodExe.stop();
+        }
+    }
 }

@@ -46,11 +46,17 @@ import net.sf.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.kohsuke.stapler.RequestImpl;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.WebApp;
 import org.powermock.reflect.Whitebox;
 
+import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -71,12 +77,49 @@ import static org.mockito.Mockito.when;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class PluginImplHudsonTest {
+
     /**
      * The Jenkins Rule.
      */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    //CS IGNORE MagicNumber FOR NEXT 20 LINES. REASON: Random test data
+
+    @Test
+    public void testBooleanConfigPersistence() throws Exception {
+        PluginImpl instance = PluginImpl.getInstance();
+        // assert default config
+        assertTrue("globalEnabled: default value is true", instance.isGlobalEnabled());
+        assertFalse("testResultParsingEnabled: default value is false", instance.isTestResultParsingEnabled());
+        assertTrue("gerritTriggerEnabled: default value is true", instance.isGerritTriggerEnabled());
+        assertFalse("doNotAnalyzeAbortedJob: default value is false", instance.isDoNotAnalyzeAbortedJob());
+        assertFalse("graphsEnabled: default value is false", instance.isGraphsEnabled());
+        // to ever get graphsEnabled, we'll need a KB with enableStatistics, like MongoDBKB with the right option
+        MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
+                Secret.fromString("password"), true, true);
+        instance.setKnowledgeBase(mongoKB);
+        // need an actual StaplerRequest implementation to test we're using bindJSON correctly
+        WebApp webapp = new WebApp(mock(ServletContext.class));
+        Stapler stapler = mock(Stapler.class);
+        when(stapler.getWebApp()).thenReturn(webapp);
+        StaplerRequest sreq = new RequestImpl(stapler, mock(HttpServletRequest.class), Collections.emptyList(), null);
+        // flip configuration of all boolean values
+        JSONObject form = new JSONObject();
+        form.put("globalEnabled", !instance.isGlobalEnabled());
+        form.put("testResultParsingEnabled", !instance.isTestResultParsingEnabled());
+        form.put("gerritTriggerEnabled", !instance.isGerritTriggerEnabled());
+        form.put("doNotAnalyzeAbortedJob", !instance.isDoNotAnalyzeAbortedJob());
+        form.put("graphsEnabled", !instance.isGraphsEnabled());
+        instance.configure(sreq, form);
+        // assert opposite config
+        assertFalse("globalEnabled: opposite value is false", instance.isGlobalEnabled());
+        assertTrue("testResultParsingEnabled: opposite value is true", instance.isTestResultParsingEnabled());
+        assertFalse("gerritTriggerEnabled: opposite value is false", instance.isGerritTriggerEnabled());
+        assertTrue("doNotAnalyzeAbortedJob: opposite value is true", instance.isDoNotAnalyzeAbortedJob());
+        assertTrue("graphsEnabled: opposite value is true", instance.isGraphsEnabled());
+    }
 
     /**
      * Tests that {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getKnowledgeBaseDescriptors()} contains the
