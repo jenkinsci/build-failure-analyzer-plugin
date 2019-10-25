@@ -482,6 +482,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param doNotAnalyzeAbortedJob on or off.
      */
+    @DataBoundSetter
     public void setDoNotAnalyzeAbortedJob(boolean doNotAnalyzeAbortedJob) {
         this.doNotAnalyzeAbortedJob = doNotAnalyzeAbortedJob;
     }
@@ -492,6 +493,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param globalEnabled on or off.
      */
+    @DataBoundSetter
     public void setGlobalEnabled(boolean globalEnabled) {
         this.globalEnabled = globalEnabled;
     }
@@ -502,6 +504,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param testResultParsingEnabled on or off.
      */
+    @DataBoundSetter
     public void setTestResultParsingEnabled(boolean testResultParsingEnabled) {
         this.testResultParsingEnabled = testResultParsingEnabled;
     }
@@ -511,6 +514,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param testResultCategories Space-separated string with categories
      */
+    @DataBoundSetter
     public void setTestResultCategories(String testResultCategories) {
         this.testResultCategories = testResultCategories;
     }
@@ -534,6 +538,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param gerritTriggerEnabled on or off.
      */
+    @DataBoundSetter
     public void setGerritTriggerEnabled(boolean gerritTriggerEnabled) {
         this.gerritTriggerEnabled = gerritTriggerEnabled;
     }
@@ -557,6 +562,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param nrOfScanThreads the number of scan threads.
      */
+    @DataBoundSetter
     public void setNrOfScanThreads(int nrOfScanThreads) {
         if (nrOfScanThreads < MINIMUM_NR_OF_SCAN_THREADS) {
             throw new IllegalArgumentException("Minimum nrOfScanThreads is " + MINIMUM_NR_OF_SCAN_THREADS);
@@ -569,6 +575,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param maxLogSize value
      */
+    @DataBoundSetter
     public void setMaxLogSize(int maxLogSize) {
         this.maxLogSize = maxLogSize;
     }
