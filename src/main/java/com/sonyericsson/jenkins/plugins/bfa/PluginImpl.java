@@ -343,6 +343,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param noCausesEnabled on or off.
      */
+    @DataBoundSetter
     public void setNoCausesEnabled(boolean noCausesEnabled) {
         this.noCausesEnabled = noCausesEnabled;
     }
