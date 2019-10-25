@@ -14,6 +14,7 @@ unclassified:
         port: 27017
         successfulLogging: false
     maxLogSize: 10
+    noCausesEnabled: true
     noCausesMessage: "No problems were identified. Please contribute  causes to help others"
     nrOfScanThreads: 6
     sodVariables:
@@ -24,5 +25,3 @@ unclassified:
       sodWaitForJobShutdownTimeout: 32
     testResultCategories: "hgjghhlllllaa"
     testResultParsingEnabled: true
-
-

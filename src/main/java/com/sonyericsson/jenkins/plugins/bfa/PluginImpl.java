@@ -131,6 +131,7 @@ public class PluginImpl extends GlobalConfiguration {
      */
     protected static final int MINIMUM_NR_OF_SCAN_THREADS = 1;
 
+    private Boolean noCausesEnabled;
     private String noCausesMessage;
 
     private Boolean globalEnabled;
@@ -321,6 +322,30 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public String getNoCausesMessage() {
         return noCausesMessage;
+    }
+
+    /**
+     * Whether to display in the build page when no causes are identified.
+     *
+     * @return true if on.
+     */
+    public boolean isNoCausesEnabled() {
+        if (noCausesEnabled == null) {
+            return true;
+        } else {
+            return noCausesEnabled;
+        }
+    }
+
+    /**
+     * Sets whether the "no indications found" message should be shown in the job page when no causes are found.
+     * Default value is true.
+     *
+     * @param noCausesEnabled on or off.
+     */
+    @DataBoundSetter
+    public void setNoCausesEnabled(boolean noCausesEnabled) {
+        this.noCausesEnabled = noCausesEnabled;
     }
 
     /**

@@ -31,20 +31,25 @@ def l = namespace(lib.LayoutTagLib)
 
 index = 1
 
-tr {
-    td {
-        img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
-    }
-    td(style: "vertical-align: middle;") {
-        h2(_("Identified problems"))
-    }
-}
+def rootFailureDisplayData = my.getFailureCauseDisplayData()
+if (PluginImpl.getInstance().isNoCausesEnabled() || !rootFailureDisplayData.isEmpty()) {
 
-displayData(my.getFailureCauseDisplayData(), [], 0)
+    tr {
+        td {
+            img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
+        }
+        td(style: "vertical-align: middle;") {
+            h2(_("Identified problems"))
+        }
+    }
+
+    displayData(rootFailureDisplayData, [], 0)
+}
 
 def displayData(failureCauseDisplayData, linkTree, indent) {
 
-    if (failureCauseDisplayData.getFoundFailureCauses().empty && failureCauseDisplayData.getDownstreamFailureCauses().empty) {
+    if (failureCauseDisplayData.getFoundFailureCauses().empty
+            && failureCauseDisplayData.getDownstreamFailureCauses().empty) {
 
         if (indent > 0) {
             displayLinkTree(linkTree)

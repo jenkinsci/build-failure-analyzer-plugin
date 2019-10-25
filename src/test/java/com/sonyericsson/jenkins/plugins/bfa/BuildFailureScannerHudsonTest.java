@@ -387,6 +387,31 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
+     * Tests that "no problem identified" message is not shown when no failure cause has been found.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoIndicationMessageShownIfNoCausesDisabled() throws Exception {
+        FreeStyleProject project = createProject();
+        PluginImpl.getInstance().setNoCausesEnabled(false);
+
+        configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        assertTrue(action.getFoundFailureCauses().isEmpty());
+
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl());
+        HtmlElement document = page.getDocumentElement();
+        HtmlElement heading = document.getFirstByXPath("//h4[text()='No identified problem']");
+        assertNull(heading);
+    }
+
+    /**
      * Makes sure that the build action is not added to a successful build.
      *
      * @throws Exception if so.

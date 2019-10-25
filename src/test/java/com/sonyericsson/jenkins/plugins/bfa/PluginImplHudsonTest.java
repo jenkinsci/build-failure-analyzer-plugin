@@ -96,6 +96,7 @@ public class PluginImplHudsonTest {
         assertTrue("gerritTriggerEnabled: default value is true", instance.isGerritTriggerEnabled());
         assertFalse("doNotAnalyzeAbortedJob: default value is false", instance.isDoNotAnalyzeAbortedJob());
         assertFalse("graphsEnabled: default value is false", instance.isGraphsEnabled());
+        assertTrue("noCausesEnabled: default value is true", instance.isNoCausesEnabled());
         // to ever get graphsEnabled, we'll need a KB with enableStatistics, like MongoDBKB with the right option
         MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
                 Secret.fromString("password"), true, true);
@@ -112,6 +113,7 @@ public class PluginImplHudsonTest {
         form.put("gerritTriggerEnabled", !instance.isGerritTriggerEnabled());
         form.put("doNotAnalyzeAbortedJob", !instance.isDoNotAnalyzeAbortedJob());
         form.put("graphsEnabled", !instance.isGraphsEnabled());
+        form.put("noCausesEnabled", !instance.isNoCausesEnabled());
         instance.configure(sreq, form);
         // assert opposite config
         assertFalse("globalEnabled: opposite value is false", instance.isGlobalEnabled());
@@ -119,6 +121,7 @@ public class PluginImplHudsonTest {
         assertFalse("gerritTriggerEnabled: opposite value is false", instance.isGerritTriggerEnabled());
         assertTrue("doNotAnalyzeAbortedJob: opposite value is true", instance.isDoNotAnalyzeAbortedJob());
         assertTrue("graphsEnabled: opposite value is true", instance.isGraphsEnabled());
+        assertFalse("noCausesEnabled: opposite value is false", instance.isNoCausesEnabled());
     }
 
     /**
@@ -319,6 +322,7 @@ public class PluginImplHudsonTest {
     private JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
         JSONObject form = new JSONObject();
         form.put("noCausesMessage", expectedNoCauseMessage);
+        form.put("noCausesEnabled", true);
         form.put("globalEnabled", true);
         form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);
