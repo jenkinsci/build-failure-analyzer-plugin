@@ -21,7 +21,6 @@
         <powermock.version>1.6.6</powermock.version>
         <checkstyle.version>3.1.0</checkstyle.version>
         <configuration-as-code.version>1.20</configuration-as-code.version>
-        <jackson.version>2.10.0</jackson.version>
     </properties>
 
     <licenses>
@@ -77,21 +76,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
@@ -146,11 +130,22 @@
             <groupId>org.mongojack</groupId>
             <artifactId>mongojack</artifactId>
             <version>2.9.4</version>
+            <exclusions>
+                <!-- jackson deps come from jackson2-api plugin instead -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
-            <version>${jackson.version}</version>
+            <version>2.10.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -231,6 +226,13 @@
             <artifactId>workflow-aggregator</artifactId>
             <version>2.5</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- it comes from jackson2-api plugin instead -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
