@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>1.24.1-SNAPSHOT</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
@@ -15,13 +15,14 @@
     </parent>
 
     <properties>
+        <revision>1.24.1</revision>
+        <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <powermock.version>1.6.6</powermock.version>
         <checkstyle.version>3.1.0</checkstyle.version>
         <configuration-as-code.version>1.20</configuration-as-code.version>
-        <jackson.version>2.10.0</jackson.version>
     </properties>
 
     <licenses>
@@ -77,21 +78,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
@@ -146,11 +132,22 @@
             <groupId>org.mongojack</groupId>
             <artifactId>mongojack</artifactId>
             <version>2.9.4</version>
+            <exclusions>
+                <!-- jackson deps come from jackson2-api plugin instead -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
-            <version>${jackson.version}</version>
+            <version>2.10.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -231,6 +228,13 @@
             <artifactId>workflow-aggregator</artifactId>
             <version>2.5</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- it comes from jackson2-api plugin instead -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -313,8 +317,8 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <configLocation>swe_checkstyle.xml</configLocation>
-                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    <configLocation>${project.basedir}/swe_checkstyle.xml</configLocation>
+                    <suppressionsLocation>${project.basedir}/checkstyle-suppressions.xml</suppressionsLocation>
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <consoleOutput>true</consoleOutput>
@@ -357,7 +361,7 @@
         <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
-      <tag>HEAD</tag>
+      <tag>${scmTag}</tag>
   </scm>
     <reporting>
         <plugins>
