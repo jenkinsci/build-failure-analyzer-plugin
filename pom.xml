@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>1.24.1-SNAPSHOT</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
@@ -15,6 +15,8 @@
     </parent>
 
     <properties>
+        <revision>1.24.1</revision>
+        <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -315,8 +317,8 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <configLocation>swe_checkstyle.xml</configLocation>
-                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    <configLocation>${project.basedir}/swe_checkstyle.xml</configLocation>
+                    <suppressionsLocation>${project.basedir}/checkstyle-suppressions.xml</suppressionsLocation>
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <consoleOutput>true</consoleOutput>
@@ -359,7 +361,7 @@
         <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
-      <tag>HEAD</tag>
+      <tag>${scmTag}</tag>
   </scm>
     <reporting>
         <plugins>
