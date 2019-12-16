@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
@@ -44,6 +45,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -248,10 +250,12 @@ public class BuildLogIndication extends Indication {
          *         the string does not match the pattern,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
+        @RequirePOST
         public FormValidation doMatchText(
                 @QueryParameter("pattern") final String testPattern,
                 @QueryParameter("testText") String testText,
                 @QueryParameter("textSourceIsUrl") final boolean textSourceIsUrl) {
+            Jenkins.get().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (textSourceIsUrl) {
                 testText = testText.replaceAll("/\\./", "/").replaceAll("/view/change-requests", "");
                 Matcher urlMatcher = URL_PATTERN.matcher(testText);
@@ -332,7 +336,9 @@ public class BuildLogIndication extends Indication {
                 return FormValidation.error(Messages.InvalidURL_Error());
             } else {
                 try {
-                    if (testText.matches(testPattern)) {
+                    final Pattern pattern = Pattern.compile(testPattern);
+                    final Matcher matcher = pattern.matcher(new FailureReader.InterruptibleCharSequence(testText));
+                    if (matcher.matches()) {
                         return FormValidation.ok(Messages.StringMatchesPattern());
                     }
                     return FormValidation.warning(Messages.StringDoesNotMatchPattern());
