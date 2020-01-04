@@ -23,12 +23,18 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 /**
  * Scan on demand feature settings.
  *
  * @author Shemeer S &lt;shemeer.x.sulaiman@sonymobile.com&gt;
  */
-public class ScanOnDemandVariables {
+public class ScanOnDemandVariables extends AbstractDescribableImpl<ScanOnDemandVariables> {
 
     /**
      * Minimum number of worker threads.
@@ -59,19 +65,30 @@ public class ScanOnDemandVariables {
     private int sodThreadKeepAliveTime;
     private int sodWaitForJobShutdownTimeout;
     private int sodCorePoolNumberOfThreads;
-     /**
+
+    /**
+     * Data bound constructor (used by jcasc).
+     */
+    @DataBoundConstructor
+    public ScanOnDemandVariables() {
+    }
+
+    /**
      * Set maximum numbers of sod worker threads.
      *
      * @param maximumSodWorkerThreads value.
      */
-    public void setMaximumSodWorkerThreads(int maximumSodWorkerThreads) {
-        this.maximumSodWorkerThreads = maximumSodWorkerThreads;
-    }
+     @DataBoundSetter
+     public void setMaximumSodWorkerThreads(int maximumSodWorkerThreads) {
+         this.maximumSodWorkerThreads = maximumSodWorkerThreads;
+     }
+
     /**
      * Set minimum numbers of sod worker threads.
      *
      * @param minimumSodWorkerThreads value.
      */
+    @DataBoundSetter
     public void setMinimumSodWorkerThreads(int minimumSodWorkerThreads) {
         this.minimumSodWorkerThreads = minimumSodWorkerThreads;
     }
@@ -80,6 +97,7 @@ public class ScanOnDemandVariables {
      *
      * @param sodCorePoolNumberOfThreads value.
      */
+    @DataBoundSetter
     public void setSodCorePoolNumberOfThreads(int sodCorePoolNumberOfThreads) {
         this.sodCorePoolNumberOfThreads = sodCorePoolNumberOfThreads;
     }
@@ -88,6 +106,7 @@ public class ScanOnDemandVariables {
      *
      * @param sodThreadKeepAliveTime value.
      */
+    @DataBoundSetter
     public void setSodThreadKeepAliveTime(int sodThreadKeepAliveTime) {
         this.sodThreadKeepAliveTime = sodThreadKeepAliveTime;
     }
@@ -96,6 +115,7 @@ public class ScanOnDemandVariables {
      *
      * @param sodWaitForJobShutdownTimeout  value.
      */
+    @DataBoundSetter
     public void setSodWaitForJobShutdownTimeout(int sodWaitForJobShutdownTimeout) {
         this.sodWaitForJobShutdownTimeout = sodWaitForJobShutdownTimeout;
     }
@@ -105,9 +125,13 @@ public class ScanOnDemandVariables {
      *
      * @return int value.
      */
-    public int getSodCorePoolNumberOfThreads() {
-        return sodCorePoolNumberOfThreads;
-    }
+     public int getSodCorePoolNumberOfThreads() {
+         if (sodCorePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
+             return ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS;
+         }
+
+         return sodCorePoolNumberOfThreads;
+     }
 
     /**
      * Returns the maximum number of sod threads.
@@ -115,6 +139,10 @@ public class ScanOnDemandVariables {
      * @return int value.
      */
     public int getMaximumSodWorkerThreads() {
+        if (maximumSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS) {
+            return ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS;
+        }
+
         return maximumSodWorkerThreads;
     }
 
@@ -124,6 +152,10 @@ public class ScanOnDemandVariables {
      * @return int value.
      */
     public int getMinimumSodWorkerThreads() {
+        if (minimumSodWorkerThreads < ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS) {
+            return ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS;
+        }
+
         return minimumSodWorkerThreads;
     }
 
@@ -133,6 +165,10 @@ public class ScanOnDemandVariables {
      * @return int value.
      */
     public int getSodThreadKeepAliveTime() {
+        if (sodThreadKeepAliveTime < ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME) {
+            return ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME;
+        }
+
         return sodThreadKeepAliveTime;
     }
 
@@ -142,7 +178,18 @@ public class ScanOnDemandVariables {
      * @return the int value.
      */
     public int getSodWaitForJobShutdownTimeout() {
+        if (sodWaitForJobShutdownTimeout < ScanOnDemandVariables.DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT) {
+            return DEFAULT_SOD_WAIT_FOR_JOBS_SHUTDOWN_TIMEOUT;
+        }
+
         return sodWaitForJobShutdownTimeout;
     }
 
+    /**
+     * Descriptor for {@link ScanOnDemandVariables}.
+     */
+    @Extension
+    public static class DescriptorImpl extends Descriptor<ScanOnDemandVariables> {
+
+    }
 }

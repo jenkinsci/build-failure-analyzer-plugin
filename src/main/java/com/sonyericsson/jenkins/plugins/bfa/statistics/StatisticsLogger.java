@@ -90,7 +90,7 @@ public final class StatisticsLogger {
      * @param causes the list of causes.
      */
     public void log(Run build, List<FoundFailureCause> causes) {
-        if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+        if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
             queueExecutor.submit(new LoggingWork(build, causes));
         }
     }

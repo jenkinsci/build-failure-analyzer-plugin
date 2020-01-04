@@ -1,0 +1,4 @@
+_extends: .github
+version-template: $MAJOR.$MINOR.$PATCH
+tag-template: build-failure-analyzer-$NEXT_PATCH_VERSION
+name-template: Build Failure Analyzer Plugin $NEXT_PATCH_VERSION

@@ -24,7 +24,13 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
@@ -37,9 +43,9 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -51,6 +57,8 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class", visible = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BuildLogIndication extends Indication {
 
     private static final long serialVersionUID = -2889792693081908532L;
@@ -61,24 +69,20 @@ public class BuildLogIndication extends Indication {
      *
      * @param pattern the string value to search for.
      */
+    @JsonCreator
     @DataBoundConstructor
     public BuildLogIndication(@JsonProperty("pattern") String pattern) {
         super(pattern);
     }
 
-    /**
-     * Default constructor.
-     * <strong>Do not use this unless you are a serializer.</strong>
-     */
-    public BuildLogIndication() {
-    }
-
     @Override
+    @JsonIgnore
     public FailureReader getReader() {
         return new BuildLogFailureReader(this);
     }
 
     @Override
+    @JsonIgnore
     public Pattern getPattern() {
         if (compiled == null) {
             compiled = Pattern.compile(getUserProvidedExpression());
@@ -87,6 +91,7 @@ public class BuildLogIndication extends Indication {
     }
 
     @Override
+    @JsonIgnore
     public IndicationDescriptor getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(BuildLogIndicationDescriptor.class);
     }
@@ -187,7 +192,7 @@ public class BuildLogIndication extends Indication {
              *
              * @param name the name of this StringBuildId.
              */
-            private StringBuildId(String name) {
+            StringBuildId(String name) {
                 this.name = name;
             }
 
@@ -245,12 +250,14 @@ public class BuildLogIndication extends Indication {
          *         the string does not match the pattern,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
+        @RequirePOST
         public FormValidation doMatchText(
                 @QueryParameter("pattern") final String testPattern,
                 @QueryParameter("testText") String testText,
                 @QueryParameter("textSourceIsUrl") final boolean textSourceIsUrl) {
+            Jenkins.get().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (textSourceIsUrl) {
-                testText = testText.replaceAll("/\\./", "/");
+                testText = testText.replaceAll("/\\./", "/").replaceAll("/view/change-requests", "");
                 Matcher urlMatcher = URL_PATTERN.matcher(testText);
                 if (urlMatcher.matches()) {
                     String[] urlParts = new String[NUM_OF_URL_PARTS];
@@ -329,7 +336,9 @@ public class BuildLogIndication extends Indication {
                 return FormValidation.error(Messages.InvalidURL_Error());
             } else {
                 try {
-                    if (testText.matches(testPattern)) {
+                    final Pattern pattern = Pattern.compile(testPattern);
+                    final Matcher matcher = pattern.matcher(new FailureReader.InterruptibleCharSequence(testText));
+                    if (matcher.matches()) {
                         return FormValidation.ok(Messages.StringMatchesPattern());
                     }
                     return FormValidation.warning(Messages.StringDoesNotMatchPattern());

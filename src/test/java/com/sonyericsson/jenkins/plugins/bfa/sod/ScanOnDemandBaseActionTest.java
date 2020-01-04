@@ -160,7 +160,7 @@ public class ScanOnDemandBaseActionTest {
     @Test
     public void testShouldOnlyShowWhenScanningIsEnabled() throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
-        project = j.configRoundtrip(project);
+        project = (FreeStyleProject)j.configRoundtrip((Item)project);
         String expectedHref = "/jenkins/" + project.getUrl() + "scan-on-demand";
 
         JenkinsRule.WebClient client = j.createWebClient();

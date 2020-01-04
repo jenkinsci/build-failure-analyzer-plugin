@@ -76,6 +76,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -148,6 +149,66 @@ public class BuildFailureScannerHudsonTest {
 
         assertNotNull(error);
         assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+    }
+
+    /**
+     * Happy test that should find one generic failure indication in the build.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testOnlyOneGenericIndicationFound() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nUnknown Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, genericFailureCause));
+        assertFalse(findCauseInList(causeListFromAction, specificFailureCause));
+    }
+
+    /**
+     * Happy test that should replace the generic failure indication with the specific one.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testGenericFailureCauseIsDroppedForSpecificOne() throws Exception {
+        PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
+
+        FailureCause genericFailureCause = configureCauseAndIndication(
+                "Generic Error", "an error", "", "Generic", new BuildLogIndication(".*Generic Error.*")
+        );
+        FailureCause specificFailureCause = configureCauseAndIndication(
+                "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
+        );
+
+        FreeStyleProject project = createProject("Generic Error\nSpecific Error");
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        List<FoundFailureCause> causeListFromAction = build
+                .getAction(FailureCauseBuildAction.class)
+                .getFoundFailureCauses();
+        assertFalse(findCauseInList(causeListFromAction, genericFailureCause));
+        assertTrue(findCauseInList(causeListFromAction, specificFailureCause));
     }
 
     /**
@@ -446,6 +507,31 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
+     * Tests that "no problem identified" message is not shown when no failure cause has been found.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoIndicationMessageShownIfNoCausesDisabled() throws Exception {
+        FreeStyleProject project = createProject();
+        PluginImpl.getInstance().setNoCausesEnabled(false);
+
+        configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        assertTrue(action.getFoundFailureCauses().isEmpty());
+
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl());
+        HtmlElement document = page.getDocumentElement();
+        HtmlElement heading = document.getFirstByXPath("//h4[text()='No identified problem']");
+        assertNull(heading);
+    }
+
+    /**
      * Makes sure that the build action is not added to a successful build.
      *
      * @throws Exception if so.
@@ -566,9 +652,9 @@ public class BuildFailureScannerHudsonTest {
         List<FailureCause> causes = new LinkedList<FailureCause>();
         causes.add(cause);
         KnowledgeBase base = mock(KnowledgeBase.class);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         when(base.getCauses()).thenReturn(causes);
-        when(base.isStatisticsEnabled()).thenReturn(true);
+        when(base.isEnableStatistics()).thenReturn(true);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
