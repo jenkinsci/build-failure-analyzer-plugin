@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -261,7 +262,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                     String buildName = data.getLinks().getProjectDisplayName();
                     String buildUrl = Jenkins.getInstance().getRootUrl() + build.getUrl();
                     createSlackMessage(foundCauseList, notifySlackAllFail, slackFailCauseCat, buildName,
-                            buildNum, buildUrl, buildLog);
+                            buildNum, buildUrl, scanLog);
                 }
             }
         } catch (Exception e) {
@@ -277,23 +278,23 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param buildName - Name of the build
      * @param buildNum - Build object
      * @param buildUrl - Full URL of build
-     * @param buildLog - PrintStream for the build log
+     * @param scanLog - PrintStream for the build log
      * @return boolean true if message successfully created, false otherwise
      */
     public static boolean createSlackMessage(List<FoundFailureCause> foundCauseList,
             boolean notifySlackOfAllFailures, List<String> slackFailureCauseCategories,
-            String buildName, String buildNum, String buildUrl, PrintStream buildLog) {
+            String buildName, String buildNum, String buildUrl, PrintStream scanLog) {
         boolean notifySlackOfFailure = false;
         StringBuffer bufBuildFailCause = new StringBuffer();
 
         /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
-        for(int i = 0; i < foundCauseList.size(); i++) {
+        for (int i = 0; i < foundCauseList.size(); i++) {
             if (!notifySlackOfAllFailures) {
                 List<String> categories = foundCauseList.get(i).getCategories();
                 if (categories != null) {
-                    for(int j = 0; j < categories.size(); j++) {
+                    for (int j = 0; j < categories.size(); j++) {
                         String category = categories.get(j);
-                        if(failureCategoryMatches(category, slackFailureCauseCategories)) {
+                        if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
                             break;
                         }
@@ -318,7 +319,7 @@ public class BuildFailureScanner extends RunListener<Run> {
             s.append(bufBuildFailCause.toString() + "```\nSee ");
             s.append(buildUrl + " for details.");
 
-            slack.postToSlack(s.toString(), buildLog);
+            slack.postToSlack(s.toString(), scanLog);
             return true;
         }
         return false;
@@ -331,7 +332,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @return Boolean true if atleast one category matches, false otherwise
      */
     private static boolean failureCategoryMatches(String category, List<String> slackFailureCauseCategories) {
-        for(int i = 0; i < slackFailureCauseCategories.size(); i++) {
+        for (int i = 0; i < slackFailureCauseCategories.size(); i++) {
             if (category.trim().equalsIgnoreCase(slackFailureCauseCategories.get(i).trim())) {
                 return true;
             }

@@ -600,7 +600,8 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param slackNotifEnabled on or off. null == off.
      */
-    public void setSlackNotifEnabled(Boolean slackNotifEnabled) {
+    @DataBoundSetter
+    public void setSlackNotifEnabled(boolean slackNotifEnabled) {
         this.slackNotifEnabled = slackNotifEnabled;
     }
 
@@ -609,7 +610,8 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param slackChannelName null = DEFAULT_SLACK_CHANNEL
      */
-    public void setSlackChannel(String slackChannelName) {
+    @DataBoundSetter
+    public void setSlackChannelName(String slackChannelName) {
         this.slackChannelName = slackChannelName;
     }
 
@@ -618,6 +620,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param slackFailureCategories - Space seperated list of failure cause categories.
      */
+    @DataBoundSetter
     public void setslackFailureCategories(String slackFailureCategories) {
         this.slackFailureCategories = slackFailureCategories;
     }

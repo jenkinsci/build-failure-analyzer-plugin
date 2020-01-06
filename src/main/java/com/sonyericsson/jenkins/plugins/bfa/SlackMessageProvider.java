@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Sony Mobile Communications AB. All rights reserved.
+ * Copyright 2020 Johan Cornelissen All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import jenkins.plugins.slack.SlackNotifier;
@@ -83,7 +84,7 @@ public class SlackMessageProvider {
      * Get descriptor for Slack Notifier plugin.
      * @return Descriptor
      */
-    private SlackNotifier.DescriptorImpl getSlackDescriptor(){
+    private SlackNotifier.DescriptorImpl getSlackDescriptor() {
         return (SlackNotifier.DescriptorImpl)Jenkins.getInstance().getDescriptor(SlackNotifier.class);
     }
 
@@ -154,7 +155,7 @@ public class SlackMessageProvider {
         s.append("Channel :" + room + "\n");
         s.append("BotUser:" + botUser);
         if (message != null) {
-            s.append("\n"+message);
+            s.append("\n" + message);
         }
 
         if (buildLog != null) {
@@ -194,7 +195,7 @@ public class SlackMessageProvider {
             SlackService service = new StandardSlackService(baseUrl, teamDomain, authToken,
                     authTokenCredentialId, botUser, useRoom);
             boolean postResult = service.publish(messageText, messageColor);
-            if(!postResult){
+            if (!postResult) {
                 reportGenericErrorMessage(buildLog, null);
             } else {
                 if (buildLog != null) {

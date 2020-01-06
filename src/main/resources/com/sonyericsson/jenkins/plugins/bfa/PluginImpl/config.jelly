@@ -51,31 +51,15 @@
             <f:checkbox name="convertOldKb" checked="true"/>
             <span class="warning">Notice that when converting to an existing (non empty) knowledge base; duplicates could happen.</span>
         </f:entry>
-        <f:entry title="${%Send notifications to Gerrit-Trigger-plugin}"
-                 description="${%enableGerritTriggerDescription}">
-            <f:checkbox field="gerritTriggerEnabled"  default="true"/>
-        </f:entry>
-        <f:entry title="${%Send notifications to Slack}"
-                 description="${%enableSlackNotificationsDescription}">
-            <f:checkbox name="slackNotifEnabled" checked="${it.slackNotifEnabled}" default="false"/>
-        </f:entry>
-        <f:advanced>
-	    	<f:section title="${%Build failure analyzer - Slack options}">
-	            <f:entry title="${%Slack Channel}"
-	                     description="${%Slack channel to use for notification of build failures. Overrides slack channel specified in Global Slack Notifier settings. Ex:#build-failures }">
-	        		<f:textbox name="slackChannelName" value="${it.slackChannelName}" default="${it.DEFAULT_SLACK_CHANNEL}"/>
-	        	</f:entry>
-	        	<f:entry title="${%Failure Cause Categories}"
-	                     description="${%Instruct plugin to only notify slack channel of failures listed as part of a certain category. Use space-separated list. Default: ALL}">
-	                <f:textbox name="slackFailureCategories" value="${it.slackFailureCategories}" default="${it.DEFAULT_SLACK_FAILURE_CATEGORIES}"/>
-	        	</f:entry>
-	        </f:section>
-        </f:advanced>
         <f:entry title="${%Concurrent scans}" description="${%nrOfScanThreadsDescription}">
             <f:number field="nrOfScanThreads" clazz="required positive-number" />
         </f:entry>
         <f:entry title="${%Fallback categories}" description="${%fallbackCategoriesDescription}" >
             <f:textbox field="fallbackCategoriesAsString" autoCompleteDelimChar=" " />
+        </f:entry>
+        <f:entry title="${%Send notifications to Gerrit-Trigger-plugin}"
+                 description="${%enableGerritTriggerDescription}">
+            <f:checkbox field="gerritTriggerEnabled"  default="true"/>
         </f:entry>
         <f:block>
             <table>
@@ -85,6 +69,23 @@
                                  inline="true">
                     <f:entry title="Categories" description="${%testResultCategoriesDescription}">
                         <f:textbox field="testResultCategories" />
+                    </f:entry>
+                </f:optionalBlock>
+            </table>
+        </f:block>
+        <f:block>
+            <table>
+                <f:optionalBlock name="slackNotifEnabled"
+                                 title="${%Send notifications to Slack}"
+                                 checked="${descriptor.slackNotifEnabled}"
+                                 inline="true">
+                     <f:entry title="${%Slack Channel}"
+                              description="${%Slack channel to use for notification of build failures. Overrides slack channel specified in Global Slack Notifier settings. Ex:#build-failures }">
+                         <f:textbox name="slackChannelName" value="${descriptor.slackChannelName}" default="${descriptor.DEFAULT_SLACK_CHANNEL}"/>
+                    </f:entry>
+                    <f:entry title="${%Failure Cause Categories}"
+                              description="${%Instruct plugin to only notify slack channel of failures listed as part of a certain category. Use space-separated list. Default: ALL}">
+                        <f:textbox name="slackFailureCategories" value="${descriptor.slackFailureCategories}" default="${descriptor.DEFAULT_SLACK_FAILURE_CATEGORIES}"/>
                     </f:entry>
                 </f:optionalBlock>
             </table>
