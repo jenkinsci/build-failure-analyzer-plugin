@@ -24,13 +24,13 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.statistics;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import hudson.model.Cause;
+
 import java.util.Date;
 import java.util.List;
-
-import hudson.model.Cause;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * The statistics object which will be logged.

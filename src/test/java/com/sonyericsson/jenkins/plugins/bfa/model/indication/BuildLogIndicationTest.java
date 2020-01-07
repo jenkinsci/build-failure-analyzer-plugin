@@ -24,7 +24,13 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.util.UrlUtils;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
@@ -39,21 +45,30 @@ import hudson.matrix.MatrixRun;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Item;
 import hudson.model.Result;
+import hudson.security.SecurityRealm;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockBuilder;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * Tests for the BuildLogIndication.
@@ -275,5 +290,92 @@ public class BuildLogIndicationTest {
                 "localhost/job/this_url_is_well_formed_but_does_not_refer_to_any_jenkins_job/1/", true);
         assertEquals(Messages.InvalidURL_Error(), formValidation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
+    }
+
+    // CS IGNORE MagicNumber FOR NEXT 200 LINES. REASON: test data.
+
+    @Test @Issue("SECURITY-1651")
+    public void testDoMatchNotHttpGetAccessible() throws Exception {
+        lockDown();
+        final JenkinsRule.WebClient webClient = j.createWebClient();
+        webClient.assertFails("descriptorByName/"
+                + BuildLogIndication.class.getName()
+                + "/matchText?"
+                + "pattern=[a-z]+&"
+                + "testText=hello&"
+                + "textSourceIsUrl=false",
+                405);
+    }
+
+    @Test @Issue("SECURITY-1651")
+    public void testDoMatchHttpPostAccessible() throws Exception {
+        lockDown();
+        final JenkinsRule.WebClient webClient = j.createWebClient();
+        post(webClient, "descriptorByName/"
+                        + BuildLogIndication.class.getName()
+                        + "/matchText?"
+                        + "pattern=[a-z]+&"
+                        + "testText=hello&"
+                        + "textSourceIsUrl=false",
+                null, 403);
+    }
+
+    @Test @Issue("SECURITY-1651")
+    public void testDoMatchHttpPostAccessibleWithPermission() throws Exception {
+        lockDown();
+        final JenkinsRule.WebClient webClient = j.createWebClient().login("bob");
+        post(webClient, "descriptorByName/"
+                        + BuildLogIndication.class.getName()
+                        + "/matchText?"
+                        + "pattern=[a-z]+&"
+                        + "testText=hello&"
+                        + "textSourceIsUrl=false",
+                null, null);
+    }
+
+    /**
+     * Performs an HTTP POST request to the relative url.
+     *
+     * @param webClient the client
+     * @param relative the url relative to the context path
+     * @param expectedContentType if expecting specific content type or null if not
+     * @param expectedStatus if expecting a failing http status code or null if not
+     * @throws IOException if so
+     */
+    private static void post(JenkinsRule.WebClient webClient, String relative,
+                             String expectedContentType, Integer expectedStatus) throws IOException {
+        WebRequest request = new WebRequest(
+                UrlUtils.toUrlUnsafe(webClient.getContextPath() + relative),
+                HttpMethod.POST);
+        try {
+            Page p = webClient.getPage(request);
+            if (expectedContentType != null) {
+                assertThat(p.getWebResponse().getContentType(), is(expectedContentType));
+            }
+        } catch (FailingHttpStatusCodeException e) {
+            if (expectedStatus != null) {
+                assertEquals(expectedStatus.intValue(), e.getStatusCode());
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Lock down the instance.
+     */
+    private void lockDown() {
+        SecurityRealm securityRealm = j.createDummySecurityRealm();
+        j.getInstance().setSecurityRealm(securityRealm);
+        j.getInstance().setAuthorizationStrategy(
+                new MockAuthorizationStrategy().grant(Jenkins.READ).everywhere().toAuthenticated());
+        j.jenkins.setCrumbIssuer(null); //Not really testing csrf right now
+        j.getInstance().setAuthorizationStrategy(
+                new MockAuthorizationStrategy().grant(Item.READ, Item.DISCOVER).everywhere().toAuthenticated()
+                        .grant(PluginImpl.VIEW_PERMISSION).everywhere().toAuthenticated()
+                        .grant(Jenkins.READ, Item.DISCOVER).everywhere().toEveryone()
+                        .grant(Item.CONFIGURE).everywhere().to("bob")
+                        .grant(PluginImpl.UPDATE_PERMISSION).everywhere().to("bob")
+                        .grant(Jenkins.ADMINISTER).everywhere().to("alice"));
     }
 }

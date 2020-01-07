@@ -24,13 +24,21 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.WebResponseListener;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.apache.http.HttpStatus;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
@@ -38,12 +46,25 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * Tests for {@link FailureCause}.
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class FailureCauseHudsonTest extends HudsonTestCase {
+public class FailureCauseHudsonTest {
+
+    /**
+     * The simulated Jenkins instance.
+     */
+    @Rule
+    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
+    public JenkinsRule jenkins = new JenkinsRule();
+
 
     /**
      * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
@@ -51,6 +72,7 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testDoConfigSubmit() throws Exception {
         List<FailureCause> list = new LinkedList<FailureCause>();
         FailureCause c = new FailureCause("A Name", "Some Description");
@@ -64,10 +86,10 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
         list.add(c);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
 
-        WebClient client = this.createWebClient();
+        JenkinsRule.WebClient client = jenkins.createWebClient();
         HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/" + id);
 
-        this.submit(page.getFormByName("causeForm"));
+        jenkins.submit(page.getFormByName("causeForm"));
 
         Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
@@ -101,6 +123,7 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
      *
      * @throws Exception if so.
      */
+    @Test
     public void testDoConfigSubmitOne() throws Exception {
         List<FailureCause> list = new LinkedList<FailureCause>();
         FailureCause c = new FailureCause("A Name", "Some Description");
@@ -110,10 +133,10 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
         list.add(c);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(list));
 
-        WebClient client = this.createWebClient();
+        JenkinsRule.WebClient client = jenkins.createWebClient();
         HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/" + id);
 
-        this.submit(page.getFormByName("causeForm"));
+        jenkins.submit(page.getFormByName("causeForm"));
 
         Collection<FailureCause> newList = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
@@ -124,5 +147,69 @@ public class FailureCauseHudsonTest extends HudsonTestCase {
         assertEquals(cause.getDescription(), newCause.getDescription());
         assertEquals(cause.getIndications().get(0).getPattern().pattern(),
                 newCause.getIndications().get(0).getPattern().pattern());
+    }
+
+    /**
+     * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoCheckNameViaWebForm() throws Exception {
+        JenkinsRule.WebClient client = jenkins.createWebClient();
+        client.setAjaxController(new NicelyResynchronizingAjaxController());
+
+        WebResponseListener.StatusListener serverErrors =
+                new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        WebResponseListener.StatusListener success = new WebResponseListener.StatusListener(HttpStatus.SC_OK);
+
+        client.addWebResponseListener(serverErrors);
+        client.addWebResponseListener(success);
+
+        client.loadDownloadedResponses();
+        HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/new");
+
+        HtmlInput input = page.getFormByName("causeForm").getInputByName("_.name");
+        input.setValueAttribute("Mööp");
+        input.fireEvent("change");
+
+        assertTrue(serverErrors.getResponses().isEmpty());
+        WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);
+
+        assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
+                "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkName"));
+        assertEquals(webResponse.getContentAsString(), "<div/>");
+    }
+
+    /**
+     * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testDoCheckDescriptionViaWebForm() throws Exception {
+        JenkinsRule.WebClient client = jenkins.createWebClient();
+        client.setAjaxController(new NicelyResynchronizingAjaxController());
+
+        WebResponseListener.StatusListener serverErrors =
+                new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        WebResponseListener.StatusListener success = new WebResponseListener.StatusListener(HttpStatus.SC_OK);
+
+        client.addWebResponseListener(serverErrors);
+        client.addWebResponseListener(success);
+
+        client.loadDownloadedResponses();
+        HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/new");
+
+        HtmlTextArea input = page.getFormByName("causeForm").getTextAreaByName("_.description");
+        input.setText("Mööp");
+        input.fireEvent("change");
+
+        assertTrue(serverErrors.getResponses().isEmpty());
+        WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);
+
+        assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
+                "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkDescription"));
+        assertEquals(webResponse.getContentAsString(), "<div/>");
     }
 }

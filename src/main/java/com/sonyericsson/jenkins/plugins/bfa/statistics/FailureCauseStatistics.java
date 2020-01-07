@@ -24,16 +24,14 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.statistics;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import org.mongojack.DBRef;
 
 import java.util.List;
-
-import net.vz.mongodb.jackson.DBRef;
-
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * The FailureCause statistics object.

@@ -20,7 +20,6 @@
     </module>
 
     <module name="TreeWalker">
-        <module name="FileContentsHolder"/>
         <module name="ConstantName">
             <property name="format" value="^logger|([A-Z][A-Z0-9]*(_[A-Z0-9]+)*)$"/>
         </module>
@@ -80,10 +79,6 @@
         <module name="InnerAssignment"/>
         <module name="MagicNumber"/>
         <module name="MissingSwitchDefault"/>
-        <module name="RedundantThrows">
-                   <property name="logLoadErrors" value="true"/>
-                <property name="suppressLoadErrors" value="true"/>
-        </module>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="CovariantEquals"/>
@@ -115,23 +110,21 @@
         <module name="JavadocVariable">
                    <property name="scope" value="protected"/>
         </module>
-        <module name="FileContentsHolder"/>
         <module name="MultipleVariableDeclarations" >
                     <property name="severity" value="warning"/>
         </module>
         <module name="ArrayTrailingComma">
                 <property name="severity" value="warning"/>
         </module>
+
+        <!-- Ignore generated code -->
+        <module name="SuppressionCommentFilter"/>
+        <module name="SuppressWithNearbyCommentFilter">
+            <property name="commentFormat" value="CS IGNORE (\w+) FOR NEXT (\d+) LINES\. REASON\: \w+"/>
+            <property name="checkFormat" value="$1"/>
+            <property name="influenceFormat" value="$2"/>
+        </module>
     </module>
     <module name="NewlineAtEndOfFile"/>
     <module name="Translation"/>
-    <!-- Ignore generated code -->
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="This file was auto-generated from WSDL"/>
-    </module>
-    <module name="SuppressWithNearbyCommentFilter">
-        <property name="commentFormat" value="CS IGNORE (\w+) FOR NEXT (\d+) LINES\. REASON\: \w+"/>
-        <property name="checkFormat" value="$1"/>
-        <property name="influenceFormat" value="$2"/>
-    </module>
 </module>

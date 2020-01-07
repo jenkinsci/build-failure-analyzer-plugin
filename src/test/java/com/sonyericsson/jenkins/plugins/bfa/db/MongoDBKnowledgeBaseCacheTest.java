@@ -27,24 +27,23 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.mongodb.DBObject;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import net.vz.mongodb.jackson.DBCursor;
-import net.vz.mongodb.jackson.JacksonDBCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mongojack.DBCursor;
+import org.mongojack.JacksonDBCollection;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import java.util.List;
 
-
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertNotNull;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
