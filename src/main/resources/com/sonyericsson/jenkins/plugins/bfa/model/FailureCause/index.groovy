@@ -64,10 +64,10 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
               f.textbox(field: "id", value: my.getId())
             }
             f.entry(title: _("Name"), field: "name") {
-              f.textbox(value: my.getName(), checkUrl: "'checkName?value='+escape(this.value)")
+              f.textbox(value: my.getName(), checkMethod: "post")
             }
             f.entry(title: _("Description"), field: "description") {
-              f.textarea(value: my.getDescription(), checkUrl: "'checkDescription?value='+escape(this.value)")
+              f.textarea(value: my.getDescription(), checkMethod: "post")
             }
             f.entry(title: _("Comment"), field: "comment") {
               f.textarea(value: my.getComment())

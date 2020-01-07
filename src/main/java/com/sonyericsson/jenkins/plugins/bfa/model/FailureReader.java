@@ -24,10 +24,18 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.google.common.base.Joiner;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.Util;
+import hudson.console.ConsoleNote;
+import hudson.model.AbstractBuild;
+import hudson.model.Run;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,15 +45,6 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.google.common.base.Joiner;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
-import hudson.Util;
-import hudson.console.ConsoleNote;
-import hudson.model.AbstractBuild;
-import hudson.model.Run;
-import org.codehaus.jackson.annotate.JsonIgnoreType;
 
 /**
  * Reader used to find indications of a failure cause.

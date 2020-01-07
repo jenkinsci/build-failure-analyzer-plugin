@@ -128,6 +128,16 @@ public class FailureCauseDisplayData {
     }
 
     /**
+     * Indicates whether any failure causes where found (directly or downstream).
+     *
+     * @return true iff found failures and downstream failures lists are both empty
+     */
+    public boolean isEmpty() {
+        return ((foundFailureCauses == null) || foundFailureCauses.isEmpty())
+                && ((downstreamFailureCauses == null) || downstreamFailureCauses.isEmpty());
+    }
+
+    /**
      * A class containing links to be displayed for the project and the build.
      */
     public static final class Links {

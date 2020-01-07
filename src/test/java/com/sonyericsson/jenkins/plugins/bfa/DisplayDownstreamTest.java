@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
+import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -39,13 +40,15 @@ import hudson.matrix.MatrixRun;
 import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.Functions;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.BlockingBehaviour;
 import hudson.plugins.parameterizedtrigger.CurrentBuildParameters;
 import hudson.plugins.parameterizedtrigger.TriggerBuilder;
+import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -53,7 +56,6 @@ import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assume.assumeFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -81,7 +83,16 @@ public class DisplayDownstreamTest {
     private static final String PROJECT_EW = "NORTH-WEST";
     private static final String PROJECT_SE = "SOUTH-EAST";
     private static final String PROJECT_SW = "SOUTH-WEST";
-    private static final String DEFAULT = "echo I am ${PROJECT_NAME}";
+    private static final String DEFAULT;
+
+    static {
+        if (Functions.isWindows()) {
+            DEFAULT = "echo I am %PROJECT_NAME%";
+        } else {
+            DEFAULT = "echo I am ${PROJECT_NAME}";
+        }
+    }
+
     private static final String FAILED = "rapakalja";
 
     /**
@@ -91,8 +102,6 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testFailureCauseDisplayData() throws Exception {
-        assumeFalse(Functions.isWindows());
-
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
 
@@ -118,8 +127,6 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testMatrixNoIdentifiedCause() throws Exception {
-        assumeFalse(Functions.isWindows());
-
         FailureCauseDisplayData failureCauseDisplayData =
                 getDisplayData(executeBuild());
 
@@ -151,8 +158,6 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testMatrixIdentifiedCause() throws Exception {
-        assumeFalse(Functions.isWindows());
-
         Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         FailureCause failureCause = BuildFailureScannerHudsonTest.
                 configureCauseAndIndication("Other cause", "Other description", "Other comment",
@@ -192,8 +197,6 @@ public class DisplayDownstreamTest {
      */
     @Test
     public void testIdentifiedTwoCauses() throws Exception {
-        assumeFalse(Functions.isWindows());
-
         final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
         final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
 
@@ -202,6 +205,40 @@ public class DisplayDownstreamTest {
                 new BlockableBuildTriggerConfig(child1.getName() + ", " + child2.getName(),
                     new BlockingBehaviour(Result.FAILURE, Result.FAILURE, Result.FAILURE),
                     new ArrayList<AbstractBuildParameters>())));
+
+        final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
+        BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
+                "Other description", "Other comment", "Category", indication);
+
+        parent.scheduleBuild2(0).get();
+
+        final FailureCauseBuildAction buildAction = parent.getFirstBuild().getAction(FailureCauseBuildAction.class);
+        final FailureCauseDisplayData failureCauseDisplayData = buildAction.getFailureCauseDisplayData();
+        final List<FailureCauseDisplayData> downstreamCauses = failureCauseDisplayData.getDownstreamFailureCauses();
+
+        assertEquals(0, failureCauseDisplayData.getFoundFailureCauses().size());
+        assertEquals(2, downstreamCauses.size());
+
+        for (FailureCauseDisplayData causeDisplayData : downstreamCauses) {
+            final List<FoundFailureCause> causeListFromAction = causeDisplayData.getFoundFailureCauses();
+            assertEquals(1, causeListFromAction.size());
+            assertEquals(causeListFromAction.get(0).getName(), "Other cause");
+        }
+    }
+
+    /**
+     * Test FailureCauseDisplayData object population from pipeline (using build-cache-dbf).
+     *
+     * @throws Exception if failure cause cant be configured or build can't
+     *                   be executed
+     */
+    @Test
+    public void testIdentifiedTwoCausesFromPipeline() throws Exception {
+        final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
+        final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
+
+        final WorkflowJob parent = jenkins.createProject(WorkflowJob.class, "parent");
+        parent.setDefinition(new CpsFlowDefinition("try {build('child1')} catch (e) {};build('child2')", true));
 
         final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
@@ -309,7 +346,7 @@ public class DisplayDownstreamTest {
     }
 
     /**
-     * Creates a FreeStyleProject with a basic shell step. The shell is loaded
+     * Creates a FreeStyleProject with a basic shell/batch step. The shell is loaded
      * with the supplied command.
      *
      * @param name the name of the project
@@ -320,8 +357,11 @@ public class DisplayDownstreamTest {
     private FreeStyleProject createFreestyleProjectWithShell(String name, String command)
             throws Exception {
         final FreeStyleProject project = jenkins.createFreeStyleProject(name);
-        project.getBuildersList().add(new Shell(command));
+        if (Functions.isWindows()) {
+            project.getBuildersList().add(new BatchFile(command));
+        } else {
+            project.getBuildersList().add(new Shell(command));
+        }
         return project;
     }
-
 }

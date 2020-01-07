@@ -115,7 +115,7 @@ l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
         th{text(_("Description"))}
         th{text(_("Comment"))}
         th{text(_("Modified"))}
-        if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+        if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
             th{text(_("Last seen"))}
         }
         th{text(" ")}
@@ -151,14 +151,14 @@ l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
               text(_("ModifiedBy", lastModifiedString, user))
             }
           }
-          if (PluginImpl.getInstance().getKnowledgeBase().isStatisticsEnabled()) {
+          if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
             def lastOccurred = cause.getAndInitiateLastOccurred();
             def lastOccurredString = DateFormat.getDateTimeInstance(
                   DateFormat.SHORT, DateFormat.SHORT).format(lastOccurred)
             if (lastOccurred == new Date(0)) {
                 lastOccurredString = "Never";
             }
-            td{
+            td(data: lastOccurred){
                 text(lastOccurredString)
             }
           }

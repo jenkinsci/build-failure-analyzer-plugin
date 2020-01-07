@@ -23,6 +23,11 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -40,18 +45,14 @@ import hudson.model.User;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import net.vz.mongodb.jackson.Id;
-import net.vz.mongodb.jackson.ObjectId;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonIgnoreType;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.mongojack.Id;
+import org.mongojack.ObjectId;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -112,8 +113,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param modifications the modification history of this FailureCause.
      */
     @JsonCreator
-    public FailureCause(@Id @ObjectId String id, @JsonProperty("name") String name, @JsonProperty("description")
-    String description, @JsonProperty("comment") String comment, @JsonProperty("occurred") Date lastOccurred,
+    public FailureCause(@Id @ObjectId @JsonProperty("id") String id,
+                        @JsonProperty("name") String name,
+                        @JsonProperty("description") String description,
+                        @JsonProperty("comment") String comment,
+                        @JsonProperty("occurred") Date lastOccurred,
                         @JsonProperty("categories") List<String> categories,
                         @JsonProperty("indications") List<Indication> indications,
                         @JsonProperty("modifications") List<FailureCauseModification> modifications) {
@@ -165,7 +169,8 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     }
 
     /**
-     * Validates this FailureCause. Checks for: {@link #doCheckName(String)}, {@link #doCheckDescription(String)},
+     * Validates this FailureCause. Checks for: {@link FailureCauseDescriptor#doCheckName(String, String)},
+     * {@link FailureCauseDescriptor#doCheckDescription(String)},
      * Indications.size &gt; 0. and {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication#validate()}.
      *
      * @param newName        the name to validate
@@ -176,11 +181,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     public FormValidation validate(String newName,
                                    String newDescription,
                                    List<Indication> newIndications) {
-        FormValidation nameVal = doCheckName(newName);
+        FormValidation nameVal = getDescriptor().doCheckName(newName, id);
         if (nameVal.kind != FormValidation.Kind.OK) {
             return nameVal;
         }
-        FormValidation descriptionVal = doCheckDescription(newDescription);
+        FormValidation descriptionVal = getDescriptor().doCheckDescription(newDescription);
         if (descriptionVal.kind != FormValidation.Kind.OK) {
             return descriptionVal;
         }
@@ -201,15 +206,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param value the form value.
      * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckDescription(String)} instead
      */
+    @Deprecated
     public FormValidation doCheckDescription(@QueryParameter final String value) {
-        if (Util.fixEmpty(value) == null) {
-            return FormValidation.error("You should provide a description.");
-        }
-        if (CauseManagement.NEW_CAUSE_DESCRIPTION.equalsIgnoreCase(value.trim())) {
-            return FormValidation.error("Bad description.");
-        }
-        return FormValidation.ok();
+        return getDescriptor().doCheckDescription(value);
     }
 
     /**
@@ -218,31 +219,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param value the form value.
      * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+     * @deprecated Use {@link FailureCauseDescriptor#doCheckName(String, String)} instead
      */
+    @Deprecated
     public FormValidation doCheckName(@QueryParameter final String value) {
-        if (Util.fixEmpty(value) == null) {
-            return FormValidation.error("You must provide a name for the failure cause!");
-        }
-        if (CauseManagement.NEW_CAUSE_NAME.equalsIgnoreCase(value)) {
-            return FormValidation.error("Reserved name!");
-        }
-        try {
-            Jenkins.checkGoodName(value);
-        } catch (Failure failure) {
-            return FormValidation.error(failure, failure.getMessage());
-        }
-        //Use the cache it's hopefully good enough
-        try {
-            for (FailureCause other : PluginImpl.getInstance().getKnowledgeBase().getCauses()) {
-                if ((id == null || !id.equals(other.getId())) && value.equals(other.getName())) {
-                    return FormValidation.error("There is another cause with that name.");
-                }
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to get causes list to evaluate name! ", e);
-        }
-        return FormValidation.ok();
+        return getDescriptor().doCheckName(value, id);
     }
 
     /**
@@ -295,11 +276,9 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         this.indications = newIndications;
 
         String user = null;
-        try {
-            user = User.current().getId();
-        } catch (NullPointerException npe) {
-            logger.log(Level.INFO,
-                    "Failed to get user for Failure Cause modification");
+        User current = User.current();
+        if (current != null) {
+            user = current.getId();
         }
 
         this.modifications.add(0, new FailureCauseModification(user, new Date()));
@@ -663,29 +642,70 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
 
         /**
+         * Form validation for {@link #description}. Checks for not empty and not "Description..."
+         *
+         * @param value the form value.
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        @RequirePOST
+        public FormValidation doCheckDescription(@QueryParameter final String value) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            if (Util.fixEmpty(value) == null) {
+                return FormValidation.error("You should provide a description.");
+            }
+            if (CauseManagement.NEW_CAUSE_DESCRIPTION.equalsIgnoreCase(value.trim())) {
+                return FormValidation.error("Bad description.");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
+         * Form validation for {@link #name}. Checks for not empty, not "New...",
+         * {@link Jenkins#checkGoodName(String)} and
+         * that it is unique based on the cache of existing causes.
+         *
+         * @param value the form value.
+         * @param id The id (if changing an existing cause).
+         * @return {@link hudson.util.FormValidation#ok()} if everything is well.
+         */
+        @RequirePOST
+        public FormValidation doCheckName(
+                @QueryParameter final String value,
+                @QueryParameter final String id) {
+            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            if (Util.fixEmpty(value) == null) {
+                return FormValidation.error("You must provide a name for the failure cause!");
+            }
+            if (CauseManagement.NEW_CAUSE_NAME.equalsIgnoreCase(value)) {
+                return FormValidation.error("Reserved name!");
+            }
+            try {
+                Jenkins.checkGoodName(value);
+            } catch (Failure failure) {
+                return FormValidation.error(failure, failure.getMessage());
+            }
+            //Use the cache it's hopefully good enough
+            try {
+                for (FailureCause other : PluginImpl.getInstance().getKnowledgeBase().getCauses()) {
+                    if ((id == null || !id.equals(other.getId())) && value.equals(other.getName())) {
+                        return FormValidation.error("There is another cause with that name.");
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to get causes list to evaluate name! ", e);
+            }
+            return FormValidation.ok();
+        }
+
+        /**
          * Does the auto completion for categories, matching with any category already present in the knowledge base.
          *
          * @param value the input value.
          * @return the AutoCompletionCandidates.
          */
         public AutoCompletionCandidates doAutoCompleteCategories(@QueryParameter String value) {
-            List<String> categories;
-            try {
-                categories = PluginImpl.getInstance().getKnowledgeBase().getCategories();
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Could not get the categories for autocompletion", e);
-                return null;
-            }
-            AutoCompletionCandidates candidates = new AutoCompletionCandidates();
-            if (categories == null) {
-                return candidates;
-            }
-            for (String category : categories) {
-                if (category.toLowerCase().startsWith(value.toLowerCase())) {
-                    candidates.add(category);
-                }
-            }
-            return candidates;
+            return PluginImpl.getInstance().getCategoryAutoCompletionCandidates(value);
         }
     }
 }
