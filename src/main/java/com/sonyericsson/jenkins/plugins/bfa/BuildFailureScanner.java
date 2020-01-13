@@ -285,15 +285,14 @@ public class BuildFailureScanner extends RunListener<Run> {
             boolean notifySlackOfAllFailures, List<String> slackFailureCauseCategories,
             String buildName, String buildNum, String buildUrl, PrintStream scanLog) {
         boolean notifySlackOfFailure = false;
-        StringBuffer bufBuildFailCause = new StringBuffer();
+        StringBuilder bufBuildFailCause = new StringBuilder();
 
         /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
-        for (int i = 0; i < foundCauseList.size(); i++) {
+        for (FoundFailureCause foundCause : foundCauseList) {
             if (!notifySlackOfAllFailures) {
-                List<String> categories = foundCauseList.get(i).getCategories();
+                List<String> categories = foundCause.getCategories();
                 if (categories != null) {
-                    for (int j = 0; j < categories.size(); j++) {
-                        String category = categories.get(j);
+                    for (String category : categories) {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
                             break;
@@ -303,10 +302,10 @@ public class BuildFailureScanner extends RunListener<Run> {
             }
             /* Create list for slack message with failure causes from build */
             if (bufBuildFailCause.length() == 0) {
-                bufBuildFailCause.append(foundCauseList.get(i).getName());
+                bufBuildFailCause.append(foundCause.getName());
             } else {
                 bufBuildFailCause.append("\n");
-                bufBuildFailCause.append(foundCauseList.get(i).getName());
+                bufBuildFailCause.append(foundCause.getName());
             }
         }
 
@@ -332,8 +331,8 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @return Boolean true if atleast one category matches, false otherwise
      */
     private static boolean failureCategoryMatches(String category, List<String> slackFailureCauseCategories) {
-        for (int i = 0; i < slackFailureCauseCategories.size(); i++) {
-            if (category.trim().equalsIgnoreCase(slackFailureCauseCategories.get(i).trim())) {
+        for (String slackCategory : slackFailureCauseCategories) {
+            if (category.trim().equalsIgnoreCase(slackCategory.trim())) {
                 return true;
             }
         }
