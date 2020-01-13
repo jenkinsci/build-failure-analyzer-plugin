@@ -61,6 +61,36 @@ public class FoundIndication {
      * @param originalPattern the original pattern we used to match.
      * @param matchingFile    the path to the file in which we found the match.
      * @param matchingString  the String that makes up the match.
+     * @deprecated Use {@link #FoundIndication(Run, String, String, String, Integer)} instead
+     */
+    @Deprecated
+    public FoundIndication(Run build, String originalPattern,
+                           String matchingFile, String matchingString) {
+        this(build, originalPattern, matchingFile, matchingString, -1);
+    }
+
+    /**
+     * JSON Constructor.
+     *
+     * @param pattern the pattern we used to match.
+     * @param matchingFile the path to the file in which we found the match.
+     * @param matchingString the String that makes up the match.
+     * @deprecated Use {@link #FoundIndication(String, String, String, Integer)} instead
+     */
+    @Deprecated
+    public FoundIndication(@JsonProperty("pattern") String pattern,
+                           @JsonProperty("matchingFile") String matchingFile,
+                           @JsonProperty("matchingString") String matchingString) {
+        this(pattern, matchingFile, matchingString, -1);
+    }
+
+    /**
+     * Standard constructor.
+     *
+     * @param build           the build of this indication.
+     * @param originalPattern the original pattern we used to match.
+     * @param matchingFile    the path to the file in which we found the match.
+     * @param matchingString  the String that makes up the match.
      * @param matchingLine    the line number of the found indication
      */
     public FoundIndication(Run build, String originalPattern,
