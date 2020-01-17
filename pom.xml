@@ -19,7 +19,6 @@
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <checkstyle.version>3.1.0</checkstyle.version>
         <configuration-as-code.version>1.20</configuration-as-code.version>
     </properties>
@@ -275,19 +274,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -335,18 +323,12 @@
             </extension>
         </extensions>
     </build>
-    <distributionManagement>
-        <repository>
-            <id>maven.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/releases</url>
-        </repository>
-    </distributionManagement>
     <scm>
         <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
-      <tag>${scmTag}</tag>
-  </scm>
+        <tag>${scmTag}</tag>
+    </scm>
     <reporting>
         <plugins>
             <plugin>
