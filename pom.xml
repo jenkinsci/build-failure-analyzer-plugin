@@ -105,6 +105,12 @@
             <groupId>com.sonymobile.jenkins.plugins.mq</groupId>
             <artifactId>mq-notifier</artifactId>
             <version>1.2.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                </exclusion>
+            </exclusions>
             <optional>true</optional>
         </dependency>
         <dependency>
