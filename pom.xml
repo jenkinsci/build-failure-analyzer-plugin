@@ -20,7 +20,7 @@
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
         <checkstyle.version>3.1.0</checkstyle.version>
-        <configuration-as-code.version>1.20</configuration-as-code.version>
+        <configuration-as-code.version>1.35</configuration-as-code.version>
     </properties>
 
     <licenses>
@@ -104,6 +104,12 @@
             <groupId>com.sonymobile.jenkins.plugins.mq</groupId>
             <artifactId>mq-notifier</artifactId>
             <version>1.2.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                </exclusion>
+            </exclusions>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -176,10 +182,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.jenkins</groupId>
-            <artifactId>configuration-as-code</artifactId>
+            <groupId>io.jenkins.configuration-as-code</groupId>
+            <artifactId>test-harness</artifactId>
             <version>${configuration-as-code.version}</version>
-            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
 
