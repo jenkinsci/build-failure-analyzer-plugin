@@ -32,8 +32,8 @@ def l = namespace(lib.LayoutTagLib)
 
 index = 1
 
-def rootFailureDisplayData = my.getFailureCauseDisplayData()
-if (PluginImpl.getInstance().isNoCausesEnabled() || !rootFailureDisplayData.isEmpty()) {
+def matrixRuns = my.getRunsWithAction()
+if (PluginImpl.getInstance().isNoCausesEnabled() || !matrixRuns.isEmpty()) {
 
     tr {
         td {
@@ -44,7 +44,7 @@ if (PluginImpl.getInstance().isNoCausesEnabled() || !rootFailureDisplayData.isEm
         }
     }
 
-    my.getRunsWithAction().each { run ->
+    matrixRuns.each { run ->
         tr {
             td {}
             td(style: "font-size: larger; font-weight: bold") {
