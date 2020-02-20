@@ -701,7 +701,7 @@ public class BuildFailureScannerHudsonTest {
      */
     @Test
     public void testTestEnableBuildDescriptionIfDisabled() throws Exception {
-//      PluginImpl.getInstance().setTestResultParsingEnabled(true);
+      PluginImpl.getInstance().setTestResultParsingEnabled(true);
       PluginImpl.getInstance().setEnableBuildDescription(false);
       FreeStyleProject project = jenkins.createFreeStyleProject();
 
@@ -721,7 +721,7 @@ public class BuildFailureScannerHudsonTest {
       FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
       jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
-      FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+          FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
       assertNotNull(action);
 
       List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
