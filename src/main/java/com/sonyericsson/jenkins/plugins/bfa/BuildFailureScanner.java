@@ -540,7 +540,7 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     /**
-     * Generate text that can be used for the build description using categories and failure causes
+     * Generate text that can be used for the build description using categories and failure causes.
      *
      * @param build to get current build description
      * @param foundCauseList list of failure causes

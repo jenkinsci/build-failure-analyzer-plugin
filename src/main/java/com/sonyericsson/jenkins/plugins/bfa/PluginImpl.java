@@ -596,7 +596,7 @@ public class PluginImpl extends GlobalConfiguration {
 
 
     /**
-     * Set option to append failure causes to job's build description
+     * Set option to append failure causes to job's build description.
      *
      * @param enableBuildDescription should build description option be turned on
      */

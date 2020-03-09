@@ -697,7 +697,9 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
-     * Test enableBuildDescription = false does not append failure cause to build description
+     * Test enableBuildDescription = false does not append failure cause to build description.
+     *
+     * @throws Exception if a build description is appended when the setting is set to false.
      */
     @Test
     public void testTestEnableBuildDescriptionIfDisabled() throws Exception {
@@ -735,6 +737,8 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test enableBuildDescription = true does append failure cause to existing build description
      * without categories set.
+     *
+     * @throws Exception if the build description is not appended when the setting is true.
      */
     @Test
     public void testTestEnableBuildDescriptionWithoutCategoriesIfEnabled() throws Exception {
@@ -764,15 +768,17 @@ public class BuildFailureScannerHudsonTest {
 
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
         assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
-        String testDescription = "Hello World<br>\n" +
-                "<mark><i>Here are details of the failure...</i>  <i>More details</i></mark>";
+        String testDescription = "Hello World<br>\n"
+                + "<mark><i>Here are details of the failure...</i>  <i>More details</i></mark>";
 
         assertEquals(testDescription, build.getDescription());
     }
 
   /**
-   * Test enableBuildDescription = true does append failure cause to existing build description
+   * Test enableBuildDescription = true does append failure cause to existing build description.
    * with categories set
+   *
+   * @throws Exception if description is not appended correctly.
    */
   @Test
   public void testTestEnableBuildDescriptionWithCategoriesIfEnabled() throws Exception {
@@ -805,8 +811,8 @@ public class BuildFailureScannerHudsonTest {
       List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
       assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
 
-      String testDescription = "Hello World<br>\n" +
-              "<mark><b>foo</b> <b>bar</b> : <i>Here are details of the failure...</i>  <i>More details</i></mark>";
+      String testDescription = "Hello World<br>\n"
+              + "<mark><b>foo</b> <b>bar</b> : <i>Here are details of the failure...</i>  <i>More details</i></mark>";
       assertEquals(build.getDescription(), testDescription);
   }
 
