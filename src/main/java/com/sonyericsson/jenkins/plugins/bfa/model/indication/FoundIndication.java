@@ -49,15 +49,10 @@ public class FoundIndication {
      */
     protected static final String FILE_ENCODING = System.getProperty("file.encoding");
     private String matchingFile;
-    /**
-     * @deprecated, kept for backwards compatibility.
-     */
-    @Deprecated
-    private transient Integer matchingLine;
-
     private String pattern;
     private Run build;
     private String matchingString;
+    private Integer matchingLine;
 
     /**
      * Standard constructor.
@@ -66,13 +61,12 @@ public class FoundIndication {
      * @param originalPattern the original pattern we used to match.
      * @param matchingFile    the path to the file in which we found the match.
      * @param matchingString  the String that makes up the match.
+     * @deprecated Use {@link #FoundIndication(Run, String, String, String, Integer)} instead
      */
+    @Deprecated
     public FoundIndication(Run build, String originalPattern,
                            String matchingFile, String matchingString) {
-        this.pattern = originalPattern;
-        this.matchingFile = matchingFile;
-        this.build = build;
-        this.matchingString = matchingString;
+        this(build, originalPattern, matchingFile, matchingString, -1);
     }
 
     /**
@@ -81,14 +75,51 @@ public class FoundIndication {
      * @param pattern the pattern we used to match.
      * @param matchingFile the path to the file in which we found the match.
      * @param matchingString the String that makes up the match.
+     * @deprecated Use {@link #FoundIndication(String, String, String, Integer)} instead
+     */
+    @Deprecated
+    public FoundIndication(@JsonProperty("pattern") String pattern,
+                           @JsonProperty("matchingFile") String matchingFile,
+                           @JsonProperty("matchingString") String matchingString) {
+        this(pattern, matchingFile, matchingString, -1);
+    }
+
+    /**
+     * Standard constructor.
+     *
+     * @param build           the build of this indication.
+     * @param originalPattern the original pattern we used to match.
+     * @param matchingFile    the path to the file in which we found the match.
+     * @param matchingString  the String that makes up the match.
+     * @param matchingLine    the line number of the found indication
+     */
+    public FoundIndication(Run build, String originalPattern,
+                           String matchingFile, String matchingString,
+                           Integer matchingLine) {
+        this.pattern = originalPattern;
+        this.matchingFile = matchingFile;
+        this.build = build;
+        this.matchingString = matchingString;
+        this.matchingLine = matchingLine;
+    }
+
+    /**
+     * JSON Constructor.
+     *
+     * @param pattern the pattern we used to match.
+     * @param matchingFile the path to the file in which we found the match.
+     * @param matchingString the String that makes up the match.
+     * @param matchingLine the line number of the found indication
      */
     @JsonCreator
     public FoundIndication(@JsonProperty("pattern") String pattern,
             @JsonProperty("matchingFile") String matchingFile,
-            @JsonProperty("matchingString") String matchingString) {
+            @JsonProperty("matchingString") String matchingString,
+            @JsonProperty("matchingLine") Integer matchingLine) {
         this.pattern = pattern;
         this.matchingFile = matchingFile;
         this.matchingString = matchingString;
+        this.matchingLine = matchingLine;
     }
 
     /**
@@ -169,12 +200,10 @@ public class FoundIndication {
     }
 
     /**
-     * The old matching line number.
+     * The matching line number.
      *
      * @return the matching line number.
-     * @deprecated since 1.3.2, 1.4.0 replaced with {@link #getMatchingString()}.
      */
-    @Deprecated
     public int getMatchingLine() {
         if (matchingLine != null) {
             return matchingLine;

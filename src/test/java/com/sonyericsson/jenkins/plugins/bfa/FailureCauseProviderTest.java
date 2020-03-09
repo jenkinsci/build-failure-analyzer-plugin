@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
  * @author Tomas Westling &lt;tomas.westling@axis.com&gt;
  */
 public class FailureCauseProviderTest {
-
+    private static final int MATCHING_LINE_NUMBER = 10;
     /**
      * Tests that the Json structure is correct after the FailureCauseProvider has done its thing.
      */
@@ -69,7 +69,8 @@ public class FailureCauseProviderTest {
                 null,
                 null);
         List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
-        FoundIndication foundIndication = new FoundIndication(null, "mypattern", "myfile", "mystring");
+        FoundIndication foundIndication = new FoundIndication(null, "mypattern", "myfile", "mystring",
+            MATCHING_LINE_NUMBER);
         foundIndications.add(foundIndication);
         FoundFailureCause foundFailureCause = new FoundFailureCause(failureCause, foundIndications);
         List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
@@ -95,5 +96,6 @@ public class FailureCauseProviderTest {
         assertThat(cat.get(1), is("category2"));
         assertThat(((JSONObject)indicationsJson.get(0)).getString("pattern"), is("mypattern"));
         assertThat(((JSONObject)indicationsJson.get(0)).getString("matchingString"), is("mystring"));
+        assertThat(((JSONObject)indicationsJson.get(0)).getInt("matchingLine"), is(MATCHING_LINE_NUMBER));
     }
 }

@@ -11,18 +11,16 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.43</version>
+        <version>3.55</version>
     </parent>
 
     <properties>
-        <revision>1.24.3</revision>
+        <revision>1.25.2</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <powermock.version>1.6.6</powermock.version>
         <checkstyle.version>3.1.0</checkstyle.version>
-        <configuration-as-code.version>1.20</configuration-as-code.version>
+        <configuration-as-code.version>1.35</configuration-as-code.version>
     </properties>
 
     <licenses>
@@ -106,6 +104,12 @@
             <groupId>com.sonymobile.jenkins.plugins.mq</groupId>
             <artifactId>mq-notifier</artifactId>
             <version>1.2.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                </exclusion>
+            </exclusions>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -147,7 +151,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
-            <version>2.10.0</version>
+            <version>2.10.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -178,10 +182,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.jenkins</groupId>
-            <artifactId>configuration-as-code</artifactId>
+            <groupId>io.jenkins.configuration-as-code</groupId>
+            <artifactId>test-harness</artifactId>
             <version>${configuration-as-code.version}</version>
-            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
 
@@ -243,39 +246,24 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.10.19</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-            <version>2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
+            <artifactId>powermock-api-mockito2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -291,19 +279,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -351,18 +328,12 @@
             </extension>
         </extensions>
     </build>
-    <distributionManagement>
-        <repository>
-            <id>maven.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/releases</url>
-        </repository>
-    </distributionManagement>
     <scm>
         <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
-      <tag>${scmTag}</tag>
-  </scm>
+        <tag>${scmTag}</tag>
+    </scm>
     <reporting>
         <plugins>
             <plugin>

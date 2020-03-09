@@ -59,6 +59,7 @@ public class FailureCauseProvider extends MQDataProvider {
                     JSONObject foundIndicationJSONObject = new JSONObject();
                     foundIndicationJSONObject.put("pattern", indication.getPattern());
                     foundIndicationJSONObject.put("matchingString", indication.getMatchingString());
+                    foundIndicationJSONObject.put("matchingLine", indication.getMatchingLine());
                     foundIndicationsJSONArray.add(foundIndicationJSONObject);
                 }
                 failureCauseJSONObject.put("indications", foundIndicationsJSONArray);
