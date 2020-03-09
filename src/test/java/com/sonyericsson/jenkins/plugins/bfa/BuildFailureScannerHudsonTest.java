@@ -813,17 +813,16 @@ public class BuildFailureScannerHudsonTest {
     /**
      * ArgumentMatcher for a Statistics object.
      */
-    public static class IsValidStatisticsObject extends ArgumentMatcher<Statistics> {
+    public static class IsValidStatisticsObject implements ArgumentMatcher<Statistics> {
         @Override
-        public boolean matches(Object o) {
-            if (!(o instanceof Statistics)) {
+        public boolean matches(Statistics o) {
+            if (o == null) {
                 return false;
             }
-            Statistics stat = (Statistics)o;
-            if (stat.getBuildNumber() != 1) {
+            if (o.getBuildNumber() != 1) {
                 return false;
             }
-            List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
+            List<FailureCauseStatistics> failureCauseStatisticsList = o.getFailureCauseStatisticsList();
             if (failureCauseStatisticsList == null || failureCauseStatisticsList.size() != 1) {
                 return false;
             }

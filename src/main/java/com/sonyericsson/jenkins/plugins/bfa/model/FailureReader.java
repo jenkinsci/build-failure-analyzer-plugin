@@ -182,7 +182,8 @@ public abstract class FailureReader {
                         try {
                             List<Indication> wasBefore = firstOccurrences.get(cause);
                             if (wasBefore == null || !wasBefore.contains(indication)) {
-                                if (processIndication(build, currentFile, resultMap, line, cause, indication)) {
+                                if (processIndication(build, currentFile, resultMap, line, cause, indication,
+                                        currentLine)) {
                                     wasBefore = new ArrayList<Indication>();
                                     wasBefore.add(indication);
                                     firstOccurrences.put(cause, wasBefore);
@@ -245,6 +246,7 @@ public abstract class FailureReader {
      * @param line line with content
      * @param cause current cause
      * @param indication indication that should be checked
+     * @param lineNumber The line number of the indication
      * @return true if new indication was found
      */
     private static boolean processIndication(Run build,
@@ -252,7 +254,8 @@ public abstract class FailureReader {
                                              Map<FailureCause, List<FoundIndication>> causeIndicationsMap,
                                              String line,
                                              FailureCause cause,
-                                             Indication indication) {
+                                             Indication indication,
+                                             int lineNumber) {
         Pattern pattern = indication.getPattern();
 
         if (pattern.matcher(new InterruptibleCharSequence(line)).matches()) {
@@ -260,7 +263,8 @@ public abstract class FailureReader {
                                                     build,
                                                     pattern.toString(),
                                                     currentFile,
-                                                    ConsoleNote.removeNotes(line));
+                                                    ConsoleNote.removeNotes(line),
+                                                    lineNumber);
 
 
             putToMapWithList(causeIndicationsMap, cause, foundIndication);
@@ -334,7 +338,7 @@ public abstract class FailureReader {
                     Matcher matcher = pattern.matcher(new InterruptibleCharSequence(searchBuffer.toString()));
                     if (matcher.find()) {
                         foundIndication = new FoundIndication(build, pattern.pattern(), currentFile,
-                                removeConsoleNotes(matcher.group()));
+                                removeConsoleNotes(matcher.group()), -1);
                         break;
                     }
                     searchBuffer.delete(0, BUF_SIZE_BYTES - OVERLAP_BYTES);
