@@ -240,7 +240,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                 printDownstream(scanLog, downstreamFailureCauses);
             }
 
-            if (PluginImpl.getInstance().isEnableBuildDescription() && !foundCauseList.isEmpty()) {
+            if (PluginImpl.getInstance().isBuildDescriptionEnabled() && !foundCauseList.isEmpty()) {
               build.setDescription(generateDescriptionString(build, foundCauseList));
             }
 

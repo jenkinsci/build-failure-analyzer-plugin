@@ -697,14 +697,14 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
-     * Test enableBuildDescription = false does not append failure cause to build description.
+     * Test buildDescriptionEnabled = false does not append failure cause to build description.
      *
      * @throws Exception if a build description is appended when the setting is set to false.
      */
     @Test
-    public void testTestEnableBuildDescriptionIfDisabled() throws Exception {
+    public void testTestBuildDescriptionEnabledIfDisabled() throws Exception {
       PluginImpl.getInstance().setTestResultParsingEnabled(true);
-      PluginImpl.getInstance().setEnableBuildDescription(false);
+      PluginImpl.getInstance().setBuildDescriptionEnabled(false);
       FreeStyleProject project = jenkins.createFreeStyleProject();
 
       project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
@@ -735,15 +735,15 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
-     * Test enableBuildDescription = true does append failure cause to existing build description
+     * Test buildDescriptionEnabled = true does append failure cause to existing build description
      * without categories set.
      *
      * @throws Exception if the build description is not appended when the setting is true.
      */
     @Test
-    public void testTestEnableBuildDescriptionWithoutCategoriesIfEnabled() throws Exception {
+    public void testTestBuildDescriptionEnabledWithoutCategoriesIfEnabled() throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(true);
-        PluginImpl.getInstance().setEnableBuildDescription(true);
+        PluginImpl.getInstance().setBuildDescriptionEnabled(true);
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
         // Test with a preset build description
@@ -775,15 +775,15 @@ public class BuildFailureScannerHudsonTest {
     }
 
   /**
-   * Test enableBuildDescription = true does append failure cause to existing build description.
+   * Test buildDescriptionEnabled = true does append failure cause to existing build description.
    * with categories set
    *
    * @throws Exception if description is not appended correctly.
    */
   @Test
-  public void testTestEnableBuildDescriptionWithCategoriesIfEnabled() throws Exception {
+  public void testTestBuildDescriptionEnabledWithCategoriesIfEnabled() throws Exception {
       PluginImpl.getInstance().setTestResultParsingEnabled(true);
-      PluginImpl.getInstance().setEnableBuildDescription(true);
+      PluginImpl.getInstance().setBuildDescriptionEnabled(true);
       String categories = "foo bar";
       PluginImpl.getInstance().setTestResultCategories(categories);
       FreeStyleProject project = jenkins.createFreeStyleProject();
