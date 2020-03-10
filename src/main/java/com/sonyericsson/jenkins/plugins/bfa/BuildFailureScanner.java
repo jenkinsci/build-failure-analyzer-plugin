@@ -240,6 +240,10 @@ public class BuildFailureScanner extends RunListener<Run> {
                 printDownstream(scanLog, downstreamFailureCauses);
             }
 
+            if (PluginImpl.getInstance().isEnableBuildDescription() && !foundCauseList.isEmpty()) {
+              build.setDescription(generateDescriptionString(build, foundCauseList));
+            }
+
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
@@ -533,5 +537,44 @@ public class BuildFailureScanner extends RunListener<Run> {
         }
 
         return failedTestList;
+    }
+
+    /**
+     * Generate text that can be used for the build description using categories and failure causes.
+     *
+     * @param build to get current build description
+     * @param foundCauseList list of failure causes
+     * @return A String of the BFA categories and causes appended to the build's description.
+     */
+    public static String generateDescriptionString(Run build, List<FoundFailureCause> foundCauseList) {
+        String buildDescription = "<mark>";
+        // Append all of the categories.
+        if (foundCauseList.get(0) != null) {
+            for (int j = 0; j < foundCauseList.get(0).getCategories().size(); j++) {
+                buildDescription += "<b>";
+                buildDescription += foundCauseList.get(0).getCategories().get(j).toString();
+                buildDescription += "</b> ";
+            }
+            if (foundCauseList.get(0).getCategories().size() > 0) {
+                buildDescription += ": ";
+            }
+        }
+
+        // Append all failure causes.
+        for (int i = 0; i < foundCauseList.size(); i++) {
+            buildDescription = buildDescription.concat("<i>");
+            buildDescription = buildDescription.concat(foundCauseList.get(i).getDescription());
+            buildDescription = buildDescription.concat("</i>");
+            if (i < (foundCauseList.size() - 1)) {
+                buildDescription += "  ";
+            }
+        }
+        buildDescription = buildDescription.concat("</mark>");
+
+        // Append this build description to any pre-existing build description
+        if (!(build.getDescription() == null) && !build.getDescription().isEmpty()) {
+            buildDescription = build.getDescription().concat("<br>\n").concat(buildDescription);
+        }
+        return buildDescription;
     }
 }

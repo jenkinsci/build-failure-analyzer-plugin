@@ -87,5 +87,10 @@
         <f:entry title="${%Max size of log file}" description="${%maxLogSize}">
             <f:textbox field="maxLogSize" />
         </f:entry>
+        <f:entry title="${%Set job description to failure description}"
+             description="${%Enabling this option will set the build's description to the failure descriptions as a convenience.}">
+            <f:checkbox name="enableBuildDescription" checked="${it.enableBuildDescription}"
+                  default="false"/>
+        </f:entry>
     </f:advanced>
 </j:jelly>
