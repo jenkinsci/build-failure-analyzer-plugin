@@ -330,6 +330,9 @@ public class PluginImplHudsonTest {
         form.put("globalEnabled", true);
         form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);
+        form.put("slackNotifEnabled", true);
+        form.put("slackChannelName", PluginImpl.DEFAULT_SLACK_CHANNEL);
+        form.put("slackFailureCategories", PluginImpl.DEFAULT_SLACK_FAILURE_CATEGORIES);
         form.put("testResultParsingEnabled", true);
         form.put("testResultCategories", "foo bar");
         form.put("knowledgeBase", new JSONObject());

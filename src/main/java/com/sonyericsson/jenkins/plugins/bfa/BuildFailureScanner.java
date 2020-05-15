@@ -39,6 +39,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
 import hudson.Extension;
+import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixProject;
@@ -63,6 +64,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -240,10 +242,101 @@ public class BuildFailureScanner extends RunListener<Run> {
                 printDownstream(scanLog, downstreamFailureCauses);
             }
 
+            /* Split slack failure cause category string from configure menu into list of strings */
+            String failureCategories = PluginImpl.getInstance().getSlackFailureCategories();
+            List<String> slackFailCauseCat = Arrays.<String>asList(Util.tokenize(failureCategories));
+
+            /* Check if ALL failures are to be reported */
+            boolean notifySlackAllFail = false;
+            if (slackFailCauseCat.get(0).equals(PluginImpl.getInstance().DEFAULT_SLACK_FAILURE_CATEGORIES)) {
+                notifySlackAllFail = true;
+            }
+
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
+
+            // Check slack plugin is installed
+            if (Jenkins.getInstance().getPlugin("slack") != null) {
+                boolean slackEnabled = PluginImpl.getInstance().isSlackNotifEnabled();
+                if (slackEnabled && slackFailCauseCat != null) {
+                    String buildNum = String.valueOf(build.getNumber());
+                    String buildName = data.getLinks().getProjectDisplayName();
+                    String buildUrl = Jenkins.getInstance().getRootUrl() + build.getUrl();
+                    createSlackMessage(foundCauseList, notifySlackAllFail, slackFailCauseCat, buildName,
+                            buildNum, buildUrl, scanLog);
+                }
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
         }
+    }
+
+    /**
+     * Function to create the message for Slack using build and BFA information.
+     * @param foundCauseList - Build failure causes found in the build
+     * @param notifySlackOfAllFailures - Flag to indicate if all failures should be sent to Slack
+     * @param slackFailureCauseCategories - Failure causes for which to notify Slack (from BFA configuration)
+     * @param buildName - Name of the build
+     * @param buildNum - Build object
+     * @param buildUrl - Full URL of build
+     * @param scanLog - PrintStream for the build log
+     * @return boolean true if message successfully created, false otherwise
+     */
+    public static boolean createSlackMessage(List<FoundFailureCause> foundCauseList,
+            boolean notifySlackOfAllFailures, List<String> slackFailureCauseCategories,
+            String buildName, String buildNum, String buildUrl, PrintStream scanLog) {
+        boolean notifySlackOfFailure = false;
+        StringBuilder bufBuildFailCause = new StringBuilder();
+
+        /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
+        for (FoundFailureCause foundCause : foundCauseList) {
+            if (!notifySlackOfAllFailures) {
+                List<String> categories = foundCause.getCategories();
+                if (categories != null) {
+                    for (String category : categories) {
+                        if (failureCategoryMatches(category, slackFailureCauseCategories)) {
+                            notifySlackOfFailure = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            /* Create list for slack message with failure causes from build */
+            if (bufBuildFailCause.length() == 0) {
+                bufBuildFailCause.append(foundCause.getName());
+            } else {
+                bufBuildFailCause.append("\n");
+                bufBuildFailCause.append(foundCause.getName());
+            }
+        }
+
+        /* Notify slack if configured to report "ALL" failures or if one of the failure categories matched. */
+        if (notifySlackOfAllFailures || notifySlackOfFailure) {
+            SlackMessageProvider slack = new SlackMessageProvider();
+
+            StringBuilder s = new StringBuilder("Job *\"" + buildName + "\"*");
+            s.append(" build *#" + buildNum + "* FAILED due to following failure causes: \n```");
+            s.append(bufBuildFailCause.toString() + "```\nSee ");
+            s.append(buildUrl + " for details.");
+
+            slack.postToSlack(s.toString(), scanLog);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Function to check if atleast one of the failure cause categories match the identified failure.
+     * @param category - Category of the cause for the build failure
+     * @param slackFailureCauseCategories - List of failure causes for which to notify slack
+     * @return Boolean true if atleast one category matches, false otherwise
+     */
+    private static boolean failureCategoryMatches(String category, List<String> slackFailureCauseCategories) {
+        for (String slackCategory : slackFailureCauseCategories) {
+            if (category.trim().equalsIgnoreCase(slackCategory.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

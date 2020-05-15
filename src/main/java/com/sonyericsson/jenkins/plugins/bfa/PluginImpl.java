@@ -97,6 +97,16 @@ public class PluginImpl extends GlobalConfiguration {
     private static final int BYTES_IN_MEGABYTE = 1024 * 1024;
 
     /**
+     * Default slack channel to use.
+     */
+    public static final String DEFAULT_SLACK_CHANNEL =  "";
+
+    /**
+     * Default value for which failure categories to notify slack.
+     */
+    public static final String DEFAULT_SLACK_FAILURE_CATEGORIES = "ALL";
+
+    /**
      * The permission group for all permissions related to this plugin.
      */
     public static final PermissionGroup PERMISSION_GROUP =
@@ -138,6 +148,9 @@ public class PluginImpl extends GlobalConfiguration {
     private boolean doNotAnalyzeAbortedJob;
 
     private Boolean gerritTriggerEnabled;
+    private Boolean slackNotifEnabled;
+    private String slackChannelName;
+    private String slackFailureCategories;
 
     private String fallbackCategoriesAsString;
     private transient List<String> fallbackCategories;
@@ -537,6 +550,45 @@ public class PluginImpl extends GlobalConfiguration {
     }
 
     /**
+     * Send notifications to Slack.
+     *
+     * @return true if on.
+     */
+    public boolean isSlackNotifEnabled() {
+        if (slackNotifEnabled == null) {
+            return false;
+        } else {
+            return slackNotifEnabled;
+        }
+    }
+
+    /**
+     * Get configured slack channel.
+     *
+     * @return String - Slack Channel.
+     */
+    public String getSlackChannelName() {
+        if (slackChannelName == null) {
+            return DEFAULT_SLACK_CHANNEL;
+        } else {
+            return slackChannelName;
+        }
+    }
+
+    /**
+     * Get configured slack failure cause categories.
+     *
+     * @return String - Space separated list of failure cause categories.
+     */
+    public String getSlackFailureCategories() {
+        if (slackFailureCategories == null) {
+            return DEFAULT_SLACK_FAILURE_CATEGORIES;
+        } else {
+            return slackFailureCategories;
+        }
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on, cause descriptions will be forwarded to Gerrit-Trigger-Plugin.
      * Default value is true.
      *
@@ -545,6 +597,36 @@ public class PluginImpl extends GlobalConfiguration {
     @DataBoundSetter
     public void setGerritTriggerEnabled(boolean gerritTriggerEnabled) {
         this.gerritTriggerEnabled = gerritTriggerEnabled;
+    }
+
+    /**
+     * Sets if this feature is enabled or not. When on, selected failures will be sent to Slack channel.
+     *
+     * @param slackNotifEnabled on or off. null == off.
+     */
+    @DataBoundSetter
+    public void setSlackNotifEnabled(boolean slackNotifEnabled) {
+        this.slackNotifEnabled = slackNotifEnabled;
+    }
+
+    /**
+     * Set configured slack channel.
+     *
+     * @param slackChannelName null = DEFAULT_SLACK_CHANNEL
+     */
+    @DataBoundSetter
+    public void setSlackChannelName(String slackChannelName) {
+        this.slackChannelName = slackChannelName;
+    }
+
+    /**
+     * Set configured slack failure cause categories.
+     *
+     * @param slackFailureCategories - Space seperated list of failure cause categories.
+     */
+    @DataBoundSetter
+    public void setslackFailureCategories(String slackFailureCategories) {
+        this.slackFailureCategories = slackFailureCategories;
     }
 
     /**
