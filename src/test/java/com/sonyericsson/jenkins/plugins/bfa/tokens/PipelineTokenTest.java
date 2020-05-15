@@ -28,7 +28,8 @@ public class PipelineTokenTest {
                     + "  stages {\n"
                     + "    stage(\"Run declarative bfa\") {\n"
                     + "      steps {\n"
-                    + "        writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, noFailureText=\"No errors found - Declarative\"}''')\n"
+                    + "        writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, "
+                                    + "noFailureText=\"No errors found - Declarative\"}''')\n"
                     + "      }\n"
                     + "    }\n"
                     + "  }\n"
@@ -38,7 +39,8 @@ public class PipelineTokenTest {
     private static final String SCRIPTED_PIPELINE =
                       "node {\n"
                     + "  stage(\"Run scripted bfa\") {\n"
-                    + "    writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, noFailureText=\"No errors found - Scripted\"}''')\n"
+                    + "    writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, "
+                              + "noFailureText=\"No errors found - Scripted\"}''')\n"
                     + "  }\n"
                     + "}\n";
 

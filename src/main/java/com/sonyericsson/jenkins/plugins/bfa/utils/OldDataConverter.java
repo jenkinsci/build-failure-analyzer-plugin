@@ -68,7 +68,8 @@ public final class OldDataConverter extends ItemListener {
     /**
      * The seconds to delay actual processing of the conversion.
      *
-     * @see java.util.concurrent.ScheduledExecutorService#schedule(java.util.concurrent.Callable, long, java.util.concurrent.TimeUnit)
+     * @see java.util.concurrent.ScheduledExecutorService#schedule(
+     *          java.util.concurrent.Callable, long, java.util.concurrent.TimeUnit)
      */
     public static final int SCHEDULE_DELAY = 3;
 

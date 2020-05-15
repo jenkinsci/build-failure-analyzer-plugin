@@ -436,6 +436,10 @@ public class PluginImpl extends GlobalConfiguration {
         }
     }
 
+    /**
+     * Fallback categories.
+     * @return Fallback categories
+     */
     public String getFallbackCategoriesAsString() {
         return Util.join(getFallbackCategories(), " ");
     }

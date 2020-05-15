@@ -19,7 +19,7 @@
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
-        <checkstyle.version>3.1.0</checkstyle.version>
+        <checkstyle.version>3.1.1</checkstyle.version>
         <configuration-as-code.version>1.35</configuration-as-code.version>
     </properties>
 
@@ -290,7 +290,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>8.21</version>
+                        <version>8.32</version>
                     </dependency>
                 </dependencies>
                 <configuration>

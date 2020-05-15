@@ -727,7 +727,8 @@ public class BuildFailureScannerHudsonTest {
      * @throws Exception if something goes wrong in handling the causes.
      *
      * @see #configureCauseAndIndication(com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
-     * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
+     * @see #configureCauseAndIndication(String, String,
+     *        com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
     private FailureCause configureCauseAndIndication() throws Exception {
         return configureCauseAndIndication(new BuildLogIndication(REGEX));
@@ -742,7 +743,8 @@ public class BuildFailureScannerHudsonTest {
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      *
-     * @see #configureCauseAndIndication(String, String, com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
+     * @see #configureCauseAndIndication(String, String,
+     *           com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
     private FailureCause configureCauseAndIndication(Indication indication) throws Exception {
         return configureCauseAndIndication("Error", DESCRIPTION, indication);

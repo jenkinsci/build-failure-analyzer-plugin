@@ -8,6 +8,8 @@
     <suppress checks=".+"
               files="Messages.java"/>
     <suppress checks=".+"
+              files=".+\.properties"/>
+    <suppress checks=".+"
               files="InjectedTest.java"/>
     <suppress checks="MagicNumber" files="BuildLogIndication.java"/>
 </suppressions>
