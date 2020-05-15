@@ -77,6 +77,7 @@ import org.jfree.data.time.Hour;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.mongojack.DBCursor;
 import org.mongojack.JacksonDBCollection;
@@ -128,6 +129,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private Secret password;
     private boolean enableStatistics;
     private boolean successfulLogging;
+    private boolean tls;
 
     /**
      * Getter for the MongoDB user name.
@@ -167,6 +169,24 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     public String getDbName() {
         return dbName;
+    }
+
+
+    /**
+     * Whether to use TLS when connecting to the mongo server.
+     * @return the tls option
+     */
+    public boolean isTls() {
+        return tls;
+    }
+
+    /**
+     * Set whether or not to use TLS when connecting to the mongo server.
+     * @param tls the tls option
+     */
+    @DataBoundSetter
+    public void setTls(boolean tls) {
+        this.tls = tls;
     }
 
     /**
@@ -409,6 +429,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     && equals(oldMongoDBKnowledgeBase.getDbName(), dbName)
                     && equals(oldMongoDBKnowledgeBase.getUserName(), userName)
                     && equals(oldMongoDBKnowledgeBase.getPassword(), password)
+                    && this.tls == oldMongoDBKnowledgeBase.tls
                     && this.enableStatistics == oldMongoDBKnowledgeBase.enableStatistics
                     && this.successfulLogging == oldMongoDBKnowledgeBase.successfulLogging;
         } else {
@@ -1038,6 +1059,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     .builder()
                     .connectTimeout(CONNECT_TIMEOUT)
                     .serverSelectionTimeout(SERVER_SELECTION_TIMEOUT)
+                    .sslEnabled(tls)
                     .build();
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
@@ -1194,6 +1216,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @param dbName the database name.
          * @param userName the user name.
          * @param password the password.
+         * @param tls the tls option.
          * @return {@link FormValidation#ok() } if can be done,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
@@ -1202,9 +1225,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("port") final int port,
                 @QueryParameter("dbName") final String dbName,
                 @QueryParameter("userName") final String userName,
-                @QueryParameter("password") final String password) {
+                @QueryParameter("password") final String password,
+                @QueryParameter("tls") final boolean tls) {
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
                     Secret.fromString(password), false, false);
+            base.setTls(tls);
             try {
                 DBObject ping = new BasicDBObject("ping", "1");
                 DB db = base.getDb();
