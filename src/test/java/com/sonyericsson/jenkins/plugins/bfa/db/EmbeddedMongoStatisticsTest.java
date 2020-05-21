@@ -75,7 +75,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(value = {PluginImpl.class, Jenkins.class})
-@PowerMockIgnore("javax.management.*") //Solves PowerMock issue 277
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
 public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     // CS IGNORE MagicNumber FOR NEXT 600 LINES. REASON: Test data.
 

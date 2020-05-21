@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -25,6 +26,7 @@ import java.util.List;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PluginImpl.class, Jenkins.class })
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
 public class GerritMessageProviderExtensionTest {
     private static final String JENKINS_URL =  "http://some.jenkins.com";
     private static final String BUILD_URL = "jobs/build/123";
