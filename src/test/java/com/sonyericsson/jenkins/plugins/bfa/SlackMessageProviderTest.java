@@ -2,16 +2,17 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import jenkins.model.Jenkins;
 import jenkins.plugins.slack.SlackNotifier;
-import org.apache.http.ssl.SSLInitializationException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
+
+import org.apache.http.ssl.SSLInitializationException;
 
 /**
  * Tests for the SlackMessageProvider class.
@@ -20,7 +21,6 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PluginImpl.class, SlackNotifier.class, Jenkins.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
 public class SlackMessageProviderTest {
     private SlackNotifier slackPlugin;
     private SlackNotifier.DescriptorImpl descriptor;
