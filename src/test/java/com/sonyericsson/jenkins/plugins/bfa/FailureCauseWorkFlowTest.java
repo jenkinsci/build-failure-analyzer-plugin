@@ -25,6 +25,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import hudson.model.Result;
+import hudson.model.queue.QueueTaskFuture;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -32,7 +33,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import java.util.concurrent.Future;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +43,6 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests for WorkflowJobs.
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
- * @throws Exception if so.
  */
 public class FailureCauseWorkFlowTest {
     /**
@@ -62,7 +61,7 @@ public class FailureCauseWorkFlowTest {
     public void testWorkflowFailureCauseBuildAction() throws Exception {
         WorkflowJob proj = j.jenkins.createProject(WorkflowJob.class, "proj");
         proj.setDefinition(new CpsFlowDefinition("error()"));
-        Future<WorkflowRun> f = proj.scheduleBuild2(0);
+        QueueTaskFuture<WorkflowRun> f = proj.scheduleBuild2(0);
         assertThat("build was actually scheduled", f, Matchers.notNullValue());
         WorkflowRun run = j.assertBuildStatus(Result.FAILURE, f.get());
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);

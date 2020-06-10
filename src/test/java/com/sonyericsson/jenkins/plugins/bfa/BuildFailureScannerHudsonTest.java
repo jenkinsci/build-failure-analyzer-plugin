@@ -49,9 +49,9 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.listeners.RunListener;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.junit.JUnitResultArchiver;
 import jenkins.model.Jenkins;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -73,7 +73,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
@@ -123,7 +122,7 @@ public class BuildFailureScannerHudsonTest {
 
         FailureCause failureCause = configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -169,7 +168,7 @@ public class BuildFailureScannerHudsonTest {
 
         FreeStyleProject project = createProject("Generic Error\nUnknown Error");
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -199,7 +198,7 @@ public class BuildFailureScannerHudsonTest {
 
         FreeStyleProject project = createProject("Generic Error\nSpecific Error");
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -222,7 +221,7 @@ public class BuildFailureScannerHudsonTest {
 
         FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication(MULTILINE_REGEX));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -267,7 +266,7 @@ public class BuildFailureScannerHudsonTest {
         final String otherDescription = "Other description";
         FailureCause failureCause2 = configureCauseAndIndication("Other cause", otherDescription, indication);
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -318,6 +317,64 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
+     * Test to ensure no failure category can be specified, and if all build failures
+     * are to be reported, a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoCategoryALLSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        PrintStream buildLog = null;
+
+        String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* []",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
+    }
+
+    /**
+     * Test to ensure no failure category can be specified,
+     * are to be reported, a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoCategorySlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories = Arrays.asList("");
+        PrintStream buildLog = null;
+
+        String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* []",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
+    }
+
+    /**
      * Test to ensure one failure category can be specified, and if all build failures
      * are to be reported, a new Slack message should be created.
      * @throws Exception if so.
@@ -333,11 +390,17 @@ public class BuildFailureScannerHudsonTest {
         List<String> slackFailureCauseCategories = Arrays.asList("ALL");
         PrintStream buildLog = null;
 
-        boolean result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+        String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "\"job/test0/1/", buildLog);
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
 
-        assertEquals(true, result);
+        assertEquals(expected, result);
     }
 
     /**
@@ -350,7 +413,7 @@ public class BuildFailureScannerHudsonTest {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
-        testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "git");
+        testFailureCause = new FailureCause("Some Fail Cause git", "Some Description git", "", "git");
         FoundFailureCause testFailureCause2 = new FoundFailureCause(testFailureCause);
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
@@ -358,11 +421,52 @@ public class BuildFailureScannerHudsonTest {
         List<String> slackFailureCauseCategories = Arrays.asList("ALL");
         PrintStream buildLog = null;
 
-        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
-        assertEquals(true, result);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                "*Failure Name:* Some Fail Cause git",
+                "*Failure Categories:* [git]",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
+    }
+
+    /**
+     * Test to ensure multiple failure categories can be specified, and if not all the categories
+     * match a new Slack message should be created with only the selected category.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testMultiCategoryFailureSlackMessageOnlySelected() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
+        testFailureCause = new FailureCause("Some Fail Cause git", "Some Description", "", "git");
+        FoundFailureCause testFailureCause2 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
+
+        boolean notifySlackOfAllFailures = false;
+        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        PrintStream buildLog = null;
+
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
     }
 
     /**
@@ -381,11 +485,11 @@ public class BuildFailureScannerHudsonTest {
         List<String> slackFailureCauseCategories = Arrays.asList("git");
         PrintStream buildLog = null;
 
-        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
-        assertEquals(false, result);
+        assertNull(result);
     }
 
     /**
@@ -406,11 +510,11 @@ public class BuildFailureScannerHudsonTest {
         List<String> slackFailureCauseCategories = Arrays.asList("git");
         PrintStream buildLog = null;
 
-        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
-        assertEquals(false, result);
+        assertNull(result);
     }
 
     /**
@@ -429,11 +533,16 @@ public class BuildFailureScannerHudsonTest {
         List<String> slackFailureCauseCategories = Arrays.asList("env");
         PrintStream buildLog = null;
 
-        boolean result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "\"job/test0/1/", buildLog);
-
-        assertEquals(true, result);
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+        assertEquals(expected, result);
     }
 
     /**
@@ -449,7 +558,7 @@ public class BuildFailureScannerHudsonTest {
 
         configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -479,7 +588,7 @@ public class BuildFailureScannerHudsonTest {
 
         configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -498,7 +607,7 @@ public class BuildFailureScannerHudsonTest {
 
         configureCauseAndIndication(new MultilineBuildLogIndication(".*something completely different.*"));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -518,7 +627,7 @@ public class BuildFailureScannerHudsonTest {
 
         configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -542,7 +651,7 @@ public class BuildFailureScannerHudsonTest {
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         configureCauseAndIndication();
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.SUCCESS, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -559,7 +668,7 @@ public class BuildFailureScannerHudsonTest {
         PluginImpl.getInstance().setGlobalEnabled(false);
         FreeStyleProject project = createProject();
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -576,7 +685,7 @@ public class BuildFailureScannerHudsonTest {
         PluginImpl.getInstance().setMaxLogSize(1);
         FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -593,7 +702,7 @@ public class BuildFailureScannerHudsonTest {
         PluginImpl.getInstance().setMaxLogSize(2);
         FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -628,7 +737,7 @@ public class BuildFailureScannerHudsonTest {
         FreeStyleProject project = createProject();
         project.addProperty(new ScannerJobProperty(true));
         configureCauseAndIndication();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
@@ -664,7 +773,7 @@ public class BuildFailureScannerHudsonTest {
         }).when(base).saveStatistics(Matchers.<Statistics>any());
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, base);
         FreeStyleProject project = createProject();
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
         long time = System.currentTimeMillis();
@@ -726,7 +835,7 @@ public class BuildFailureScannerHudsonTest {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
@@ -768,7 +877,7 @@ public class BuildFailureScannerHudsonTest {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
@@ -805,7 +914,7 @@ public class BuildFailureScannerHudsonTest {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.UNSTABLE, build);
 

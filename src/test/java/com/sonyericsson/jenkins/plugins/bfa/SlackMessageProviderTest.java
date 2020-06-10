@@ -17,7 +17,6 @@ import org.apache.http.ssl.SSLInitializationException;
 /**
  * Tests for the SlackMessageProvider class.
  * @author Johan Cornelissen &lt;j.cornelissen@queensu.ca&gt;
- * @throws Exception if so.
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PluginImpl.class, SlackNotifier.class, Jenkins.class})

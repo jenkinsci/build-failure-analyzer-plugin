@@ -198,7 +198,7 @@ public class Statistics {
     }
 
         /**
-         * @deprecated, kept for backwards compatibility.
+         * deprecated, kept for backwards compatibility.
          * @param projectName the project name.
          * @param buildNumber the build number.
          * @param startingTime the starting time.
