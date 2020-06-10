@@ -335,7 +335,7 @@ public class BuildFailureScannerHudsonTest {
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
@@ -364,7 +364,7 @@ public class BuildFailureScannerHudsonTest {
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
@@ -393,7 +393,7 @@ public class BuildFailureScannerHudsonTest {
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
@@ -425,7 +425,7 @@ public class BuildFailureScannerHudsonTest {
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
@@ -439,7 +439,7 @@ public class BuildFailureScannerHudsonTest {
 
     /**
      * Test to ensure multiple failure categories can be specified, and if not all the categories
-     * match a new Slack message should be created with only the selected category
+     * match a new Slack message should be created with only the selected category.
      * @throws Exception if so.
      */
     @Test
@@ -459,7 +459,7 @@ public class BuildFailureScannerHudsonTest {
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
@@ -536,7 +536,7 @@ public class BuildFailureScannerHudsonTest {
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
-        String expected= String.join("\n",
+        String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",

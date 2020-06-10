@@ -289,7 +289,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
         /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
         for (FoundFailureCause foundCause : foundCauseList) {
-            if(notifySlackOfAllFailures){
+            if (notifySlackOfAllFailures) {
                 /* Create list for slack message with failure causes from build */
                 if (bufBuildFailCause.length() != 0) {
                     bufBuildFailCause.append("\n");
