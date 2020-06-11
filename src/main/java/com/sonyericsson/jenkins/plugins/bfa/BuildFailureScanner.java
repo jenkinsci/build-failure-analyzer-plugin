@@ -306,6 +306,9 @@ public class BuildFailureScanner extends RunListener<Run> {
                     for (String category : categories) {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
+                            if (bufBuildFailCause.length() != 0) {
+                                bufBuildFailCause.append("\n");
+                            }
                             bufBuildFailCause.append("*Failure Name:* ");
                             bufBuildFailCause.append(foundCause.getName());
                             bufBuildFailCause.append("\n");
