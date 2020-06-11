@@ -291,12 +291,14 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (FoundFailureCause foundCause : foundCauseList) {
             if (notifySlackOfAllFailures) {
                 /* Create list for slack message with failure causes from build */
+                if (bufBuildFailCause.length() != 0) {
+                    bufBuildFailCause.append("\n");
+                }
                 bufBuildFailCause.append("*Failure Name:* ");
                 bufBuildFailCause.append(foundCause.getName());
                 bufBuildFailCause.append("\n");
                 bufBuildFailCause.append("*Failure Categories:* ");
                 bufBuildFailCause.append(foundCause.getCategories());
-                bufBuildFailCause.append("\n");
             } else {
                 /* Only notify the selected categories even if more occur*/
                 List<String> categories = foundCause.getCategories();
@@ -304,13 +306,14 @@ public class BuildFailureScanner extends RunListener<Run> {
                     for (String category : categories) {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
+                            if (bufBuildFailCause.length() != 0) {
+                                bufBuildFailCause.append("\n");
+                            }
                             bufBuildFailCause.append("*Failure Name:* ");
                             bufBuildFailCause.append(foundCause.getName());
                             bufBuildFailCause.append("\n");
                             bufBuildFailCause.append("*Failure Categories:* ");
                             bufBuildFailCause.append(foundCause.getCategories());
-                            bufBuildFailCause.append("\n");
-
                         }
                     }
                 }
