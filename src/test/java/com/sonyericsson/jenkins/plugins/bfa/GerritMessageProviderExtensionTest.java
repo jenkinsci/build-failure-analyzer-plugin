@@ -21,7 +21,6 @@ import java.util.List;
 /**
  * Tests for the GerritMessageProviderExtensionTest.
  * @author Alexander Akbashev mr.akbashev@gmail.com
- * @throws Exception if so.
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PluginImpl.class, Jenkins.class })
