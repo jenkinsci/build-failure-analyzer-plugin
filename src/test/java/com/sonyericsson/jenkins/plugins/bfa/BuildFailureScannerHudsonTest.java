@@ -339,6 +339,38 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
+                "*Description:* Some Description",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
+    }
+
+    /**
+     * Test to ensure no failure Description can be specified,
+     * are to be reported, a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testNoDesriptionSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "", "", "env");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories = Arrays.asList("");
+        PrintStream buildLog = null;
+
+        String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                "*Description:* ",
+
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
 
@@ -368,6 +400,8 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
+                "*Description:* Some Description",
+
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
 
@@ -397,12 +431,13 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
+                "*Description:* Some Description",
+
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
 
         assertEquals(expected, result);
     }
-
     /**
      * Test to ensure multiple failure categories can be specified, and if at least one of the categories
      * match a new Slack message should be created.
@@ -418,6 +453,45 @@ public class BuildFailureScannerHudsonTest {
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
         boolean notifySlackOfAllFailures = true;
+        List<String> slackFailureCauseCategories =  Arrays.asList(new String[] {"Some Fail Cause",
+                "Some Fail Cause git"});
+        PrintStream buildLog = null;
+
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                "*Description:* Some Description",
+                "",
+                "*Failure Name:* Some Fail Cause git",
+                "*Failure Categories:* [git]",
+                "*Description:* Some Description git",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+
+        assertEquals(expected, result);
+    }
+
+    /**
+     * Test to ensure multiple failure categories can be specified, and if at least one of the categories
+     * match a new Slack message should be created.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testMultiCategoryFailureSlackMessageALL() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
+        FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
+        testFailureCause = new FailureCause("Some Fail Cause git", "Some Description git", "", "git");
+
+        FoundFailureCause testFailureCause2 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
+
+        boolean notifySlackOfAllFailures = true;
         List<String> slackFailureCauseCategories = Arrays.asList("ALL");
         PrintStream buildLog = null;
 
@@ -429,8 +503,11 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
+                "*Description:* Some Description",
+                "",
                 "*Failure Name:* Some Fail Cause git",
                 "*Failure Categories:* [git]",
+                "*Description:* Some Description git",
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
 
@@ -456,6 +533,7 @@ public class BuildFailureScannerHudsonTest {
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+
                 slackFailureCauseCategories, "Sandbox", "#1",
                 Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
 
@@ -463,6 +541,7 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
+                "*Description:* Some Description",
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
 
@@ -540,6 +619,40 @@ public class BuildFailureScannerHudsonTest {
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
+                "*Description:* Some Description",
+                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+        );
+        assertEquals(expected, result);
+    }
+
+    /**
+     * Test to ensure a single failure cause category can be chosen in the slack configuration
+     * section of the BFA plugin.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testMultiLineDescriptionSlackMessage() throws Exception {
+        PluginImpl.getInstance().setSlackNotifEnabled(true);
+        FailureCause testFailureCause = new FailureCause("Some Fail Cause",
+                "Some Description\nwith multiple lines\nTo test that it works", "", "env");
+        FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
+        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+
+        boolean notifySlackOfAllFailures = false;
+        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        PrintStream buildLog = null;
+
+        String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
+                slackFailureCauseCategories, "Sandbox", "#1",
+                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+        String expected = String.join("\n",
+                "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
+                "*Failure Name:* Some Fail Cause",
+                "*Failure Categories:* [env]",
+                "*Description:* Some Description",
+                "with multiple lines",
+                "To test that it works",
+
                 String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
         );
         assertEquals(expected, result);

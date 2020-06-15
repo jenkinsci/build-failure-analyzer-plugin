@@ -290,30 +290,43 @@ public class BuildFailureScanner extends RunListener<Run> {
         /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
         for (FoundFailureCause foundCause : foundCauseList) {
             if (notifySlackOfAllFailures) {
-                /* Create list for slack message with failure causes from build */
+                //Add two new lines between found categories
                 if (bufBuildFailCause.length() != 0) {
-                    bufBuildFailCause.append("\n");
+                    bufBuildFailCause.append("\n\n");
                 }
+                //Create list for slack message with failure Name, Cegory and Description from build
+
                 bufBuildFailCause.append("*Failure Name:* ");
                 bufBuildFailCause.append(foundCause.getName());
                 bufBuildFailCause.append("\n");
                 bufBuildFailCause.append("*Failure Categories:* ");
                 bufBuildFailCause.append(foundCause.getCategories());
+                bufBuildFailCause.append("\n");
+                bufBuildFailCause.append("*Description:* ");
+                bufBuildFailCause.append(foundCause.getDescription());
             } else {
-                /* Only notify the selected categories even if more occur*/
+                // Only notify the selected categories even if others occur
+
                 List<String> categories = foundCause.getCategories();
                 if (categories != null) {
                     for (String category : categories) {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
+                            //Add two new lines between found categoreis
                             if (bufBuildFailCause.length() != 0) {
-                                bufBuildFailCause.append("\n");
+                                bufBuildFailCause.append("\n\n");
                             }
+                            // Create list for slack message with failure Name, Cegory and Description from build
+
                             bufBuildFailCause.append("*Failure Name:* ");
                             bufBuildFailCause.append(foundCause.getName());
                             bufBuildFailCause.append("\n");
                             bufBuildFailCause.append("*Failure Categories:* ");
                             bufBuildFailCause.append(foundCause.getCategories());
+                            bufBuildFailCause.append("\n");
+                            bufBuildFailCause.append("*Description:* ");
+                            bufBuildFailCause.append(foundCause.getDescription());
+
                         }
                     }
                 }
