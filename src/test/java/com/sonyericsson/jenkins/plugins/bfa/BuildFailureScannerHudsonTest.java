@@ -347,7 +347,7 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
-     * Test to ensure no failure category can be specified,
+     * Test to ensure no failure Description can be specified,
      * are to be reported, a new Slack message should be created.
      * @throws Exception if so.
      */
