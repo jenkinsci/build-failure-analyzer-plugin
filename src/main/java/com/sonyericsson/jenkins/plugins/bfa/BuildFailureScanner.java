@@ -279,7 +279,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param buildNum - Build object
      * @param buildUrl - Full URL of build
      * @param scanLog - PrintStream for the build log
-     * @return String message if message successfully created, null otherwise
+     * @return String Slack message with failure name, category and description if message successfully created, null otherwise
      */
     public static String createSlackMessage(List<FoundFailureCause> foundCauseList,
             boolean notifySlackOfAllFailures, List<String> slackFailureCauseCategories,
