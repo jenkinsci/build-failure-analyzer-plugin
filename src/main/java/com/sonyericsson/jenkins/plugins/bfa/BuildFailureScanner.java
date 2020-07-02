@@ -323,6 +323,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                             bufBuildFailCause.append("\n");
                             bufBuildFailCause.append("*Description:* ");
                             bufBuildFailCause.append(foundCause.getDescription());
+
                         }
                     }
                 }
