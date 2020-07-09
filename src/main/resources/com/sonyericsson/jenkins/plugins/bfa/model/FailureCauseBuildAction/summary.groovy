@@ -39,7 +39,9 @@ if (PluginImpl.getInstance().isNoCausesEnabled() || !rootFailureDisplayData.isEm
             img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
         }
         td(style: "vertical-align: middle;") {
-            h2(_("Identified problems"))
+            h2(class: "h4") {
+                text(_("Identified problems"))
+            }
         }
     }
 
@@ -58,10 +60,10 @@ def displayData(failureCauseDisplayData, linkTree, indent) {
         tr {
             td {}
             td {
-                h4(style: "margin-left: 10px;") {
+                h4(style: "margin-left: 10px;", class: "h5") {
                     text(_("No identified problem"))
                 }
-                h4(style: "margin-left: 10px; font-weight: normal") {
+                h4(style: "margin-left: 10px; font-weight: normal", class: "h5") {
                     raw(app.markupFormatter.translate(PluginImpl.getInstance().noCausesMessage))
                 }
             }
@@ -87,7 +89,7 @@ def displayLinkTree(linkTree) {
     tr {
         td {}
         td {
-            h3 {
+            h3(class: "h5") {
                 text(_("Subproject build: "))
                 linkTree.eachWithIndex { link, i ->
                     if (link?.buildUrl != null) {
@@ -114,7 +116,7 @@ def displayCauses(cause, indent, links) {
     tr {
         td {}
         td {
-            h3(style: "margin-left: 20px;") {
+            h3(style: "margin-left: 20px;", class: "h5") {
                 text(cause.name)
                 br {}
                 br {}
