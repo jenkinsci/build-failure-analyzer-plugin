@@ -279,7 +279,8 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param buildNum - Build object
      * @param buildUrl - Full URL of build
      * @param scanLog - PrintStream for the build log
-     * @return String Slack message with failure name, category and description if message successfully created, null otherwise
+     * @return String Slack message with failure name, category and description if message successfully created,
+     * null otherwise
      */
     public static String createSlackMessage(List<FoundFailureCause> foundCauseList,
             boolean notifySlackOfAllFailures, List<String> slackFailureCauseCategories,
@@ -290,11 +291,11 @@ public class BuildFailureScanner extends RunListener<Run> {
         /* Check if one of the failure causes for the build matches those specified in plugin's slack settings. */
         for (FoundFailureCause foundCause : foundCauseList) {
             if (notifySlackOfAllFailures) {
-                //Add two new lines between found categories
+                //Add two new lines between found Failure Causes
                 if (bufBuildFailCause.length() != 0) {
                     bufBuildFailCause.append("\n\n");
                 }
-                //Create list for slack message with failure Name, Cegory and Description from build
+                //Create list for slack message with failure Name, Category and Description from build
                 bufBuildFailCause.append("*Failure Name:* ");
                 bufBuildFailCause.append(foundCause.getName());
                 bufBuildFailCause.append("\n");
@@ -310,11 +311,11 @@ public class BuildFailureScanner extends RunListener<Run> {
                     for (String category : categories) {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
-                            //Add two new lines between found categoreis
+                            //Add two new lines between found Failure Causes
                             if (bufBuildFailCause.length() != 0) {
                                 bufBuildFailCause.append("\n\n");
                             }
-                            // Create list for slack message with failure Name, Cegory and Description from build
+                            // Create list for slack message with failure Name, Category and Description from build
                             bufBuildFailCause.append("*Failure Name:* ");
                             bufBuildFailCause.append(foundCause.getName());
                             bufBuildFailCause.append("\n");
@@ -335,9 +336,9 @@ public class BuildFailureScanner extends RunListener<Run> {
             SlackMessageProvider slack = new SlackMessageProvider();
 
             StringBuilder s = new StringBuilder("Job *\"" + buildName + "\"*");
-            s.append(" build *#" + buildNum + "* FAILED due to following failure causes: \n");
-            s.append(bufBuildFailCause.toString() + "\nSee ");
-            s.append(buildUrl + " for details.");
+            s.append(" build *#").append(buildNum).append("* FAILED due to following failure causes: \n");
+            s.append(bufBuildFailCause.toString()).append("\nSee ");
+            s.append(buildUrl).append(" for details.");
 
             slack.postToSlack(s.toString(), scanLog);
             return s.toString();
