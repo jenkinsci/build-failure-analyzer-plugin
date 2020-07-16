@@ -625,7 +625,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @param slackFailureCategories - Space seperated list of failure cause categories.
      */
     @DataBoundSetter
-    public void setslackFailureCategories(String slackFailureCategories) {
+    public void setSlackFailureCategories(String slackFailureCategories) {
         this.slackFailureCategories = slackFailureCategories;
     }
 

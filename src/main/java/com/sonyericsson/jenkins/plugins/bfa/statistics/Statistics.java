@@ -197,19 +197,20 @@ public class Statistics {
         this.failureCauseStatisticsList = failureCauseStatistics;
     }
 
-        /**
-         * @deprecated, kept for backwards compatibility.
-         * @param projectName the project name.
-         * @param buildNumber the build number.
-         * @param startingTime the starting time.
-         * @param duration the duration.
-         * @param triggerCauses the causes that triggered this build.
-         * @param nodeName the name of the node this build ran on.
-         * @param master the master this build ran on.
-         * @param timeZoneOffset the time zone offset.
-         * @param result the result of the build.
-         * @param failureCauseStatistics the statistics for the FailureCauses.
-         */
+    /**
+     * Deprecated statistics constructor.
+     * @param projectName the project name.
+     * @param buildNumber the build number.
+     * @param startingTime the starting time.
+     * @param duration the duration.
+     * @param triggerCauses the causes that triggered this build.
+     * @param nodeName the name of the node this build ran on.
+     * @param master the master this build ran on.
+     * @param timeZoneOffset the time zone offset.
+     * @param result the result of the build.
+     * @param failureCauseStatistics the statistics for the FailureCauses.
+     * @deprecated, kept for backwards compatibility.
+     */
     @Deprecated
     public Statistics(String projectName,
                       int buildNumber,
