@@ -96,6 +96,9 @@ public abstract class EmbeddedMongoTest {
         knowledgeBase = new MongoDBKnowledgeBase(LOCALHOST, port, DB_NAME, null, null, true, false);
     }
 
+    /**
+     * Tears down the test environment.
+     */
     @After
     public void tearDown() {
         if (this.mongodProc != null) {

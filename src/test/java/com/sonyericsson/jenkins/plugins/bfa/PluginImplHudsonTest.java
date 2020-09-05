@@ -87,6 +87,10 @@ public class PluginImplHudsonTest {
 
     //CS IGNORE MagicNumber FOR NEXT 20 LINES. REASON: Random test data
 
+    /**
+     * Tests that boolean configure parameters are persisted.
+     * @throws Exception if so
+     */
     @Test
     public void testBooleanConfigPersistence() throws Exception {
         PluginImpl instance = PluginImpl.getInstance();
@@ -326,6 +330,9 @@ public class PluginImplHudsonTest {
         form.put("globalEnabled", true);
         form.put("graphsEnabled", true);
         form.put("gerritTriggerEnabled", true);
+        form.put("slackNotifEnabled", true);
+        form.put("slackChannelName", PluginImpl.DEFAULT_SLACK_CHANNEL);
+        form.put("slackFailureCategories", PluginImpl.DEFAULT_SLACK_FAILURE_CATEGORIES);
         form.put("testResultParsingEnabled", true);
         form.put("testResultCategories", "foo bar");
         form.put("knowledgeBase", new JSONObject());
