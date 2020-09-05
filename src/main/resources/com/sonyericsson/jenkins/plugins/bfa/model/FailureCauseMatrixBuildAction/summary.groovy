@@ -40,7 +40,9 @@ if (PluginImpl.getInstance().isNoCausesEnabled() || !matrixRuns.isEmpty()) {
             img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
         }
         td(style: "vertical-align: middle;") {
-            h2(_("Identified problems"))
+            h2(class: "h4") {
+                text(_("Identified problems"))
+            }
         }
     }
 
@@ -70,7 +72,7 @@ def displayData(failureCauseDisplayData, run, linkTree, indent) {
         tr {
             td {}
             td {
-                h4(style: "margin-left: 20px;") {
+                h4(style: "margin-left: 20px;", class: "h5") {
                     text(_("No identified problem"))
                 }
                 h4(style: "margin-left:  20px; font-weight: normal") {
@@ -98,7 +100,7 @@ def displayLinkTree(linkTree) {
     tr {
         td {}
         td {
-            h3(style: "margin-left:  10px;") {
+            h3(style: "margin-left:  10px;", class: "h5") {
                 text(_("Subproject build: "))
                 linkTree.eachWithIndex { link, i ->
                     if (i > 0) {
@@ -123,7 +125,7 @@ def displayCauses(cause, run, indent, links) {
     tr {
         td {}
         td {
-            h3(style: "margin-left: 20px;") {
+            h3(style: "margin-left: 20px;", class: "h5") {
                 text(cause.name)
                 br {}
                 br {}

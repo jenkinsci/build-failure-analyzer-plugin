@@ -32,10 +32,10 @@ import hudson.matrix.MatrixProject;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.Result;
+import hudson.model.queue.QueueTaskFuture;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.MockBuilder;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -48,7 +48,6 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests for the FailureCauseMatrixAggregator.
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
- * @throws Exception if so.
  */
 public class FailureCauseMatrixAggregatorTest {
     /**
@@ -70,7 +69,7 @@ public class FailureCauseMatrixAggregatorTest {
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         matrix.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(10, TimeUnit.SECONDS);
         FailureCauseMatrixBuildAction matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNotNull(matrixAction);
@@ -87,7 +86,7 @@ public class FailureCauseMatrixAggregatorTest {
         MatrixProject matrix = jenkins.createMatrixProject();
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
-        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(10, TimeUnit.SECONDS);
         Action matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNull(matrixAction);
@@ -105,7 +104,7 @@ public class FailureCauseMatrixAggregatorTest {
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         matrix.getBuildersList().add(new MockBuilder(Result.ABORTED));
-        Future<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(10, TimeUnit.SECONDS);
         FailureCauseMatrixBuildAction matrixAction = build.getAction(FailureCauseMatrixBuildAction.class);
         assertNull(matrixAction);

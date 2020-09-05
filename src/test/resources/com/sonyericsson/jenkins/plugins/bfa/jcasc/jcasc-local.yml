@@ -9,6 +9,7 @@ unclassified:
     noCausesEnabled: true
     noCausesMessage: "No problems were identified. Please contribute  causes to help others"
     nrOfScanThreads: 6
+    slackNotifEnabled: false
     sodVariables:
       maximumSodWorkerThreads: 4
       minimumSodWorkerThreads: 2
