@@ -45,6 +45,8 @@ import hudson.model.Hudson;
 import hudson.model.ModelObject;
 import hudson.security.Permission;
 import hudson.util.Graph;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
@@ -62,6 +64,8 @@ import java.util.Map;
  */
 @Extension
 public class CauseManagement extends BfaGraphAction {
+
+    private static final Logger LOGGER = Logger.getLogger(CauseManagement.class.getName());
 
     /**
      * Where in the Jenkins name space this action will be.
@@ -162,7 +166,9 @@ public class CauseManagement extends BfaGraphAction {
             returnValue = PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
         } catch (Exception e) {
             String message = "Could not fetch causes: " + e.getMessage();
+
             setErrorMessage(message);
+            LOGGER.log(Level.SEVERE, message, e);
         }
         return returnValue;
     }

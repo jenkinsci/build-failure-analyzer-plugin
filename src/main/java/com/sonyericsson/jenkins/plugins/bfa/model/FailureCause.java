@@ -163,6 +163,18 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     }
 
     /**
+     * Standard constructor.
+     *
+     * @param name        the name of this FailureCause.
+     * @param description the description of this FailureCause.
+     * @param comment the comment for this FailureCause.
+     * @param categories    the categories of this FailureCause.
+     */
+    public FailureCause(String name, String description, String comment, String categories) {
+        this(null, name, description, "", null, Arrays.<String>asList(Util.tokenize(categories)), null, null);
+    }
+
+    /**
      * Default constructor. <strong>Do not use this unless you are a serializer.</strong>
      */
     public FailureCause() {

@@ -38,11 +38,14 @@
     <f:entry title="${%Password}" description="${%MongoDBKnowledgeBase_PasswordDesc}">
         <f:password field="password" />
     </f:entry>
+    <f:entry title="${%Use TLS connection}">
+        <f:checkbox field="tls" />
+    </f:entry>
     <f:entry title="${%Enable statistics logging}">
         <f:checkbox field="enableStatistics" default="true"/>
     </f:entry>
     <f:entry title="${%Enable statistics logging of successful builds}">
         <f:checkbox field="successfulLogging" default="false"/>
     </f:entry>
-    <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="host,port,dbName,userName,password"/>
+    <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="host,port,dbName,userName,password,tls"/>
 </j:jelly>

@@ -12,6 +12,10 @@ recognition of why the build failed.
 
 * Tomas Westling 
   - tomas.westling@axis.com
+  
+## Guides
+
+ * [Azure Cosmos DB](docs/azure.md)
 
 ## Community Resources
  * [Changelog](https://github.com/jenkinsci/build-failure-analyzer-plugin/releases)

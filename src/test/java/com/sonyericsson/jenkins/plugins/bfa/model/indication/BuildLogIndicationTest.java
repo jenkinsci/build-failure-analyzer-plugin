@@ -294,6 +294,10 @@ public class BuildLogIndicationTest {
 
     // CS IGNORE MagicNumber FOR NEXT 200 LINES. REASON: test data.
 
+    /**
+     * Tests SECURITY-1651.
+     * @throws Exception if so
+     */
     @Test @Issue("SECURITY-1651")
     public void testDoMatchNotHttpGetAccessible() throws Exception {
         lockDown();
@@ -307,6 +311,10 @@ public class BuildLogIndicationTest {
                 405);
     }
 
+    /**
+     * Tests SECURITY-1651.
+     * @throws Exception if so
+     */
     @Test @Issue("SECURITY-1651")
     public void testDoMatchHttpPostAccessible() throws Exception {
         lockDown();
@@ -320,6 +328,10 @@ public class BuildLogIndicationTest {
                 null, 403);
     }
 
+    /**
+     * Tests SECURITY-1651.
+     * @throws Exception if so
+     */
     @Test @Issue("SECURITY-1651")
     public void testDoMatchHttpPostAccessibleWithPermission() throws Exception {
         lockDown();
