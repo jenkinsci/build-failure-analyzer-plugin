@@ -50,6 +50,7 @@ import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
@@ -689,7 +690,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         buildDescription = buildDescription.concat("</mark>");
 
         // Append this build description to any pre-existing build description
-        if (StringUtilities.isNotEmpty(build.getDescription()) {
+        if (StringUtils.isNotEmpty(build.getDescription())) {
             buildDescription = build.getDescription().concat("<br>\n").concat(buildDescription);
         }
         return buildDescription;
