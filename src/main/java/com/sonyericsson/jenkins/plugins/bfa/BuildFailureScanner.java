@@ -252,7 +252,6 @@ public class BuildFailureScanner extends RunListener<Run> {
                 notifySlackAllFail = true;
             }
 
-            if (PluginImpl.getInstance().isEnableBuildDescription() && !foundCauseList.isEmpty()) {
             if (PluginImpl.getInstance().isBuildDescriptionEnabled() && !foundCauseList.isEmpty()) {
               build.setDescription(generateDescriptionString(build, foundCauseList));
             }
@@ -677,12 +676,14 @@ public class BuildFailureScanner extends RunListener<Run> {
         }
 
         // Append all failure causes.
-        for (int i = 0; i < foundCauseList.size(); i++) {
-            buildDescription = buildDescription.concat("<i>");
-            buildDescription = buildDescription.concat(foundCauseList.get(i).getDescription());
-            buildDescription = buildDescription.concat("</i>");
-            if (i < (foundCauseList.size() - 1)) {
-                buildDescription += "  ";
+        if (foundCauseList.get(0) != null)  {
+            for (int i = 0; i < foundCauseList.size(); i++) {
+                buildDescription = buildDescription.concat("<i>");
+                buildDescription = buildDescription.concat(foundCauseList.get(i).getDescription());
+                buildDescription = buildDescription.concat("</i>");
+                if (i < (foundCauseList.size() - 1)) {
+                    buildDescription += "  ";
+                }
             }
         }
         buildDescription = buildDescription.concat("</mark>");
