@@ -600,6 +600,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param buildDescriptionEnabled should build description option be turned on
      */
+    @DataBoundSetter
     public void setBuildDescriptionEnabled(Boolean buildDescriptionEnabled) {
       this.buildDescriptionEnabled = buildDescriptionEnabled;
     }
