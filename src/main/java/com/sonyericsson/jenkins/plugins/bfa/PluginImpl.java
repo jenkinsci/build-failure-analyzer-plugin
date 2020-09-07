@@ -161,7 +161,7 @@ public class PluginImpl extends GlobalConfiguration {
 
     private int nrOfScanThreads;
     private int maxLogSize;
-    private Boolean buildDescriptionEnabled;
+    private boolean buildDescriptionEnabled;
 
     private Boolean graphsEnabled;
 
@@ -686,8 +686,8 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @param buildDescriptionEnabled should build description option be turned on
      */
-    public void setBuildDescriptionEnabled(Boolean buildDescriptionEnabled) {
-      this.buildDescriptionEnabled = buildDescriptionEnabled;
+    public void setBuildDescriptionEnabled(boolean buildDescriptionEnabled) {
+        this.buildDescriptionEnabled = buildDescriptionEnabled;
     }
 
     /**
@@ -696,11 +696,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return True if enabled.
      */
     public boolean isBuildDescriptionEnabled() {
-      if (buildDescriptionEnabled == null) {
-        return false;
-      } else {
         return buildDescriptionEnabled;
-      }
     }
 
     /**
