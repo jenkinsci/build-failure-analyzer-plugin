@@ -13,6 +13,5 @@
               files="InjectedTest.java"/>
     <suppress checks="MagicNumber" files="BuildLogIndication.java"/>
     <suppress checks="MagicNumberCheck"
-              files="BuildFailureScannerHudsonTest.java"
-              lines="1100,1142"/>
+              files="BuildFailureScannerHudsonTest.java"/>
 </suppressions>
