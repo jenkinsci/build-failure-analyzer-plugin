@@ -572,7 +572,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         buildDescription = buildDescription.concat("</mark>");
 
         // Append this build description to any pre-existing build description
-        if (!(build.getDescription() == null) && !build.getDescription().isEmpty()) {
+        if (StringUtilities.isNotEmpty(build.getDescription()) {
             buildDescription = build.getDescription().concat("<br>\n").concat(buildDescription);
         }
         return buildDescription;
