@@ -1055,7 +1055,7 @@ public class BuildFailureScannerHudsonTest {
 
       project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-      Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+      QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
       FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
       jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
@@ -1095,7 +1095,7 @@ public class BuildFailureScannerHudsonTest {
 
         project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(120, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
@@ -1137,7 +1137,7 @@ public class BuildFailureScannerHudsonTest {
 
       project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
 
-      Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+      QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
       FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
       jenkins.assertBuildStatus(Result.UNSTABLE, build);
 
