@@ -1039,7 +1039,6 @@ public class BuildFailureScannerHudsonTest {
      */
     @Test
     public void testTestBuildDescriptionEnabledIfDisabled() throws Exception {
-      PluginImpl.getInstance().setTestResultParsingEnabled(true);
       PluginImpl.getInstance().setBuildDescriptionEnabled(false);
       FreeStyleProject project = jenkins.createFreeStyleProject();
 
@@ -1068,46 +1067,6 @@ public class BuildFailureScannerHudsonTest {
       // Start with some build description not assigned by BFA and run another scan.
       action.getFoundFailureCauses();
       assertEquals(build.getDescription(), null);
-    }
-
-    /**
-     * Test buildDescriptionEnabled = true does append failure cause to existing build description
-     * without categories set.
-     *
-     * @throws Exception if the build description is not appended when the setting is true.
-     */
-    @Test
-    public void testTestBuildDescriptionEnabledWithoutCategoriesIfEnabled() throws Exception {
-        PluginImpl.getInstance().setTestResultParsingEnabled(true);
-        PluginImpl.getInstance().setBuildDescriptionEnabled(true);
-        FreeStyleProject project = jenkins.createFreeStyleProject();
-
-        // Test with a preset build description
-        project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
-        project.getBuildersList().add(new TestBuilder() {
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-                                   BuildListener listener) throws InterruptedException, IOException {
-                build.getWorkspace().child("junit.xml").copyFrom(this.getClass().getResource("junit.xml"));
-                build.setDescription("Hello World");
-                return true;
-            }
-        });
-
-        project.getPublishersList().add(new JUnitResultArchiver("junit.xml", false, null));
-
-        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
-        FreeStyleBuild build = future.get(120, TimeUnit.SECONDS);
-        jenkins.assertBuildStatus(Result.UNSTABLE, build);
-
-        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
-        assertNotNull(action);
-
-        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
-        assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
-        String testDescription = "Hello World<br>\n"
-                + "<mark><i>Here are details of the failure...</i>  <i>More details</i></mark>";
-
-        assertEquals(testDescription, build.getDescription());
     }
 
   /**
