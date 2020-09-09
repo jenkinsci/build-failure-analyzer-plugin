@@ -663,36 +663,38 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @return A String of the BFA categories and causes appended to the build's description.
      */
     public static String generateDescriptionString(Run build, List<FoundFailureCause> foundCauseList) {
-        String buildDescription = "<mark>";
-        // Append all of the categories.
+        StringBuffer buildDescription = new StringBuffer();
+        buildDescription.append("<mark>");
+
         if (foundCauseList.get(0) != null) {
+
             for (int j = 0; j < foundCauseList.get(0).getCategories().size(); j++) {
-                buildDescription += "<b>";
-                buildDescription += foundCauseList.get(0).getCategories().get(j).toString();
-                buildDescription += "</b> ";
+                buildDescription.append("<b>");
+                buildDescription.append(foundCauseList.get(0).getCategories().get(j));
+                buildDescription.append("</b> ");
             }
             if (foundCauseList.get(0).getCategories().size() > 0) {
-                buildDescription += ": ";
+                buildDescription.append(": ");
             }
         }
 
         // Append all failure causes.
         if (foundCauseList.get(0) != null)  {
             for (int i = 0; i < foundCauseList.size(); i++) {
-                buildDescription = buildDescription.concat("<i>");
-                buildDescription = buildDescription.concat(foundCauseList.get(i).getDescription());
-                buildDescription = buildDescription.concat("</i>");
+                buildDescription.append("<i>");
+                buildDescription.append(foundCauseList.get(i).getDescription());
+                buildDescription.append("</i>");
                 if (i < (foundCauseList.size() - 1)) {
-                    buildDescription += "  ";
+                    buildDescription.append("  ");
                 }
             }
         }
-        buildDescription = buildDescription.concat("</mark>");
+        buildDescription.append("</mark>");
 
         // Append this build description to any pre-existing build description
         if (StringUtils.isNotEmpty(build.getDescription())) {
-            buildDescription = build.getDescription().concat("<br>\n").concat(buildDescription);
+            buildDescription.insert(0,(build.getDescription().concat("<br>\n")));
         }
-        return buildDescription;
+        return buildDescription.toString();
     }
 }
