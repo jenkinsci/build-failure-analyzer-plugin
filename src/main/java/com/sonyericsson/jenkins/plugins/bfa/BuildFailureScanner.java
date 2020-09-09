@@ -693,7 +693,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
         // Append this build description to any pre-existing build description
         if (StringUtils.isNotEmpty(build.getDescription())) {
-            buildDescription.insert(0,(build.getDescription().concat("<br>\n")));
+            buildDescription.insert(0, (build.getDescription().concat("<br>\n")));
         }
         return buildDescription.toString();
     }
