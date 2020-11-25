@@ -25,18 +25,26 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+
+import static com.mongodb.client.model.Filters.not;
+import static com.mongodb.client.model.Filters.exists;
+import static com.mongodb.client.model.Filters.eq;
+
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
@@ -52,25 +60,30 @@ import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SimpleTimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import org.apache.commons.collections.keyvalue.MultiKey;
+import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.Hour;
@@ -79,10 +92,10 @@ import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.mongojack.DBCursor;
-import org.mongojack.JacksonDBCollection;
-import org.mongojack.WriteResult;
+import org.mongojack.JacksonMongoCollection;
 import org.mongojack.internal.MongoJackModule;
+
+import java.util.Collection;
 
 import static java.util.Arrays.asList;
 
@@ -103,6 +116,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Query to single out documents that doesn't have a "removed" property
      */
     static final BasicDBObject NOT_REMOVED_QUERY = new BasicDBObject("_removed", new BasicDBObject("$exists", false));
+    static final Bson NOT_REMOVED_QUERY_FILTER = not(exists("_removed"));
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int SERVER_SELECTION_TIMEOUT = 5000;
@@ -115,11 +129,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             .setTypeFactory(TYPE_FACTORY);
 
     private transient MongoClient mongo;
-    private transient DB db;
-    private transient DBCollection collection;
-    private transient DBCollection statisticsCollection;
-    private transient JacksonDBCollection<FailureCause, String> jacksonCollection;
-    private transient JacksonDBCollection<Statistics, String> jacksonStatisticsCollection;
+    private transient MongoDatabase db;
+    private transient JacksonMongoCollection<FailureCause> jacksonCollection;
+    private transient JacksonMongoCollection<DBObject> jacksonStatisticsCollection;
     private transient MongoDBKnowledgeBaseCache cache;
 
     private String host;
@@ -255,9 +267,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         List<FailureCause> list = new LinkedList<FailureCause>();
         DBObject keys = new BasicDBObject();
         keys.put("name", 1);
-        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
-        while (dbCauses.hasNext()) {
-            list.add(dbCauses.next());
+        final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY_FILTER);
+        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
+        while (iterator.hasNext()) {
+            list.add(iterator.next());
         }
         return list;
 
@@ -274,10 +287,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         keys.put("modifications", 1);
         keys.put("lastOccurred", 1);
         BasicDBObject orderBy = new BasicDBObject("name", 1);
-        DBCursor<FailureCause> dbCauses =  getJacksonCollection().find(NOT_REMOVED_QUERY, keys);
-        dbCauses = dbCauses.sort(orderBy);
-        while (dbCauses.hasNext()) {
-            list.add(dbCauses.next());
+        final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY);
+        dbCauses.sort(orderBy);
+
+        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
+        while (iterator.hasNext()) {
+            list.add(iterator.next());
         }
         return list;
     }
@@ -305,10 +320,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         BasicDBObject removedInfo = new BasicDBObject("timestamp", new Date());
         removedInfo.put("by", Jenkins.getAuthentication().getName());
         BasicDBObject update = new BasicDBObject("$set", new BasicDBObject("_removed", removedInfo));
-        FailureCause modified = getJacksonCollection().findAndModify(idq, null, null, false, update, true, false);
+        getJacksonCollection().updateById(id, update);
+        final FailureCause modifiedFailureCause = getJacksonCollection().findOneById(id);
         initCache();
         cache.updateCache();
-        return modified;
+        return modifiedFailureCause;
     }
 
     /**
@@ -323,12 +339,14 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see MongoDBKnowledgeBase#addCause(FailureCause)
      */
     public FailureCause addCause(FailureCause cause, boolean doUpdate) {
-        WriteResult<FailureCause, String> result = getJacksonCollection().insert(cause);
+        getJacksonCollection().insert(cause);
         if (doUpdate) {
             initCache();
             cache.updateCache();
         }
-        return result.getSavedObject();
+
+        final FailureCause modifiedFailureCause = getJacksonCollection().find(eq("name", cause.getName())).first();
+        return modifiedFailureCause;
     }
 
     @Override
@@ -348,12 +366,13 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see MongoDBKnowledgeBase#saveCause(FailureCause)
      */
     public FailureCause saveCause(FailureCause cause, boolean doUpdate) {
-        WriteResult<FailureCause, String> result =  getJacksonCollection().save(cause);
+        getJacksonCollection().save(cause);
         if (doUpdate) {
             initCache();
             cache.updateCache();
         }
-        return result.getSavedObject();
+        final FailureCause modifiedFailureCause = getJacksonCollection().find(eq("name", cause.getName())).first();
+        return modifiedFailureCause;
     }
 
     @Override
@@ -397,10 +416,9 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @throws Exception if something goes wrong.
      */
     protected void convertRemoved(MongoDBKnowledgeBase oldKnowledgeBase) throws Exception {
-        List<DBObject> removed = oldKnowledgeBase.getRemovedCauses();
-        DBCollection dbCollection = getJacksonCollection().getDbCollection();
-        for (DBObject obj : removed) {
-            dbCollection.save(obj);
+        List<FailureCause> removed = oldKnowledgeBase.getRemovedCauses();
+        for (FailureCause fc : removed) {
+            getJacksonCollection().save(fc);
         }
     }
 
@@ -410,12 +428,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @return the list of removed causes.
      * @throws Exception if so.
      */
-    protected List<DBObject> getRemovedCauses() throws Exception {
+    protected List<FailureCause> getRemovedCauses() throws Exception {
         BasicDBObject query = new BasicDBObject("_removed", new BasicDBObject("$exists", true));
-        com.mongodb.DBCursor dbCursor = getJacksonCollection().getDbCollection().find(query);
-        List<DBObject> removed = new LinkedList<DBObject>();
-        while (dbCursor.hasNext()) {
-            removed.add(dbCursor.next());
+        FindIterable<FailureCause> causes = getJacksonCollection().find(query);
+        List<FailureCause> removed = new LinkedList<FailureCause>();
+        while (causes.iterator().hasNext()) {
+            removed.add(causes.iterator().next());
         }
         return removed;
     }
@@ -505,28 +523,30 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         List<FailureCauseStatistics> failureCauseStatisticsList = stat.getFailureCauseStatisticsList();
         addFailureCausesToDBObject(object, failureCauseStatisticsList);
 
-        getStatisticsCollection().insert(object);
+        getJacksonStatisticsCollection().insert(object);
        }
 
     @Override
     public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) {
-        DBObject matchFields = generateMatchFields(filter);
-        DBCursor<Statistics> dbCursor = getJacksonStatisticsCollection().find(matchFields);
+        BasicDBObject matchFields = generateMatchFields(filter);
+        FindIterable<DBObject> dbCursor = getJacksonStatisticsCollection().find(matchFields);
         BasicDBObject buildNumberDescending = new BasicDBObject("buildNumber", -1);
         dbCursor = dbCursor.sort(buildNumberDescending);
         if (limit > 0) {
             dbCursor = dbCursor.limit(limit);
         }
-        return dbCursor.toArray();
+        List<Statistics> returnList = new LinkedList<Statistics>();
+        return returnList;
+
     }
 
     @Override
     public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
-        DBObject matchFields = generateMatchFields(filter);
+        BasicDBObject matchFields = generateMatchFields(filter);
         matchFields.put("failureCauses", null);
 
         try {
-            return getStatisticsCollection().count(matchFields);
+            return getJacksonStatisticsCollection().countDocuments(matchFields);
         } catch (Exception e) {
             logger.fine("Unable to get number of null failure causes");
             e.printStackTrace();
@@ -559,16 +579,20 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         groupFields.put("_id", idFields);
         groupFields.put("number", new BasicDBObject("$sum", 1));
         DBObject group = new BasicDBObject("$group", groupFields);
-
-        AggregationOutput output;
+        List aggregatorList = new LinkedList<Bson>();
+        aggregatorList.add(match);
+        aggregatorList.add(project);
+        aggregatorList.add(group);
+        AggregateIterable<Document> output;
         try {
-            output = getStatisticsCollection().aggregate(match, project, group);
-            for (DBObject result : output.results()) {
-                DBObject groupedAttrs = (DBObject)result.get("_id");
-                TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
+            output = getJacksonStatisticsCollection().aggregate(aggregatorList);
+            while (output.iterator().hasNext()) {
+                Document d = output.iterator().next();
+                int id = d.getInteger(("_id"));
+                boolean isNullFailureCause = d.getBoolean("isNullFailureCause");
+                TimePeriod period = generateTimePeriodFromResult(d, intervalSize);
                 periods.add(period);
-                int number = (Integer)result.get("number");
-                boolean isNullFailureCause = (Boolean)groupedAttrs.get("isNullFailureCause");
+                int number = (Integer)d.getInteger("number");
                 if (isNullFailureCause) {
                     unknownFailures.put(period, number);
                 } else {
@@ -620,17 +644,25 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             limit = new BasicDBObject("$limit", maxNbr);
         }
 
-        AggregationOutput output;
+        List aggregatorList = new LinkedList<Bson>();
+        aggregatorList.add(match);
+        aggregatorList.add(unwind);
+        aggregatorList.add(group);
+        aggregatorList.add(sort);
+        AggregateIterable<Document> output;
         try {
-            if (limit == null) {
-                output = getStatisticsCollection().aggregate(match, unwind, group, sort);
-            } else {
-                output = getStatisticsCollection().aggregate(match, unwind, group, sort, limit);
+            if (limit != null) {
+                aggregatorList.add(limit);
             }
-            for (DBObject result : output.results()) {
+            output = getJacksonStatisticsCollection().aggregate(aggregatorList);
+            final MongoCursor<Document> iterator = output.iterator();
+            while (iterator.hasNext()) {
+
+
+                DBObject result = (DBObject) iterator.next();
                 DBRef failureCauseRef = (DBRef)result.get("_id");
                 if (failureCauseRef != null) {
-                    Integer number = (Integer)result.get("number");
+                    Integer number = (Integer) result.get("number");
                     String id = failureCauseRef.getId().toString();
                     nbrOfFailureCausesPerId.add(new ObjectCountPair<String>(id, number));
                 }
@@ -646,8 +678,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public Date getLatestFailureForCause(String id) {
         try {
-            DBObject match = new BasicDBObject("failureCauses.failureCause.$id", new ObjectId(id));
-            com.mongodb.DBCursor output = getStatisticsCollection()
+            BasicDBObject match = new BasicDBObject("failureCauses.failureCause.$id", new ObjectId(id));
+            FindIterable<DBObject> output = getJacksonStatisticsCollection()
                     .find(match)
                     .sort(new BasicDBObject("startingTime", -1))
                     .limit(1);
@@ -671,7 +703,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         Date creationDate;
         try {
             //Get the creation date using time information in MongoDB id:
-            creationDate = new Date(new ObjectId(id).getTime());
+            creationDate = new ObjectId(id).getDate();
         } catch (IllegalArgumentException e) {
             logger.log(Level.WARNING, "Could not retrieve original modification", e);
             creationDate = new Date(0);
@@ -681,14 +713,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public void updateLastSeen(List<String> ids, Date seen) {
-        List<ObjectId> objectIds = new LinkedList<ObjectId>();
+        BasicDBObject set = new BasicDBObject("$set", new BasicDBObject("lastOccurred", seen));
         for (String id : ids) {
-            objectIds.add(new ObjectId(id));
+            getJacksonCollection().updateById(id, set);
         }
-        DBObject match = new BasicDBObject("_id", new BasicDBObject("$in", objectIds));
-        DBObject set = new BasicDBObject("$set", new BasicDBObject("lastOccurred", seen));
-
-        getJacksonCollection().updateMulti(match, set);
     }
 
     /**
@@ -698,8 +726,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param filter the filter to create match fields for
      * @return DBObject containing fields to match
      */
-    private static DBObject generateMatchFieldsBase(GraphFilterBuilder filter) {
-        DBObject matchFields = new BasicDBObject();
+    private static BasicDBObject generateMatchFieldsBase(GraphFilterBuilder filter) {
+        BasicDBObject matchFields = new BasicDBObject();
         if (filter != null) {
             putNonNullStringValue(matchFields, "master", filter.getMasterName());
             putNonNullStringValue(matchFields, "slaveHostName", filter.getSlaveName());
@@ -719,8 +747,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @param filter the filter to create match fields for
      * @return DBObject containing fields to match
      */
-    private static DBObject generateMatchFields(GraphFilterBuilder filter) {
-        DBObject matchFields = generateMatchFieldsBase(filter);
+    private static BasicDBObject generateMatchFields(GraphFilterBuilder filter) {
+        BasicDBObject matchFields = generateMatchFieldsBase(filter);
         putNonNullBasicDBObject(matchFields, "result", "$ne", "SUCCESS");
 
         return matchFields;
@@ -799,11 +827,17 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         DBObject group = new BasicDBObject("$group", groupFields);
 
         DBObject sort = new BasicDBObject("$sort", new BasicDBObject("_id", 1));
-
-        AggregationOutput output;
+        List aggregatorList = new LinkedList<Bson>();
+        aggregatorList.add(match);
+        aggregatorList.add(unwind);
+        aggregatorList.add(group);
+        aggregatorList.add(sort);
+        AggregateIterable<Document> output;
         try {
-            output = getStatisticsCollection().aggregate(match, unwind, group, sort);
-            for (DBObject result : output.results()) {
+            output = getJacksonStatisticsCollection().aggregate(aggregatorList);
+            final MongoCursor<Document> iterator = output.iterator();
+            while (iterator.hasNext()) {
+                DBObject result = (DBObject) iterator.next();
                 List<FailureCause> failureCauses = new ArrayList<FailureCause>();
                 Integer buildNumber = (Integer)result.get("_id");
                 BasicDBList failureCauseRefs = (BasicDBList)result.get("failureCauses");
@@ -850,7 +884,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Calendar.DATE or Calendar.MONTH.
      * @return TimePeriod
      */
-    private TimePeriod generateTimePeriodFromResult(DBObject result, int intervalSize) {
+    private TimePeriod generateTimePeriodFromResult(Document result, int intervalSize) {
         BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
         int month = groupedAttrs.getInt("month");
         int year = groupedAttrs.getInt("year");
@@ -898,14 +932,20 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         groupFields.put("number", new BasicDBObject("$sum", 1));
         DBObject group = new BasicDBObject("$group", groupFields);
 
-        AggregationOutput output;
-        output = getStatisticsCollection().aggregate(match, unwind, group);
-        for (DBObject result : output.results()) {
-            int number = (Integer)result.get("number");
+        AggregateIterable<Document> output;
+        List aggregatorList = new LinkedList<Bson>();
+        aggregatorList.add(match);
+        aggregatorList.add(unwind);
+        aggregatorList.add(group);
+        output = getJacksonStatisticsCollection().aggregate(aggregatorList);
+        Iterator<Document> i = output.iterator();
+        while (i.hasNext()) {
+            final Document next = i.next();
+            int number = (Integer)next.get("number");
 
-            TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
+            TimePeriod period = generateTimePeriodFromResult(next, intervalSize);
 
-            BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
+            BasicDBObject groupedAttrs = (BasicDBObject)next.get("_id");
             DBRef failureRef = (DBRef)groupedAttrs.get("failureCause");
             String id = failureRef.getId().toString();
             FailureCause failureCause = getCause(id);
@@ -990,16 +1030,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         searchObj.put("projectName", build.getParent().getFullName());
         searchObj.put("buildNumber", build.getNumber());
         searchObj.put("master", BfaUtils.getMasterName());
-        com.mongodb.DBCursor dbcursor = getStatisticsCollection().find(searchObj);
-        if (dbcursor.size() > 0) {
-            while (dbcursor.hasNext()) {
-                getStatisticsCollection().remove(dbcursor.next());
-                logger.log(Level.INFO, build.getDisplayName() + " build failure cause removed");
-            }
-        } else {
-            logger.log(Level.INFO, build.getDisplayName() + " build failure cause "
-                    + "value is null or initial scanning ");
-        }
+        getJacksonStatisticsCollection().getMongoCollection().deleteMany(searchObj);
     }
 
     /**
@@ -1055,24 +1086,27 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private MongoClient getMongoConnection() {
         if (mongo == null) {
-            MongoClientOptions mongoClientOptions = MongoClientOptions
-                    .builder()
-                    .connectTimeout(CONNECT_TIMEOUT)
-                    .serverSelectionTimeout(SERVER_SELECTION_TIMEOUT)
-                    .sslEnabled(tls)
-                    .build();
+            StringBuilder connectionStringBuilder = new StringBuilder(host);
+            connectionStringBuilder.append(":").append(port);
+            MongoClientSettings.Builder builder = MongoClientSettings.builder().applyToClusterSettings(
+                    builder1 -> {
+                        List<ServerAddress> hostlist = new LinkedList<ServerAddress>();
+                        hostlist.add(new ServerAddress(host, port));
+                        builder1.hosts(hostlist).
+                                serverSelectionTimeout(SERVER_SELECTION_TIMEOUT, TimeUnit.MILLISECONDS).
+                                mode(ClusterConnectionMode.SINGLE);
+                    }).applyToConnectionPoolSettings(builder15 -> {
+
+                    }).applyToServerSettings(builder12 -> {
+            }).applyToSocketSettings(builder13 -> builder13.connectTimeout((CONNECT_TIMEOUT), TimeUnit.MILLISECONDS)).
+                    applyToSslSettings(builder14 -> builder14.enabled(tls));
+
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
                 MongoCredential credential = MongoCredential.createCredential(userName, dbName, pwd);
-
-                mongo = new MongoClient(
-                        new ServerAddress(host, port),
-                        credential,
-                        mongoClientOptions
-                );
-            } else {
-                mongo = new MongoClient(new ServerAddress(host, port), mongoClientOptions);
+                builder.credential(credential);
             }
+            mongo = MongoClients.create(builder.build());
         }
         return mongo;
     }
@@ -1081,45 +1115,21 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the DB.
      * @return The DB.
      */
-    private DB getDb() {
+    private MongoDatabase getDb() {
         if (db == null) {
-            db = getMongoConnection().getDB(dbName);
+            db = getMongoConnection().getDatabase(dbName);
         }
         return db;
-    }
-
-    /**
-     * Gets the DBCollection.
-     * @return The db collection.
-     */
-    private DBCollection getCollection() {
-        if (collection == null) {
-            collection = getDb().getCollection(COLLECTION_NAME);
-        }
-        return collection;
-    }
-
-    /**
-     * Gets the Statistics DBCollection.
-     * @return The statistics db collection.
-     */
-    private synchronized DBCollection getStatisticsCollection() {
-        if (statisticsCollection == null) {
-            statisticsCollection = getDb().getCollection(STATISTICS_COLLECTION_NAME);
-        }
-        return statisticsCollection;
     }
 
     /**
      * Gets the JacksonDBCollection for FailureCauses.
      * @return The jackson db collection.
      */
-    private synchronized JacksonDBCollection<FailureCause, String> getJacksonCollection() {
+    private synchronized JacksonMongoCollection<FailureCause> getJacksonCollection() {
         if (jacksonCollection == null) {
-            if (collection == null) {
-                collection = getCollection();
-            }
-            jacksonCollection = JacksonDBCollection.wrap(collection, FailureCause.class, String.class, OBJECT_MAPPER);
+            jacksonCollection = JacksonMongoCollection.builder().withObjectMapper(OBJECT_MAPPER).build(
+                    getMongoConnection(), dbName, COLLECTION_NAME, FailureCause.class, UuidRepresentation.STANDARD);
         }
         return jacksonCollection;
     }
@@ -1128,13 +1138,15 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the JacksonDBCollection for Statistics.
      * @return The jackson db collection.
      */
-    private synchronized JacksonDBCollection<Statistics, String> getJacksonStatisticsCollection() {
+    private synchronized JacksonMongoCollection<DBObject> getJacksonStatisticsCollection() {
         if (jacksonStatisticsCollection == null) {
-            if (statisticsCollection == null) {
-                statisticsCollection = getStatisticsCollection();
-            }
-            jacksonStatisticsCollection = JacksonDBCollection.wrap(statisticsCollection, Statistics.class, String.class,
-                    OBJECT_MAPPER);
+            jacksonStatisticsCollection = JacksonMongoCollection.builder().withObjectMapper(OBJECT_MAPPER).build(
+                    getMongoConnection(),
+                    dbName,
+                    STATISTICS_COLLECTION_NAME,
+                    DBObject.class,
+                    UuidRepresentation.STANDARD);
+
         }
         return jacksonStatisticsCollection;
     }
@@ -1231,9 +1243,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                     Secret.fromString(password), false, false);
             base.setTls(tls);
             try {
-                DBObject ping = new BasicDBObject("ping", "1");
-                DB db = base.getDb();
-                db.command(ping);
+                BasicDBObject ping = new BasicDBObject("ping", "1");
+                base.getDb().runCommand(ping);
             } catch (Exception e) {
                 return FormValidation.error(e, Messages.MongoDBKnowledgeBase_ConnectionError());
             }

@@ -237,9 +237,11 @@ public class CauseManagement extends BfaGraphAction {
         id = Util.fixEmpty(id);
         if (id != null) {
             try {
+                //UpdateResult ur = PluginImpl.getInstance().getKnowledgeBase().removeCause(id);
                 FailureCause cause = PluginImpl.getInstance().getKnowledgeBase().removeCause(id);
+
                 if (cause != null) {
-                    request.getSession(true).setAttribute(SESSION_REMOVED_FAILURE_CAUSE, cause);
+                    request.getSession(true).setAttribute(SESSION_REMOVED_FAILURE_CAUSE, id);
                 }
             } catch (Exception e) {
                 //Should we use errorMessage here as well?
