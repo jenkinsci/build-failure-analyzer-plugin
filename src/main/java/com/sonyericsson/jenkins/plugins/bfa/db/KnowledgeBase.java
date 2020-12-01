@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.mongodb.DBObject;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -202,8 +203,8 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @return the list of statistics.
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) throws Exception {
-        return Collections.<Statistics>emptyList();
+    public List<DBObject> getStatistics(GraphFilterBuilder filter, int limit) throws Exception {
+        return Collections.<DBObject>emptyList();
     }
 
     /**

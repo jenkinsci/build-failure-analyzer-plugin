@@ -25,12 +25,13 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 
-import com.mongodb.DBObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
+import org.bson.conversions.Bson;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mongojack.DBCursor;
-import org.mongojack.JacksonDBCollection;
+import org.mongojack.JacksonMongoCollection;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
@@ -51,7 +52,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * Tests for the Mongo cache.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(JacksonDBCollection.class)
+@PrepareForTest(JacksonMongoCollection.class)
 public class MongoDBKnowledgeBaseCacheTest {
 
     /**
@@ -62,11 +63,13 @@ public class MongoDBKnowledgeBaseCacheTest {
     public void testStartStop() throws Exception {
         FailureCause mockedCause =
                 new FailureCause("id", "myFailureCause", "description", "comment", null, "category", null, null);
-        DBCursor<FailureCause> cursor = mock(DBCursor.class);
-        JacksonDBCollection<FailureCause, String> collection = mock(JacksonDBCollection.class);
+        FindIterable<FailureCause> iterable = mock(FindIterable.class);
+        MongoCursor<FailureCause> cursor = mock(MongoCursor.class);
+        when(iterable.iterator()).thenReturn(cursor);
         when(cursor.next()).thenReturn(mockedCause);
         when(cursor.hasNext()).thenReturn(true, false);
-        doReturn(cursor).when(collection).find(any(DBObject.class));
+        JacksonMongoCollection<FailureCause> collection = mock(JacksonMongoCollection.class);
+        doReturn(iterable).when(collection).find(any(Bson.class));
         MongoDBKnowledgeBaseCache cache = new MongoDBKnowledgeBaseCache(collection);
         cache.start();
         while (cache.getCauses() == null) {

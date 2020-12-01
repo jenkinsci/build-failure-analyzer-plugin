@@ -67,7 +67,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -527,15 +526,19 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
        }
 
     @Override
-    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) {
+    public List<DBObject> getStatistics(GraphFilterBuilder filter, int limit) {
         BasicDBObject matchFields = generateMatchFields(filter);
-        FindIterable<DBObject> dbCursor = getJacksonStatisticsCollection().find(matchFields);
+        FindIterable<DBObject> iterable = getJacksonStatisticsCollection().find(matchFields);
         BasicDBObject buildNumberDescending = new BasicDBObject("buildNumber", -1);
-        dbCursor = dbCursor.sort(buildNumberDescending);
+        iterable = iterable.sort(buildNumberDescending);
         if (limit > 0) {
-            dbCursor = dbCursor.limit(limit);
+            iterable = iterable.limit(limit);
         }
-        List<Statistics> returnList = new LinkedList<Statistics>();
+        List<DBObject> returnList = new LinkedList<DBObject>();
+        MongoCursor<DBObject> iterator = iterable.iterator();
+        while (iterator.hasNext()) {
+            returnList.add(iterator.next());
+        }
         return returnList;
 
     }
@@ -583,16 +586,17 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         aggregatorList.add(match);
         aggregatorList.add(project);
         aggregatorList.add(group);
-        AggregateIterable<Document> output;
+        AggregateIterable<DBObject> output;
         try {
             output = getJacksonStatisticsCollection().aggregate(aggregatorList);
-            while (output.iterator().hasNext()) {
-                Document d = output.iterator().next();
-                int id = d.getInteger(("_id"));
-                boolean isNullFailureCause = d.getBoolean("isNullFailureCause");
-                TimePeriod period = generateTimePeriodFromResult(d, intervalSize);
+            final MongoCursor<DBObject> iterator = output.iterator();
+            while (iterator.hasNext()) {
+                DBObject result = iterator.next();
+                DBObject groupedAttrs = (DBObject)result.get("_id");
+                TimePeriod period = generateTimePeriodFromResult(result, intervalSize);
                 periods.add(period);
-                int number = (Integer)d.getInteger("number");
+                int number = (int)result.get("number");
+                boolean isNullFailureCause = (boolean)groupedAttrs.get("isNullFailureCause");
                 if (isNullFailureCause) {
                     unknownFailures.put(period, number);
                 } else {
@@ -659,10 +663,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             while (iterator.hasNext()) {
 
 
-                DBObject result = (DBObject) iterator.next();
+                DBObject result = (DBObject)iterator.next();
                 DBRef failureCauseRef = (DBRef)result.get("_id");
                 if (failureCauseRef != null) {
-                    Integer number = (Integer) result.get("number");
+                    Integer number = (Integer)result.get("number");
                     String id = failureCauseRef.getId().toString();
                     nbrOfFailureCausesPerId.add(new ObjectCountPair<String>(id, number));
                 }
@@ -832,12 +836,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         aggregatorList.add(unwind);
         aggregatorList.add(group);
         aggregatorList.add(sort);
-        AggregateIterable<Document> output;
+        AggregateIterable<DBObject> output;
         try {
             output = getJacksonStatisticsCollection().aggregate(aggregatorList);
-            final MongoCursor<Document> iterator = output.iterator();
+            final MongoCursor<DBObject> iterator = output.iterator();
             while (iterator.hasNext()) {
-                DBObject result = (DBObject) iterator.next();
+                DBObject result = (DBObject)iterator.next();
                 List<FailureCause> failureCauses = new ArrayList<FailureCause>();
                 Integer buildNumber = (Integer)result.get("_id");
                 BasicDBList failureCauseRefs = (BasicDBList)result.get("failureCauses");
@@ -884,7 +888,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Calendar.DATE or Calendar.MONTH.
      * @return TimePeriod
      */
-    private TimePeriod generateTimePeriodFromResult(Document result, int intervalSize) {
+    private TimePeriod generateTimePeriodFromResult(DBObject result, int intervalSize) {
         BasicDBObject groupedAttrs = (BasicDBObject)result.get("_id");
         int month = groupedAttrs.getInt("month");
         int year = groupedAttrs.getInt("year");
@@ -932,15 +936,15 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         groupFields.put("number", new BasicDBObject("$sum", 1));
         DBObject group = new BasicDBObject("$group", groupFields);
 
-        AggregateIterable<Document> output;
+        AggregateIterable<DBObject> output;
         List aggregatorList = new LinkedList<Bson>();
         aggregatorList.add(match);
         aggregatorList.add(unwind);
         aggregatorList.add(group);
         output = getJacksonStatisticsCollection().aggregate(aggregatorList);
-        Iterator<Document> i = output.iterator();
+        final MongoCursor<DBObject> i = output.iterator();
         while (i.hasNext()) {
-            final Document next = i.next();
+            final DBObject next = i.next();
             int number = (Integer)next.get("number");
 
             TimePeriod period = generateTimePeriodFromResult(next, intervalSize);

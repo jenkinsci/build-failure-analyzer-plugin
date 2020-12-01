@@ -23,6 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
 import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
@@ -218,7 +220,7 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     }
 
     /**
-     * Test for {@link FailureCause#initModifications()}. Verifies that the creation date
+     * Test for {@link FailureCause#getAndInitiateModifications()}. Verifies that the creation date
      * is taken as latest modification date if no saved modifications are present.
      * @throws Exception if something goes wrong
      */
@@ -283,12 +285,12 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
         Statistics.UpstreamCause uc = new UpstreamCause(PROJECT_B, BUILD_NR);
         Statistics s = new Statistics(PROJECT_A, 1, null, null, 1L, null, null, MASTER_A, 0, UNSTABLE, uc, null);
         knowledgeBase.saveStatistics(s);
-        List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
+        List<DBObject> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
         assertNotNull("The fetched statistics should not be null", fetchedStatistics);
         assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
-        Statistics.UpstreamCause fetchedUC = fetchedStatistics.get(0).getUpstreamCause();
-        assertEquals(fetchedUC.getUpstreamBuild(), uc.getUpstreamBuild());
-        assertEquals(fetchedUC.getUpstreamProject(), uc.getUpstreamProject());
+        BasicDBObject fetchedUC = (BasicDBObject)fetchedStatistics.get(0).get("upstreamCause");
+        assertEquals(fetchedUC.get("build"), uc.getUpstreamBuild());
+        assertEquals(fetchedUC.get("project"), uc.getUpstreamProject());
     }
 
     /**
@@ -300,10 +302,10 @@ public class EmbeddedMongoStatisticsTest extends EmbeddedMongoTest {
     public void testStatisticsWithNoUpstreamCauses() throws Exception {
         Statistics s = new Statistics(PROJECT_A, 1, null, null, 1L, null, null, MASTER_A, 0, UNSTABLE, null, null);
         knowledgeBase.saveStatistics(s);
-        List<Statistics> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
+        List<DBObject> fetchedStatistics = knowledgeBase.getStatistics(null, -1);
         assertNotNull("The fetched statistics should not be null", fetchedStatistics);
         assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
-        Statistics.UpstreamCause fetchedUC = fetchedStatistics.get(0).getUpstreamCause();
+        Object fetchedUC = fetchedStatistics.get(0).get("upstreamCause");
         assertTrue("The fetched upstream cause should be null", fetchedUC == null);
     }
 
