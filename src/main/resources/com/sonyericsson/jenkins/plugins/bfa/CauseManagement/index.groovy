@@ -90,16 +90,6 @@ l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
                     + "background-repeat: no-repeat;",
                     href: "new",
                     alt: _("New")) { text(_("Create new")) }
-
-            if (PluginImpl.getInstance().isGraphsEnabled()) {
-                a(style: "font-weight: bold; "
-                        + "font-size: larger; "
-                        + "padding-top: 5px; "
-                        + "padding-bottom: 5px; "
-                        + "float: right;",
-                        href: "detailedgraphs",
-                        alt: _("Graphs/statistics")) { text(_("Graphs/Statistics")) }
-            }
         }
     }
 

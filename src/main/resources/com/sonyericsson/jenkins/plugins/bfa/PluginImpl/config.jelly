@@ -29,10 +29,6 @@
                  description="${%If builds should be scanned or not.}">
             <f:checkbox field="globalEnabled" default="true"/>
         </f:entry>
-        <f:entry title="${%Enable graphs}"
-                 description="${%Whether to display graphs or not. NOTE: The selected storage type must support this!}">
-            <f:checkbox field="graphsEnabled" default="true"/>
-        </f:entry>
         <f:optionalBlock title="${%Enable text when no failure causes are found}"
                          field="noCausesEnabled"
                          inline="true">

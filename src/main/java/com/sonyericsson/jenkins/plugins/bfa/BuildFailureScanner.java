@@ -25,8 +25,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ComputerGraphAction;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
@@ -165,10 +163,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
                 if (PluginImpl.needToAnalyze(build.getResult())) {
                     scan(build, scanLog);
-                    ProjectGraphAction.invalidateProjectGraphCache(build.getParent());
-                    if (build instanceof AbstractBuild) {
-                        ComputerGraphAction.invalidateNodeGraphCache(((AbstractBuild)build).getBuiltOn());
-                    }
+
                 } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLogging()) {
                     final List<FoundFailureCause> emptyCauseList
                         = Collections.synchronizedList(new LinkedList<FoundFailureCause>());

@@ -24,7 +24,6 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
@@ -48,12 +47,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -70,13 +66,11 @@ import static org.powermock.api.mockito.PowerMockito.when;
 public class MongoDBKnowledgeBaseTest {
 
     private JacksonMongoCollection<FailureCause> collection;
-    JacksonMongoCollection<DBObject> jacksonStatisticsCollection;
     private JacksonMongoCollection<DBObject> statisticsCollection;
     private MongoDBKnowledgeBase kb;
     private List<Indication> indications;
     private Indication indication;
     private FailureCause mockedCause;
-    private DBObject mockedStatistics;
     private static final int PORT = 27017;
 
     /**
@@ -94,8 +88,6 @@ public class MongoDBKnowledgeBaseTest {
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
                 "category", indications, null);
-        mockedStatistics = new BasicDBObject("key", "value");
-
     }
 
     /**
@@ -165,27 +157,6 @@ public class MongoDBKnowledgeBaseTest {
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
         assertSame(mockedCause, addedCause);
-    }
-
-    /**
-     * Tests fetching statistics.
-     *
-     * @throws Exception if unable to fetch statistics.
-     */
-    @Test
-    public void testGetStatistics() throws Exception {
-        FindIterable<DBObject> iterable = mock(FindIterable.class);
-        MongoCursor<DBObject> iterator = mock(MongoCursor.class);
-        doReturn(iterable).when(statisticsCollection).find(Matchers.<Bson>any());
-        when(iterable.limit(anyInt())).thenReturn(iterable);
-        when(iterable.sort(any(Bson.class))).thenReturn(iterable);
-        when(iterable.iterator()).thenReturn(iterator);
-        when(iterator.hasNext()).thenReturn(true, false);
-        when(iterator.next()).thenReturn(mockedStatistics);
-        List<DBObject> fetchedStatistics = kb.getStatistics(null, 1);
-        assertNotNull("The fetched statistics should not be null", fetchedStatistics);
-        assertFalse("The fetched statistics list should not be empty", fetchedStatistics.isEmpty());
-        assertSame(mockedStatistics, fetchedStatistics.get(0));
     }
 
     /**
