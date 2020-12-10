@@ -1,8 +1,8 @@
 # Build Failure Analyzer Plugin
 
-This plugin scans build logs and other files in the workspace for recognised patterns
-of known causes to build failures and displays them on the build page for quicker
-recognition of why the build failed.
+This plugin scans the build log and optionally, failed test cases 
+for recognised patterns of known causes to build failures and displays 
+them on the build page for quicker recognition of why the build failed.
 
 ## Maintainers
 
