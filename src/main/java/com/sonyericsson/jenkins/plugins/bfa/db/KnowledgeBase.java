@@ -24,11 +24,8 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
-import com.sonyericsson.jenkins.plugins.bfa.graphs.FailureCauseTimeInterval;
-import com.sonyericsson.jenkins.plugins.bfa.graphs.GraphFilterBuilder;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
-import com.sonyericsson.jenkins.plugins.bfa.utils.ObjectCountPair;
 import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -36,14 +33,11 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
-import org.jfree.data.time.TimePeriod;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Base class for storage implementations of {@link FailureCause}s. Extend this class and put <code>@Extension</code> on
@@ -194,120 +188,6 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
     public abstract void saveStatistics(Statistics stat) throws Exception;
-
-    /**
-     * Gets Statistics data. This method needs to be implemented in subclass for graph support.
-     * @param filter the filter to use when fetching data
-     * @param limit number of statistics items to fetch, set to nonpositive value to fetch all
-     * @return the list of statistics.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
-     */
-    public List<Statistics> getStatistics(GraphFilterBuilder filter, int limit) throws Exception {
-        return Collections.<Statistics>emptyList();
-    }
-
-    /**
-     * Gets a list of {@link ObjectCountPair} where each pair contains a unique {@link FailureCause} as key
-     * and the number of times that failure cause was triggered as count.
-     * The list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param filter the filter to use when fetching data
-     * @return list of ObjectCountPairs.
-     */
-    public List<ObjectCountPair<FailureCause>> getNbrOfFailureCauses(GraphFilterBuilder filter) {
-        return Collections.<ObjectCountPair<FailureCause>>emptyList();
-    }
-
-    /**
-     * Gets the quota of unknown failure causes mapped by time periods.
-     * This method needs to be implemented in subclass for graph support.
-     * @param intervalSize the interval sizes in which the data is grouped.
-     * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
-     * @param filter The filter to use when fetching the data
-     * @return failure cause quotas
-     */
-    public Map<TimePeriod, Double> getUnknownFailureCauseQuotaPerTime(int intervalSize, GraphFilterBuilder filter) {
-        return Collections.<TimePeriod, Double>emptyMap();
-    }
-
-    /**
-     * Gets a list of {@link ObjectCountPair}s where each pair contains a unique {@link FailureCause}-name as key
-     * and the number of times that failure cause was triggered as count.
-     * This list is sorted by counts, meaning that the FailureCause that has been triggered the most comes first.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param filter The filter to use when fetching the data
-     * @return List of ObjectCountPairs that consist of a name and count
-     */
-    public List<ObjectCountPair<String>> getFailureCauseNames(GraphFilterBuilder filter) {
-        return Collections.<ObjectCountPair<String>>emptyList();
-    }
-
-    /**
-     * Counts how many statistics posts there are without FailureCause (null) for a given filter.
-     * This method needs to be implemented in subclass for graph support.
-     * @param filter the filter to use when fetching data
-     * @return number of statistics posts without FailureCause
-     */
-    public long getNbrOfNullFailureCauses(GraphFilterBuilder filter) {
-        return DEFAULT_NBR_OF_NULL_FAILURE_CAUSES;
-    }
-
-    /**
-     * Gets a list of {@link ObjectCountPair} where each pair contains a unique failure category string as key
-     * and the number of times that the failure cause category was triggered as count.
-     * The list is sorted by counts, meaning that the Category that has been triggered the most comes first.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param filter the filter to use when fetching data
-     * @param limit the number of categories to fetch, set to nonpositive value to fetch all
-     * @return list of ObjectCountPairs
-     */
-    public List<ObjectCountPair<String>> getNbrOfFailureCategoriesPerName(GraphFilterBuilder filter, int limit) {
-        return Collections.<ObjectCountPair<String>>emptyList();
-    }
-
-    /**
-     * Gets a map where a lists of failure causes are mapped
-     * by the build number for which they were triggered.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param filter the filter to use when fetching data
-     * @return map of failure causes
-     */
-    public Map<Integer, List<FailureCause>> getFailureCausesPerBuild(GraphFilterBuilder filter) {
-        return Collections.<Integer, List<FailureCause>>emptyMap();
-    }
-
-    /**
-     * Fetches failure causes grouped in time intervals. The returned list does not have to be sorted,
-     * and one list element is created for each FailureCause for each time interval there exist data.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param intervalSize the interval sizes in which the data is grouped.
-     * Should be set to Calendar.MONTH, Calendar.DATE or Calendar.HOUR_OF_DAY.
-     * @param filter the filter to use when fetching data
-     * @param byCategories set to true in order to group failure causes by their categories
-     * @return list of FailureCauseTimeIntervals
-     */
-    public List<FailureCauseTimeInterval> getFailureCausesPerTime(int intervalSize, GraphFilterBuilder filter,
-            boolean byCategories) {
-        return Collections.<FailureCauseTimeInterval>emptyList();
-    }
-
-    /**
-     * Gets a list of {@link ObjectCountPair} where each pair contains a unique FailureCause id as key
-     * and a belonging count value for how many times that FailureCause was triggered.
-     * This method needs to be implemented in subclass for graph support.
-     *
-     * @param filter the filter to use when fetching data
-     * @param limit the number of items to fetch, set to nonpositive value to fetch all
-     * @return list of ObjectCountPairs
-     */
-    public List<ObjectCountPair<String>> getNbrOfFailureCausesPerId(GraphFilterBuilder filter, int limit) {
-        return Collections.<ObjectCountPair<String>>emptyList();
-    }
 
     /**
      * Find the time at which the latest Failure occurred which matches the provided FailureCause.

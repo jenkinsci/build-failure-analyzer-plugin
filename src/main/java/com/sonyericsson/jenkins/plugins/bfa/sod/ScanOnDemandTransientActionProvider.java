@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.sonyericsson.jenkins.plugins.bfa.graphs.ProjectGraphAction;
 import jenkins.model.TransientActionFactory;
 
 /**
@@ -53,14 +52,10 @@ public class ScanOnDemandTransientActionProvider extends TransientActionFactory<
     public Collection<? extends Action> createFor(Job target) {
         if (PluginImpl.shouldScan(target)) {
             final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
-            final ProjectGraphAction graphAction = new ProjectGraphAction(target);
             if (sodBaseAction.hasPermission()) {
-                return Arrays.asList(sodBaseAction, graphAction);
-            } else {
-                return Collections.singletonList(graphAction);
+                return Arrays.asList(sodBaseAction);
             }
-        } else {
-            return Collections.emptyList();
         }
+        return Collections.emptyList();
     }
 }

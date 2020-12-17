@@ -25,9 +25,11 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
-import org.mongojack.DBCursor;
-import org.mongojack.JacksonDBCollection;
+import org.mongojack.JacksonMongoCollection;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,7 +38,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase.NOT_REMOVED_QUERY;
+import static com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase.NOT_REMOVED_QUERY_FILTER;
 
 /**
  * Cache for the MongoDBKnowledgeBase.
@@ -51,7 +53,7 @@ public class MongoDBKnowledgeBaseCache {
     private TimerTask timerTask;
     private List<FailureCause> cachedFailureCauses;
     private List<String> categories;
-    private JacksonDBCollection<FailureCause, String> jacksonCollection;
+    private JacksonMongoCollection<FailureCause> jacksonCollection;
 
     private static final long CACHE_UPDATE_INTERVAL = 60000;
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
@@ -60,7 +62,7 @@ public class MongoDBKnowledgeBaseCache {
      * Standard constructor.
      * @param jacksonCollection the JacksonDBCollection, used for accessing the database.
      */
-    public MongoDBKnowledgeBaseCache(JacksonDBCollection<FailureCause, String> jacksonCollection) {
+    public MongoDBKnowledgeBaseCache(JacksonMongoCollection<FailureCause> jacksonCollection) {
         this.jacksonCollection = jacksonCollection;
     }
 
@@ -131,12 +133,20 @@ public class MongoDBKnowledgeBaseCache {
                             break;
                         }
                         List<FailureCause> list = new LinkedList<FailureCause>();
-                        DBCursor<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY);
-                        while (dbCauses.hasNext()) {
-                            list.add(dbCauses.next());
+                        FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY_FILTER);
+                        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
+                        while (iterator.hasNext()) {
+                            list.add(iterator.next());
                         }
                         cachedFailureCauses = list;
-                        categories = jacksonCollection.distinct("categories");
+                        List<String> catList = new LinkedList<String>();
+                        final DistinctIterable<String> categoriesIterable = jacksonCollection.distinct(
+                                "categories", String.class);
+                        final MongoCursor<String> catIterator = categoriesIterable.iterator();
+                        while (catIterator.hasNext()) {
+                            catList.add(catIterator.next());
+                        }
+                        categories = catList;
                     } catch (MongoException e) {
                         logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
                     } catch (InterruptedException e) {
