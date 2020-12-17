@@ -28,6 +28,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.UpdateResult;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
@@ -133,6 +134,8 @@ public class MongoDBKnowledgeBaseTest {
     @Test
     public void testAddCause() throws Exception {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
+        UpdateResult result = mock(UpdateResult.class);
+        doReturn(result).when(collection).save(mockedCause);
         doReturn(iterable).when(collection).find(Matchers.<Bson>any());
         when(iterable.first()).thenReturn(mockedCause);
         MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
@@ -150,6 +153,8 @@ public class MongoDBKnowledgeBaseTest {
     @Test
     public void testSaveCause() throws Exception {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
+        UpdateResult result = mock(UpdateResult.class);
+        doReturn(result).when(collection).save(mockedCause);
         doReturn(iterable).when(collection).find(Matchers.<Bson>any());
         when(iterable.first()).thenReturn(mockedCause);
         MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);

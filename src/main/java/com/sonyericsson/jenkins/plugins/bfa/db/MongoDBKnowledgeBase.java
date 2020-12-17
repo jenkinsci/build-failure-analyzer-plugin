@@ -42,6 +42,7 @@ import static com.mongodb.client.model.Filters.eq;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -67,6 +68,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
+import org.bson.BsonValue;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -99,7 +101,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     /**
      * Query to single out documents that doesn't have a "removed" property
      */
-    static final BasicDBObject NOT_REMOVED_QUERY = new BasicDBObject("_removed", new BasicDBObject("$exists", false));
     static final Bson NOT_REMOVED_QUERY_FILTER = not(exists("_removed"));
     private static final Logger logger = Logger.getLogger(MongoDBKnowledgeBase.class.getName());
     private static final int CONNECT_TIMEOUT = 5000;
@@ -271,7 +272,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         keys.put("modifications", 1);
         keys.put("lastOccurred", 1);
         BasicDBObject orderBy = new BasicDBObject("name", 1);
-        final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY);
+        final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY_FILTER);
         dbCauses.sort(orderBy);
 
         final MongoCursor<FailureCause> iterator = dbCauses.iterator();
@@ -322,14 +323,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see MongoDBKnowledgeBase#addCause(FailureCause)
      */
     public FailureCause addCause(FailureCause cause, boolean doUpdate) {
-        getJacksonCollection().insert(cause);
-        if (doUpdate) {
-            initCache();
-            cache.updateCache();
-        }
-
-        final FailureCause modifiedFailureCause = getJacksonCollection().find(eq("name", cause.getName())).first();
-        return modifiedFailureCause;
+        return saveCause(cause, doUpdate);
     }
 
     @Override
@@ -349,12 +343,13 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * @see MongoDBKnowledgeBase#saveCause(FailureCause)
      */
     public FailureCause saveCause(FailureCause cause, boolean doUpdate) {
-        getJacksonCollection().save(cause);
+        UpdateResult result = getJacksonCollection().save(cause);
         if (doUpdate) {
             initCache();
             cache.updateCache();
         }
-        final FailureCause modifiedFailureCause = getJacksonCollection().find(eq("name", cause.getName())).first();
+        final BsonValue upsertedId = result.getUpsertedId();
+        final FailureCause modifiedFailureCause = getJacksonCollection().find(eq("_id", upsertedId)).first();
         return modifiedFailureCause;
     }
 

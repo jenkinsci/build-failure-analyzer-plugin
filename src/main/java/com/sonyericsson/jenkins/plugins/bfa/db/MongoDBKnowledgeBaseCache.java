@@ -38,7 +38,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase.NOT_REMOVED_QUERY;
+import static com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase.NOT_REMOVED_QUERY_FILTER;
 
 /**
  * Cache for the MongoDBKnowledgeBase.
@@ -133,7 +133,7 @@ public class MongoDBKnowledgeBaseCache {
                             break;
                         }
                         List<FailureCause> list = new LinkedList<FailureCause>();
-                        FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY);
+                        FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY_FILTER);
                         final MongoCursor<FailureCause> iterator = dbCauses.iterator();
                         while (iterator.hasNext()) {
                             list.add(iterator.next());
