@@ -178,8 +178,8 @@ public abstract class FailureReader {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (StringUtils.isEmpty(line)) {
-            	    currentLine++;
-            	    continue;
+                    currentLine++;
+                    continue;
                 }
                 for (FailureCause cause : causes) {
                     for (Indication indication : cause.getIndications()) {
