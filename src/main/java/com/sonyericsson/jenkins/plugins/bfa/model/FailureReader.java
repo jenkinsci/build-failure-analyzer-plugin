@@ -45,7 +45,7 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import org.apache.commons.lang3.StringUtils;
 /**
  * Reader used to find indications of a failure cause.
  *
@@ -177,6 +177,10 @@ public abstract class FailureReader {
             int currentLine = 1;
             String line;
             while ((line = reader.readLine()) != null) {
+                if (StringUtils.isEmpty(line)) {
+            		currentLine++;
+            		continue;
+            	}
                 for (FailureCause cause : causes) {
                     for (Indication indication : cause.getIndications()) {
                         try {
@@ -198,7 +202,7 @@ public abstract class FailureReader {
                                 throw e;
                             }
                         }
-                        currentLine++;
+                        
                         timerThread.touch();
                         if (System.currentTimeMillis() - startTime > adjustedFileTimeout) {
                             logger.warning("File timeout scanning for indication '" + indication.toString() + "'"
@@ -207,6 +211,7 @@ public abstract class FailureReader {
                         }
                     }
                 }
+                currentLine++;
             }
             return convertToFoundFailureCauses(resultMap);
         } finally {
