@@ -1,18 +1,4 @@
-causes:
-- categories:
-  - "example"
-  - "second"
-  comment: "To show what a cause looks like"
-  description: "A problem was found"
-  id: "035e67d4-6692-4b1f-adf9-95c43948b349"
-  indications:
-  - buildLog:
-      pattern: ".*problem.*"
-  - multilineBuildLog:
-      pattern: "(?m)(?s)^[^\\r\\n]*?many.*problems[^\\r\\n]*?$"
-  name: "Found problems"
 doNotAnalyzeAbortedJob: true
-exportCausesToJCasCEnabled: true
 gerritTriggerEnabled: true
 globalEnabled: true
 graphsEnabled: false

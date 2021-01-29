@@ -46,6 +46,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -86,13 +87,26 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param id            the id.
      * @param name          the name of this FailureCause.
      * @param description   the description of this FailureCause.
+     * @param indications   the list of indications
+     */
+    @DataBoundConstructor
+    public FailureCause(String id, String name, String description, List<Indication> indications) {
+        this(id, name, description, null, null, (List<String>)null,
+                indications, null);
+    }
+
+    /**
+     * Standard constructor.
+     *
+     * @param id            the id.
+     * @param name          the name of this FailureCause.
+     * @param description   the description of this FailureCause.
      * @param comment       the comment of this FailureCause.
      * @param lastOccurred  the time at which this FailureCause last occurred.
      * @param categories    the categories of this FailureCause.
      * @param indications   the list of indications
      * @param modifications the modification history of this FailureCause.
      */
-    @DataBoundConstructor
     public FailureCause(String id, String name, String description, String comment,
                         Date lastOccurred, String categories, List<Indication> indications,
                         List<FailureCauseModification> modifications) {
@@ -401,6 +415,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param lastOccurred the occurrence to set.
      */
+    @DataBoundSetter
     public void setLastOccurred(Date lastOccurred) {
         if (lastOccurred == null) {
             this.lastOccurred = null;
@@ -439,6 +454,26 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     public List<String> getCategories() {
         return categories;
+    }
+
+    /**
+     * Setter for the comment.
+     *
+     * @param comment
+     */
+    @DataBoundSetter
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    /**
+     * Setter for the FailureCauseModifications done to this FailureCause.
+     *
+     * @param modifications
+     */
+    @DataBoundSetter
+    public void setModifications(List<FailureCauseModification> modifications) {
+        this.modifications = modifications;
     }
 
     /**
@@ -541,6 +576,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      *
      * @param categories the categories.
      */
+    @DataBoundSetter
     public void setCategories(List<String> categories) {
         this.categories = categories;
     }

@@ -1,0 +1,13 @@
+unclassified:
+  buildFailureAnalyzer:
+    causes:
+    - description: "A problem was found"
+      id: "035e67d4-6692-4b1f-adf9-95c43948b349"
+      indications:
+      - buildLog:
+          pattern: ".*problem.*"
+      name: "Found problems"
+      modifications:
+        - time: "Fri Jan 29 20:18:27 GMT 2021"
+          user: "Somebody"
+    exportCausesToJCasCEnabled: true

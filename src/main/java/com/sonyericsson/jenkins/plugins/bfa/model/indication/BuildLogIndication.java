@@ -43,6 +43,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -59,6 +60,7 @@ import java.util.regex.PatternSyntaxException;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class", visible = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Symbol("buildLog")
 public class BuildLogIndication extends Indication {
 
     private static final long serialVersionUID = -2889792693081908532L;

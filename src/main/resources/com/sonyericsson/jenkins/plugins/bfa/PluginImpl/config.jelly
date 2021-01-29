@@ -92,5 +92,8 @@
         <f:entry title="${%Max size of log file}" description="${%maxLogSize}">
             <f:textbox field="maxLogSize" />
         </f:entry>
+        <f:entry title="${%Include causes to the JCasC export}" description="${%exportCausesToJCasCEnabled}">
+            <f:checkbox field="exportCausesToJCasCEnabled" />
+        </f:entry>
     </f:advanced>
 </j:jelly>
