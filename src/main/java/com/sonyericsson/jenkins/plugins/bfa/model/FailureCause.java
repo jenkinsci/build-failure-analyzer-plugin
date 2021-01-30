@@ -459,7 +459,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     /**
      * Setter for the comment.
      *
-     * @param comment
+     * @param comment the comment
      */
     @DataBoundSetter
     public void setComment(String comment) {
@@ -469,7 +469,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     /**
      * Setter for the FailureCauseModifications done to this FailureCause.
      *
-     * @param modifications
+     * @param modifications the modifications
      */
     @DataBoundSetter
     public void setModifications(List<FailureCauseModification> modifications) {

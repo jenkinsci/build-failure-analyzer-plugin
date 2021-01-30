@@ -641,7 +641,8 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Set if this feature is enabled or not. When on, causes will in the JCasC export.
-     * @param exportCausesToJCasCEnabled
+     *
+     * @param exportCausesToJCasCEnabled on or off. null == off.
      */
     @DataBoundSetter
     public void setExportCausesToJCasCEnabled(Boolean exportCausesToJCasCEnabled) {
