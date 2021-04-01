@@ -115,20 +115,8 @@ public class BuildFailureScanner extends RunListener<Run> {
 
     @Override
     public void onCompleted(Run run, @Nonnull TaskListener listener) {
-        if (run instanceof AbstractBuild) {
-            logger.entering(getClass().getName(), "onCompleted");
-
-            doScan(run);
-        }
-    }
-
-    @Override
-    public void onFinalized(Run run) {
-        if (!(run instanceof AbstractBuild)) {
-            logger.entering(getClass().getName(), "onFinalized");
-
-            doScan(run);
-        }
+        logger.entering(getClass().getName(), "onCompleted");
+        doScan(run);
     }
 
     private void doScan(Run build) {
