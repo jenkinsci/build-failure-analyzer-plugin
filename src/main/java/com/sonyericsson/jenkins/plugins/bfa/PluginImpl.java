@@ -156,7 +156,7 @@ public class PluginImpl extends GlobalConfiguration {
     private String fallbackCategoriesAsString;
     private transient List<String> fallbackCategories;
 
-    private Boolean exportCausesToJCasCEnabled;
+    private boolean exportCausesToJCasCEnabled;
     private transient CopyOnWriteList<FailureCause> causes;
 
     private KnowledgeBase knowledgeBase;
@@ -635,7 +635,7 @@ public class PluginImpl extends GlobalConfiguration {
      * Get if causes from the current knowledge base should be included in the JCasC export is enabled.
      * @return exportCausesToJCasCEnabled - on or off. null == off.
      */
-    public Boolean getExportCausesToJCasCEnabled() {
+    public boolean getExportCausesToJCasCEnabled() {
         return exportCausesToJCasCEnabled;
     }
 
@@ -645,7 +645,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @param exportCausesToJCasCEnabled on or off. null == off.
      */
     @DataBoundSetter
-    public void setExportCausesToJCasCEnabled(Boolean exportCausesToJCasCEnabled) {
+    public void setExportCausesToJCasCEnabled(boolean exportCausesToJCasCEnabled) {
         this.exportCausesToJCasCEnabled = exportCausesToJCasCEnabled;
     }
 
@@ -674,7 +674,7 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public Collection<FailureCause> getCauses() {
         // The Causes export can be very large so we only include it if enabled.
-        if (exportCausesToJCasCEnabled == null || !exportCausesToJCasCEnabled) {
+        if (!getExportCausesToJCasCEnabled()) {
             return null;
         }
         if (knowledgeBase != null) {

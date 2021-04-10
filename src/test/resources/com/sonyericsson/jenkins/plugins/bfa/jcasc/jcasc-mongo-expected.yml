@@ -1,4 +1,5 @@
 doNotAnalyzeAbortedJob: true
+exportCausesToJCasCEnabled: false
 gerritTriggerEnabled: true
 globalEnabled: true
 graphsEnabled: false
