@@ -661,7 +661,7 @@ public class PluginImpl extends GlobalConfiguration {
                 try {
                     knowledgeBase.saveCause(cause);
                 } catch (Exception e) {
-                    logger.log(Level.WARNING, null, e);
+                    logger.log(Level.WARNING, "Failed to save cause to the knowledge base", e);
                 }
             }
         }
@@ -681,6 +681,7 @@ public class PluginImpl extends GlobalConfiguration {
             try {
                 return knowledgeBase.getCauses();
             } catch (Exception e) {
+                logger.log(Level.WARNING, "Failed to get causes from the knowledge base", e);
                 return null;
             }
         }
