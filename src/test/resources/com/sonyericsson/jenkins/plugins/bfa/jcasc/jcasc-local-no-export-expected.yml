@@ -3,15 +3,7 @@ exportCausesToJCasCEnabled: false
 gerritTriggerEnabled: true
 globalEnabled: true
 graphsEnabled: false
-knowledgeBase:
-  mongoDB:
-    dbName: "bfa"
-    enableStatistics: true
-    host: "localhost"
-
-    port: 27017
-    successfulLogging: false
-    userName: "bfa"
+knowledgeBase: "localFile"
 maxLogSize: 10
 noCausesEnabled: true
 noCausesMessage: "No problems were identified. Please contribute  causes to help others"
