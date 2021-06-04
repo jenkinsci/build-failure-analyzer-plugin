@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
@@ -43,10 +44,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -64,11 +68,25 @@ import static org.junit.Assert.assertEquals;
  * @author shemeer.x.sulaiman@sonymobile.com&gt;
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, PluginImpl.class, ScanOnDemandQueue.class, ScanOnDemandTask.class })
+@PrepareForTest({
+        Jenkins.class,
+        PluginImpl.class,
+        ScanOnDemandQueue.class,
+        ScanOnDemandTask.class,
+        Metrics.class,
+        MetricRegistry.class
+})
 public class ScanOnDemandTaskTest {
 
     private AbstractProject mockproject;
     private PluginImpl pluginMock;
+
+    @Mock
+    private Jenkins jenkins;
+    @Mock
+    private Metrics metricsPlugin;
+    @Mock
+    private MetricRegistry metricRegistry;
 
     /**
      * Runs before every test.
@@ -81,6 +99,12 @@ public class ScanOnDemandTaskTest {
         mockStatic(PluginImpl.class);
         when(PluginImpl.getInstance()).thenReturn(pluginMock);
         when(PluginImpl.needToAnalyze(Result.FAILURE)).thenReturn(true);
+
+        PowerMockito.mockStatic(Jenkins.class);
+        PowerMockito.mockStatic(Metrics.class);
+        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
+        PowerMockito.when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
     }
 
     /**

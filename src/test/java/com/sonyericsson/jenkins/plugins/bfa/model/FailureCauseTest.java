@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import com.codahale.metrics.MetricRegistry;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -33,6 +34,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Failure;
 import hudson.util.FormValidation;
+import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.junit.Before;
@@ -41,6 +43,7 @@ import org.junit.runner.RunWith;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.mockito.Matchers;
+import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -69,12 +72,19 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, PluginImpl.class })
+@PrepareForTest({Jenkins.class, PluginImpl.class, Metrics.class, MetricRegistry.class })
 public class FailureCauseTest {
 
     private PluginImpl pluginMock;
     private KnowledgeBase baseMock;
     private FailureCause.FailureCauseDescriptor descriptor;
+
+    @Mock
+    private Jenkins jenkinsMock;
+    @Mock
+    private Metrics metricsPlugin;
+    @Mock
+    private MetricRegistry metricRegistry;
 
     /**
      * Runs before every test.
@@ -87,7 +97,6 @@ public class FailureCauseTest {
         mockStatic(PluginImpl.class);
         when(PluginImpl.getInstance()).thenReturn(pluginMock);
 
-        Jenkins jenkinsMock = mock(Jenkins.class);
         mockStatic(Jenkins.class);
         when(Jenkins.getInstance()).thenReturn(jenkinsMock);
         doCallRealMethod().when(Jenkins.class);
@@ -95,6 +104,10 @@ public class FailureCauseTest {
 
         descriptor = new FailureCause.FailureCauseDescriptor();
         when(jenkinsMock.getDescriptorByType(FailureCause.FailureCauseDescriptor.class)).thenReturn(descriptor);
+
+        PowerMockito.mockStatic(Metrics.class);
+        PowerMockito.when(jenkinsMock.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
     }
 
     /**
