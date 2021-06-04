@@ -42,7 +42,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
 @ExportedBean
-public class FoundFailureCause {
+public class FoundFailureCause implements IFailureCauseMetricData {
     private static final Logger logger = Logger.getLogger(FoundFailureCause.class.getName());
 
     private final String id;

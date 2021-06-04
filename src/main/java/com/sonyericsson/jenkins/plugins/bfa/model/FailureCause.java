@@ -69,7 +69,7 @@ import java.util.logging.Logger;
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FailureCause implements Serializable, Action, Describable<FailureCause> {
+public class FailureCause implements Serializable, Action, Describable<FailureCause>, IFailureCauseMetricData {
     private static final Logger logger = Logger.getLogger(FailureCause.class.getName());
     private String id;
     private String name;
