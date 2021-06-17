@@ -11,13 +11,13 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.55</version>
+        <version>4.19</version>
     </parent>
 
     <properties>
         <revision>2.0.1</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.164.3</jenkins.version>
+        <jenkins.version>2.222.4</jenkins.version>
         <java.level>8</java.level>
         <checkstyle.version>3.1.1</checkstyle.version>
         <configuration-as-code.version>1.35</configuration-as-code.version>
@@ -85,17 +85,22 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.30</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.30</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.30</version>
         </dependency>
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
@@ -151,7 +156,7 @@
         <dependency>
             <groupId>com.sonymobile.jenkins.plugins.mq</groupId>
             <artifactId>mq-notifier</artifactId>
-            <version>1.2.1</version>
+            <version>1.3.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-validator</groupId>
@@ -202,6 +207,12 @@
             <version>2.11.0</version>
         </dependency>
         <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-api</artifactId>
+            <version>2.42</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.11.0</version>
@@ -214,7 +225,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.9</version>
+            <version>3.11</version>
         </dependency>
         <dependency>
             <groupId>commons-net</groupId>
@@ -240,12 +251,11 @@
             <version>${configuration-as-code.version}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
-            <version>1.19</version>
-            <scope>test</scope>
+            <version>1.20</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -278,25 +288,30 @@
             <version>1.2</version>
             <optional>true</optional>
         </dependency>
-        <!-- Test dependencies -->
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-aggregator</artifactId>
-            <version>2.5</version>
-            <scope>test</scope>
-            <exclusions>
-                <!-- it comes from jackson2-api plugin instead -->
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>workflow-job</artifactId>
+            <version>2.41</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>scm-api</artifactId>
-            <version>2.2.6</version>
-            <scope>test</scope>
+            <version>2.6.4</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>script-security</artifactId>
+            <version>1.75</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins.workflow/workflow-step-api -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-step-api</artifactId>
+            <version>2.23</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -317,6 +332,12 @@
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
             <version>2.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>git-client</artifactId>
+            <version>1.21.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -410,11 +431,6 @@
                     <!-- Optional directory to put findbugs xdoc xml report -->
                     <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.3</version>
             </plugin>
         </plugins>
     </reporting>
