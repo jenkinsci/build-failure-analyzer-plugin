@@ -313,6 +313,13 @@
             <version>2.23</version>
             <optional>true</optional>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/pipeline-build-step -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>pipeline-build-step</artifactId>
+            <version>2.5.1</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -410,6 +417,14 @@
     </scm>
     <reporting>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
