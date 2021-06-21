@@ -76,7 +76,7 @@ public class FailureCauseWorkFlowTest {
     @Test
     public void testFailureCausesWhenNotFailed() throws Exception {
         WorkflowJob proj = j.jenkins.createProject(WorkflowJob.class, "proj");
-        proj.setDefinition(new CpsFlowDefinition("println('hello')"));
+        proj.setDefinition(new CpsFlowDefinition("//Do nothing!"));
         WorkflowRun run = j.assertBuildStatusSuccess(proj.scheduleBuild2(0));
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         assertNull(action);

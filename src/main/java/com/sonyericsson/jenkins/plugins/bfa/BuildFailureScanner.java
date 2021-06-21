@@ -41,7 +41,6 @@ import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
@@ -115,20 +114,8 @@ public class BuildFailureScanner extends RunListener<Run> {
 
     @Override
     public void onCompleted(Run run, @Nonnull TaskListener listener) {
-        if (run instanceof AbstractBuild) {
-            logger.entering(getClass().getName(), "onCompleted");
-
-            doScan(run);
-        }
-    }
-
-    @Override
-    public void onFinalized(Run run) {
-        if (!(run instanceof AbstractBuild)) {
-            logger.entering(getClass().getName(), "onFinalized");
-
-            doScan(run);
-        }
+        logger.entering(getClass().getName(), "onCompleted");
+        doScan(run);
     }
 
     private void doScan(Run build) {
