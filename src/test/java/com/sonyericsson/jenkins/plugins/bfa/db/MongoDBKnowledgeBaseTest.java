@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongojack.JacksonMongoCollection;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -58,6 +59,8 @@ import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -180,6 +183,7 @@ public class MongoDBKnowledgeBaseTest {
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
         assertSame(mockedCause, addedCause);
+        verify(metricRegistry, times(2)).counter(Mockito.anyString());
     }
 
     /**

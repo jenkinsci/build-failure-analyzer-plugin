@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -53,7 +54,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link LocalFileKnowledgeBase}.
@@ -131,6 +134,7 @@ public class LocalFileKnowledgeBaseTest {
         assertNotNull(expected.getId());
         assertFalse(expected.getId().isEmpty());
         assertSame(expected, kb.getCause(expected.getId()));
+
     }
 
     /**
@@ -166,6 +170,7 @@ public class LocalFileKnowledgeBaseTest {
                 "", expected.getIndications(), expected.getModifications());
         assertSame(toSave, kb.saveCause(toSave));
         assertNotSame(expected, kb.getCause(toSave.getId()));
+        verify(metricRegistry, times(1)).counter(Mockito.anyString());
     }
 
     /**
