@@ -848,7 +848,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @param userName the user name.
          * @param password the password.
          * @param tls the tls option.
-         * @param retrywrites the retry_writes option
+         * @param retryWrites the retry_writes option
          * @return {@link FormValidation#ok() } if can be done,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
