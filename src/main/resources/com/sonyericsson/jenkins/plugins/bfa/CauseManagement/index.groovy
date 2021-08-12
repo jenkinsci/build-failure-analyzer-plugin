@@ -32,7 +32,11 @@ def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
 
-l.layout(permission: PluginImpl.VIEW_PERMISSION, norefresh: true) {
+// Check permission manually. Using permissions layout() from groovy breaks view.jelly.
+// Long story short, view.jelly interprets the exception text as jelly tags, which leads
+// to a JellyTagException (internal server error).
+Jenkins.get().checkPermission(PluginImpl.VIEW_PERMISSION)
+l.layout(norefresh: true) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
