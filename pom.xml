@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>2.0.1</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
@@ -15,7 +15,7 @@
     </parent>
 
     <properties>
-        <revision>2.0.1</revision>
+        <revision>2.0.2</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.222.4</jenkins.version>
         <java.level>8</java.level>
@@ -437,7 +437,7 @@
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git
         </developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
-        <tag>build-failure-analyzer-2.0.1</tag>
+        <tag>${scmTag}</tag>
     </scm>
     <reporting>
         <plugins>
