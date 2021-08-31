@@ -707,7 +707,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             StringBuilder connectionStringBuilder = new StringBuilder(host);
             connectionStringBuilder.append(":").append(port);
             boolean disableRetryWrites = true;
-            if(retryWrites){
+            if (retryWrites) {
                 disableRetryWrites = false;
             }
             MongoClientSettings.Builder builder = MongoClientSettings.builder().applyToClusterSettings(
