@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.codahale.metrics.MetricRegistry;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
@@ -32,12 +33,17 @@ import com.mongodb.client.result.UpdateResult;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import jenkins.metrics.api.Metrics;
+import jenkins.model.Jenkins;
 import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongojack.JacksonMongoCollection;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
@@ -53,6 +59,8 @@ import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -63,7 +71,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(JacksonMongoCollection.class)
+@PrepareForTest({JacksonMongoCollection.class, Jenkins.class, Metrics.class, MetricRegistry.class})
 public class MongoDBKnowledgeBaseTest {
 
     private JacksonMongoCollection<FailureCause> collection;
@@ -73,6 +81,13 @@ public class MongoDBKnowledgeBaseTest {
     private Indication indication;
     private FailureCause mockedCause;
     private static final int PORT = 27017;
+
+    @Mock
+    private Jenkins jenkins;
+    @Mock
+    private Metrics metricsPlugin;
+    @Mock
+    private MetricRegistry metricRegistry;
 
     /**
      * Common stuff to set up for the tests.
@@ -89,6 +104,12 @@ public class MongoDBKnowledgeBaseTest {
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
                 "category", indications, null);
+
+        PowerMockito.mockStatic(Jenkins.class);
+        PowerMockito.mockStatic(Metrics.class);
+        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
+        PowerMockito.when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
     }
 
     /**
@@ -162,6 +183,7 @@ public class MongoDBKnowledgeBaseTest {
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
         assertSame(mockedCause, addedCause);
+        verify(metricRegistry, times(2)).counter(Mockito.anyString());
     }
 
     /**

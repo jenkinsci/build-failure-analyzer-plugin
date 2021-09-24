@@ -38,6 +38,7 @@ import com.mongodb.client.MongoClient;
 import static com.mongodb.client.model.Filters.not;
 import static com.mongodb.client.model.Filters.exists;
 import static com.mongodb.client.model.Filters.eq;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCursor;
@@ -58,6 +59,7 @@ import hudson.util.FormValidation;
 import hudson.util.Secret;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,8 +83,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.mongojack.JacksonMongoCollection;
 import org.mongojack.internal.MongoJackModule;
-
-import java.util.Collection;
 
 
 /**
@@ -211,6 +211,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public synchronized void start() {
         initCache();
+        cache.updateCache();
+        for (FailureCause entry : getCauseNames()) {
+            addMetric(entry);
+        }
     }
 
     @Override
@@ -328,6 +332,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public FailureCause saveCause(FailureCause cause) {
+        addMetric(cause);
         return saveCause(cause, true);
     }
 

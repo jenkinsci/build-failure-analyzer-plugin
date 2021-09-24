@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 import static hudson.Util.fixEmpty;
 
 import java.io.IOException;
@@ -55,6 +56,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class LocalFileKnowledgeBase extends KnowledgeBase {
 
     private Map<String, FailureCause> causes;
+
+
+
 
     /**
      * Standard constructor. Used for legacy conversion.
@@ -125,6 +129,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
 
     @Override
     public FailureCause saveCause(FailureCause cause) throws IOException {
+        addMetric(cause);
         if (fixEmpty(cause.getId()) == null) {
             return addCause(cause);
         } else {
@@ -183,7 +188,9 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
 
     @Override
     public void start() {
-        //TODO should something be done here?
+        for (Map.Entry<String, FailureCause> entry : causes.entrySet()) {
+            addMetric(entry.getValue());
+        }
     }
 
     @Override

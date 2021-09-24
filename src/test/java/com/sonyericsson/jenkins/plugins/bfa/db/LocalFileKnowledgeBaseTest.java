@@ -24,15 +24,20 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.codahale.metrics.MetricRegistry;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.CopyOnWriteList;
+import jenkins.metrics.api.Metrics;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -49,7 +54,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link LocalFileKnowledgeBase}.
@@ -57,12 +64,19 @@ import static org.mockito.Mockito.when;
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(PluginImpl.class)
+@PrepareForTest({PluginImpl.class, Jenkins.class, Metrics.class, MetricRegistry.class})
 public class LocalFileKnowledgeBaseTest {
 
     private CopyOnWriteList<FailureCause> oldCauses;
     private FailureCause olle;
     private FailureCause existingCause;
+
+    @Mock
+    private Jenkins jenkins;
+    @Mock
+    private Metrics metricsPlugin;
+    @Mock
+    private MetricRegistry metricRegistry;
 
     /**
      * Some usable test data for most tests.
@@ -80,6 +94,12 @@ public class LocalFileKnowledgeBaseTest {
         PluginImpl mock = PowerMockito.mock(PluginImpl.class);
         PowerMockito.mockStatic(PluginImpl.class);
         PowerMockito.when(PluginImpl.getInstance()).thenReturn(mock);
+
+        PowerMockito.mockStatic(Jenkins.class);
+        PowerMockito.mockStatic(Metrics.class);
+        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
+        PowerMockito.when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
     }
 
     /**
@@ -114,6 +134,7 @@ public class LocalFileKnowledgeBaseTest {
         assertNotNull(expected.getId());
         assertFalse(expected.getId().isEmpty());
         assertSame(expected, kb.getCause(expected.getId()));
+
     }
 
     /**
@@ -149,6 +170,7 @@ public class LocalFileKnowledgeBaseTest {
                 "", expected.getIndications(), expected.getModifications());
         assertSame(toSave, kb.saveCause(toSave));
         assertNotSame(expected, kb.getCause(toSave.getId()));
+        verify(metricRegistry, times(1)).counter(Mockito.anyString());
     }
 
     /**

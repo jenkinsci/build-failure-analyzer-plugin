@@ -16,6 +16,7 @@ recognition of why the build failed.
 ## Guides
 
  * [Azure Cosmos DB](docs/azure.md)
+ * [Metrics Integration](docs/metrics.md)
 
 ## Community Resources
  * [Changelog](https://github.com/jenkinsci/build-failure-analyzer-plugin/releases)
