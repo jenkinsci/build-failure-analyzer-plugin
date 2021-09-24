@@ -171,7 +171,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param categories    the categories of this FailureCause.
      */
     public FailureCause(String name, String description, String comment, String categories) {
-        this(null, name, description, "", null, Arrays.<String>asList(Util.tokenize(categories)), null, null);
+        this(null, name, description, comment, null, Arrays.<String>asList(Util.tokenize(categories)), null, null);
     }
 
     /**
