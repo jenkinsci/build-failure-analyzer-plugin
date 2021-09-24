@@ -6,7 +6,7 @@
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <description>Jenkins Build Failure Analyzer Plugin</description>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Build+Failure+Analyzer</url>
+    <url>https://github.com/jenkinsci/build-failure-analyzer-plugin/blob/master/docs/README.md</url>
 
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>

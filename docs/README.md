@@ -18,7 +18,7 @@ The Build Log Indication searches through the build log, one line at a time, fo
 It uses Pattern.match, so the regular expression needs to match should be as follows
 
 
-[![](https://cdn.jsdelivr.net/gh/jenkins-infra/plugins-wiki-docs@master/build-failure-analyzer/docs/images/bfa-newfailurecause.png)](https://github.com/jenkins-infra/plugins-wiki-docs/blob/master/build-failure-analyzer/docs/images/bfa-newfailurecause.png)  
+![Adding new failure causes and indications to the knowledge base.](images/bfa-newfailurecause.png)  
 _Adding new failure causes and indications to the knowledge base._
 
 From version 1.3.1 of the plugin, regular expressions can be tested on the Failure Cause Management page, in two different ways:
@@ -40,10 +40,10 @@ The plugin comes with two ways of saving the knowledge base:
 All builds on the server that are non-successful (aborted, failed, unstable) will be scanned for all failure causes.   
 If an indication is found, the description will be put directly on the build page, with a link to the matching line in the build log.  
 If no cause is found, a text stating this will be shown. The text is configurable on the main configuration page of the server.  
-[![](https://cdn.jsdelivr.net/gh/jenkins-infra/plugins-wiki-docs@master/build-failure-analyzer/docs/images/bfa-buildpage.PNG)](https://github.com/jenkins-infra/plugins-wiki-docs/blob/master/build-failure-analyzer/docs/images/bfa-buildpage.PNG)  
+![The build page when the build failure analyzer has found a failure cause.](images/bfa-buildpage.png)  
 _The build page when the build failure analyzer has found a failure cause._
 
-[![](https://cdn.jsdelivr.net/gh/jenkins-infra/plugins-wiki-docs@master/build-failure-analyzer/docs/images/bfa-buildlog.PNG)](https://github.com/jenkins-infra/plugins-wiki-docs/blob/master/build-failure-analyzer/docs/images/bfa-buildlog.PNG)  
+![The build log with the matching line marked in red.](images/bfa-buildlog.png)  
 _The build log with the matching line marked in red._
 
 ### Statistics
@@ -88,6 +88,17 @@ node {
 Replace description placeholders from captured expressions in found indications
 
 Substitutions may be made within the description with placeholders of the form **${I,G}**, where **I** is the indication number and **G** is the captured group within the indication expression. e.g., **${1,1}** would be replaced with the first indication's first captured group and **${1,2}** would be replaced with the first indication's second captured group.
+
+## Guides
+
+* [Azure Cosmos DB](azure.md)
+* [AWS DocumentDB](documentDB.md)
+* [Metrics Integration](metrics.md)
+
+## Releases
+* [New Releases](https://github.com/jenkinsci/build-failure-analyzer-plugin/releases)
+* [Old Changelog](old-changelog.md)
+
 
 ## Tips & Tricks
 
