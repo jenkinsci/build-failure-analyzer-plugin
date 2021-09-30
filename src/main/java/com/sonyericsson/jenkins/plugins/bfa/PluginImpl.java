@@ -635,7 +635,7 @@ public class PluginImpl extends GlobalConfiguration {
      * Get if causes from the current knowledge base should be included in the JCasC export is enabled.
      * @return exportCausesToJCasCEnabled - on or off. null == off.
      */
-    public boolean getExportCausesToJCasCEnabled() {
+    public boolean isExportCausesToJCasCEnabled() {
         return exportCausesToJCasCEnabled;
     }
 
@@ -674,7 +674,7 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public Collection<FailureCause> getCauses() {
         // The Causes export can be very large so we only include it if enabled.
-        if (!getExportCausesToJCasCEnabled()) {
+        if (!isExportCausesToJCasCEnabled()) {
             return null;
         }
         if (knowledgeBase != null) {
