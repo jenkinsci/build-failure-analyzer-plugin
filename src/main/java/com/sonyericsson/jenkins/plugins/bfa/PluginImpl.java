@@ -650,7 +650,8 @@ public class PluginImpl extends GlobalConfiguration {
     }
 
     /**
-     * Set the causes.
+     * Save causes to the db. Assumes that the ids are kept from when the causes were fetched.
+     * Failing to do so may result in duplicate causes.
      *
      * @param causes value
      */
