@@ -58,6 +58,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -155,6 +156,7 @@ public class PluginImpl extends GlobalConfiguration {
     private String fallbackCategoriesAsString;
     private transient List<String> fallbackCategories;
 
+    private boolean exportCausesToJCasCEnabled;
     private transient CopyOnWriteList<FailureCause> causes;
 
     private KnowledgeBase knowledgeBase;
@@ -627,6 +629,64 @@ public class PluginImpl extends GlobalConfiguration {
     @DataBoundSetter
     public void setSlackFailureCategories(String slackFailureCategories) {
         this.slackFailureCategories = slackFailureCategories;
+    }
+
+    /**
+     * Get if causes from the current knowledge base should be included in the JCasC export is enabled.
+     * @return exportCausesToJCasCEnabled - on or off. null == off.
+     */
+    public boolean isExportCausesToJCasCEnabled() {
+        return exportCausesToJCasCEnabled;
+    }
+
+    /**
+     * Set if this feature is enabled or not. When on, causes will in the JCasC export.
+     *
+     * @param exportCausesToJCasCEnabled on or off. null == off.
+     */
+    @DataBoundSetter
+    public void setExportCausesToJCasCEnabled(boolean exportCausesToJCasCEnabled) {
+        this.exportCausesToJCasCEnabled = exportCausesToJCasCEnabled;
+    }
+
+    /**
+     * Save causes to the db. Assumes that the ids are kept from when the causes were fetched.
+     * Failing to do so may result in duplicate causes.
+     *
+     * @param causes value
+     */
+    @DataBoundSetter
+    public void setCauses(List<FailureCause> causes) {
+        if (knowledgeBase != null) {
+            for (FailureCause cause:causes) {
+                try {
+                    knowledgeBase.saveCause(cause);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Failed to save cause to the knowledge base", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the causes, used by JCasC to include it in the configuration export.
+     *
+     * @return the causes
+     */
+    public Collection<FailureCause> getCauses() {
+        // The Causes export can be very large so we only include it if enabled.
+        if (!isExportCausesToJCasCEnabled()) {
+            return null;
+        }
+        if (knowledgeBase != null) {
+            try {
+                return knowledgeBase.getCauses();
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Failed to get causes from the knowledge base", e);
+                return null;
+            }
+        }
+        return null;
     }
 
     /**

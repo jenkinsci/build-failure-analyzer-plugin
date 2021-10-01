@@ -1,30 +1,9 @@
-causes:
-- categories:
-  - "example"
-  - "second"
-  comment: "To show what a cause looks like"
-  description: "A problem was found"
-  id: "61566f2a8f5c6de699e69b46"
-  indications:
-  - buildLog:
-      pattern: ".*problem.*"
-  - multilineBuildLog:
-      pattern: "(?m)(?s)^[^\\r\\n]*?many.*problems[^\\r\\n]*?$"
-  name: "Found problems"
 doNotAnalyzeAbortedJob: true
-exportCausesToJCasCEnabled: true
+exportCausesToJCasCEnabled: false
 gerritTriggerEnabled: true
 globalEnabled: true
 graphsEnabled: false
-knowledgeBase:
-  mongoDB:
-    dbName: "bfadb"
-    enableStatistics: true
-    host: "localhost"
-
-    port: 27017
-    successfulLogging: false
-    userName: "bfa"
+knowledgeBase: "localFile"
 maxLogSize: 10
 noCausesEnabled: true
 noCausesMessage: "No problems were identified. Please contribute  causes to help others"

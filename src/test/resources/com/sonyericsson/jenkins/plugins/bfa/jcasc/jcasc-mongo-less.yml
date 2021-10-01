@@ -1,0 +1,22 @@
+unclassified:
+  buildFailureAnalyzer:
+    knowledgeBase:
+      mongoDB:
+        dbName: "bfadb"
+        enableStatistics: true
+        host: "localhost"
+        userName: bfa
+        password: changeme
+        port: 27017
+        successfulLogging: false
+    causes:
+    - description: "A problem was found"
+      id: "61566f2a8f5c6de699e69b46"
+      indications:
+      - buildLog:
+          pattern: ".*problem.*"
+      name: "Found problems"
+      modifications:
+        - time: "Fri Jan 29 20:18:27 GMT 2021"
+          user: "Somebody"
+    exportCausesToJCasCEnabled: true

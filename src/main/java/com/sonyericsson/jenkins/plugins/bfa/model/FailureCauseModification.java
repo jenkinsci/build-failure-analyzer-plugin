@@ -25,6 +25,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -51,6 +52,22 @@ public class FailureCauseModification implements Serializable {
             this.time = null;
         } else {
             this.time = (Date)time.clone();
+        }
+    }
+
+    /**
+     * Constructor for FailureCauseModification.
+     *
+     * @param user The user who made the modification.
+     * @param time The time at which the modification was done.
+     */
+    @DataBoundConstructor
+    public FailureCauseModification(String user, String time) {
+        this.user = user;
+        if (time == null) {
+            this.time = null;
+        } else {
+            this.time = new Date(time);
         }
     }
 

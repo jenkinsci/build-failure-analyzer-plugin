@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.MultilineBuildLogFailureReader;
 import hudson.Extension;
 import hudson.model.Hudson;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.regex.Pattern;
@@ -42,6 +43,7 @@ import java.util.regex.Pattern;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class", visible = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Symbol("multilineBuildLog")
 public class MultilineBuildLogIndication extends BuildLogIndication {
 
     private static final long serialVersionUID = 8436383594898812087L;
