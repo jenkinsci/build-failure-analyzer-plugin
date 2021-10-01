@@ -1,0 +1,39 @@
+unclassified:
+  buildFailureAnalyzer:
+    causes:
+    - categories: [ "example", "second" ]
+      comment: "To show what a cause looks like"
+      description: "A problem was found"
+      id: "035e67d4-6692-4b1f-adf9-95c43948b349"
+      indications:
+      - buildLog:
+          pattern: ".*problem.*"
+      - multilineBuildLog:
+          pattern: "many.*problems"
+      name: "Found problems"
+    doNotAnalyzeAbortedJob: true
+    gerritTriggerEnabled: true
+    globalEnabled: true
+    graphsEnabled: false
+    knowledgeBase:
+      mongoDB:
+        dbName: "bfa"
+        enableStatistics: true
+        host: "localhost"
+        userName: bfa
+        password: changeme
+        port: 27017
+        successfulLogging: false
+    maxLogSize: 10
+    noCausesEnabled: true
+    noCausesMessage: "No problems were identified. Please contribute  causes to help others"
+    nrOfScanThreads: 6
+    slackNotifEnabled: false
+    sodVariables:
+      maximumSodWorkerThreads: 4
+      minimumSodWorkerThreads: 2
+      sodCorePoolNumberOfThreads: 6
+      sodThreadKeepAliveTime: 17
+      sodWaitForJobShutdownTimeout: 32
+    testResultCategories: "hgjghhlllllaa"
+    testResultParsingEnabled: true
