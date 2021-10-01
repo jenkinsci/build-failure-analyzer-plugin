@@ -2,7 +2,10 @@ package com.sonyericsson.jenkins.plugins.bfa.jcasc;
 
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
+import com.sonyericsson.jenkins.plugins.bfa.db.EmbeddedMongoRule;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
@@ -13,6 +16,7 @@ import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.model.CNode;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +35,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class ConfigurationAsCodeMongoTest {
 
+    static final String EXPECTED_ID = "61566f2a8f5c6de699e69b46";
+    static final String EXPECTED_DB = "bfadb";
+    static final String EXPECTED_USERNAME = "bfa";
+    static final String EXPECTED_PASSWORD = "changeme";
+    static final int EXPECTED_PORT = 27017;
+
     /**
      * Jenkins rule.
      */
     @Rule
     //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
+    public RuleChain chain = RuleChain
+        .outerRule(new EmbeddedMongoRule(EXPECTED_PORT, EXPECTED_DB, EXPECTED_USERNAME, EXPECTED_PASSWORD))
+        .around(new JenkinsConfiguredWithCodeRule());
 
     /**
      * Support config as code import.
@@ -53,10 +65,10 @@ public class ConfigurationAsCodeMongoTest {
 
         MongoDBKnowledgeBase knowledgeBase = (MongoDBKnowledgeBase)plugin.getKnowledgeBase();
         assertThat(knowledgeBase.getHost(), is("localhost"));
-        assertThat(knowledgeBase.getDbName(), is("bfa"));
+        assertThat(knowledgeBase.getDbName(), is(EXPECTED_DB));
         assertThat(knowledgeBase.isEnableStatistics(), is(true));
-        assertThat(knowledgeBase.getUserName(), is("bfa"));
-        assertThat(knowledgeBase.getPassword().getPlainText(), is("changeme"));
+        assertThat(knowledgeBase.getUserName(), is(EXPECTED_USERNAME));
+        assertThat(knowledgeBase.getPassword().getPlainText(), is(EXPECTED_PASSWORD));
         assertThat(knowledgeBase.isSuccessfulLogging(), is(false));
 
         assertThat(plugin.getNoCausesMessage(), is(ConfigurationAsCodeLocalTest.NO_CAUSES_MESSAGE));
@@ -78,6 +90,25 @@ public class ConfigurationAsCodeMongoTest {
 
         assertThat(plugin.getTestResultCategories(), is("hgjghhlllllaa"));
         assertThat(plugin.isTestResultParsingEnabled(), is(true));
+
+        List<FailureCause> initialCauses = new ArrayList<FailureCause>(plugin.getCauses());
+        assertThat(initialCauses.size(), is(1));
+        FailureCause cause = initialCauses.get(0);
+        assertThat(cause.getId(), is(EXPECTED_ID));
+        assertThat(cause.getDescription(), is(ConfigurationAsCodeLocalTest.EXPECTED_DESCRIPTION));
+        assertThat(cause.getComment(), is(ConfigurationAsCodeLocalTest.EXPECTED_COMMENT));
+        assertThat(cause.getCategoriesAsString(), is(ConfigurationAsCodeLocalTest.EXPECTED_CATEGORIES));
+        assertThat(cause.getName(), is(ConfigurationAsCodeLocalTest.EXPECTED_NAME));
+
+        List<Indication> indications = cause.getIndications();
+        assertThat(indications.size(), is(2));
+        assertThat(indications.get(0), instanceOf(BuildLogIndication.class));
+        assertThat(indications.get(1), instanceOf(MultilineBuildLogIndication.class));
+        BuildLogIndication buildLog = (BuildLogIndication)indications.get(0);
+        assertThat(buildLog.getUserProvidedExpression(), is(ConfigurationAsCodeLocalTest.EXPECTED_BUILD_LOG_EXPRESSION));
+        MultilineBuildLogIndication multilineBuildLog = (MultilineBuildLogIndication)indications.get(1);
+        assertThat(multilineBuildLog.getUserProvidedExpression(),
+                is(ConfigurationAsCodeLocalTest.EXPECTED_MULTILINE_BUILD_LOG_EXPRESSION));
     }
 
     /**
@@ -114,7 +145,7 @@ public class ConfigurationAsCodeMongoTest {
         assertThat(initialCauses.size(), is(1));
 
         FailureCause cause = initialCauses.get(0);
-        assertThat(cause.getId(), is(ConfigurationAsCodeLocalTest.EXPECTED_ID));
+        assertThat(cause.getId(), is(EXPECTED_ID));
         assertThat(cause.getDescription(), is(ConfigurationAsCodeLocalTest.EXPECTED_DESCRIPTION));
         assertThat(cause.getComment(), is(nullValue()));
         assertThat(cause.getCategoriesAsString(), is(nullValue()));

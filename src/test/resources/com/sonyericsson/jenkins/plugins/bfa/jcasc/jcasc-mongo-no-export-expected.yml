@@ -5,7 +5,7 @@ globalEnabled: true
 graphsEnabled: false
 knowledgeBase:
   mongoDB:
-    dbName: "bfa"
+    dbName: "bfadb"
     enableStatistics: true
     host: "localhost"
 

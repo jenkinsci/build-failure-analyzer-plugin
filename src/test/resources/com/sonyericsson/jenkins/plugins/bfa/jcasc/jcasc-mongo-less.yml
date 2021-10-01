@@ -2,7 +2,7 @@ unclassified:
   buildFailureAnalyzer:
     knowledgeBase:
       mongoDB:
-        dbName: "bfa"
+        dbName: "bfadb"
         enableStatistics: true
         host: "localhost"
         userName: bfa
@@ -11,7 +11,7 @@ unclassified:
         successfulLogging: false
     causes:
     - description: "A problem was found"
-      id: "035e67d4-6692-4b1f-adf9-95c43948b349"
+      id: "61566f2a8f5c6de699e69b46"
       indications:
       - buildLog:
           pattern: ".*problem.*"

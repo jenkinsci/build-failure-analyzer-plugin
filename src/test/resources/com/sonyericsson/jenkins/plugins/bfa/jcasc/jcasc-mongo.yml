@@ -1,12 +1,24 @@
 unclassified:
   buildFailureAnalyzer:
+    causes:
+    - categories: [ "example", "second" ]
+      comment: "To show what a cause looks like"
+      description: "A problem was found"
+      id: "61566f2a8f5c6de699e69b46"
+      indications:
+      - buildLog:
+          pattern: ".*problem.*"
+      - multilineBuildLog:
+          pattern: "many.*problems"
+      name: "Found problems"
     doNotAnalyzeAbortedJob: true
+    exportCausesToJCasCEnabled: true
     gerritTriggerEnabled: true
     globalEnabled: true
     graphsEnabled: false
     knowledgeBase:
       mongoDB:
-        dbName: "bfa"
+        dbName: "bfadb"
         enableStatistics: true
         host: "localhost"
         userName: bfa
