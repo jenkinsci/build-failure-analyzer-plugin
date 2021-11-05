@@ -26,6 +26,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.incCounters;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
@@ -190,9 +191,6 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList = foundCauseListToLog;
             }
 
-            for (FoundFailureCause cause : foundCauseList) {
-                incCounters(cause);
-            }
 
             List<String> fallbackCategories = PluginImpl.getInstance().getFallbackCategories();
 
@@ -218,6 +216,17 @@ public class BuildFailureScanner extends RunListener<Run> {
                     }
                 }
             }
+
+
+            if (!foundCauseList.isEmpty()) {
+                for (FoundFailureCause cause : foundCauseList) {
+                    logger.log(Level.SEVERE, cause.getName());
+                    incCounters(cause);
+                }
+            } else {
+                incCounters(UNKNOWNCAUSE);
+            }
+
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);
