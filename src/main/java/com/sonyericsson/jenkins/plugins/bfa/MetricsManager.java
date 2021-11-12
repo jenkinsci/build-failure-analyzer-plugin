@@ -13,7 +13,8 @@ import java.util.SortedSet;
 public final class MetricsManager {
     static final String CAUSEPREFIX = "jenkins_bfa.cause.";
     static final String CATEGORYPREFIX = "jenkins_bfa.category.";
-    static final FailureCause UNKNOWNCAUSE = new FailureCause("no matching cause", "");
+/**A magic cause to represent builds that match no causes in the database. */
+    public static final FailureCause UNKNOWNCAUSE = new FailureCause("no matching cause", "");
 
     private MetricsManager() {
     }
