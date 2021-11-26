@@ -86,8 +86,13 @@
             </f:property>
         </f:section>
         <f:entry title="${%Do not analyze aborted jobs}"
-                                help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
+                 help="/plugin/build-failure-analyzer/help/help-doNotAnalyzeAbortedJobs.html">
             <f:checkbox field="doNotAnalyzeAbortedJob" />
+        </f:entry>
+        <f:entry title="${%Squash failure metrics to unique categories for each build}"
+                 description="${%metricSquashingEnabledDescription}"
+                 help="/plugin/build-failure-analyzer/help/help-metricSquashingEnabled.html">
+            <f:checkbox field="metricSquashingEnabled" default="false" />
         </f:entry>
         <f:entry title="${%Max size of log file}" description="${%maxLogSize}">
             <f:textbox field="maxLogSize" />

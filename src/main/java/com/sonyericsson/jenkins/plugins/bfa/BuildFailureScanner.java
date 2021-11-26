@@ -190,9 +190,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList = foundCauseListToLog;
             }
 
-            for (FoundFailureCause cause : foundCauseList) {
-                incCounters(cause);
-            }
+            incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
 
             List<String> fallbackCategories = PluginImpl.getInstance().getFallbackCategories();
 

@@ -99,6 +99,7 @@ public class PluginImplHudsonTest {
         assertFalse("doNotAnalyzeAbortedJob: default value is false", instance.isDoNotAnalyzeAbortedJob());
         assertFalse("graphsEnabled: default value is false", instance.isGraphsEnabled());
         assertTrue("noCausesEnabled: default value is true", instance.isNoCausesEnabled());
+        assertFalse("metricSquashingEnabled: default value is false", instance.isMetricSquashingEnabled());
         // to ever get graphsEnabled, we'll need a KB with enableStatistics, like MongoDBKB with the right option
         MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
                 Secret.fromString("password"), true, true);
@@ -116,6 +117,7 @@ public class PluginImplHudsonTest {
         form.put("doNotAnalyzeAbortedJob", !instance.isDoNotAnalyzeAbortedJob());
         form.put("graphsEnabled", !instance.isGraphsEnabled());
         form.put("noCausesEnabled", !instance.isNoCausesEnabled());
+        form.put("metricSquashingEnabled", !instance.isMetricSquashingEnabled());
         instance.configure(sreq, form);
         // assert opposite config
         assertFalse("globalEnabled: opposite value is false", instance.isGlobalEnabled());
@@ -124,6 +126,7 @@ public class PluginImplHudsonTest {
         assertTrue("doNotAnalyzeAbortedJob: opposite value is true", instance.isDoNotAnalyzeAbortedJob());
         assertTrue("graphsEnabled: opposite value is true", instance.isGraphsEnabled());
         assertFalse("noCausesEnabled: opposite value is false", instance.isNoCausesEnabled());
+        assertTrue("metricSquashingEnabled: opposite value is true", instance.isMetricSquashingEnabled());
     }
 
     /**
@@ -336,6 +339,7 @@ public class PluginImplHudsonTest {
         form.put("slackFailureCategories", PluginImpl.DEFAULT_SLACK_FAILURE_CATEGORIES);
         form.put("testResultParsingEnabled", true);
         form.put("testResultCategories", "foo bar");
+        form.put("metricSquashingEnabled", false);
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);
         form.put("maximumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
