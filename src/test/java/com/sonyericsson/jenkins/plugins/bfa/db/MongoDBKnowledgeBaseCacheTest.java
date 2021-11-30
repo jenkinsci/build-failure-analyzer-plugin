@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -86,5 +87,33 @@ public class MongoDBKnowledgeBaseCacheTest {
         cache.stop();
         Thread.sleep(1000);
         assertNull("Updater thread should be null", Whitebox.getInternalState(cache, "updaterThread"));
+    }
+
+    /**
+     * Tests that the cache does not fail if the update thread has not run.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testUnStartedCacheStillReturnsData() throws Exception {
+        FailureCause mockedCause =
+                new FailureCause("id", "myFailureCause", "description", "comment", null, "category", null, null);
+        FindIterable<FailureCause> iterable = mock(FindIterable.class);
+        MongoCursor<FailureCause> cursor = mock(MongoCursor.class);
+        when(iterable.iterator()).thenReturn(cursor);
+        when(cursor.next()).thenReturn(mockedCause);
+        when(cursor.hasNext()).thenReturn(true, false);
+        JacksonMongoCollection<FailureCause> collection = mock(JacksonMongoCollection.class);
+        doReturn(iterable).when(collection).find(any(Bson.class));
+        DistinctIterable<String> categoriesIterable = mock(DistinctIterable.class);
+        MongoCursor<String> categoriesCursor = mock(MongoCursor.class);
+        when(categoriesIterable.iterator()).thenReturn(categoriesCursor);
+        when(categoriesCursor.next()).thenReturn("test");
+        when(categoriesCursor.hasNext()).thenReturn(true, false);
+        doReturn(categoriesIterable).when(collection).distinct("categories", String.class);
+        MongoDBKnowledgeBaseCache cache = new MongoDBKnowledgeBaseCache(collection);
+        List<FailureCause> list = cache.getCauses();
+        assertEquals("Cache should have been updated with the correct cause", mockedCause, list.get(0));
+        List<String> categoriesList = cache.getCategories();
+        assertEquals("Cache should have been updated with the correct category", "test", categoriesList.get(0));
     }
 }
