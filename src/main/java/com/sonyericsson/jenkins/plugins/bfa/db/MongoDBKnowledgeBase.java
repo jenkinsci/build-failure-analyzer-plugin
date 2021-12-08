@@ -188,7 +188,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     /**
-     * Set whether or not disable retryWrites while connecting to the mongo server.
+     * enable or disable retryWrites while connecting to the mongo server.
      * @param retryWrites the retryWrites option
      */
     @DataBoundSetter
@@ -706,10 +706,6 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         if (mongo == null) {
             StringBuilder connectionStringBuilder = new StringBuilder(host);
             connectionStringBuilder.append(":").append(port);
-            boolean disableRetryWrites = true;
-            if (retryWrites) {
-                disableRetryWrites = false;
-            }
             MongoClientSettings.Builder builder = MongoClientSettings.builder().applyToClusterSettings(
                     builder1 -> {
                         List<ServerAddress> hostlist = new LinkedList<ServerAddress>();
@@ -721,7 +717,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
                     }).applyToServerSettings(builder12 -> {
             }).applyToSocketSettings(builder13 -> builder13.connectTimeout((CONNECT_TIMEOUT), TimeUnit.MILLISECONDS)).
-                    applyToSslSettings(builder14 -> builder14.enabled(tls)).retryWrites(disableRetryWrites);
+                    applyToSslSettings(builder14 -> builder14.enabled(tls)).retryWrites(retryWrites);
 
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
