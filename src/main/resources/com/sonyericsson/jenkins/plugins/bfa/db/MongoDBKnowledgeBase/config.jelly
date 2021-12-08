@@ -41,7 +41,7 @@
     <f:entry title="${%Use TLS connection}">
         <f:checkbox field="tls" />
     </f:entry>
-    <f:entry title="${%Disable RetryWrites}">
+    <f:entry title="${%Enable RetryWrites}">
         <f:checkbox field="retryWrites" />
     </f:entry>
     <f:entry title="${%Enable statistics logging}">
