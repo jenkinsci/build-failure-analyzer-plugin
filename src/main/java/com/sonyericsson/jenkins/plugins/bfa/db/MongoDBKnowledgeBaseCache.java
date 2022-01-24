@@ -31,6 +31,7 @@ import com.mongodb.client.MongoCursor;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import org.mongojack.JacksonMongoCollection;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -108,6 +109,9 @@ public class MongoDBKnowledgeBaseCache {
      * @return the causes.
      */
     public List<FailureCause> getCauses() {
+        if (cachedFailureCauses == null) {
+            cachedFailureCauses = loadCauses();
+        }
         return cachedFailureCauses;
     }
 
@@ -116,6 +120,9 @@ public class MongoDBKnowledgeBaseCache {
      * @return the categories.
      */
     public List<String> getCategories() {
+        if (categories == null) {
+            categories = loadCategories();
+        }
         return categories;
     }
 
@@ -124,42 +131,61 @@ public class MongoDBKnowledgeBaseCache {
      */
     protected class UpdateThread extends Thread {
         private volatile boolean stop = false;
-            @Override
-            public void run() {
-                while (!stop) {
-                    try {
-                        shouldUpdate.acquire();
-                        if (stop) {
-                            break;
-                        }
-                        List<FailureCause> list = new LinkedList<FailureCause>();
-                        FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY_FILTER);
-                        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
-                        while (iterator.hasNext()) {
-                            list.add(iterator.next());
-                        }
-                        cachedFailureCauses = list;
-                        List<String> catList = new LinkedList<String>();
-                        final DistinctIterable<String> categoriesIterable = jacksonCollection.distinct(
-                                "categories", String.class);
-                        final MongoCursor<String> catIterator = categoriesIterable.iterator();
-                        while (catIterator.hasNext()) {
-                            catList.add(catIterator.next());
-                        }
-                        categories = catList;
-                    } catch (MongoException e) {
-                        logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
-                    } catch (InterruptedException e) {
-                        logger.log(Level.WARNING, "Updater thread interrupted", e);
+        @Override
+        public void run() {
+            while (!stop) {
+                try {
+                    shouldUpdate.acquire();
+                    if (stop) {
+                        break;
                     }
+                    cachedFailureCauses = loadCauses();
+                    categories = loadCategories();
+                } catch (InterruptedException e) {
+                    logger.log(Level.WARNING, "Updater thread interrupted", e);
                 }
             }
-            /**
-             * Stops the execution of this thread.
-             */
-            protected void stopThread() {
-                stop = true;
-                shouldUpdate.release();
-            }
+        }
+        /**
+         * Stops the execution of this thread.
+         */
+        protected void stopThread() {
+            stop = true;
+            shouldUpdate.release();
         }
     }
+
+    private List<FailureCause> loadCauses() {
+        try {
+            List<FailureCause> list = new LinkedList<FailureCause>();
+            FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY_FILTER);
+            final MongoCursor<FailureCause> iterator = dbCauses.iterator();
+            while (iterator.hasNext()) {
+                list.add(iterator.next());
+            }
+            return list;
+        } catch (MongoException e) {
+            logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private List<String> loadCategories() {
+        try {
+            List<String> catList = new LinkedList<String>();
+            final DistinctIterable<String> categoriesIterable = jacksonCollection.distinct(
+                    "categories", String.class);
+            final MongoCursor<String> catIterator = categoriesIterable.iterator();
+            while (catIterator.hasNext()) {
+                catList.add(catIterator.next());
+            }
+            return catList;
+        } catch (MongoException e) {
+            logger.log(Level.SEVERE, "MongoException caught when updating cache: ", e);
+        }
+
+        return Collections.emptyList();
+    }
+
+}
