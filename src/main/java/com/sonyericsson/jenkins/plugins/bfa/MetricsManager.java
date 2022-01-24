@@ -45,14 +45,27 @@ public final class MetricsManager {
     }
 
     /**
-     * Increment caounters for the metric and its categories.
-     * @param cause The cause to increment counters for
+     * Increment counters for the metric and its categories.
+     * @param causes The cause to increment counters for
+     * @param squashCauses Whether or not to squash cause metrics
      */
-    public static void incCounters(IFailureCauseMetricData cause) {
+    public static void incCounters(List<? extends IFailureCauseMetricData> causes, boolean squashCauses) {
         MetricRegistry metricRegistry = Metrics.metricRegistry();
-        Set<String> metrics = getMetricNames(cause);
-        for (String metric : metrics) {
-            metricRegistry.counter(metric).inc();
+        if (squashCauses) {
+            Set<String> metrics = new HashSet<>();
+            for (IFailureCauseMetricData cause : causes) {
+                metrics.addAll(getMetricNames(cause));
+            }
+            for (String metric : metrics) {
+                metricRegistry.counter(metric).inc();
+            }
+        } else {
+            for (IFailureCauseMetricData cause : causes) {
+                Set<String> metrics = getMetricNames(cause);
+                for (String metric : metrics) {
+                    metricRegistry.counter(metric).inc();
+                }
+            }
         }
     }
 }

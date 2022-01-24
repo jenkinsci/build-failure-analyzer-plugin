@@ -167,6 +167,8 @@ public class PluginImpl extends GlobalConfiguration {
     private Boolean testResultParsingEnabled;
     private String testResultCategories;
 
+    private Boolean metricSquashingEnabled;
+
     /**
      * ScanOnDemandVariable instance.
      */
@@ -495,6 +497,19 @@ public class PluginImpl extends GlobalConfiguration {
     }
 
     /**
+     * If metrics should be squashed to only unique categories per build.
+     *
+     * @return True if enabled.
+     */
+    public boolean isMetricSquashingEnabled() {
+        if (metricSquashingEnabled == null) {
+            return false;
+        } else {
+            return metricSquashingEnabled;
+        }
+    }
+
+    /**
      * Sets if this feature is enabled or not. When on all aborted builds will be ignored.
      *
      * @param doNotAnalyzeAbortedJob on or off.
@@ -534,6 +549,17 @@ public class PluginImpl extends GlobalConfiguration {
     @DataBoundSetter
     public void setTestResultCategories(String testResultCategories) {
         this.testResultCategories = testResultCategories;
+    }
+
+    /**
+     * Sets if metrics should be squashed to only unique categories per build.
+     * Default value is false.
+     *
+     * @param metricSquashingEnabled on or off.
+     */
+    @DataBoundSetter
+    public void setMetricSquashingEnabled(boolean metricSquashingEnabled) {
+        this.metricSquashingEnabled = metricSquashingEnabled;
     }
 
     /**

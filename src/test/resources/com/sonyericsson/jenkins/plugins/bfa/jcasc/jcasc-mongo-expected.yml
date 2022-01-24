@@ -12,6 +12,7 @@ knowledgeBase:
     successfulLogging: false
     userName: "bfa"
 maxLogSize: 10
+metricSquashingEnabled: false
 noCausesEnabled: true
 noCausesMessage: "No problems were identified. Please contribute  causes to help others"
 nrOfScanThreads: 6

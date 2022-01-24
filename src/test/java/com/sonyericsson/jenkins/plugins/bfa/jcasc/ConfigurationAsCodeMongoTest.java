@@ -69,6 +69,8 @@ public class ConfigurationAsCodeMongoTest {
 
         assertThat(plugin.getTestResultCategories(), is("hgjghhlllllaa"));
         assertThat(plugin.isTestResultParsingEnabled(), is(true));
+
+        assertThat(plugin.isMetricSquashingEnabled(), is(false));
     }
 
     /**
