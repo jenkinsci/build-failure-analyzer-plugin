@@ -29,10 +29,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
-import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
-
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
@@ -43,6 +40,7 @@ import com.sonyericsson.jenkins.plugins.bfa.test.utils.DifferentKnowledgeBase;
 import hudson.ExtensionList;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -52,18 +50,17 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.WebApp;
 import org.powermock.reflect.Whitebox;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -89,6 +86,7 @@ public class PluginImplHudsonTest {
 
     /**
      * Tests that boolean configure parameters are persisted.
+     *
      * @throws Exception if so
      */
     @Test
@@ -101,6 +99,7 @@ public class PluginImplHudsonTest {
         assertFalse("doNotAnalyzeAbortedJob: default value is false", instance.isDoNotAnalyzeAbortedJob());
         assertFalse("graphsEnabled: default value is false", instance.isGraphsEnabled());
         assertTrue("noCausesEnabled: default value is true", instance.isNoCausesEnabled());
+        assertFalse("metricSquashingEnabled: default value is false", instance.isMetricSquashingEnabled());
         // to ever get graphsEnabled, we'll need a KB with enableStatistics, like MongoDBKB with the right option
         MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
                 Secret.fromString("password"), true, true);
@@ -118,6 +117,7 @@ public class PluginImplHudsonTest {
         form.put("doNotAnalyzeAbortedJob", !instance.isDoNotAnalyzeAbortedJob());
         form.put("graphsEnabled", !instance.isGraphsEnabled());
         form.put("noCausesEnabled", !instance.isNoCausesEnabled());
+        form.put("metricSquashingEnabled", !instance.isMetricSquashingEnabled());
         instance.configure(sreq, form);
         // assert opposite config
         assertFalse("globalEnabled: opposite value is false", instance.isGlobalEnabled());
@@ -126,6 +126,7 @@ public class PluginImplHudsonTest {
         assertTrue("doNotAnalyzeAbortedJob: opposite value is true", instance.isDoNotAnalyzeAbortedJob());
         assertTrue("graphsEnabled: opposite value is true", instance.isGraphsEnabled());
         assertFalse("noCausesEnabled: opposite value is false", instance.isNoCausesEnabled());
+        assertTrue("metricSquashingEnabled: opposite value is true", instance.isMetricSquashingEnabled());
     }
 
     /**
@@ -229,6 +230,7 @@ public class PluginImplHudsonTest {
     /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
      * Tests that a LocalFileKnowledgebase is preserved through a reconfigure without changes.
+     *
      * @throws Exception if so.
      */
     @Test
@@ -286,16 +288,17 @@ public class PluginImplHudsonTest {
     private void assertConfigPageRendering(DifferentKnowledgeBase knowledgeBase, HtmlPage page) {
         //Check that the select box has the correct value
         HtmlElement element = getStorageTypeRow(page);
-        HtmlElement settingsMainElement = element.getOneHtmlElementByAttribute("td", "class", "setting-main");
+        assertNotNull("Should have found the base div", element);
+        HtmlElement settingsMainElement = element.getOneHtmlElementByAttribute("div", "class", "setting-main");
         HtmlSelect select = (HtmlSelect)settingsMainElement.getChildElements().iterator().next();
         assertEquals(knowledgeBase.getDescriptor().getDisplayName(), select.getSelectedOptions().get(0).getText());
 
         //Check that it has the someString input field with correct value
-        DomNode container = settingsMainElement.getEnclosingElement("tr").getNextSibling();
-        HtmlTable table = page.getDocumentElement().getOneHtmlElementByAttribute("table", "name", "knowledgeBase");
+        DomNode container = settingsMainElement.getEnclosingElement("div").getNextSibling();
+        HtmlElement table = page.getDocumentElement().getOneHtmlElementByAttribute("div", "name", "knowledgeBase");
         assertSame("The table should be inside the dropDownContainer", container, table.getParentNode().getParentNode());
-        HtmlTableCell cell = table.getCellAt(1, 2);
-        HtmlTextInput someStringInput = (HtmlTextInput)cell.getHtmlElementDescendants().iterator().next();
+        final HtmlTextInput someStringInput = table.getOneHtmlElementByAttribute("input", "name", "_.someString");
+        assertNotNull("Should have found some text input", someStringInput);
         assertEquals(knowledgeBase.getSomeString(), someStringInput.getText());
     }
 
@@ -306,10 +309,11 @@ public class PluginImplHudsonTest {
      * @return the table row.
      */
     private HtmlElement getStorageTypeRow(HtmlPage page) {
-        List<HtmlElement> elements = page.getDocumentElement().getElementsByAttribute("td", "class", "setting-name");
+        List<HtmlElement> elements = page.getDocumentElement().getElementsByAttribute(
+                "div", "class", "setting-name help-sibling");
         for (HtmlElement element : elements) {
-            if ("Storage type".equals(element.getTextContent())) {
-                return element.getEnclosingElement("tr");
+            if ("Storage type".equals(StringUtils.trim(element.getTextContent()))) {
+                return element.getEnclosingElement("div");
             }
         }
         return null;
@@ -320,7 +324,7 @@ public class PluginImplHudsonTest {
      *
      * @param expectedNoCauseMessage the text for noCausesMessage.
      * @param convert                if convertion should be run or not, set to null no not put the value in the form.
-     * @param nrOfScanThreads           the number of threads.
+     * @param nrOfScanThreads        the number of threads.
      * @return the form data.
      */
     private JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
@@ -335,6 +339,7 @@ public class PluginImplHudsonTest {
         form.put("slackFailureCategories", PluginImpl.DEFAULT_SLACK_FAILURE_CATEGORIES);
         form.put("testResultParsingEnabled", true);
         form.put("testResultCategories", "foo bar");
+        form.put("metricSquashingEnabled", false);
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);
         form.put("maximumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);

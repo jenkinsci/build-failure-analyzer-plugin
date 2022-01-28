@@ -4,6 +4,7 @@ globalEnabled: true
 graphsEnabled: false
 knowledgeBase: "localFile"
 maxLogSize: 10
+metricSquashingEnabled: false
 noCausesEnabled: true
 noCausesMessage: "No problems were identified. Please contribute  causes to help others"
 nrOfScanThreads: 6
