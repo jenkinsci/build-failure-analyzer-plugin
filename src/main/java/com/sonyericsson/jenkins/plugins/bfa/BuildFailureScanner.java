@@ -191,7 +191,6 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList = foundCauseListToLog;
             }
 
-            incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
 
             List<String> fallbackCategories = PluginImpl.getInstance().getFallbackCategories();
 
@@ -219,10 +218,13 @@ public class BuildFailureScanner extends RunListener<Run> {
             }
 
 
-           if (!foundCauseList.isEmpty()) { 
-               incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled()); 
-           } else { 
-               incCounters(new ArrayList<>(Collections.singletonList(UNKNOWNCAUSE)), PluginImpl.getInstance().isMetricSquashingEnabled()); 
+           if (!foundCauseList.isEmpty()) {
+               incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
+           } else {
+               incCounters(
+                   new ArrayList<>(Collections.singletonList(UNKNOWNCAUSE)),
+                   PluginImpl.getInstance().isMetricSquashingEnabled()
+                );
            }
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
