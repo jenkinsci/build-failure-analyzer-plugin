@@ -128,6 +128,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     private boolean enableStatistics;
     private boolean successfulLogging;
     private boolean tls;
+    private boolean retryWrites;
 
     /**
      * Getter for the MongoDB user name.
@@ -186,6 +187,16 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     public void setTls(boolean tls) {
         this.tls = tls;
     }
+
+    /**
+     * enable or disable retryWrites while connecting to the mongo server.
+     * @param retryWrites the retryWrites option
+     */
+    @DataBoundSetter
+    public void setRetryWrites(boolean retryWrites) {
+        this.retryWrites = retryWrites;
+    }
+
 
     /**
      * Standard constructor.
@@ -713,7 +724,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
                     }).applyToServerSettings(builder12 -> {
             }).applyToSocketSettings(builder13 -> builder13.connectTimeout((CONNECT_TIMEOUT), TimeUnit.MILLISECONDS)).
-                    applyToSslSettings(builder14 -> builder14.enabled(tls));
+                    applyToSslSettings(builder14 -> builder14.enabled(tls)).retryWrites(retryWrites);
 
             if (password != null && Util.fixEmpty(password.getPlainText()) != null) {
                 char[] pwd = password.getPlainText().toCharArray();
@@ -843,6 +854,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @param userName the user name.
          * @param password the password.
          * @param tls the tls option.
+         * @param retryWrites the retry_writes option
          * @return {@link FormValidation#ok() } if can be done,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
@@ -852,10 +864,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("dbName") final String dbName,
                 @QueryParameter("userName") final String userName,
                 @QueryParameter("password") final String password,
-                @QueryParameter("tls") final boolean tls) {
+                @QueryParameter("tls") final boolean tls,
+                @QueryParameter("retrywrites") final boolean retryWrites) {
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
                     Secret.fromString(password), false, false);
             base.setTls(tls);
+            base.setRetryWrites(retryWrites);
             try {
                 BasicDBObject ping = new BasicDBObject("ping", "1");
                 base.getDb().runCommand(ping);
