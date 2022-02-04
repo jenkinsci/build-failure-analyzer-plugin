@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 import static hudson.Util.fixEmpty;
 
 import java.io.IOException;
@@ -191,6 +192,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
         for (Map.Entry<String, FailureCause> entry : causes.entrySet()) {
             addMetric(entry.getValue());
         }
+        addMetric(UNKNOWNCAUSE);
     }
 
     @Override

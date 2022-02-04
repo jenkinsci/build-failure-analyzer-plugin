@@ -26,6 +26,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.incCounters;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
@@ -190,7 +191,6 @@ public class BuildFailureScanner extends RunListener<Run> {
                 foundCauseList = foundCauseListToLog;
             }
 
-            incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
 
             List<String> fallbackCategories = PluginImpl.getInstance().getFallbackCategories();
 
@@ -216,6 +216,16 @@ public class BuildFailureScanner extends RunListener<Run> {
                     }
                 }
             }
+
+
+           if (!foundCauseList.isEmpty()) {
+               incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
+           } else {
+               incCounters(
+                   new ArrayList<>(Collections.singletonList(UNKNOWNCAUSE)),
+                   PluginImpl.getInstance().isMetricSquashingEnabled()
+                );
+           }
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
             buildAction.setBuild(build);

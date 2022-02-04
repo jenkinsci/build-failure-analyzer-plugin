@@ -39,6 +39,7 @@ import static com.mongodb.client.model.Filters.not;
 import static com.mongodb.client.model.Filters.exists;
 import static com.mongodb.client.model.Filters.eq;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCursor;
@@ -215,6 +216,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         for (FailureCause entry : getCauseNames()) {
             addMetric(entry);
         }
+        addMetric(UNKNOWNCAUSE);
     }
 
     @Override
