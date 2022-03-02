@@ -174,9 +174,10 @@ public abstract class FailureReader {
         timerThread.start();
         try {
             long startTime = System.currentTimeMillis();
-            int currentLine = 1;
+            int currentLine = 0;
             String line;
             while ((line = reader.readLine()) != null) {
+                currentLine++;
                 for (FailureCause cause : causes) {
                     for (Indication indication : cause.getIndications()) {
                         try {
@@ -198,7 +199,6 @@ public abstract class FailureReader {
                                 throw e;
                             }
                         }
-                        currentLine++;
                         timerThread.touch();
                         if (System.currentTimeMillis() - startTime > adjustedFileTimeout) {
                             logger.warning("File timeout scanning for indication '" + indication.toString() + "'"
