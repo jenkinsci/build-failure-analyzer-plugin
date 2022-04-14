@@ -159,7 +159,7 @@ l.layout(norefresh: true) {
           td {
             if (canRemove) {
               a(href: "remove?id=" + cause.getId(), title:_("Remove")) {
-                img(src: imagesURL + "/16x16/edit-delete.png", alt: _("Remove"))
+                l.task(icon: "icon-edit-delete icon-sm", alt: _("Remove"))
               }
             }
           }
