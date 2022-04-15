@@ -29,6 +29,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 import hudson.model.Run;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.List;
 import java.util.Scanner;
@@ -41,6 +43,7 @@ import static java.lang.Math.max;
  *
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
+@ExportedBean
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FoundIndication {
 
@@ -127,6 +130,7 @@ public class FoundIndication {
      *
      * @return the file in which we found the match.
      */
+    @Exported
     public String getMatchingFile() {
         return matchingFile;
     }
@@ -136,6 +140,7 @@ public class FoundIndication {
      *
      * @return the pattern.
      */
+    @Exported
     public String getPattern() {
         return pattern;
     }
@@ -154,6 +159,7 @@ public class FoundIndication {
      *
      * @return the matching String.
      */
+    @Exported
     public String getMatchingString() {
         return matchingString;
     }
@@ -162,6 +168,7 @@ public class FoundIndication {
      * Getter for the first matching line (useful with multi-line build log indications.
      * @return the first line from {@code getMatchingString()}.
      */
+    @Exported
     public String getFirstMatchingLine() {
         final Scanner scanner = new Scanner(matchingString);
         try {
@@ -204,6 +211,7 @@ public class FoundIndication {
      *
      * @return the matching line number.
      */
+    @Exported
     public int getMatchingLine() {
         if (matchingLine != null) {
             return matchingLine;
@@ -218,6 +226,7 @@ public class FoundIndication {
      *
      * @return the hash of the line of text.
      */
+    @Exported
     public int getMatchingHash() {
         if (matchingString != null) {
             return matchingString.hashCode();
