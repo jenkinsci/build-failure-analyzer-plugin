@@ -256,7 +256,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
         assertEquals(firstNbrOfModifications + 1, secondNbrOfModifications);
         assertStringContains("Latest modification date should be visible",
-                modList.getFirstChild().asText(), DateFormat.getDateTimeInstance(
+                modList.getFirstChild().asNormalizedText(), DateFormat.getDateTimeInstance(
                         DateFormat.SHORT, DateFormat.SHORT).format(cause.getLatestModification().getTime()));
     }
 

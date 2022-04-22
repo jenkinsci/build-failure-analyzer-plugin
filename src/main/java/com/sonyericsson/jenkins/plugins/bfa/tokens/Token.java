@@ -93,6 +93,11 @@ public class Token extends DataBoundTokenMacro {
     }
 
     @Override
+    public boolean handlesHtmlEscapeInternally() {
+        return true;
+    }
+
+    @Override
     public String evaluate(final AbstractBuild<?, ?> build, final TaskListener listener, final String macroName)
         throws MacroEvaluationException, IOException, InterruptedException {
 
@@ -115,6 +120,9 @@ public class Token extends DataBoundTokenMacro {
 
         // Scan the build now.
         new ScanOnDemandTask(run).run();
+
+
+        renderer.setEscapeHtml(this.escapeHtml);
 
         final FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         if (action != null) {

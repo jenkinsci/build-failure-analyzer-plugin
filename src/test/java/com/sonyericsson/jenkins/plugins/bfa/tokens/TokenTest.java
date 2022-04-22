@@ -56,6 +56,7 @@ public class TokenTest extends HudsonTestCase {
     private FreeStyleProject project;
     private FreeStyleBuild noCauseBuild;
     private FreeStyleBuild causeBuild;
+    private FreeStyleBuild htmlCauseBuild;
 
     @Override
     protected void setUp() throws Exception {
@@ -75,8 +76,18 @@ public class TokenTest extends HudsonTestCase {
                 "There was an error.", "comment", "category",
                 new BuildLogIndication(".*ERROR.*"));
 
-        final Future<FreeStyleBuild> buildFuture = project.scheduleBuild2(quietPeriod);
+        Future<FreeStyleBuild> buildFuture = project.scheduleBuild2(quietPeriod);
         causeBuild = buildFuture.get(timeout, TimeUnit.SECONDS);
+
+        BuildFailureScannerHudsonTest.configureCauseAndIndication("error",
+                "There was an <b>error</b>.", "comment", "category",
+                new BuildLogIndication(".*HTML.*"));
+        project.getBuildersList().clear();
+        project.getBuildersList().add(new PrintToLogBuilder("HTML"));
+        project.getBuildersList().add(new MockBuilder(Result.FAILURE));
+
+        buildFuture = project.scheduleBuild2(quietPeriod);
+        htmlCauseBuild = buildFuture.get(timeout, TimeUnit.SECONDS);
     }
 
     /**
@@ -110,7 +121,7 @@ public class TokenTest extends HudsonTestCase {
     public void testExpandAllError() throws Exception {
         final int expectedOutputLineCount = 4;
         final String defaults = TokenMacro.expandAll(causeBuild, listener, "${BUILD_FAILURE_ANALYZER}");
-        System.out.println("Default:\n[" + defaults + "]");
+        //System.out.println("Default:\n[" + defaults + "]");
         assertTrue("Default has title", defaults.contains("Identified problems:"));
         assertTrue("Default has cause", defaults.contains("There was an error."));
         assertTrue("Default has indications", defaults.contains("Indication 1"));
@@ -170,6 +181,82 @@ public class TokenTest extends HudsonTestCase {
         System.out.println("Plaintext full:\n[" + plainFull + "]");
         assertTrue("Plaintext full has title", plainFull.contains("Identified problems:"));
         assertTrue("Plaintext full has cause", plainFull.contains("There was an error."));
+        assertTrue("Plaintext full has indications", plainFull.contains("Indication 1"));
+        assertTrue("Plaintext full is not HTML", !plainFull.contains("<li>"));
+        assertEquals("", expectedOutputLineCount, Iterables.size(Splitter.on('\n')
+                .omitEmptyStrings().split(plainFull)));
+    }
+
+    /**
+     * Tests the expansion when there is a failure for the default setup.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testExpandAllHtml() throws Exception {
+        final int expectedOutputLineCount = 4;
+        final String defaults = TokenMacro.expandAll(htmlCauseBuild, listener,
+                "${BUILD_FAILURE_ANALYZER,escapeHtml=true}");
+        //System.out.println("Default:\n[" + defaults + "]");
+        assertTrue("Default has title", defaults.contains("Identified problems:"));
+        assertTrue("Default has cause", defaults.contains("There was an &lt;b&gt;error&lt;/b&gt;."));
+        assertTrue("Default has indications", defaults.contains("Indication 1"));
+        assertTrue("Default is not HTML", !defaults.contains("<li>"));
+        assertEquals("", expectedOutputLineCount, Iterables.size(Splitter.on('\n')
+                .omitEmptyStrings().split(defaults)));
+    }
+
+    /**
+     * Tests the expansion when there is a failure for the default setup.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testExpandHtml() throws Exception {
+        final int expectedOutputLineCount = 4;
+        final String defaults = TokenMacro.expand(htmlCauseBuild, htmlCauseBuild.getWorkspace(), listener,
+                "${BUILD_FAILURE_ANALYZER,escapeHtml=true}");
+        //System.out.println("Default:\n[" + defaults + "]");
+        assertTrue("Default has title", defaults.contains("Identified problems:"));
+        assertTrue("Default has cause", defaults.contains("There was an &lt;b&gt;error&lt;/b&gt;."));
+        assertTrue("Default has indications", defaults.contains("Indication 1"));
+        assertTrue("Default is not HTML", !defaults.contains("<li>"));
+        assertEquals("", expectedOutputLineCount, Iterables.size(Splitter.on('\n')
+                .omitEmptyStrings().split(defaults)));
+    }
+
+    /**
+     * Tests the expansion when there is a failure that includes the title and indications.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testExpandAllHtmlWithTitleAndIndications() throws Exception {
+        final int expectedOutputLineCount = 4;
+        final String plainFull = TokenMacro.expandAll(htmlCauseBuild, listener,
+                "${BUILD_FAILURE_ANALYZER, includeTitle=true, includeIndications=true,escapeHtml=true}");
+        System.out.println("Plaintext full:\n[" + plainFull + "]");
+        assertTrue("Plaintext full has title", plainFull.contains("Identified problems:"));
+        assertTrue("Plaintext full has cause", plainFull.contains("There was an &lt;b&gt;error&lt;/b&gt;."));
+        assertTrue("Plaintext full has indications", plainFull.contains("Indication 1"));
+        assertTrue("Plaintext full is not HTML", !plainFull.contains("<li>"));
+        assertEquals("", expectedOutputLineCount, Iterables.size(Splitter.on('\n')
+                .omitEmptyStrings().split(plainFull)));
+    }
+
+    /**
+     * Tests the expansion when there is a failure that includes the title and indications.
+     *
+     * @throws Exception If necessary
+     */
+    @Test
+    public void testExpandnHtmlWithTitleAndIndications() throws Exception {
+        final int expectedOutputLineCount = 4;
+        final String plainFull = TokenMacro.expand(htmlCauseBuild, htmlCauseBuild.getWorkspace(), listener,
+                "${BUILD_FAILURE_ANALYZER, includeTitle=true, includeIndications=true,escapeHtml=true}");
+        System.out.println("Plaintext full:\n[" + plainFull + "]");
+        assertTrue("Plaintext full has title", plainFull.contains("Identified problems:"));
+        assertTrue("Plaintext full has cause", plainFull.contains("There was an &lt;b&gt;error&lt;/b&gt;."));
         assertTrue("Plaintext full has indications", plainFull.contains("Indication 1"));
         assertTrue("Plaintext full is not HTML", !plainFull.contains("<li>"));
         assertEquals("", expectedOutputLineCount, Iterables.size(Splitter.on('\n')
@@ -397,10 +484,10 @@ public class TokenTest extends HudsonTestCase {
      * @throws Exception If necessary
      */
     @Test
-    public void testExpandNoFailureWithText() throws Exception {
+    public void testExpandNoFailureWithTextEscapeHtml() throws Exception {
         final String defaultNoResult = TokenMacro.expand(noCauseBuild, noCauseBuild.getWorkspace(), listener,
-                "${BUILD_FAILURE_ANALYZER, noFailureText=\"Sample text with <b>html</b>\"}");
-        assertEquals("Sample text with <b>html</b>", defaultNoResult);
+                "${BUILD_FAILURE_ANALYZER, escapeHtml=true, noFailureText=\"Sample text with <b>html</b>\"}");
+        assertEquals("Sample text with &lt;b&gt;html&lt;/b&gt;", defaultNoResult);
     }
 
 }
