@@ -37,16 +37,13 @@ import hudson.util.FormValidation;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
 
 import javax.servlet.ServletException;
 import java.util.Collections;
@@ -58,33 +55,32 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.hasItems;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link FailureCause}.
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, PluginImpl.class, Metrics.class, MetricRegistry.class })
 public class FailureCauseTest {
 
     private PluginImpl pluginMock;
     private KnowledgeBase baseMock;
     private FailureCause.FailureCauseDescriptor descriptor;
 
-    @Mock
+
     private Jenkins jenkinsMock;
-    @Mock
     private Metrics metricsPlugin;
     @Mock
     private MetricRegistry metricRegistry;
+    private MockedStatic<PluginImpl> pluginMockedStatic;
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
+    private MockedStatic<Metrics> metricsMockedStatic;
 
     /**
      * Runs before every test.
@@ -93,21 +89,32 @@ public class FailureCauseTest {
      */
     @Before
     public void setUp() {
-        pluginMock = PowerMockito.mock(PluginImpl.class);
-        mockStatic(PluginImpl.class);
-        when(PluginImpl.getInstance()).thenReturn(pluginMock);
+        jenkinsMock = mock(Jenkins.class);
+        metricsPlugin = mock(Metrics.class);
+        pluginMock = mock(PluginImpl.class);
+        pluginMockedStatic = mockStatic(PluginImpl.class);
+        pluginMockedStatic.when(PluginImpl::getInstance).thenReturn(pluginMock);
 
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkinsMock);
-        doCallRealMethod().when(Jenkins.class);
-        Jenkins.checkGoodName(any());
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkinsMock);
+        jenkinsMockedStatic.when(() -> Jenkins.checkGoodName(any())).thenCallRealMethod();
 
         descriptor = new FailureCause.FailureCauseDescriptor();
         when(jenkinsMock.getDescriptorByType(FailureCause.FailureCauseDescriptor.class)).thenReturn(descriptor);
 
-        PowerMockito.mockStatic(Metrics.class);
-        PowerMockito.when(jenkinsMock.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
-        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
+        metricsMockedStatic = mockStatic(Metrics.class);
+        when(jenkinsMock.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        pluginMockedStatic.close();
+        jenkinsMockedStatic.close();
+        metricsMockedStatic.close();
     }
 
     /**
@@ -495,7 +502,7 @@ public class FailureCauseTest {
         }
         StaplerRequest request = mock(StaplerRequest.class);
         when(request.getSubmittedForm()).thenReturn(form);
-        when(request.bindJSONToList(same(Indication.class), Matchers.<Object>anyObject()))
+        when(request.bindJSONToList(same(Indication.class), any()))
                 .thenReturn((List<Indication>)indications);
         return request;
     }

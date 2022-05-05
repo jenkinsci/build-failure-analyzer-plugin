@@ -9,14 +9,10 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import jenkins.metrics.api.Metrics;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,30 +22,32 @@ import java.util.List;
 
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.incCounters;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 /**
  * Tests for {@link MetricsManager}.
  */
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({MetricRegistry.class, Metrics.class})
 public class MetricsManagerTest {
-    @Mock
     private MetricRegistry metricRegistry;
-    @Mock
     private Counter counter;
 
     private FailureCause mockedCause;
     private List<? extends IFailureCauseMetricData> mockedCauseList;
+    private MockedStatic<Metrics> metricsMockedStatic;
 
     /**
      * Common stuff to set up for the tests.
      */
     @Before
     public void setUp() {
+        metricRegistry = mock(MetricRegistry.class);
+        counter = mock(Counter.class);
         List<Indication> indications = new LinkedList<>();
         Indication indication = new BuildLogIndication("something");
         indications.add(indication);
@@ -57,9 +55,18 @@ public class MetricsManagerTest {
                 "category", indications, null);
         mockedCauseList = new ArrayList<>(Arrays.asList(mockedCause, mockedCause));
 
-        PowerMockito.mockStatic(Metrics.class);
-        PowerMockito.when(Metrics.metricRegistry()).thenReturn(metricRegistry);
-        PowerMockito.when(metricRegistry.counter(Mockito.anyString())).thenReturn(counter);
+        metricsMockedStatic = mockStatic(Metrics.class);
+        metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
+
+        when(metricRegistry.counter(anyString())).thenReturn(counter);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        metricsMockedStatic.close();
     }
 
     /**

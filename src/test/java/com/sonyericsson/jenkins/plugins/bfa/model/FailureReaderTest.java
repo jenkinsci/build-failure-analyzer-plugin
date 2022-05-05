@@ -42,13 +42,13 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import hudson.model.Run;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
@@ -94,7 +94,7 @@ public class FailureReaderTest {
     private FoundIndication scan(BuildLogIndication indication,
                                  BufferedReader reader,
                                  String currentFile) throws IOException {
-        Run run = PowerMockito.mock(Run.class);
+        Run run = mock(Run.class);
 
         List<FailureCause> causes = new ArrayList<FailureCause>();
         FailureCause cause = new FailureCause("test", "description");

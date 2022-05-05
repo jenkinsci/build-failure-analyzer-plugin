@@ -33,20 +33,16 @@ import com.mongodb.client.result.UpdateResult;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import org.bson.conversions.Bson;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.ArgumentMatchers;
+import org.mockito.MockedStatic;
 import org.mongojack.JacksonMongoCollection;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
 import java.util.Date;
@@ -57,12 +53,13 @@ import java.util.List;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
 
 /**
@@ -70,8 +67,6 @@ import static org.powermock.api.mockito.PowerMockito.when;
  *
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({JacksonMongoCollection.class, Jenkins.class, Metrics.class, MetricRegistry.class})
 public class MongoDBKnowledgeBaseTest {
 
     private JacksonMongoCollection<FailureCause> collection;
@@ -82,34 +77,46 @@ public class MongoDBKnowledgeBaseTest {
     private FailureCause mockedCause;
     private static final int PORT = 27017;
 
-    @Mock
     private Jenkins jenkins;
-    @Mock
     private Metrics metricsPlugin;
-    @Mock
     private MetricRegistry metricRegistry;
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
+    private MockedStatic<Metrics> metricsMockedStatic;
 
     /**
      * Common stuff to set up for the tests.
      */
     @Before
     public void setUp() {
+        jenkins = mock(Jenkins.class);
+        metricsPlugin = mock(Metrics.class);
+        metricRegistry = mock(MetricRegistry.class);
         kb = new MongoDBKnowledgeBase("", PORT, "mydb", null, null, false, false);
         collection = mock(JacksonMongoCollection.class);
         statisticsCollection = mock(JacksonMongoCollection.class);
         Whitebox.setInternalState(kb, "jacksonCollection", collection);
         Whitebox.setInternalState(kb, "jacksonStatisticsCollection", statisticsCollection);
+
         indications = new LinkedList<Indication>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
                 "category", indications, null);
 
-        PowerMockito.mockStatic(Jenkins.class);
-        PowerMockito.mockStatic(Metrics.class);
-        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
-        PowerMockito.when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
-        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        metricsMockedStatic = mockStatic(Metrics.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        jenkinsMockedStatic.close();
+        metricsMockedStatic.close();
     }
 
     /**
@@ -139,7 +146,7 @@ public class MongoDBKnowledgeBaseTest {
         when(iterable.iterator()).thenReturn(cursor);
         when(cursor.next()).thenReturn(mockedCause);
         when(cursor.hasNext()).thenReturn(true, false);
-        doReturn(iterable).when(collection).find(Matchers.<Bson>any());
+        doReturn(iterable).when(collection).find(ArgumentMatchers.<Bson>any());
         Collection<FailureCause> fetchedCauses = kb.getCauseNames();
         assertNotNull("The fetched cause should not be null", fetchedCauses);
         Iterator fetch = fetchedCauses.iterator();
@@ -157,7 +164,7 @@ public class MongoDBKnowledgeBaseTest {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
         UpdateResult result = mock(UpdateResult.class);
         doReturn(result).when(collection).save(mockedCause);
-        doReturn(iterable).when(collection).find(Matchers.<Bson>any());
+        doReturn(iterable).when(collection).find(ArgumentMatchers.<Bson>any());
         when(iterable.first()).thenReturn(mockedCause);
         MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
         Whitebox.setInternalState(kb, cache);
@@ -176,14 +183,14 @@ public class MongoDBKnowledgeBaseTest {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
         UpdateResult result = mock(UpdateResult.class);
         doReturn(result).when(collection).save(mockedCause);
-        doReturn(iterable).when(collection).find(Matchers.<Bson>any());
+        doReturn(iterable).when(collection).find(ArgumentMatchers.<Bson>any());
         when(iterable.first()).thenReturn(mockedCause);
         MongoDBKnowledgeBaseCache cache = mock(MongoDBKnowledgeBaseCache.class);
         Whitebox.setInternalState(kb, cache);
         FailureCause addedCause = kb.saveCause(mockedCause);
         assertNotNull(addedCause);
         assertSame(mockedCause, addedCause);
-        verify(metricRegistry, times(2)).counter(Mockito.anyString());
+        verify(metricRegistry, times(2)).counter(anyString());
     }
 
     /**
@@ -193,7 +200,7 @@ public class MongoDBKnowledgeBaseTest {
      */
     @Test(expected = MongoException.class)
     public void testThrowMongo() throws Exception {
-        when(collection.find(Matchers.<Bson>any())).thenThrow(MongoException.class);
+        when(collection.find(ArgumentMatchers.<Bson>any())).thenThrow(MongoException.class);
         kb.getCauseNames();
     }
 }

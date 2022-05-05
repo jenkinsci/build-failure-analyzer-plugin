@@ -39,6 +39,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.StatisticsLogger;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.init.InitMilestone;
@@ -51,7 +52,6 @@ import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -116,7 +116,7 @@ public class BuildFailureScanner extends RunListener<Run> {
     }
 
     @Override
-    public void onCompleted(Run run, @Nonnull TaskListener listener) {
+    public void onCompleted(Run run, @NonNull TaskListener listener) {
         logger.entering(getClass().getName(), "onCompleted");
         doScan(run);
     }

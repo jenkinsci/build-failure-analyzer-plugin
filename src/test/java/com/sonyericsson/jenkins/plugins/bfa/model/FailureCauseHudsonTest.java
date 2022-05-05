@@ -35,11 +35,11 @@ import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
 import java.util.Iterator;

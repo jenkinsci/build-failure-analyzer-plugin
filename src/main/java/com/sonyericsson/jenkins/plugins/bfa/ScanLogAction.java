@@ -1,10 +1,10 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import javax.annotation.Nonnull;
 import jenkins.model.RunAction2;
 import org.apache.commons.io.FileUtils;
 
@@ -23,7 +23,7 @@ public class ScanLogAction implements RunAction2 {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     @Override
     public String getIconFileName() {
         return PluginImpl.getDefaultIcon();
@@ -32,7 +32,7 @@ public class ScanLogAction implements RunAction2 {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     @Override
     public String getDisplayName() {
         return Messages.ScanLogAction_DisplayName();
@@ -49,7 +49,7 @@ public class ScanLogAction implements RunAction2 {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     @Override
     public String getUrlName() {
         return "failure-cause-scan-log";

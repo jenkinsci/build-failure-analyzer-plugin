@@ -38,6 +38,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import hudson.Util;
 import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
@@ -45,7 +46,6 @@ import org.apache.commons.lang.StringUtils;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.powermock.reflect.Whitebox;
 
 import javax.servlet.http.HttpSession;
 import java.text.DateFormat;
@@ -59,9 +59,9 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -256,7 +256,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
         assertEquals(firstNbrOfModifications + 1, secondNbrOfModifications);
         assertStringContains("Latest modification date should be visible",
-                modList.getFirstChild().asText(), DateFormat.getDateTimeInstance(
+                modList.getFirstChild().asNormalizedText(), DateFormat.getDateTimeInstance(
                         DateFormat.SHORT, DateFormat.SHORT).format(cause.getLatestModification().getTime()));
     }
 
