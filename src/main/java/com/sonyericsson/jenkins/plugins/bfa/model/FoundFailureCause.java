@@ -123,6 +123,7 @@ public class FoundFailureCause implements IFailureCauseMetricData {
      *
      * @return the list.
      */
+    @Exported
     public List<FoundIndication> getIndications() {
         if (indications == null) {
             indications = new LinkedList<FoundIndication>();
