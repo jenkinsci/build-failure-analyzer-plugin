@@ -30,6 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import hudson.matrix.MatrixRun;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import java.util.logging.Logger;
 
@@ -73,6 +74,8 @@ public class Renderer {
      */
     private String noFailureText = "";
 
+    private boolean escapeHtml = false;
+
     /**
      * @param includeIndications When true, the indication numbers and links into the console log are included
      * in the token replacement text.
@@ -111,7 +114,17 @@ public class Renderer {
     }
 
     /**
-     * Append the either the html or plain text given to the StringBuilder, depending on "useHtmlFormat" value.
+     * See {@link org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro#escapeHtml}.
+     * Only applicable when {@link #useHtmlFormat} == <code>false</code>
+     *
+     * @param escapeHtml true if so.
+     */
+    public void setEscapeHtml(final boolean escapeHtml) {
+        this.escapeHtml = escapeHtml;
+    }
+
+    /**
+     * Append either the html or plain text given to the StringBuilder, depending on "useHtmlFormat" value.
      * @param stringBuilder The {@link StringBuilder} to append to.
      * @param htmlText Text to append in case of html, can be null.
      * @param plainText Text to append in case of plain text, can be null.
@@ -133,7 +146,11 @@ public class Renderer {
         final FailureCauseDisplayData data = action.getFailureCauseDisplayData();
         if (data.getFoundFailureCauses().isEmpty() && data.getDownstreamFailureCauses().isEmpty()) {
             logger.info("there were no causes");
-            return noFailureText;
+            if (!useHtmlFormat && escapeHtml) {
+                return StringEscapeUtils.escapeHtml(noFailureText);
+            } else {
+                return noFailureText;
+            }
         }
         final StringBuilder stringBuilder = new StringBuilder();
         addTitle(stringBuilder);
@@ -236,7 +253,11 @@ public class Renderer {
                 } else {
                     stringBuilder.append(LIST_BULLET_SPACE);
                 }
-                stringBuilder.append(lines.get(lineIndex));
+                String str = lines.get(lineIndex);
+                if (escapeHtml) {
+                    str = StringEscapeUtils.escapeHtml(str);
+                }
+                stringBuilder.append(str);
                 stringBuilder.append("\n");
             }
             if (includeIndications) {
@@ -297,9 +318,17 @@ public class Renderer {
             stringBuilder.append(":\n");
             stringBuilder.append(indentForDepth(indentLevel));
             stringBuilder.append(LIST_BULLET_SPACE);
-            stringBuilder.append("<");
+            if (escapeHtml) {
+                stringBuilder.append("&lt;");
+            } else {
+                stringBuilder.append("<");
+            }
             stringBuilder.append(indicationUrlBuilder.getUrlString());
-            stringBuilder.append(">\n");
+            if (escapeHtml) {
+                stringBuilder.append("&gt;\n");
+            } else {
+                stringBuilder.append(">\n");
+            }
         }
     }
 
@@ -364,7 +393,11 @@ public class Renderer {
         } else {
             stringBuilder.append(indentForDepth(indentLevel));
             stringBuilder.append(LIST_BULLET);
-            stringBuilder.append(matrixRun.getFullDisplayName());
+            String fullDisplayName = matrixRun.getFullDisplayName();
+            if (escapeHtml) {
+                fullDisplayName = StringEscapeUtils.escapeHtml(fullDisplayName);
+            }
+            stringBuilder.append(fullDisplayName);
             stringBuilder.append("\n");
             addFailureCauseDisplayDataRepresentation(stringBuilder, data, nextIndentLevel);
         }
