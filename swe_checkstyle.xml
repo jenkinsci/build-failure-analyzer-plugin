@@ -21,6 +21,7 @@
 
     <module name="LineLength">
         <property name="max" value="121"/>
+        <property name="ignorePattern" value="^ *\* *.+$"/> <!-- ignore javadoc comments -->
     </module>
 
     <module name="TreeWalker">

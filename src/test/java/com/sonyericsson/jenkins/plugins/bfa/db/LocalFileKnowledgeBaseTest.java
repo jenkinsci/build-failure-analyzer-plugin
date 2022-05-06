@@ -33,14 +33,11 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.CopyOnWriteList;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -52,8 +49,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -63,26 +61,27 @@ import static org.mockito.Mockito.verify;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({PluginImpl.class, Jenkins.class, Metrics.class, MetricRegistry.class})
 public class LocalFileKnowledgeBaseTest {
 
     private CopyOnWriteList<FailureCause> oldCauses;
     private FailureCause olle;
     private FailureCause existingCause;
 
-    @Mock
     private Jenkins jenkins;
-    @Mock
     private Metrics metricsPlugin;
-    @Mock
     private MetricRegistry metricRegistry;
+    private MockedStatic<PluginImpl> pluginMockedStatic;
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
+    private MockedStatic<Metrics> metricsMockedStatic;
 
     /**
      * Some usable test data for most tests.
      */
     @Before
     public void setUp() {
+        jenkins = mock(Jenkins.class);
+        metricsPlugin = mock(Metrics.class);
+        metricRegistry = mock(MetricRegistry.class);
         oldCauses = new CopyOnWriteList<FailureCause>();
         oldCauses.add(new FailureCause("nisse", "Nils has been in your code again!"));
         olle = new FailureCause("olle", "Olle is a good guy who wouldn't hurt a fly.");
@@ -91,15 +90,25 @@ public class LocalFileKnowledgeBaseTest {
         existingCause = new FailureCause("existingId", "me", "I am already here!", "someComment", new Date(),
                 "myCategory", new LinkedList<Indication>(), new LinkedList<FailureCauseModification>());
         oldCauses.add(existingCause);
-        PluginImpl mock = PowerMockito.mock(PluginImpl.class);
-        PowerMockito.mockStatic(PluginImpl.class);
-        PowerMockito.when(PluginImpl.getInstance()).thenReturn(mock);
+        PluginImpl mock = mock(PluginImpl.class);
+        pluginMockedStatic = mockStatic(PluginImpl.class);
+        pluginMockedStatic.when(PluginImpl::getInstance).thenReturn(mock);
 
-        PowerMockito.mockStatic(Jenkins.class);
-        PowerMockito.mockStatic(Metrics.class);
-        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
-        PowerMockito.when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
-        PowerMockito.when(metricsPlugin.metricRegistry()).thenReturn(metricRegistry);
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        metricsMockedStatic = mockStatic(Metrics.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
+        metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        pluginMockedStatic.close();
+        jenkinsMockedStatic.close();
+        metricsMockedStatic.close();
     }
 
     /**

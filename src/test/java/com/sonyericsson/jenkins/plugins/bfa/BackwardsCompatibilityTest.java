@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
@@ -40,7 +41,6 @@ import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.recipes.LocalData;
-import org.powermock.reflect.Whitebox;
 
 import java.util.Collection;
 import java.util.List;
