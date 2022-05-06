@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Jenkins Build Failure Analyzer.
+    This plugin scans build logs and other files in the workspace for recognised patterns
+    of known causes to build failures, and displays them on the build page for quicker
+    recognition of why the build failed.
+</div>

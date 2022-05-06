@@ -31,6 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandQueue;
 import com.sonyericsson.jenkins.plugins.bfa.sod.ScanOnDemandVariables;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
@@ -55,7 +56,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -325,7 +325,7 @@ public class PluginImpl extends GlobalConfiguration {
      *
      * @return the one.
      */
-    @Nonnull
+    @NonNull
     public static PluginImpl getInstance() {
         return ExtensionList.lookup(PluginImpl.class).get(0);
     }

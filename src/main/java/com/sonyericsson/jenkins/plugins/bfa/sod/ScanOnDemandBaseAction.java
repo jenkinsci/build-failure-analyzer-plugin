@@ -27,6 +27,8 @@ import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -50,8 +52,6 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Iterator;
@@ -274,7 +274,7 @@ public class ScanOnDemandBaseAction implements Action {
          *
          * @return the url name
          */
-        @Nonnull
+        @NonNull
         public abstract String getUrlName();
 
         /**
@@ -297,7 +297,7 @@ public class ScanOnDemandBaseAction implements Action {
          *
          * @return the name
          */
-        @Nonnull
+        @NonNull
         public abstract String getDisplayName();
 
         /**
@@ -306,7 +306,7 @@ public class ScanOnDemandBaseAction implements Action {
          * @param job the job to filter builds from
          * @return an iterator of the matching builds
          */
-        @Nonnull
+        @NonNull
         abstract Iterator<Run> getRuns(Job job);
 
         /**
@@ -330,7 +330,7 @@ public class ScanOnDemandBaseAction implements Action {
          * @return the ancestor action
          *
          */
-        @Nonnull
+        @NonNull
         public ScanOnDemandBaseAction getParent() {
             StaplerRequest request = Stapler.getCurrentRequest();
             if (request == null) {
@@ -405,19 +405,19 @@ public class ScanOnDemandBaseAction implements Action {
          */
         static final String URL = "nonscanned";
 
-        @Nonnull
+        @NonNull
         @Override
         public String getUrlName() {
             return URL;
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.ScanOnDemandBaseAction_NonScanned_DisplayName();
         }
 
-        @Nonnull
+        @NonNull
         @Override
         Iterator<Run> getRuns(Job job) {
             return new Iterators.FilterIterator<Run>(job.getBuilds().iterator()) {
@@ -439,19 +439,19 @@ public class ScanOnDemandBaseAction implements Action {
     @Extension
     @Restricted(NoExternalUse.class)
     public static class AllBuilds extends ScanMode {
-        @Nonnull
+        @NonNull
         @Override
         public String getUrlName() {
             return "all";
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.ScanOnDemandBaseAction_AllBuilds_DisplayName();
         }
 
-        @Nonnull
+        @NonNull
         @Override
         Iterator<Run> getRuns(Job job) {
             return new Iterators.FilterIterator<Run>(job.getBuilds().iterator()) {

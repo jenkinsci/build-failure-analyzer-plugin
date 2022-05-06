@@ -23,9 +23,8 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.InvisibleAction;
-
-import javax.annotation.Nonnull;
 
 import hudson.model.Job;
 import hudson.model.Run;
@@ -45,7 +44,7 @@ public class FailureCauseProjectAction extends InvisibleAction {
     /**
      * @param job A project to report.
      */
-    public FailureCauseProjectAction(@Nonnull Job<?, ?> job) {
+    public FailureCauseProjectAction(@NonNull Job<?, ?> job) {
         this.job = job;
     }
 

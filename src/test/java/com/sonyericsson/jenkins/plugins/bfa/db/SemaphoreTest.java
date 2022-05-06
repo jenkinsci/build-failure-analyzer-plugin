@@ -23,10 +23,10 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import org.junit.Test;
-import org.powermock.reflect.Whitebox;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 

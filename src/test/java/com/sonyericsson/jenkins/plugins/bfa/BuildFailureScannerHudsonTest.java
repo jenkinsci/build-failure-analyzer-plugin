@@ -42,6 +42,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIn
 import com.sonyericsson.jenkins.plugins.bfa.statistics.FailureCauseStatistics;
 import com.sonyericsson.jenkins.plugins.bfa.statistics.Statistics;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -60,10 +61,9 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 import org.jvnet.hudson.test.TestBuilder;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -82,7 +82,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -903,7 +903,7 @@ public class BuildFailureScannerHudsonTest {
                 hasCalledStatistics = true;
                 return null;
             }
-        }).when(base).saveStatistics(Matchers.<Statistics>any());
+        }).when(base).saveStatistics(ArgumentMatchers.<Statistics>any());
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, base);
         FreeStyleProject project = createProject();
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());

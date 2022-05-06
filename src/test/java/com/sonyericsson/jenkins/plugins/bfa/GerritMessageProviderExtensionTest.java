@@ -7,44 +7,55 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import hudson.model.Job;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for the GerritMessageProviderExtensionTest.
  * @author Alexander Akbashev mr.akbashev@gmail.com
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({PluginImpl.class, Jenkins.class })
 public class GerritMessageProviderExtensionTest {
     private static final String JENKINS_URL =  "http://some.jenkins.com";
     private static final String BUILD_URL = "jobs/build/123";
     private static final String NO_CAUSES_MSG = "FEEL_FREE_TO_PUT_WHAT_EVER_YOU_WANT";
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
+    private MockedStatic<PluginImpl> pluginMockedStatic;
 
     /**
      * Initialize basic stuff: Jenkins, PluginImpl, etc.
      */
     @Before
     public void setUp() {
-        PowerMockito.mockStatic(Jenkins.class);
-        Jenkins jenkins = PowerMockito.mock(Jenkins.class);
-        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
-        PowerMockito.when(jenkins.getRootUrl()).thenReturn(JENKINS_URL);
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        Jenkins jenkins = mock(Jenkins.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        when(jenkins.getRootUrl()).thenReturn(JENKINS_URL);
 
 
-        PowerMockito.mockStatic(PluginImpl.class);
-        PluginImpl plugin = PowerMockito.mock(PluginImpl.class);
-        PowerMockito.when(plugin.isGerritTriggerEnabled()).thenReturn(true);
-        PowerMockito.when(PluginImpl.getInstance()).thenReturn(plugin);
-        PowerMockito.when(plugin.getNoCausesMessage()).thenReturn(NO_CAUSES_MSG);
+        pluginMockedStatic = mockStatic(PluginImpl.class);
+        PluginImpl plugin = mock(PluginImpl.class);
+        when(plugin.isGerritTriggerEnabled()).thenReturn(true);
+        pluginMockedStatic.when(PluginImpl::getInstance).thenReturn(plugin);
+        when(plugin.getNoCausesMessage()).thenReturn(NO_CAUSES_MSG);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        jenkinsMockedStatic.close();
+        pluginMockedStatic.close();
     }
 
     /**
@@ -55,9 +66,9 @@ public class GerritMessageProviderExtensionTest {
      * @return Run with desired failure cause.
      */
     private Run getRunWithTopCause(String cause) {
-        Run run = PowerMockito.mock(Run.class);
-        Job parent = PowerMockito.mock(Job.class);
-        FailureCauseBuildAction action = PowerMockito.mock(FailureCauseBuildAction.class);
+        Run run = mock(Run.class);
+        Job parent = mock(Job.class);
+        FailureCauseBuildAction action = mock(FailureCauseBuildAction.class);
 
         List<FoundFailureCause> failureCauses = new ArrayList<FoundFailureCause>();
 
@@ -68,11 +79,11 @@ public class GerritMessageProviderExtensionTest {
             failureCauses.add(new FoundFailureCause(new FailureCause("testName", cause)));
         }
 
-        PowerMockito.when(run.getAction(FailureCauseBuildAction.class)).thenReturn(action);
-        PowerMockito.when(run.getUrl()).thenReturn(BUILD_URL);
-        PowerMockito.when(run.getParent()).thenReturn(parent);
-        PowerMockito.when(action.getBuild()).thenReturn(run);
-        PowerMockito.when(action.getFailureCauseDisplayData()).thenReturn(displayData);
+        when(run.getAction(FailureCauseBuildAction.class)).thenReturn(action);
+        when(run.getUrl()).thenReturn(BUILD_URL);
+        when(run.getParent()).thenReturn(parent);
+        when(action.getBuild()).thenReturn(run);
+        when(action.getFailureCauseDisplayData()).thenReturn(displayData);
         return run;
     }
 
@@ -84,9 +95,9 @@ public class GerritMessageProviderExtensionTest {
      * @return Run with desired failure cause in third level.
      */
     private Run getRunWithDeepCause(String cause) {
-        Run run = PowerMockito.mock(Run.class);
-        Job parent = PowerMockito.mock(Job.class);
-        FailureCauseBuildAction action = PowerMockito.mock(FailureCauseBuildAction.class);
+        Run run = mock(Run.class);
+        Job parent = mock(Job.class);
+        FailureCauseBuildAction action = mock(FailureCauseBuildAction.class);
 
         List<FoundFailureCause> emptyFailureCauses = new ArrayList<FoundFailureCause>();
         List<FoundFailureCause> failureCauses = new ArrayList<FoundFailureCause>();
@@ -106,11 +117,11 @@ public class GerritMessageProviderExtensionTest {
         topLevelDisplayData.setFoundFailureCauses(emptyFailureCauses);
         topLevelDisplayData.addDownstreamFailureCause(middleDisplayData);
 
-        PowerMockito.when(run.getAction(FailureCauseBuildAction.class)).thenReturn(action);
-        PowerMockito.when(run.getUrl()).thenReturn(BUILD_URL);
-        PowerMockito.when(run.getParent()).thenReturn(parent);
-        PowerMockito.when(action.getBuild()).thenReturn(run);
-        PowerMockito.when(action.getFailureCauseDisplayData()).thenReturn(topLevelDisplayData);
+        when(run.getAction(FailureCauseBuildAction.class)).thenReturn(action);
+        when(run.getUrl()).thenReturn(BUILD_URL);
+        when(run.getParent()).thenReturn(parent);
+        when(action.getBuild()).thenReturn(run);
+        when(action.getFailureCauseDisplayData()).thenReturn(topLevelDisplayData);
 
         return run;
     }

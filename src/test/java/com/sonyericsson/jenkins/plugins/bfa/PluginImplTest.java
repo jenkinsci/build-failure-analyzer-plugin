@@ -24,27 +24,24 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import hudson.model.Hudson;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
 
 import static org.junit.Assert.assertEquals;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * JUnit 4 Tests for {@link PluginImpl}.
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Hudson.class)
 public class PluginImplTest {
+
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
 
     /**
      * Initial mocking.
@@ -52,8 +49,16 @@ public class PluginImplTest {
     @Before
     public void setUp() {
         Jenkins jenkins = mock(Jenkins.class);
-        mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkins);
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        jenkinsMockedStatic.close();
     }
 
     /**
@@ -82,7 +87,7 @@ public class PluginImplTest {
     }
 
     /**
-     * Tests that you can't set {@link PluginImpl#nrOfScanThreads} to 0.
+     * Tests that you can't set {@link PluginImpl#setNrOfScanThreads(int)} to 0.
      */
     @Test(expected = IllegalArgumentException.class)
     public void testSetNrOfScanThreadsZero() {

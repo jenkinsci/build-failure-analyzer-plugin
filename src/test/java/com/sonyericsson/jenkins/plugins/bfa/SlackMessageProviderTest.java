@@ -3,46 +3,58 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import jenkins.model.Jenkins;
 import jenkins.plugins.slack.SlackNotifier;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import org.apache.http.ssl.SSLInitializationException;
+import org.mockito.MockedStatic;
 
 /**
  * Tests for the SlackMessageProvider class.
  * @author Johan Cornelissen &lt;j.cornelissen@queensu.ca&gt;
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({PluginImpl.class, SlackNotifier.class, Jenkins.class})
 public class SlackMessageProviderTest {
     private SlackNotifier slackPlugin;
     private SlackNotifier.DescriptorImpl descriptor;
     private static final String JENKINS_URL =  "http://some.jenkins.com";
+    private MockedStatic<Jenkins> jenkinsMockedStatic;
+    private MockedStatic<SlackNotifier> slackNotifierMockedStatic;
+    private MockedStatic<PluginImpl> pluginMockedStatic;
 
     /**
      * Initialize basic stuff: Jenkins, PluginImpl, etc.
      */
     @Before
     public void setUp() {
-        PowerMockito.mockStatic(Jenkins.class);
-        Jenkins jenkins = PowerMockito.mock(Jenkins.class);
-        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
-        PowerMockito.when(jenkins.getRootUrl()).thenReturn(JENKINS_URL);
+        jenkinsMockedStatic = mockStatic(Jenkins.class);
+        Jenkins jenkins = mock(Jenkins.class);
+        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        when(jenkins.getRootUrl()).thenReturn(JENKINS_URL);
 
-        PowerMockito.mockStatic(SlackNotifier.class);
-        slackPlugin = PowerMockito.mock(SlackNotifier.class);
+        slackNotifierMockedStatic = mockStatic(SlackNotifier.class);
+        slackPlugin = mock(SlackNotifier.class);
 
-        PowerMockito.mockStatic(PluginImpl.class);
-        PluginImpl plugin = PowerMockito.mock(PluginImpl.class);
-        PowerMockito.when(plugin.isSlackNotifEnabled()).thenReturn(true);
-        PowerMockito.when(PluginImpl.getInstance()).thenReturn(plugin);
-        PowerMockito.when(PluginImpl.getInstance().getSlackChannelName()).thenReturn("");
+        pluginMockedStatic = mockStatic(PluginImpl.class);
+        PluginImpl plugin = mock(PluginImpl.class);
+        when(plugin.isSlackNotifEnabled()).thenReturn(true);
+        pluginMockedStatic.when(PluginImpl::getInstance).thenReturn(plugin);
+        when(plugin.getSlackChannelName()).thenReturn("");
+    }
+
+    /**
+     * Release all the static mocks.
+     */
+    @After
+    public void tearDown() {
+        jenkinsMockedStatic.close();
+        slackNotifierMockedStatic.close();
+        pluginMockedStatic.close();
     }
 
     /**
