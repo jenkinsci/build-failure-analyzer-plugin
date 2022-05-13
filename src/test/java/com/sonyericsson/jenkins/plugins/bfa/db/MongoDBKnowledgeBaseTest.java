@@ -128,8 +128,10 @@ public class MongoDBKnowledgeBaseTest {
      */
     @Test
     public void testClusterModes() throws Exception {
-        MongoDBKnowledgeBase singleNodekb = new MongoDBKnowledgeBase("oneNode", PORT, "mydb", null, null, false, false);
-        MongoDBKnowledgeBase multiNodekb = new MongoDBKnowledgeBase("node1,node2,node3", PORT, "mydb", null, null, false, false);
+        MongoDBKnowledgeBase singleNodekb = new MongoDBKnowledgeBase(
+                "oneNode", PORT, "mydb", null, null, false, false);
+        MongoDBKnowledgeBase multiNodekb = new MongoDBKnowledgeBase(
+                "node1,node2,node3", PORT, "mydb", null, null, false, false);
         MongoClient mongo = singleNodekb.getMongoConnection();
         ClusterConnectionMode connectionMode = mongo.getClusterDescription().getConnectionMode();
         assertSame(connectionMode, ClusterConnectionMode.SINGLE);
