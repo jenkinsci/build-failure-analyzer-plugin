@@ -28,8 +28,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
@@ -117,6 +119,23 @@ public class MongoDBKnowledgeBaseTest {
     public void tearDown() {
         jenkinsMockedStatic.close();
         metricsMockedStatic.close();
+    }
+
+    /**
+     * Tests that the cluster connection mode is set correctly for each kind of input.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testClusterModes() throws Exception {
+        MongoDBKnowledgeBase singleNodekb = new MongoDBKnowledgeBase("oneNode", PORT, "mydb", null, null, false, false);
+        MongoDBKnowledgeBase multiNodekb = new MongoDBKnowledgeBase("node1,node2,node3", PORT, "mydb", null, null, false, false);
+        MongoClient mongo = singleNodekb.getMongoConnection();
+        ClusterConnectionMode connectionMode = mongo.getClusterDescription().getConnectionMode();
+        assertSame(connectionMode, ClusterConnectionMode.SINGLE);
+        mongo = multiNodekb.getMongoConnection();
+        connectionMode = mongo.getClusterDescription().getConnectionMode();
+        assertSame(connectionMode, ClusterConnectionMode.MULTIPLE);
     }
 
     /**
