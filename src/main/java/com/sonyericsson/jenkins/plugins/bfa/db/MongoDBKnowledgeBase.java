@@ -709,17 +709,23 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets the connection to the MongoDB
      * @return the Mongo.
      */
-    private MongoClient getMongoConnection() {
+    MongoClient getMongoConnection() {
         if (mongo == null) {
             StringBuilder connectionStringBuilder = new StringBuilder(host);
             connectionStringBuilder.append(":").append(port);
             MongoClientSettings.Builder builder = MongoClientSettings.builder().applyToClusterSettings(
                     builder1 -> {
-                        List<ServerAddress> hostlist = new LinkedList<ServerAddress>();
-                        hostlist.add(new ServerAddress(host, port));
+                        List<ServerAddress> hostlist = new LinkedList<>();
+                        for (String h: host.split(",")) {
+                            hostlist.add(new ServerAddress(h, port));
+                        }
+                        //CS IGNORE AvoidInlineConditionals FOR NEXT 3 LINES. REASON: Split up makes code less readable.
+                        ClusterConnectionMode mode = hostlist.size() > 1
+                                ? ClusterConnectionMode.MULTIPLE
+                                : ClusterConnectionMode.SINGLE;
                         builder1.hosts(hostlist).
                                 serverSelectionTimeout(SERVER_SELECTION_TIMEOUT, TimeUnit.MILLISECONDS).
-                                mode(ClusterConnectionMode.SINGLE);
+                                mode(mode);
                     }).applyToConnectionPoolSettings(builder15 -> {
 
                     }).applyToServerSettings(builder12 -> {
