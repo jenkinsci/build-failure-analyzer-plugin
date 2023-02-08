@@ -25,7 +25,7 @@ public class ConfigurationAsCodeLocalTest {
 
     static final String NO_CAUSES_MESSAGE = "No problems were identified. Please contribute  causes to help others";
     static final int EXPECTED_SCAN_THREADS = 6;
-    static final int EXPECTED_MAXIMUM_SOD_WORKER_THREADS = 4;
+    static final int EXPECTED_MAXIMUM_SOD_WORKER_THREADS = 7;
     static final int EXPECTED_MINIMUM_SOD_WORKER_THREADS = 2;
     static final int EXPECTED_SOD_CORE_POOL_NUMBER_OF_THREADS = 6;
     static final int EXPECTED_SOD_THREAD_KEEP_ALIVE_TIME = 17;
