@@ -126,11 +126,8 @@ public class ScanOnDemandVariables extends AbstractDescribableImpl<ScanOnDemandV
      * @return int value.
      */
      public int getSodCorePoolNumberOfThreads() {
-         if (sodCorePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
-             return ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS;
-         }
-
-         return sodCorePoolNumberOfThreads;
+         return Math.min(Math.max(sodCorePoolNumberOfThreads, ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS),
+                 getMaximumSodWorkerThreads());
      }
 
     /**

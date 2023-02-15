@@ -11,7 +11,7 @@ nrOfScanThreads: 6
 slackFailureCategories: "ALL"
 slackNotifEnabled: false
 sodVariables:
-  maximumSodWorkerThreads: 4
+  maximumSodWorkerThreads: 7
   minimumSodWorkerThreads: 2
   sodCorePoolNumberOfThreads: 6
   sodThreadKeepAliveTime: 17
