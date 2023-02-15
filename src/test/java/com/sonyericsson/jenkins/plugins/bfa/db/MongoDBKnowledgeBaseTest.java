@@ -55,6 +55,7 @@ import java.util.List;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -223,5 +224,15 @@ public class MongoDBKnowledgeBaseTest {
     public void testThrowMongo() throws Exception {
         when(collection.find(ArgumentMatchers.<Bson>any())).thenThrow(MongoException.class);
         kb.getCauseNames();
+    }
+
+    /**
+     * Tests that the MongoConnection of the KnowledgeBase is set to null after stop is run.
+     */
+    @Test
+    public void testStopKnowledgeBase() {
+        kb.getMongoConnection();
+        kb.stop();
+        assertNull("MongoConnection should be null", Whitebox.getInternalState(kb, "mongo"));
     }
 }

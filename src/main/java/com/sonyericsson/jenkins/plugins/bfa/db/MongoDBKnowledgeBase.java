@@ -238,6 +238,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         }
         if (mongo != null) {
             mongo.close();
+            mongo = null;
         }
     }
 
