@@ -236,6 +236,10 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
             cache.stop();
             cache = null;
         }
+        if (mongo != null) {
+            mongo.close();
+            mongo = null;
+        }
     }
 
     /**
@@ -881,6 +885,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 base.getDb().runCommand(ping);
             } catch (Exception e) {
                 return FormValidation.error(e, Messages.MongoDBKnowledgeBase_ConnectionError());
+            } finally {
+                base.stop();
             }
             return FormValidation.ok(Messages.MongoDBKnowledgeBase_ConnectionOK());
         }
