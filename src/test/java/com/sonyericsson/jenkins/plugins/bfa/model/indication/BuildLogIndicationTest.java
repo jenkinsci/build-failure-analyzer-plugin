@@ -24,11 +24,11 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.util.UrlUtils;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.Page;
+import org.htmlunit.WebRequest;
+import org.htmlunit.util.UrlUtils;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;

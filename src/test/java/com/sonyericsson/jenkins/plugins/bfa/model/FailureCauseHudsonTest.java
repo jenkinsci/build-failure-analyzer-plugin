@@ -24,12 +24,12 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.WebResponseListener;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
+import org.htmlunit.NicelyResynchronizingAjaxController;
+import org.htmlunit.WebResponse;
+import org.htmlunit.WebResponseListener;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTextArea;
 import com.sonyericsson.jenkins.plugins.bfa.CauseManagement;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -170,7 +170,7 @@ public class FailureCauseHudsonTest {
         HtmlPage page = client.goTo(CauseManagement.URL_NAME + "/new");
 
         HtmlInput input = page.getFormByName("causeForm").getInputByName("_.name");
-        input.setValueAttribute("Mööp");
+        input.setValue("Mööp");
         input.fireEvent("change");
 
         assertTrue(serverErrors.getResponses().isEmpty());

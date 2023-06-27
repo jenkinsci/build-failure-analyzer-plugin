@@ -24,14 +24,14 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.html.HtmlTableRow;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.MongoDBKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
@@ -285,13 +285,13 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      */
     private void verifyCorrectCauseEditPage(FailureCause expectedCause, HtmlPage editPage) {
         HtmlForm form = editPage.getFormByName("causeForm");
-        String actualId = form.getInputByName("_.id").getValueAttribute();
+        String actualId = form.getInputByName("_.id").getValue();
         if (Util.fixEmpty(expectedCause.getId()) == null) {
             assertNull(Util.fixEmpty(actualId));
         } else {
             assertEquals(expectedCause.getId(), actualId);
         }
-        assertEquals(expectedCause.getName(), form.getInputByName("_.name").getValueAttribute());
+        assertEquals(expectedCause.getName(), form.getInputByName("_.name").getValue());
         HtmlElement descrArea = form.getOneHtmlElementByAttribute("textarea", "name", "_.description");
         String description = descrArea.getTextContent();
         assertEquals(expectedCause.getDescription(), description);
@@ -303,7 +303,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         if (!expectedCause.getIndications().isEmpty()) {
             HtmlElement indicationsDiv = form.getOneHtmlElementByAttribute("div", "name", "indications");
             HtmlInput patternInput = indicationsDiv.getOneHtmlElementByAttribute("input", "name", "pattern");
-            assertEquals(expectedCause.getIndications().get(0).getPattern().pattern(), patternInput.getValueAttribute());
+            assertEquals(expectedCause.getIndications().get(0).getPattern().pattern(), patternInput.getValue());
         }
     }
 

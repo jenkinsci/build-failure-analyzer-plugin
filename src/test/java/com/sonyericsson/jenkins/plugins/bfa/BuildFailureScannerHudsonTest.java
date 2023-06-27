@@ -25,9 +25,9 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.codahale.metrics.MetricRegistry;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;

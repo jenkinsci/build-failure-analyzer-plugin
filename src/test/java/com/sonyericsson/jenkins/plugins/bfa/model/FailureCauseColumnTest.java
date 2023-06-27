@@ -37,7 +37,7 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 
 /**
  * Tests for {@link FailureCauseColumn}.

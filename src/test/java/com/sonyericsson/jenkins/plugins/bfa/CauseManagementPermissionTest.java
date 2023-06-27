@@ -1,7 +1,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.Hudson;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.SecurityRealm;
