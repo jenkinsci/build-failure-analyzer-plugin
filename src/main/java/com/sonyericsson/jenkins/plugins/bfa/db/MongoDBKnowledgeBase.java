@@ -82,6 +82,7 @@ import org.jfree.data.time.TimePeriod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 import org.mongojack.JacksonMongoCollection;
 import org.mongojack.internal.MongoJackModule;
 
@@ -868,6 +869,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
          * @return {@link FormValidation#ok() } if can be done,
          *         {@link FormValidation#error(java.lang.String) } otherwise.
          */
+        @POST
         public FormValidation doTestConnection(
                 @QueryParameter("host") final String host,
                 @QueryParameter("port") final int port,
@@ -876,6 +878,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("password") final String password,
                 @QueryParameter("tls") final boolean tls,
                 @QueryParameter("retrywrites") final boolean retryWrites) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
                     Secret.fromString(password), false, false);
             base.setTls(tls);

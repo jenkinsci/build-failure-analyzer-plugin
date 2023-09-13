@@ -23,6 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import hudson.Functions;
 import java.io.Serializable;
 
 /**
@@ -43,7 +44,9 @@ public class AnnotationHelper implements Serializable {
      */
     public String getBefore() {
         if (!title.isEmpty()) {
-            return before + "<span style=\"color:white;background:red\" title=\"" + title + "\">";
+            return before
+                    + "<span style=\"color:white;background:red\" title=\""
+                    + Functions.htmlAttributeEscape(title) + "\">";
         } else {
             return before;
         }

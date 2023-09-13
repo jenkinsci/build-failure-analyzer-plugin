@@ -44,6 +44,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 import java.io.IOException;
 
 /**
@@ -220,6 +221,7 @@ public class CauseManagement implements RootAction {
      * @param response the stapler response.
      * @throws IOException if so during redirect.
      */
+    @POST
     public void doRemoveConfirm(@QueryParameter String id, StaplerRequest request, StaplerResponse response)
             throws IOException {
         Jenkins.getInstance().checkPermission(PluginImpl.REMOVE_PERMISSION);
