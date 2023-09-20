@@ -340,9 +340,8 @@
         </plugins>
     </build>
     <scm>
-        <connection>scm:git:ssh://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/build-failure-analyzer-plugin.git
-        </developerConnection>
+        <connection>scm:git:https://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
         <tag>${scmTag}</tag>
     </scm>
