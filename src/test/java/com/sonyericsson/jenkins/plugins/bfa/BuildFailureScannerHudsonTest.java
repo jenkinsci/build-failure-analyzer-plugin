@@ -129,6 +129,12 @@ public class BuildFailureScannerHudsonTest {
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
 
+        ScanLogAction scanLogAction = build.getAction(ScanLogAction.class);
+        assertNotNull(scanLogAction);
+        assertNotNull(scanLogAction.getStartTime());
+        assertNotNull(scanLogAction.getEndTime());
+        assertNull(scanLogAction.getException());
+
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
@@ -153,6 +159,31 @@ public class BuildFailureScannerHudsonTest {
 
         MetricRegistry metricRegistry = Metrics.metricRegistry();
         assertEquals(1, metricRegistry.counter("jenkins_bfa.cause.Error").getCount());
+    }
+
+    /**
+     * Test when an exception occurred during scan.
+     * @throws Exception if so.
+     */
+    @Test
+    public void testExceptionDuringParsing() throws Exception {
+        FreeStyleProject project = createProject();
+
+        FailureCause failureCause = configureCauseAndIndication(new BuildLogIndication("(wrong pattern"));
+
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        ScanLogAction scanLogAction = build.getAction(ScanLogAction.class);
+        assertNotNull(scanLogAction);
+        assertNotNull(scanLogAction.getStartTime());
+        assertNotNull(scanLogAction.getEndTime());
+        assertNotNull(scanLogAction.getException());
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
     }
 
     /**
