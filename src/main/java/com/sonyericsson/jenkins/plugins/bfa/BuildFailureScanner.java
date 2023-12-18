@@ -263,7 +263,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                 }
             }
         } catch (Exception e) {
-            scanLogAction.setException(e);
+            scanLogAction.setExceptionMessage(e.toString());
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
         } finally {
             scanLogAction.finished();
@@ -598,8 +598,8 @@ public class BuildFailureScanner extends RunListener<Run> {
         } catch (Exception e) {
             logToScanLog(scanLog, "Exception during parsing file: " + e);
             ScanLogAction logAction = build.getAction(ScanLogAction.class);
-            if (logAction != null && logAction.getException() == null) {
-                logAction.setException(e);
+            if (logAction != null && logAction.getExceptionMessage() == null) {
+                logAction.setExceptionMessage(e.toString());
             }
         } finally {
             if (reader != null) {

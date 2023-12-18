@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import jenkins.model.RunAction2;
 import org.apache.commons.io.FileUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -27,7 +29,7 @@ public class ScanLogAction implements RunAction2 {
 
     private Long endTime;
 
-    private Exception exception;
+    private String exceptionMessage;
 
     /**
      * {@inheritDoc}
@@ -94,24 +96,25 @@ public class ScanLogAction implements RunAction2 {
     /**
      * To call when the scan is finished.
      */
-    public void finished() {
+    @Restricted(NoExternalUse.class)
+    protected void finished() {
         this.endTime = System.currentTimeMillis();
     }
 
     /**
-     * Get the exception if any.
+     * Get the exception message if any.
      * @return the first exception faced during scan
      */
-    public Exception getException() {
-        return exception;
+    public String getExceptionMessage() {
+        return exceptionMessage;
     }
 
     /**
      * Set an exception.
-     * @param exception the exception to set
+     * @param exceptionMessage the exception message to set
      */
-    public void setException(Exception exception) {
-        this.exception = exception;
+    public void setExceptionMessage(String exceptionMessage) {
+        this.exceptionMessage = exceptionMessage;
     }
 
     /**
