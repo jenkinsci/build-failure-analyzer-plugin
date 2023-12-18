@@ -133,7 +133,7 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(scanLogAction);
         assertNotNull(scanLogAction.getStartTime());
         assertNotNull(scanLogAction.getEndTime());
-        assertNull(scanLogAction.getException());
+        assertNull(scanLogAction.getExceptionMessage());
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
@@ -180,7 +180,7 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(scanLogAction);
         assertNotNull(scanLogAction.getStartTime());
         assertNotNull(scanLogAction.getEndTime());
-        assertNotNull(scanLogAction.getException());
+        assertNotNull(scanLogAction.getExceptionMessage());
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
