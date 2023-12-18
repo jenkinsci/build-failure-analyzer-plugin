@@ -171,7 +171,8 @@ public class BuildFailureScanner extends RunListener<Run> {
      * @param scanLog log to write information to.
      */
     public static void scan(Run build, PrintStream scanLog) {
-        build.addOrReplaceAction(new ScanLogAction());
+        ScanLogAction scanLogAction = new ScanLogAction();
+        build.addOrReplaceAction(scanLogAction);
         try {
             Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
             List<FoundFailureCause> foundCauseListToLog = findCauses(causes, build, scanLog);
@@ -262,7 +263,10 @@ public class BuildFailureScanner extends RunListener<Run> {
                 }
             }
         } catch (Exception e) {
+            scanLogAction.setExceptionMessage(e.toString());
             logger.log(Level.SEVERE, "Could not scan build " + build, e);
+        } finally {
+            scanLogAction.finished();
         }
     }
 
@@ -591,8 +595,12 @@ public class BuildFailureScanner extends RunListener<Run> {
                             build,
                             reader,
                             LOG_FILE_NAME));
-        } catch (IOException e) {
+        } catch (Exception e) {
             logToScanLog(scanLog, "Exception during parsing file: " + e);
+            ScanLogAction logAction = build.getAction(ScanLogAction.class);
+            if (logAction != null && logAction.getExceptionMessage() == null) {
+                logAction.setExceptionMessage(e.toString());
+            }
         } finally {
             if (reader != null) {
                 try {
