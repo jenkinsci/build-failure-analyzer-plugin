@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.io.SequenceInputStream;
 import java.io.StringReader;
@@ -180,13 +181,14 @@ public class FailureReaderTest {
     @Test
     public void testScanMultiLineOneFile() throws Exception {
         FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*scan for me please.*"));
-        BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
+        LineNumberReader br = new LineNumberReader(new StringReader("scan for me please will you!\nA second line"));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
         assertTrue("Unexpected long time to parse log: " + elapsedTime, elapsedTime <= 1000);
         assertNotNull("Expected to find an indication", indication);
+        assertEquals(indication.getMatchingLine(), 1);
     }
 
     /**
@@ -197,7 +199,7 @@ public class FailureReaderTest {
     public void testScanMultiLineOneFileWithBlockTimeout() throws Exception {
         // Evil input + expression. Will timeout every time.
         FailureReader reader = new TestReader(new MultilineBuildLogIndication("^(([a-z])+.)+[A-Z]([a-z])+$"));
-        BufferedReader br = new BufferedReader(new InputStreamReader(
+        LineNumberReader br = new LineNumberReader(new InputStreamReader(
                 new ByteArrayInputStream("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".getBytes())));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
@@ -221,7 +223,7 @@ public class FailureReaderTest {
             zipStream.getNextEntry();
             inStream = new SequenceInputStream(inStream, zipStream);
         }
-        BufferedReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(inStream)));
+        LineNumberReader br = new QuadrupleDupleLineReader(new BufferedReader(new InputStreamReader(inStream)));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
@@ -236,7 +238,7 @@ public class FailureReaderTest {
      * and constructs the same line 15 times on top of the original.
      * This so that the scanning has more to work on and can timeout
      */
-    static class QuadrupleDupleLineReader extends BufferedReader {
+    static class QuadrupleDupleLineReader extends LineNumberReader {
 
         /**
          * Standard constructor
