@@ -35,6 +35,7 @@ import hudson.model.Run;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -318,7 +319,7 @@ public abstract class FailureReader {
      * @return a FoundIndication if we find the pattern, null if not.
      * @throws IOException if problems occur in the reader handling.
      */
-    protected FoundIndication scanMultiLineOneFile(Run build, BufferedReader reader, String currentFile)
+    protected FoundIndication scanMultiLineOneFile(Run build, LineNumberReader reader, String currentFile)
             throws IOException {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_BLOCK);
         FoundIndication foundIndication = null;
@@ -338,7 +339,7 @@ public abstract class FailureReader {
                     Matcher matcher = pattern.matcher(new InterruptibleCharSequence(searchBuffer.toString()));
                     if (matcher.find()) {
                         foundIndication = new FoundIndication(build, pattern.pattern(), currentFile,
-                                removeConsoleNotes(matcher.group()), -1);
+                                removeConsoleNotes(matcher.group()), reader.getLineNumber());
                         break;
                     }
                     searchBuffer.delete(0, BUF_SIZE_BYTES - OVERLAP_BYTES);
