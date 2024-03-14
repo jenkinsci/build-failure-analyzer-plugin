@@ -51,6 +51,7 @@ import hudson.model.listeners.RunListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -247,6 +248,10 @@ public class BuildFailureScanner extends RunListener<Run> {
             boolean notifySlackAllFail = false;
             if (slackFailCauseCat.get(0).equals(PluginImpl.getInstance().DEFAULT_SLACK_FAILURE_CATEGORIES)) {
                 notifySlackAllFail = true;
+            }
+
+            if (PluginImpl.getInstance().isBuildDescriptionEnabled() && !foundCauseList.isEmpty()) {
+              build.setDescription(generateDescriptionString(build, foundCauseList));
             }
 
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
@@ -652,5 +657,48 @@ public class BuildFailureScanner extends RunListener<Run> {
         }
 
         return failedTestList;
+    }
+
+    /**
+     * Generate text that can be used for the build description using categories and failure causes.
+     *
+     * @param build to get current build description
+     * @param foundCauseList list of failure causes
+     * @return A String of the BFA categories and causes appended to the build's description.
+     */
+    public static String generateDescriptionString(Run build, List<FoundFailureCause> foundCauseList) {
+        StringBuffer buildDescription = new StringBuffer();
+        buildDescription.append("<mark>");
+
+        if (foundCauseList.get(0) != null) {
+
+            for (int j = 0; j < foundCauseList.get(0).getCategories().size(); j++) {
+                buildDescription.append("<b>");
+                buildDescription.append(foundCauseList.get(0).getCategories().get(j));
+                buildDescription.append("</b> ");
+            }
+            if (foundCauseList.get(0).getCategories().size() > 0) {
+                buildDescription.append(": ");
+            }
+        }
+
+        // Append all failure causes.
+        if (foundCauseList.get(0) != null)  {
+            for (int i = 0; i < foundCauseList.size(); i++) {
+                buildDescription.append("<i>");
+                buildDescription.append(foundCauseList.get(i).getDescription());
+                buildDescription.append("</i>");
+                if (i < (foundCauseList.size() - 1)) {
+                    buildDescription.append("  ");
+                }
+            }
+        }
+        buildDescription.append("</mark>");
+
+        // Append this build description to any pre-existing build description
+        if (StringUtils.isNotEmpty(build.getDescription())) {
+            buildDescription.insert(0, (build.getDescription().concat("<br>\n")));
+        }
+        return buildDescription.toString();
     }
 }
