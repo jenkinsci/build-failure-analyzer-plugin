@@ -44,10 +44,10 @@ import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -308,8 +308,8 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link CauseManagement#doRemoveConfirm(String, org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}.
+     * Tests {@link CauseManagement#doRemoveConfirm(String, org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)}.
      * Assumes that the default {@link com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase} is used.
      *
      * @throws Exception if so.
@@ -325,10 +325,10 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         KnowledgeBase kb = spy(PluginImpl.getInstance().getKnowledgeBase());
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, kb);
 
-        StaplerRequest request = mock(StaplerRequest.class);
+        StaplerRequest2 request = mock(StaplerRequest2.class);
         HttpSession session = mock(HttpSession.class);
         when(request.getSession(anyBoolean())).thenReturn(session);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         CauseManagement.getInstance().doRemoveConfirm(cause1.getId(), request, response);
 

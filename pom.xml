@@ -16,7 +16,10 @@
     <properties>
         <revision>2.5.3</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.375.3</jenkins.version>
+        <jenkins.version>2.475</jenkins.version>
+        <!-- TODO JENKINS-73339 until in parent POM -->
+        <jenkins-test-harness.version>2254.vcff7a_d4969e5</jenkins-test-harness.version>
+        <maven.compiler.release>17</maven.compiler.release>
         <checkstyle.version>3.1.1</checkstyle.version>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -210,7 +213,6 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>parameterized-trigger</artifactId>
             <scope>test</scope>
-            <version>2.45</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -277,17 +279,22 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>metrics</artifactId>
-            <version>4.2.18-439.v86a_20b_a_8318b_</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.375.x</artifactId>
-                <version>2179.v0884e842b_859</version>
+                <artifactId>bom-2.462.x</artifactId>
+                <version>3234.v5ca_5154341ef</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <!-- TODO JENKINS-73339 until in parent POM, work around https://github.com/jenkinsci/plugin-pom/issues/936 -->
+            <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>5.0.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

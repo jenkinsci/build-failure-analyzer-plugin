@@ -67,8 +67,8 @@ public class FailureCauseHudsonTest {
 
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)}.
      *
      * @throws Exception if so.
      */
@@ -118,8 +118,8 @@ public class FailureCauseHudsonTest {
     }
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} with only one cause configured.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)} with only one cause configured.
      *
      * @throws Exception if so.
      */
