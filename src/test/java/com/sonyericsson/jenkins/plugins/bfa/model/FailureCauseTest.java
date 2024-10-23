@@ -40,12 +40,12 @@ import net.sf.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -325,8 +325,8 @@ public class FailureCauseTest {
     }
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}. Where the intention is to save a new cause.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)}. Where the intention is to save a new cause.
      *
      * @throws Exception if so.
      */
@@ -340,9 +340,9 @@ public class FailureCauseTest {
         String comment = "Comment";
         String category = "category";
         String pattern = ".*";
-        StaplerRequest request = mockRequest("", name, description, comment, null, category,
+        StaplerRequest2 request = mockRequest("", name, description, comment, null, category,
                 Collections.singletonList(new BuildLogIndication(pattern)), null);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         FailureCause cause = new FailureCause(null, CauseManagement.NEW_CAUSE_NAME,
                 CauseManagement.NEW_CAUSE_DESCRIPTION, null, null, category, null, null);
@@ -358,8 +358,8 @@ public class FailureCauseTest {
     }
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}. Where the intention is to save changes to an existing cause.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)}. Where the intention is to save changes to an existing cause.
      *
      * @throws Exception if so.
      */
@@ -372,9 +372,9 @@ public class FailureCauseTest {
         String description = "The Description";
         String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(id, name, description, comment, null, "",
+        StaplerRequest2 request = mockRequest(id, name, description, comment, null, "",
                 Collections.singletonList(new BuildLogIndication(pattern)), null);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
         cause.setId(id);
@@ -390,8 +390,8 @@ public class FailureCauseTest {
     }
 
     /**
-     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} with a different id in the form than what the stapler binding says it is.
+     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)} with a different id in the form than what the stapler binding says it is.
      *
      * @throws Exception if so
      */
@@ -405,9 +405,9 @@ public class FailureCauseTest {
         String description = "The Description";
         String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+        StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
                 Collections.singletonList(new BuildLogIndication(pattern)), null);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
         cause.setId(origId);
@@ -415,8 +415,8 @@ public class FailureCauseTest {
     }
 
     /**
-     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} where the form data for id is set when it should not be since it is for a
+     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)} where the form data for id is set when it should not be since it is for a
      * new cause.
      *
      * @throws Exception if so
@@ -431,9 +431,9 @@ public class FailureCauseTest {
         String description = "The Description";
         String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+        StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
                 Collections.singletonList(new BuildLogIndication(pattern)), null);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         FailureCause cause = new FailureCause("Old Name", "Old Description");
         cause.setId(origId);
@@ -441,8 +441,8 @@ public class FailureCauseTest {
     }
 
     /**
-     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} where the form data for id is null when it should be for an existing
+     * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)} where the form data for id is null when it should be for an existing
      * cause.
      *
      * @throws Exception if so
@@ -457,9 +457,9 @@ public class FailureCauseTest {
         String description = "New Description";
         String comment = "New Comment";
         String pattern = ".*";
-        StaplerRequest request = mockRequest(newId, name, description, comment, null, "",
+        StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
                 Collections.singletonList(new BuildLogIndication(pattern)), null);
-        StaplerResponse response = mock(StaplerResponse.class);
+        StaplerResponse2 response = mock(StaplerResponse2.class);
 
         FailureCause cause = new FailureCause("A Name", "The Description");
         cause.setId(origId);
@@ -476,13 +476,13 @@ public class FailureCauseTest {
      * @param occurred    the time of last occurrence
      * @param category    the category
      * @param indications the list of indications as they should be returned from
-     *                      {@link StaplerRequest#bindJSONToList(Class, Object)}
+     *                      {@link StaplerRequest2#bindJSONToList(Class, Object)}
      * @param modifications the modification history of this FailureCause
      * @return a mocked request object.
      *
      * @throws ServletException if so, but probably not.
      */
-    private StaplerRequest mockRequest(String id, String name, String description, String comment, Date occurred,
+    private StaplerRequest2 mockRequest(String id, String name, String description, String comment, Date occurred,
                                        String category, List<? extends Indication> indications,
                                        List<FailureCauseModification> modifications) throws ServletException {
         JSONObject form = new JSONObject();
@@ -500,7 +500,7 @@ public class FailureCauseTest {
         if (modifications != null) {
             form.put("modifications", modifications);
         }
-        StaplerRequest request = mock(StaplerRequest.class);
+        StaplerRequest2 request = mock(StaplerRequest2.class);
         when(request.getSubmittedForm()).thenReturn(form);
         when(request.bindJSONToList(same(Indication.class), any()))
                 .thenReturn((List<Indication>)indications);

@@ -24,7 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import org.htmlunit.NicelyResynchronizingAjaxController;
+import org.htmlunit.WebClientUtil;
 import org.htmlunit.WebResponse;
 import org.htmlunit.WebResponseListener;
 import org.htmlunit.html.HtmlInput;
@@ -67,8 +67,8 @@ public class FailureCauseHudsonTest {
 
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)}.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)}.
      *
      * @throws Exception if so.
      */
@@ -118,8 +118,8 @@ public class FailureCauseHudsonTest {
     }
 
     /**
-     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest,
-     * org.kohsuke.stapler.StaplerResponse)} with only one cause configured.
+     * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
+     * org.kohsuke.stapler.StaplerResponse2)} with only one cause configured.
      *
      * @throws Exception if so.
      */
@@ -157,7 +157,6 @@ public class FailureCauseHudsonTest {
     @Test
     public void testDoCheckNameViaWebForm() throws Exception {
         JenkinsRule.WebClient client = jenkins.createWebClient();
-        client.setAjaxController(new NicelyResynchronizingAjaxController());
 
         WebResponseListener.StatusListener serverErrors =
                 new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
@@ -172,6 +171,7 @@ public class FailureCauseHudsonTest {
         HtmlInput input = page.getFormByName("causeForm").getInputByName("_.name");
         input.setValue("Mööp");
         input.fireEvent("change");
+        WebClientUtil.waitForJSExec(page.getWebClient());
 
         assertTrue(serverErrors.getResponses().isEmpty());
         WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);
@@ -189,7 +189,6 @@ public class FailureCauseHudsonTest {
     @Test
     public void testDoCheckDescriptionViaWebForm() throws Exception {
         JenkinsRule.WebClient client = jenkins.createWebClient();
-        client.setAjaxController(new NicelyResynchronizingAjaxController());
 
         WebResponseListener.StatusListener serverErrors =
                 new WebResponseListener.StatusListener(HttpStatus.SC_INTERNAL_SERVER_ERROR);
@@ -204,6 +203,7 @@ public class FailureCauseHudsonTest {
         HtmlTextArea input = page.getFormByName("causeForm").getTextAreaByName("_.description");
         input.setText("Mööp");
         input.fireEvent("change");
+        WebClientUtil.waitForJSExec(page.getWebClient());
 
         assertTrue(serverErrors.getResponses().isEmpty());
         WebResponse webResponse = success.getResponses().get(success.getResponses().size() - 1);

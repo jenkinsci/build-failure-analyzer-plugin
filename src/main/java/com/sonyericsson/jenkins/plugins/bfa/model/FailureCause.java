@@ -48,8 +48,8 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.mongojack.Id;
 import org.mongojack.ObjectId;
@@ -245,7 +245,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      * @param response the response
      * @throws Exception if it fails to save to the knowledge base or a validation error occurs.
      */
-    public synchronized void doConfigSubmit(StaplerRequest request, StaplerResponse response)
+    public synchronized void doConfigSubmit(StaplerRequest2 request, StaplerResponse2 response)
             throws Exception {
         logger.entering(getClass().getName(), "doConfigSubmit");
         Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
@@ -560,14 +560,14 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     //CS IGNORE JavadocMethod FOR NEXT 8 LINES. REASON: The exception can be thrown.
 
     /**
-     * Finds the {@link CauseManagement} ancestor of the {@link Stapler#getCurrentRequest() current request}.
+     * Finds the {@link CauseManagement} ancestor of the {@link Stapler#getCurrentRequest2() current request}.
      *
      * @return the management action or a derivative of it, or null if no management action is found.
      * @throws IllegalStateException if no ancestor is found.
      */
     @JsonIgnore
     public CauseManagement getAncestorCauseManagement() {
-        StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
         if (currentRequest == null) {
             return null;
         }
@@ -620,7 +620,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          * page was entered.
          */
         public String getLastFailedBuildUrl() {
-            StaplerRequest staplerRequest = Stapler.getCurrentRequest();
+            StaplerRequest2 staplerRequest = Stapler.getCurrentRequest2();
             if (staplerRequest != null) {
                 String answer = (String)staplerRequest.getSession(true).
                         getAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME);
@@ -636,7 +636,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          * page was entered.
          */
         public void setLastFailedBuildUrl() {
-            StaplerRequest staplerRequest = Stapler.getCurrentRequest();
+            StaplerRequest2 staplerRequest = Stapler.getCurrentRequest2();
             if (staplerRequest != null) {
                 Job project = staplerRequest.findAncestorObject(Job.class);
                 if (project != null && project.getLastFailedBuild() != null) {

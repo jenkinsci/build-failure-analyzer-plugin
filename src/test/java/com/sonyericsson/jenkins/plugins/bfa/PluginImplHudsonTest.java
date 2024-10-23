@@ -47,11 +47,11 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.RequestImpl;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.WebApp;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 
@@ -104,11 +104,11 @@ public class PluginImplHudsonTest {
         MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
                 Secret.fromString("password"), true, true);
         instance.setKnowledgeBase(mongoKB);
-        // need an actual StaplerRequest implementation to test we're using bindJSON correctly
+        // need an actual StaplerRequest2 implementation to test we're using bindJSON correctly
         WebApp webapp = new WebApp(mock(ServletContext.class));
         Stapler stapler = mock(Stapler.class);
         when(stapler.getWebApp()).thenReturn(webapp);
-        StaplerRequest sreq = new RequestImpl(stapler, mock(HttpServletRequest.class), Collections.emptyList(), null);
+        StaplerRequest2 sreq = new RequestImpl(stapler, mock(HttpServletRequest.class), Collections.emptyList(), null);
         // flip configuration of all boolean values
         JSONObject form = new JSONObject();
         form.put("globalEnabled", !instance.isGlobalEnabled());
@@ -157,7 +157,7 @@ public class PluginImplHudsonTest {
     }
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with a new
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}. with a new
      * KnowledgeBase type.
      *
      * @throws Exception if so.
@@ -169,7 +169,7 @@ public class PluginImplHudsonTest {
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
         cause = prevKnowledgeBase.addCause(cause);
-        StaplerRequest sreq = mock(StaplerRequest.class);
+        StaplerRequest2 sreq = mock(StaplerRequest2.class);
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello");
 
         JSONObject form = createForm("x", PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, true);
@@ -191,7 +191,7 @@ public class PluginImplHudsonTest {
     }
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with the same
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}. with the same
      * KnowledgeBase type but different configuration.
      *
      * @throws Exception if so.
@@ -204,7 +204,7 @@ public class PluginImplHudsonTest {
         cause = prevKnowledgeBase.addCause(cause);
         PluginImpl instance = PluginImpl.getInstance();
         Whitebox.setInternalState(instance, KnowledgeBase.class, prevKnowledgeBase);
-        StaplerRequest sreq = mock(StaplerRequest.class);
+        StaplerRequest2 sreq = mock(StaplerRequest2.class);
         DifferentKnowledgeBase knowledgeBase = new DifferentKnowledgeBase("Hello Again");
         when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
 
@@ -228,7 +228,7 @@ public class PluginImplHudsonTest {
     }
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}.
      * Tests that a LocalFileKnowledgebase is preserved through a reconfigure without changes.
      *
      * @throws Exception if so.
@@ -254,7 +254,7 @@ public class PluginImplHudsonTest {
     //CS IGNORE MagicNumber FOR NEXT 17 LINES. REASON: Random test data
 
     /**
-     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}.
      * Tests that a MongoDBKnowledgebase is preserved through a reconfigure without changes.
      *
      * @throws Exception if so.

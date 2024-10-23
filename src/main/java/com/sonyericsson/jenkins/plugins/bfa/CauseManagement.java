@@ -42,8 +42,8 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 import java.io.IOException;
 
@@ -65,7 +65,7 @@ public class CauseManagement implements RootAction {
     public static final String URL_NAME = "failure-cause-management";
     /**
      * The reserved id for getting a new {@link FailureCause} from {@link #getDynamic(String,
-     * org.kohsuke.stapler.StaplerRequest, org.kohsuke.stapler.StaplerResponse)}.
+     * org.kohsuke.stapler.StaplerRequest2, org.kohsuke.stapler.StaplerResponse2)}.
      */
     public static final String NEW_CAUSE_DYNAMIC_ID = "new";
     /**
@@ -167,11 +167,11 @@ public class CauseManagement implements RootAction {
      * Sets an error message as an attribute to the current request.
      *
      * @param message the message to set.
-     * @see #getErrorMessage(org.kohsuke.stapler.StaplerRequest)
+     * @see #getErrorMessage(org.kohsuke.stapler.StaplerRequest2)
      * @see #REQUEST_CAUSE_MANAGEMENT_ERROR
      */
     private void setErrorMessage(String message) {
-        Stapler.getCurrentRequest().setAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR, message);
+        Stapler.getCurrentRequest2().setAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR, message);
     }
 
     /**
@@ -180,7 +180,7 @@ public class CauseManagement implements RootAction {
      * @param request the request where the message might be.
      * @return true if there is an error message to display.
      */
-    public boolean isError(StaplerRequest request) {
+    public boolean isError(StaplerRequest2 request) {
         return Util.fixEmpty((String)request.getAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR)) != null;
     }
 
@@ -190,7 +190,7 @@ public class CauseManagement implements RootAction {
      * @param request the request where the message might be.
      * @return the error message to show.
      */
-    public String getErrorMessage(StaplerRequest request) {
+    public String getErrorMessage(StaplerRequest2 request) {
         return (String)request.getAttribute(REQUEST_CAUSE_MANAGEMENT_ERROR);
     }
 
@@ -205,7 +205,7 @@ public class CauseManagement implements RootAction {
      *
      * @throws Exception if communication with the knowledge base failed.
      */
-    public FailureCause getDynamic(String id, StaplerRequest request, StaplerResponse response) throws Exception {
+    public FailureCause getDynamic(String id, StaplerRequest2 request, StaplerResponse2 response) throws Exception {
         if (NEW_CAUSE_DYNAMIC_ID.equalsIgnoreCase(id)) {
             return new FailureCause(NEW_CAUSE_NAME, NEW_CAUSE_DESCRIPTION);
         } else {
@@ -222,7 +222,7 @@ public class CauseManagement implements RootAction {
      * @throws IOException if so during redirect.
      */
     @POST
-    public void doRemoveConfirm(@QueryParameter String id, StaplerRequest request, StaplerResponse response)
+    public void doRemoveConfirm(@QueryParameter String id, StaplerRequest2 request, StaplerResponse2 response)
             throws IOException {
         Jenkins.getInstance().checkPermission(PluginImpl.REMOVE_PERMISSION);
         id = Util.fixEmpty(id);
