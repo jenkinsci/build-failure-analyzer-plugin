@@ -32,8 +32,8 @@ import hudson.matrix.MatrixRun;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -157,7 +157,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * @param resp the stapler response.
      * @return the correct FoundFailureCause.
      */
-    public FoundFailureCause getDynamic(String token, StaplerRequest req, StaplerResponse resp) {
+    public FoundFailureCause getDynamic(String token, StaplerRequest2 req, StaplerResponse2 resp) {
         try {
             int causeNumber = Integer.parseInt(token) - 1;
             if (causeNumber >= 0 && causeNumber < foundFailureCauses.size()) {
@@ -178,7 +178,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * @param resp the stapler response
      * @throws IOException if so.
      */
-    public void doIndex(StaplerRequest req, StaplerResponse resp) throws IOException {
+    public void doIndex(StaplerRequest2 req, StaplerResponse2 resp) throws IOException {
         resp.sendRedirect2("../../failure-cause-management");
     }
 
