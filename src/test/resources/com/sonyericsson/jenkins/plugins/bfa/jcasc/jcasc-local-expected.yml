@@ -1,3 +1,4 @@
+buildDescriptionEnabled: false
 doNotAnalyzeAbortedJob: true
 gerritTriggerEnabled: true
 globalEnabled: true
