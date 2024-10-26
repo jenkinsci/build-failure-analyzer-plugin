@@ -82,7 +82,7 @@ public abstract class Indication implements Describable<Indication>, Serializabl
      * Override this method to provide more validation.
      *
      * @return {@link hudson.util.FormValidation#ok()} if everything is well.
-     * @see IndicationDescriptor#doHelp(org.kohsuke.stapler.StaplerRequest, org.kohsuke.stapler.StaplerResponse)
+     * @see IndicationDescriptor#doHelp(org.kohsuke.stapler.StaplerRequest2, org.kohsuke.stapler.StaplerResponse2)
      */
     public FormValidation validate() {
         return IndicationDescriptor.checkPattern(getUserProvidedExpression());
