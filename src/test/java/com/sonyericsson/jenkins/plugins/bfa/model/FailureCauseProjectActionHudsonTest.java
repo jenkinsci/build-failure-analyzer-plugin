@@ -24,13 +24,16 @@
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
 import hudson.Functions;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import hudson.tasks.BatchFile;
+import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 
 import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;
 
-import static org.junit.Assume.assumeFalse;
 /**
  * Test Failure Cause project action.
  */
@@ -43,16 +46,22 @@ public class FailureCauseProjectActionHudsonTest extends HudsonTestCase {
      */
     @Test
     public void testShowLastFailureOnProjectPage() throws Exception {
-        assumeFalse(Functions.isWindows());
         FreeStyleProject project = createFreeStyleProject();
-        project.getBuildersList().add(new Shell("test $BUILD_NUMBER -eq 2"));
-        project.scheduleBuild2(0).get();
+        CommandInterpreter commandInterpreter;
+        if (Functions.isWindows()) {
+            commandInterpreter = new BatchFile("@if %BUILD_NUMBER% == 1 exit /b 1");
+        } else {
+            commandInterpreter = new Shell("test $BUILD_NUMBER -ne 1");
+        }
+        project.getBuildersList().add(commandInterpreter);
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseProjectAction action = project.getAction(FailureCauseProjectAction.class);
         assertNotNull(action.getAction());
-        assertEquals(project.getLastBuild().getAction(FailureCauseBuildAction.class), action.getAction());
+        assertEquals(build.getAction(FailureCauseBuildAction.class), action.getAction());
 
-        project.scheduleBuild2(0).get();
+        buildAndAssertSuccess(project);
         assertNull(project.getAction(FailureCauseProjectAction.class).getAction());
     }
 }

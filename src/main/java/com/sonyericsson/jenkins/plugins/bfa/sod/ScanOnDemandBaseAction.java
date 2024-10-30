@@ -49,10 +49,10 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -176,7 +176,7 @@ public class ScanOnDemandBaseAction implements Action {
 
     /**
      * Shortcut method to
-     * {@link #getDefault()}.{@link ScanMode#doPerformScan(ScanOnDemandBaseAction, StaplerRequest, StaplerResponse)}
+     * {@link #getDefault()}.{@link ScanMode#doPerformScan(ScanOnDemandBaseAction, StaplerRequest2, StaplerResponse2)}
      * If the user clicks on scan on the default scanmode page.
      *
      * @param request the request
@@ -185,7 +185,7 @@ public class ScanOnDemandBaseAction implements Action {
      * @throws InterruptedException if so
      * @throws IOException if so
      */
-    public void doPerformScan(StaplerRequest request, StaplerResponse response)
+    public void doPerformScan(StaplerRequest2 request, StaplerResponse2 response)
             throws ServletException, InterruptedException, IOException {
         getDefault().doPerformScan(this, request, response);
     }
@@ -197,7 +197,7 @@ public class ScanOnDemandBaseAction implements Action {
      * @return the default mode.
      */
     public ScanMode getDefault() {
-        StaplerRequest request = Stapler.getCurrentRequest();
+        StaplerRequest2 request = Stapler.getCurrentRequest2();
         if (request != null) {
             String selected = (String)request.getSession(true).getAttribute(BFA_SOD_BUILD_TYPE);
             if (!isBlank(selected)) {
@@ -314,7 +314,7 @@ public class ScanOnDemandBaseAction implements Action {
          */
         @SuppressWarnings("unused") //Called by the view
         public void setAsDefault() {
-            StaplerRequest request = Stapler.getCurrentRequest();
+            StaplerRequest2 request = Stapler.getCurrentRequest2();
             if (request == null) {
                 throw new IllegalStateException("setAsDefault() can only be called in request scope");
             }
@@ -325,14 +325,14 @@ public class ScanOnDemandBaseAction implements Action {
          * Finds the {@link ScanOnDemandBaseAction} in the ancestor path.
          *
          * Throws {@link IllegalStateException} if we are not in the request scope and
-         * {@link Stapler#getCurrentRequest()} returns null.
+         * {@link Stapler#getCurrentRequest2()} returns null.
          *
          * @return the ancestor action
          *
          */
         @NonNull
         public ScanOnDemandBaseAction getParent() {
-            StaplerRequest request = Stapler.getCurrentRequest();
+            StaplerRequest2 request = Stapler.getCurrentRequest2();
             if (request == null) {
                 throw new IllegalStateException("getParent can only be called from request scope.");
             }
@@ -352,15 +352,15 @@ public class ScanOnDemandBaseAction implements Action {
          * Submit method for running build scan.
          *
          * @param action the action we have as an ancestor
-         * @param request  StaplerRequest
-         * @param response StaplerResponse
+         * @param request  StaplerRequest2
+         * @param response StaplerResponse2
          * @throws ServletException if something unfortunate happens.
          * @throws IOException if something unfortunate happens.
          * @throws InterruptedException if something unfortunate happens.
          */
         @SuppressWarnings("unused") //Called by the view
         public void doPerformScan(@AncestorInPath ScanOnDemandBaseAction action,
-                                  StaplerRequest request, StaplerResponse response)
+                                  StaplerRequest2 request, StaplerResponse2 response)
                 throws ServletException, IOException, InterruptedException {
             action.checkPermission();
             Iterator<Run> runIterator = getRuns(action.getProject());
