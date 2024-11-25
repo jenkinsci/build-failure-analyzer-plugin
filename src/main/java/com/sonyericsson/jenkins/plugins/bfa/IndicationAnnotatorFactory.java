@@ -31,7 +31,7 @@ import hudson.console.ConsoleAnnotatorFactory;
 import hudson.model.Run;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class IndicationAnnotatorFactory extends ConsoleAnnotatorFactory {
 
     @Override
     public ConsoleAnnotator newInstance(Object context) {
-        StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
         if (currentRequest == null) {
             //Accessed through some other means than http, so lets assume it is not a human.
             return null;
