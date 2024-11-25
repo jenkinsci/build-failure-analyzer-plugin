@@ -31,6 +31,7 @@ import hudson.Functions
 def f = namespace(lib.FormTagLib)
 def l = namespace(lib.LayoutTagLib)
 def j = namespace(lib.JenkinsTagLib)
+def st = namespace("jelly:stapler")
 
 l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
@@ -60,17 +61,18 @@ l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
             + "background-image: url(\'" + imageUrl + "');") {}
     h1(_("Failure Cause - Confirm Remove"))
     div(style: "width: 70%") {
+      st.adjunct(includes: "com.sonyericsson.jenkins.plugins.bfa.CauseManagement.resource")
       if (cause != null) {
         form(method: "POST", action: "removeConfirm") {
           p(_("removeQuestion", cause.getName()))
           input(type: "hidden", value: cause.getId(), name: "id")
           f.submit(value: _("Yes"))
           raw("&nbsp;&nbsp;");
-          input(type: "button", value:_("Back"), onClick: "history.back(1)", class: "yui-button")
+          button(type: "button", class: "jenkins-button bfa-cause-management-back-button", _("Back"))
         }
       } else {
         p(_("Not a valid cause id"))
-        input(type: "button", value:_("Back"), onClick: "history.back(1)", class: "yui-button")
+        button(class: "jenkins-button bfa-cause-management-back-button", _("Back"))
       }
 
     }
