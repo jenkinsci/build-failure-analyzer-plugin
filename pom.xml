@@ -123,7 +123,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
-            <version>4.1.2</version>
+            <version>5.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.mongojack</groupId>
