@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
@@ -10,16 +11,16 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.67</version>
+        <version>5.2</version>
     </parent>
 
     <properties>
         <revision>2.5.4</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.475</jenkins.version>
-        <!-- TODO JENKINS-73339 until in parent POM -->
-        <jenkins-test-harness.version>2254.vcff7a_d4969e5</jenkins-test-harness.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+        <jenkins.baseline>2.479</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+        <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
         <checkstyle.version>3.1.1</checkstyle.version>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -285,28 +286,15 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.462.x</artifactId>
-                <version>3234.v5ca_5154341ef</version>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
+                <version>3559.vb_5b_81183b_d23</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <!-- TODO JENKINS-73339 until in parent POM, work around https://github.com/jenkinsci/plugin-pom/issues/936 -->
-            <dependency>
-                <groupId>jakarta.servlet</groupId>
-                <artifactId>jakarta.servlet-api</artifactId>
-                <version>5.0.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <reuseForks>false</reuseForks>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -347,9 +335,9 @@
         </plugins>
     </build>
     <scm>
-        <connection>scm:git:https://github.com/jenkinsci/build-failure-analyzer-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/build-failure-analyzer-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/build-failure-analyzer-plugin</url>
+        <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+        <url>https://github.com/${gitHubRepo}</url>
         <tag>${scmTag}</tag>
     </scm>
     <reporting>
