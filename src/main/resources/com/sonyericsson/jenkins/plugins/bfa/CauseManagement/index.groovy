@@ -72,12 +72,12 @@ l.layout(norefresh: true) {
       }
     }
 
-    def removedCause = request.getSession(true).getAttribute(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE)
+    def removedCause = request2.getSession(true).getAttribute(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE)
     if ( removedCause != null) {
       div(class: "info", style: "margin-top: 10px; margin-bottom: 10px") {
         text(_("Removed", removedCause.getName()))
       }
-      request.getSession().removeAttribute(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE);
+      request2.getSession().removeAttribute(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE);
     }
 
     //The New Cause link

@@ -37,7 +37,7 @@ l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
-  def causeId = request.getParameter("id");
+  def causeId = request2.getParameter("id");
   def cause = null;
   if (causeId != null && !causeId.isEmpty()) {
     cause = PluginImpl.getInstance().getKnowledgeBase().getCause(causeId);
