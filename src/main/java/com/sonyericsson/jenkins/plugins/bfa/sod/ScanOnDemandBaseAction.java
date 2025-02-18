@@ -43,7 +43,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.util.Iterators;
 import jenkins.model.Jenkins;
-import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Ancestor;
@@ -51,8 +50,8 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
+import org.springframework.security.access.AccessDeniedException;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -139,7 +138,7 @@ public class ScanOnDemandBaseAction implements Action {
     public void checkPermission() {
         if (!hasPermission()) {
             throw new AccessDeniedException(
-                    Messages.SodAccessDeniedException(Jenkins.getAuthentication().getName(),
+                    Messages.SodAccessDeniedException(Jenkins.getAuthentication2().getName(),
                             Item.CONFIGURE.name, Project.BUILD.name));
         }
     }
@@ -181,12 +180,10 @@ public class ScanOnDemandBaseAction implements Action {
      *
      * @param request the request
      * @param response the response
-     * @throws ServletException if so
-     * @throws InterruptedException if so
      * @throws IOException if so
      */
     public void doPerformScan(StaplerRequest2 request, StaplerResponse2 response)
-            throws ServletException, InterruptedException, IOException {
+            throws IOException {
         getDefault().doPerformScan(this, request, response);
     }
 
@@ -323,7 +320,7 @@ public class ScanOnDemandBaseAction implements Action {
 
         /**
          * Finds the {@link ScanOnDemandBaseAction} in the ancestor path.
-         *
+         * <p>
          * Throws {@link IllegalStateException} if we are not in the request scope and
          * {@link Stapler#getCurrentRequest2()} returns null.
          *
@@ -354,14 +351,12 @@ public class ScanOnDemandBaseAction implements Action {
          * @param action the action we have as an ancestor
          * @param request  StaplerRequest2
          * @param response StaplerResponse2
-         * @throws ServletException if something unfortunate happens.
          * @throws IOException if something unfortunate happens.
-         * @throws InterruptedException if something unfortunate happens.
          */
         @SuppressWarnings("unused") //Called by the view
         public void doPerformScan(@AncestorInPath ScanOnDemandBaseAction action,
                                   StaplerRequest2 request, StaplerResponse2 response)
-                throws ServletException, IOException, InterruptedException {
+                throws IOException {
             action.checkPermission();
             Iterator<Run> runIterator = getRuns(action.getProject());
             while (runIterator.hasNext()) {

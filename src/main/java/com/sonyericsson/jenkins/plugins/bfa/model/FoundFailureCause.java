@@ -61,7 +61,7 @@ public class FoundFailureCause implements IFailureCauseMetricData {
      * @param originalCause the original FailureCause.
      */
     public FoundFailureCause(final FailureCause originalCause) {
-        this(originalCause, new LinkedList<FoundIndication>());
+        this(originalCause, new LinkedList<>());
     }
 
     /**
@@ -74,7 +74,7 @@ public class FoundFailureCause implements IFailureCauseMetricData {
         this.id = originalCause.getId();
         this.name = originalCause.getName();
         this.categories = originalCause.getCategories();
-        this.indications = new LinkedList<FoundIndication>(indications);
+        this.indications = new LinkedList<>(indications);
         this.description = buildFormattedDescription(originalCause, this.indications, originalCause.getDescription());
     }
 
@@ -126,7 +126,7 @@ public class FoundFailureCause implements IFailureCauseMetricData {
     @Exported
     public List<FoundIndication> getIndications() {
         if (indications == null) {
-            indications = new LinkedList<FoundIndication>();
+            indications = new LinkedList<>();
         }
         return indications;
     }
@@ -215,7 +215,7 @@ public class FoundFailureCause implements IFailureCauseMetricData {
         // "Foo ${2,1}${3,1}" becomes "Foo $1${3,1}"
         // Do not replace \${E,G}.
         final Pattern expressionPattern = Pattern.compile(
-            "(?<!\\\\)\\$\\{\\s*" + Integer.toString(expressionNumber) + "\\s*,\\s*(\\d+?)\\s*\\}");
+            "(?<!\\\\)\\$\\{\\s*" + expressionNumber + "\\s*,\\s*(\\d+?)\\s*\\}");
         final Matcher expressionMatcher = expressionPattern.matcher(input);
         final String expressionTokensReplaced = expressionMatcher.replaceAll("\\$$1");
         // Replace the rest of input's "${E,G}" with "". e.g.,

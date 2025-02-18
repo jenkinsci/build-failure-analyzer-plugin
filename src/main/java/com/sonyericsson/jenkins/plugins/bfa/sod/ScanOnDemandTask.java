@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -90,7 +91,7 @@ public class ScanOnDemandTask implements Runnable {
      */
     public void endMatrixBuildScan() throws IOException {
         List<MatrixRun> runs = ((MatrixBuild)build).getRuns();
-        List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
+        List<MatrixRun> runsWithCorrectNumber = new LinkedList<>();
 
         for (MatrixRun run : runs) {
             if (run.getNumber() == build.getNumber()) {
@@ -110,7 +111,7 @@ public class ScanOnDemandTask implements Runnable {
         File file = new File(run.getRootDir(), ScanLogAction.FILE_NAME);
         try (
                 FileOutputStream fos = new FileOutputStream(file, true);
-                PrintStream buildLog = new PrintStream(fos, true, "UTF8")
+                PrintStream buildLog = new PrintStream(fos, true, StandardCharsets.UTF_8)
         ) {
             PluginImpl.getInstance().getKnowledgeBase().removeBuildfailurecause(run);
             BuildFailureScanner.scanIfNotScanned(run, buildLog);

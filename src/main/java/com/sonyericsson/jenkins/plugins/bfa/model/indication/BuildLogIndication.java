@@ -36,7 +36,6 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
-import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
@@ -48,6 +47,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -61,6 +61,7 @@ import java.util.regex.PatternSyntaxException;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BuildLogIndication extends Indication {
 
+    @Serial
     private static final long serialVersionUID = -2889792693081908532L;
     private transient Pattern compiled = null;
 
@@ -93,7 +94,7 @@ public class BuildLogIndication extends Indication {
     @Override
     @JsonIgnore
     public IndicationDescriptor getDescriptor() {
-        return Hudson.getInstance().getDescriptorByType(BuildLogIndicationDescriptor.class);
+        return Jenkins.get().getDescriptorByType(BuildLogIndicationDescriptor.class);
     }
 
     /**
@@ -283,9 +284,9 @@ public class BuildLogIndication extends Indication {
                         for (String part: jobParts) {
                             fullFolderName.append("/").append(part);
                         }
-                        getItemInstance = (ItemGroup)Jenkins.getInstance().getItemByFullName(fullFolderName.toString());
+                        getItemInstance = (ItemGroup)Jenkins.get().getItemByFullName(fullFolderName.toString());
                     } else {
-                        getItemInstance = (ItemGroup)Jenkins.getInstance();
+                        getItemInstance = Jenkins.get();
                     }
 
                     if (getItemInstance == null) {
@@ -302,20 +303,17 @@ public class BuildLogIndication extends Indication {
                      */
 
                     final Item itemFromPart2 = getItemInstance.getItem(urlParts[2]);
-                    if (itemFromPart2 instanceof Job
+                    if (itemFromPart2 instanceof Job project
                             && isValidBuildId(urlParts[3])) {
-                        Job project = (Job)itemFromPart2;
                         build = getBuildById(project, urlParts[3]);
                     } else {
                         final Item itemFromPart1 = getItemInstance.getItem(urlParts[1]);
-                        if (itemFromPart1 instanceof MatrixProject
+                        if (itemFromPart1 instanceof MatrixProject project
                                 && isValidBuildId(urlParts[3])) {
-                            MatrixProject project = (MatrixProject)itemFromPart1;
                             MatrixConfiguration configuration = project.getItem(urlParts[2]);
                             build = getBuildById(configuration, urlParts[3]);
-                        } else if (itemFromPart1 instanceof MatrixProject
+                        } else if (itemFromPart1 instanceof MatrixProject matrixProject
                                 && isValidBuildId(urlParts[2])) {
-                            MatrixProject matrixProject = (MatrixProject)itemFromPart1;
                             MatrixConfiguration configuration = matrixProject.getItem(urlParts[3]);
                             build = getBuildById(configuration, urlParts[2]);
                         }

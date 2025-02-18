@@ -4,53 +4,52 @@ import hudson.FilePath;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests that the plugin is compatible with the token macro pipeline step.
  */
-public class PipelineTokenTest {
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkinsRule = new JenkinsRule();
+@WithJenkins
+class PipelineTokenTest {
 
-    //CS IGNORE LineLength FOR NEXT 11 LINES. REASON: Test data.
     private static final String DECLARATIVE_PIPELINE =
-                      "pipeline {\n"
-                    + "  agent any\n"
-                    + "  stages {\n"
-                    + "    stage(\"Run declarative bfa\") {\n"
-                    + "      steps {\n"
-                    + "        writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, "
-                                    + "noFailureText=\"No errors found - Declarative\"}''')\n"
-                    + "      }\n"
-                    + "    }\n"
-                    + "  }\n"
-                    + "}\n";
+            """
+                    pipeline {
+                      agent any
+                      stages {
+                        stage("Run declarative bfa") {
+                          steps {
+                            writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, \
+                    noFailureText="No errors found - Declarative"}''')
+                          }
+                        }
+                      }
+                    }
+                    """;
 
-    //CS IGNORE LineLength FOR NEXT 6 LINES. REASON: Test data.
     private static final String SCRIPTED_PIPELINE =
-                      "node {\n"
-                    + "  stage(\"Run scripted bfa\") {\n"
-                    + "    writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, "
-                              + "noFailureText=\"No errors found - Scripted\"}''')\n"
-                    + "  }\n"
-                    + "}\n";
+            """
+                    node {
+                      stage("Run scripted bfa") {
+                        writeFile file: 'bfa.log', text: tm('''${BUILD_FAILURE_ANALYZER, \
+                    noFailureText="No errors found - Scripted"}''')
+                      }
+                    }
+                    """;
 
     /**
      * Tests that the plugin is run by the tm pipeline step in a declarative pipeline by writing the result to a file.
      *
+     * @param jenkinsRule
+     *
      * @throws Exception If necessary
      */
     @Test
-    public void declarativePipelineTokenMacro() throws Exception {
+    void declarativePipelineTokenMacro(JenkinsRule jenkinsRule) throws Exception {
         WorkflowJob project = jenkinsRule.createProject(WorkflowJob.class);
         project.setDefinition(new CpsFlowDefinition(DECLARATIVE_PIPELINE, true));
 
@@ -66,10 +65,12 @@ public class PipelineTokenTest {
     /**
      * Tests that the plugin is run by the tm pipeline step in a scripted pipeline by writing the result to a file.
      *
+     * @param jenkinsRule
+     *
      * @throws Exception If necessary
      */
     @Test
-    public void scriptedPipelineTokenMacro() throws Exception {
+    void scriptedPipelineTokenMacro(JenkinsRule jenkinsRule) throws Exception {
         WorkflowJob project = jenkinsRule.createProject(WorkflowJob.class);
         project.setDefinition(new CpsFlowDefinition(SCRIPTED_PIPELINE, true));
 

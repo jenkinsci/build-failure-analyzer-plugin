@@ -38,44 +38,41 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.FormValidation;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests for the BuildLogIndication.
  */
-public class BuildLogIndicationFoldersTest {
+@WithJenkins
+class BuildLogIndicationFoldersTest {
 
     private static final String TEST_STRING = "teststring";
 
     private static final long WAIT_TIME_IN_SECONDS = 10;
 
     /**
-     * The test harness.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule r = new JenkinsRule();
-
-    /**
      * Tests that the BuildLogFailureReader can find the string in the build log
      * on a one level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderSuccessfulNF1() throws Exception {
-        Folder f = createFolder();
+    void testBuildLogFailureReaderSuccessfulNF1(JenkinsRule r) throws Exception {
+        Folder f = createFolder(r);
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
@@ -88,11 +85,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the BuildLogFailureReader can find the string in the build log
      * on a two level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderSuccessfulNF2() throws Exception {
-        Folder f0 = createFolder();
+    void testBuildLogFailureReaderSuccessfulNF2(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f = f0.createProject(Folder.class, "f2");
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
@@ -106,11 +106,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the BuildLogFailureReader can find the string in the build log
      * on a three level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderSuccessfulNF3() throws Exception {
-        Folder f0 = createFolder();
+    void testBuildLogFailureReaderSuccessfulNF3(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f1 = f0.createProject(Folder.class, "f2");
         Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
@@ -125,11 +128,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the BuildLogFailureReader doesn't find the string in the build log
      * on a one level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderUnsuccessful() throws Exception {
-        Folder f = createFolder();
+    void testBuildLogFailureReaderUnsuccessful(JenkinsRule r) throws Exception {
+        Folder f = createFolder(r);
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = r.buildAndAssertSuccess(project);
@@ -142,11 +148,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the BuildLogFailureReader doesn't find the string in the build log
      * on a two level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderUnsuccessfulNF2() throws Exception {
-        Folder f0 = createFolder();
+    void testBuildLogFailureReaderUnsuccessfulNF2(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f = f0.createProject(Folder.class, "f2");
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
@@ -160,11 +169,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the BuildLogFailureReader doesn't find the string in the build log
      * on a three level folder.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderUnsuccessfulNF3() throws Exception {
-        Folder f0 = createFolder();
+    void testBuildLogFailureReaderUnsuccessfulNF3(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f1 = f0.createProject(Folder.class, "f2");
         Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject project = f.createProject(FreeStyleProject.class, "foo");
@@ -179,11 +191,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a freestyle build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkFreestyleProject() throws Exception {
-        Folder f = createFolder();
+    void testDoMatchTextUrlValidOkFreestyleProject(JenkinsRule r) throws Exception {
+        Folder f = createFolder(r);
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
@@ -208,11 +223,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a freestyle build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkFreestyleProjectNF2() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidOkFreestyleProjectNF2(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f = f0.createProject(Folder.class, "f2");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
@@ -238,11 +256,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a freestyle build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkFreestyleProjectNF3() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidOkFreestyleProjectNF3(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f1 = f0.createProject(Folder.class, "f2");
         Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
@@ -269,17 +290,20 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a matrix build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
-        Folder f = createFolder();
+    void testDoMatchTextUrlValidOkMatrixProject(JenkinsRule r) throws Exception {
+        Folder f = createFolder(r);
         MatrixProject matrixProject = f.createProject(MatrixProject.class, "foo");
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));
         matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
         String buildUrl = r.getURL() + build.getUrl();
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
@@ -310,18 +334,21 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a matrix build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkMatrixProjectNF2() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidOkMatrixProjectNF2(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f = f0.createProject(Folder.class, "f2");
         MatrixProject matrixProject = f.createProject(MatrixProject.class, "foo");
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));
         matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
         String buildUrl = r.getURL() + build.getUrl();
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
@@ -352,11 +379,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a matrix build whose log contains a line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkMatrixProjectNF3() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidOkMatrixProjectNF3(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f1 = f0.createProject(Folder.class, "f2");
         Folder f = f1.createProject(Folder.class, "f3");
         MatrixProject matrixProject = f.createProject(MatrixProject.class, "foo");
@@ -364,7 +394,7 @@ public class BuildLogIndicationFoldersTest {
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));
         matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
         String buildUrl = r.getURL() + build.getUrl();
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
@@ -395,11 +425,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a build whose log does not contain any line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidWarning() throws Exception {
-        Folder f = createFolder();
+    void testDoMatchTextUrlValidWarning(JenkinsRule r) throws Exception {
+        Folder f = createFolder(r);
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = r.buildAndAssertSuccess(freeStyleProject);
@@ -414,11 +447,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a build whose log does not contain any line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidWarningNF2() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidWarningNF2(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f = f0.createProject(Folder.class, "f2");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
@@ -434,11 +470,14 @@ public class BuildLogIndicationFoldersTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a build whose log does not contain any line that matches the pattern.
+     *
+     * @param r
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidWarningNF3() throws Exception {
-        Folder f0 = createFolder();
+    void testDoMatchTextUrlValidWarningNF3(JenkinsRule r) throws Exception {
+        Folder f0 = createFolder(r);
         Folder f1 = f0.createProject(Folder.class, "f2");
         Folder f = f1.createProject(Folder.class, "f3");
         FreeStyleProject freeStyleProject = f.createProject(FreeStyleProject.class, "foo");
@@ -452,8 +491,7 @@ public class BuildLogIndicationFoldersTest {
         assertEquals(FormValidation.Kind.WARNING, formValidation.kind);
     }
 
-    //CS IGNORE JavadocMethod FOR NEXT 1 LINES. REASON: Test helper method
-    private Folder createFolder() throws IOException {
+    private static Folder createFolder(JenkinsRule r) throws IOException {
         return r.jenkins.createProject(Folder.class, "folder" + r.jenkins.getItems().size());
     }
 }

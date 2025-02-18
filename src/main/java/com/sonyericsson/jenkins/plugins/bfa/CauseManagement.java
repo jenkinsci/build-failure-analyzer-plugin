@@ -33,7 +33,6 @@ import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Failure;
-import hudson.model.Hudson;
 import hudson.model.ModelObject;
 import hudson.model.RootAction;
 import hudson.security.Permission;
@@ -106,8 +105,8 @@ public class CauseManagement implements RootAction {
     private static final String OWNER_URL = "/";
     @Override
     public String getIconFileName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)
-                || Hudson.getInstance().hasPermission(PluginImpl.VIEW_PERMISSION)) {
+        if (Jenkins.get().hasPermission(PluginImpl.UPDATE_PERMISSION)
+                || Jenkins.get().hasPermission(PluginImpl.VIEW_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
         } else {
             return null;
@@ -116,9 +115,9 @@ public class CauseManagement implements RootAction {
 
     @Override
     public String getDisplayName() {
-        if (Hudson.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Jenkins.get().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return Messages.CauseManagement_DisplayName();
-        } else if (Hudson.getInstance().hasPermission(PluginImpl.VIEW_PERMISSION)) {
+        } else if (Jenkins.get().hasPermission(PluginImpl.VIEW_PERMISSION)) {
             return Messages.CauseList_DisplayName();
         } else {
             return null;
@@ -148,9 +147,8 @@ public class CauseManagement implements RootAction {
      *
      * @return the collection of causes.
      *
-     * @throws Exception if communication fails.
      */
-    public Iterable<FailureCause> getShallowCauses() throws Exception {
+    public Iterable<FailureCause> getShallowCauses() {
         Iterable<FailureCause> returnValue = null;
         try {
             returnValue = PluginImpl.getInstance().getKnowledgeBase().getShallowCauses();
@@ -203,9 +201,8 @@ public class CauseManagement implements RootAction {
      * @param response the response
      * @return the cause if found or null.
      *
-     * @throws Exception if communication with the knowledge base failed.
      */
-    public FailureCause getDynamic(String id, StaplerRequest2 request, StaplerResponse2 response) throws Exception {
+    public FailureCause getDynamic(String id, StaplerRequest2 request, StaplerResponse2 response) {
         if (NEW_CAUSE_DYNAMIC_ID.equalsIgnoreCase(id)) {
             return new FailureCause(NEW_CAUSE_NAME, NEW_CAUSE_DESCRIPTION);
         } else {
@@ -224,7 +221,7 @@ public class CauseManagement implements RootAction {
     @POST
     public void doRemoveConfirm(@QueryParameter String id, StaplerRequest2 request, StaplerResponse2 response)
             throws IOException {
-        Jenkins.getInstance().checkPermission(PluginImpl.REMOVE_PERMISSION);
+        Jenkins.get().checkPermission(PluginImpl.REMOVE_PERMISSION);
         id = Util.fixEmpty(id);
         if (id != null) {
             try {
@@ -241,13 +238,13 @@ public class CauseManagement implements RootAction {
     }
 
     /**
-     * The "owner" of this Action. Default this would be {@link hudson.model.Hudson#getInstance()} but if the class is
+     * The "owner" of this Action. Default this would be {@link Jenkins#get()} but if the class is
      * included in some build or something we might want to be able to easier change the side panel for example.
      *
      * @return the holder of the beer.
      */
     public ModelObject getOwner() {
-        return Hudson.getInstance();
+        return Jenkins.get();
     }
 
     /**
@@ -302,7 +299,7 @@ public class CauseManagement implements RootAction {
      */
     public boolean isUnderTest() {
         return "org.jvnet.hudson.test.TestPluginManager".
-                equals(Hudson.getInstance().getPluginManager().getClass().getName());
+                equals(Jenkins.get().getPluginManager().getClass().getName());
     }
 
     /**
@@ -312,7 +309,7 @@ public class CauseManagement implements RootAction {
      * @return the instance.
      */
     public static CauseManagement getInstance() {
-        for (Action action : Hudson.getInstance().getActions()) {
+        for (Action action : Jenkins.get().getActions()) {
             if (action instanceof CauseManagement) {
                 return (CauseManagement)action;
             }

@@ -28,14 +28,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseModification;
-import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import hudson.util.CopyOnWriteList;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -43,12 +41,12 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -61,7 +59,7 @@ import static org.mockito.Mockito.verify;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class LocalFileKnowledgeBaseTest {
+class LocalFileKnowledgeBaseTest {
 
     private CopyOnWriteList<FailureCause> oldCauses;
     private FailureCause olle;
@@ -77,18 +75,18 @@ public class LocalFileKnowledgeBaseTest {
     /**
      * Some usable test data for most tests.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jenkins = mock(Jenkins.class);
         metricsPlugin = mock(Metrics.class);
         metricRegistry = mock(MetricRegistry.class);
-        oldCauses = new CopyOnWriteList<FailureCause>();
+        oldCauses = new CopyOnWriteList<>();
         oldCauses.add(new FailureCause("nisse", "Nils has been in your code again!"));
         olle = new FailureCause("olle", "Olle is a good guy who wouldn't hurt a fly.");
         olle.addIndication(new BuildLogIndication(".*olle.*"));
         oldCauses.add(olle);
         existingCause = new FailureCause("existingId", "me", "I am already here!", "someComment", new Date(),
-                "myCategory", new LinkedList<Indication>(), new LinkedList<FailureCauseModification>());
+                "myCategory", new LinkedList<>(), new LinkedList<>());
         oldCauses.add(existingCause);
         PluginImpl mock = mock(PluginImpl.class);
         pluginMockedStatic = mockStatic(PluginImpl.class);
@@ -96,7 +94,7 @@ public class LocalFileKnowledgeBaseTest {
 
         jenkinsMockedStatic = mockStatic(Jenkins.class);
         metricsMockedStatic = mockStatic(Metrics.class);
-        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkins);
         when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
         metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
     }
@@ -104,8 +102,8 @@ public class LocalFileKnowledgeBaseTest {
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         pluginMockedStatic.close();
         jenkinsMockedStatic.close();
         metricsMockedStatic.close();
@@ -115,16 +113,16 @@ public class LocalFileKnowledgeBaseTest {
      * Tests {@link LocalFileKnowledgeBase#LocalFileKnowledgeBase(hudson.util.CopyOnWriteList)}.
      */
     @Test
-    public void testLocalFileKnowledgeBase() {
+    void testLocalFileKnowledgeBase() {
 
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase(oldCauses);
 
         assertSame(existingCause, kb.getCause("existingId"));
 
         for (FailureCause c : kb.getCauses()) {
-            assertNotNull(c.getName() + " should have an id", c.getId());
+            assertNotNull(c.getId(), c.getName() + " should have an id");
             if (c == olle) {
-                assertFalse("olle should have an indication!", c.getIndications().isEmpty());
+                assertFalse(c.getIndications().isEmpty(), "olle should have an indication!");
             }
         }
     }
@@ -135,7 +133,7 @@ public class LocalFileKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testAddCause() throws Exception {
+    void testAddCause() throws Exception {
         FailureCause expected = new FailureCause("olle", "description");
         expected.addIndication(new BuildLogIndication(".*"));
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
@@ -152,7 +150,7 @@ public class LocalFileKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testRemoveCause() throws Exception {
+    void testRemoveCause() throws Exception {
         FailureCause expected = new FailureCause("olle", "description");
         expected.addIndication(new BuildLogIndication(".*"));
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
@@ -168,7 +166,7 @@ public class LocalFileKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testSaveCause() throws Exception {
+    void testSaveCause() throws Exception {
         FailureCause expected = olle;
         expected.setId(null);
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
@@ -189,7 +187,7 @@ public class LocalFileKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testConvertFromSameType() throws Exception {
+    void testConvertFromSameType() throws Exception {
         LocalFileKnowledgeBase old = new LocalFileKnowledgeBase(oldCauses);
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
         kb.convertFrom(old);
@@ -203,7 +201,7 @@ public class LocalFileKnowledgeBaseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testConvertFromAnotherType() throws Exception {
+    void testConvertFromAnotherType() throws Exception {
         LocalFileKnowledgeBase kb = new LocalFileKnowledgeBase();
         String zeroId = UUID.randomUUID().toString();
         oldCauses.get(0).setId(zeroId);

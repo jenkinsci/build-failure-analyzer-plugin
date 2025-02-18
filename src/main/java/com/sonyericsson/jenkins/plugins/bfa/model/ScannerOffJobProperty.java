@@ -27,6 +27,7 @@ package com.sonyericsson.jenkins.plugins.bfa.model;
 import hudson.model.AbstractProject;
 import hudson.model.JobProperty;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -68,6 +69,7 @@ public class ScannerOffJobProperty extends JobProperty<AbstractProject<?, ?>> im
      *
      * @return an instance of {@link ScannerJobProperty} with the same data.
      */
+    @Serial
     public Object readResolve() {
         return new ScannerJobProperty(doNotScan);
     }

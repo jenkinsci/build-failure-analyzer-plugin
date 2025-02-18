@@ -31,22 +31,30 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 
-import org.junit.Test;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Test Failure Cause project action.
  */
-public class FailureCauseProjectActionHudsonTest extends HudsonTestCase {
+@WithJenkins
+class FailureCauseProjectActionHudsonTest {
 
     /**
      * Should show failures of last completed build.
      *
+     * @param j
+     *
      * @throws Exception in some cases.
      */
     @Test
-    public void testShowLastFailureOnProjectPage() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+    void testShowLastFailureOnProjectPage(JenkinsRule j) throws Exception {
+        FreeStyleProject project = j.createFreeStyleProject();
         CommandInterpreter commandInterpreter;
         if (Functions.isWindows()) {
             commandInterpreter = new BatchFile("@if %BUILD_NUMBER% == 1 exit /b 1");
@@ -55,13 +63,13 @@ public class FailureCauseProjectActionHudsonTest extends HudsonTestCase {
         }
         project.getBuildersList().add(commandInterpreter);
         FreeStyleBuild build = project.scheduleBuild2(0).get();
-        assertBuildStatus(Result.FAILURE, build);
+        j.assertBuildStatus(Result.FAILURE, build);
 
         FailureCauseProjectAction action = project.getAction(FailureCauseProjectAction.class);
         assertNotNull(action.getAction());
         assertEquals(build.getAction(FailureCauseBuildAction.class), action.getAction());
 
-        buildAndAssertSuccess(project);
+        j.buildAndAssertSuccess(project);
         assertNull(project.getAction(FailureCauseProjectAction.class).getAction());
     }
 }
