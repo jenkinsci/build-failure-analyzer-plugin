@@ -39,9 +39,9 @@ import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import org.bson.conversions.Bson;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 import org.mongojack.JacksonMongoCollection;
@@ -52,10 +52,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertSame;
-import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -70,7 +71,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
-public class MongoDBKnowledgeBaseTest {
+class MongoDBKnowledgeBaseTest {
 
     private JacksonMongoCollection<FailureCause> collection;
     private JacksonMongoCollection<DBObject> statisticsCollection;
@@ -89,8 +90,8 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Common stuff to set up for the tests.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jenkins = mock(Jenkins.class);
         metricsPlugin = mock(Metrics.class);
         metricRegistry = mock(MetricRegistry.class);
@@ -100,7 +101,7 @@ public class MongoDBKnowledgeBaseTest {
         Whitebox.setInternalState(kb, "jacksonCollection", collection);
         Whitebox.setInternalState(kb, "jacksonStatisticsCollection", statisticsCollection);
 
-        indications = new LinkedList<Indication>();
+        indications = new LinkedList<>();
         indication = new BuildLogIndication("something");
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
@@ -108,7 +109,7 @@ public class MongoDBKnowledgeBaseTest {
 
         jenkinsMockedStatic = mockStatic(Jenkins.class);
         metricsMockedStatic = mockStatic(Metrics.class);
-        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkins);
         when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
         metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
     }
@@ -116,8 +117,8 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         jenkinsMockedStatic.close();
         metricsMockedStatic.close();
     }
@@ -125,53 +126,50 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Tests that the cluster connection mode is set correctly for each kind of input.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testClusterModes() throws Exception {
+    void testClusterModes() {
         MongoDBKnowledgeBase singleNodekb = new MongoDBKnowledgeBase(
                 "oneNode", PORT, "mydb", null, null, false, false);
         MongoDBKnowledgeBase multiNodekb = new MongoDBKnowledgeBase(
                 "node1,node2,node3", PORT, "mydb", null, null, false, false);
         MongoClient mongo = singleNodekb.getMongoConnection();
         ClusterConnectionMode connectionMode = mongo.getClusterDescription().getConnectionMode();
-        assertSame(connectionMode, ClusterConnectionMode.SINGLE);
+        assertSame(ClusterConnectionMode.SINGLE, connectionMode);
         mongo = multiNodekb.getMongoConnection();
         connectionMode = mongo.getClusterDescription().getConnectionMode();
-        assertSame(connectionMode, ClusterConnectionMode.MULTIPLE);
+        assertSame(ClusterConnectionMode.MULTIPLE, connectionMode);
     }
 
     /**
      * Tests finding one cause by its id.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testFindOneCause() throws Exception {
+    void testFindOneCause() {
         when(collection.findOneById(anyString())).thenReturn(mockedCause);
         FailureCause fetchedCause = kb.getCause("id");
-        assertNotNull("The fetched cause should not be null", fetchedCause);
+        assertNotNull(fetchedCause, "The fetched cause should not be null");
         assertSame(mockedCause, fetchedCause);
     }
 
     /**
      * Tests finding all causes.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testGetCauseNames() throws Exception {
+    void testGetCauseNames() {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
         MongoCursor<FailureCause> cursor = mock(MongoCursor.class);
-        List<FailureCause> list = new LinkedList<FailureCause>();
+        List<FailureCause> list = new LinkedList<>();
         list.add(mockedCause);
         when(iterable.iterator()).thenReturn(cursor);
         when(cursor.next()).thenReturn(mockedCause);
         when(cursor.hasNext()).thenReturn(true, false);
         doReturn(iterable).when(collection).find(ArgumentMatchers.<Bson>any());
         Collection<FailureCause> fetchedCauses = kb.getCauseNames();
-        assertNotNull("The fetched cause should not be null", fetchedCauses);
-        Iterator fetch = fetchedCauses.iterator();
+        assertNotNull(fetchedCauses, "The fetched cause should not be null");
+        Iterator<FailureCause> fetch = fetchedCauses.iterator();
         assertTrue(fetch.hasNext());
         assertSame(mockedCause, fetch.next());
     }
@@ -179,10 +177,9 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Tests adding one cause.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testAddCause() throws Exception {
+    void testAddCause() {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
         UpdateResult result = mock(UpdateResult.class);
         doReturn(result).when(collection).save(mockedCause);
@@ -198,10 +195,9 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Tests saving one cause.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testSaveCause() throws Exception {
+    void testSaveCause() {
         FindIterable<FailureCause> iterable = mock(FindIterable.class);
         UpdateResult result = mock(UpdateResult.class);
         doReturn(result).when(collection).save(mockedCause);
@@ -218,21 +214,21 @@ public class MongoDBKnowledgeBaseTest {
     /**
      * Tests that the mongo exception caused by the collection gets thrown from the knowledgebase.
      *
-     * @throws Exception if so.
      */
-    @Test(expected = MongoException.class)
-    public void testThrowMongo() throws Exception {
+    @Test
+    void testThrowMongo() {
         when(collection.find(ArgumentMatchers.<Bson>any())).thenThrow(MongoException.class);
-        kb.getCauseNames();
+        assertThrows(MongoException.class, () ->
+            kb.getCauseNames());
     }
 
     /**
      * Tests that the MongoConnection of the KnowledgeBase is set to null after stop is run.
      */
     @Test
-    public void testStopKnowledgeBase() {
+    void testStopKnowledgeBase() {
         kb.getMongoConnection();
         kb.stop();
-        assertNull("MongoConnection should be null", Whitebox.getInternalState(kb, "mongo"));
+        assertNull(Whitebox.getInternalState(kb, "mongo"), "MongoConnection should be null");
     }
 }

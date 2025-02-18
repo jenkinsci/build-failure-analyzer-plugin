@@ -30,37 +30,32 @@ import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-//CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests for WorkflowJobs.
  * @author Tomas Westling &lt;tomas.westling@sonymobile.com&gt;
  */
-public class FailureCauseWorkFlowTest {
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class FailureCauseWorkFlowTest {
 
     /**
      * Tests that an action is added when the builds fail.
      *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testWorkflowFailureCauseBuildAction() throws Exception {
+    void testWorkflowFailureCauseBuildAction(JenkinsRule j) throws Exception {
         WorkflowJob proj = j.jenkins.createProject(WorkflowJob.class, "proj");
-        proj.setDefinition(new CpsFlowDefinition("error()"));
+        proj.setDefinition(new CpsFlowDefinition("error()", false));
         QueueTaskFuture<WorkflowRun> f = proj.scheduleBuild2(0);
         assertThat("build was actually scheduled", f, Matchers.notNullValue());
         WorkflowRun run = j.assertBuildStatus(Result.FAILURE, f.get());
@@ -71,12 +66,14 @@ public class FailureCauseWorkFlowTest {
     /**
      * Tests that no action is added if all builds are successful.
      *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testFailureCausesWhenNotFailed() throws Exception {
+    void testFailureCausesWhenNotFailed(JenkinsRule j) throws Exception {
         WorkflowJob proj = j.jenkins.createProject(WorkflowJob.class, "proj");
-        proj.setDefinition(new CpsFlowDefinition("//Do nothing!"));
+        proj.setDefinition(new CpsFlowDefinition("//Do nothing!", false));
         WorkflowRun run = j.assertBuildStatusSuccess(proj.scheduleBuild2(0));
         FailureCauseBuildAction action = run.getAction(FailureCauseBuildAction.class);
         assertNull(action);

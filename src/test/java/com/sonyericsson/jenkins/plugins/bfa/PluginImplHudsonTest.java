@@ -42,9 +42,9 @@ import hudson.ExtensionList;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.RequestImpl;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -55,12 +55,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -73,33 +73,27 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImplHudsonTest {
-
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+@WithJenkins
+class PluginImplHudsonTest {
 
     //CS IGNORE MagicNumber FOR NEXT 20 LINES. REASON: Random test data
 
     /**
      * Tests that boolean configure parameters are persisted.
      *
-     * @throws Exception if so
+     * @param jenkins
      */
     @Test
-    public void testBooleanConfigPersistence() throws Exception {
+    void testBooleanConfigPersistence(JenkinsRule jenkins) {
         PluginImpl instance = PluginImpl.getInstance();
         // assert default config
-        assertTrue("globalEnabled: default value is true", instance.isGlobalEnabled());
-        assertFalse("testResultParsingEnabled: default value is false", instance.isTestResultParsingEnabled());
-        assertTrue("gerritTriggerEnabled: default value is true", instance.isGerritTriggerEnabled());
-        assertFalse("doNotAnalyzeAbortedJob: default value is false", instance.isDoNotAnalyzeAbortedJob());
-        assertFalse("graphsEnabled: default value is false", instance.isGraphsEnabled());
-        assertTrue("noCausesEnabled: default value is true", instance.isNoCausesEnabled());
-        assertFalse("metricSquashingEnabled: default value is false", instance.isMetricSquashingEnabled());
+        assertTrue(instance.isGlobalEnabled(), "globalEnabled: default value is true");
+        assertFalse(instance.isTestResultParsingEnabled(), "testResultParsingEnabled: default value is false");
+        assertTrue(instance.isGerritTriggerEnabled(), "gerritTriggerEnabled: default value is true");
+        assertFalse(instance.isDoNotAnalyzeAbortedJob(), "doNotAnalyzeAbortedJob: default value is false");
+        assertFalse(instance.isGraphsEnabled(), "graphsEnabled: default value is false");
+        assertTrue(instance.isNoCausesEnabled(), "noCausesEnabled: default value is true");
+        assertFalse(instance.isMetricSquashingEnabled(), "metricSquashingEnabled: default value is false");
         // to ever get graphsEnabled, we'll need a KB with enableStatistics, like MongoDBKB with the right option
         MongoDBKnowledgeBase mongoKB = new MongoDBKnowledgeBase("host", 27017, "dbname", "username",
                 Secret.fromString("password"), true, true);
@@ -120,23 +114,23 @@ public class PluginImplHudsonTest {
         form.put("metricSquashingEnabled", !instance.isMetricSquashingEnabled());
         instance.configure(sreq, form);
         // assert opposite config
-        assertFalse("globalEnabled: opposite value is false", instance.isGlobalEnabled());
-        assertTrue("testResultParsingEnabled: opposite value is true", instance.isTestResultParsingEnabled());
-        assertFalse("gerritTriggerEnabled: opposite value is false", instance.isGerritTriggerEnabled());
-        assertTrue("doNotAnalyzeAbortedJob: opposite value is true", instance.isDoNotAnalyzeAbortedJob());
-        assertTrue("graphsEnabled: opposite value is true", instance.isGraphsEnabled());
-        assertFalse("noCausesEnabled: opposite value is false", instance.isNoCausesEnabled());
-        assertTrue("metricSquashingEnabled: opposite value is true", instance.isMetricSquashingEnabled());
+        assertFalse(instance.isGlobalEnabled(), "globalEnabled: opposite value is false");
+        assertTrue(instance.isTestResultParsingEnabled(), "testResultParsingEnabled: opposite value is true");
+        assertFalse(instance.isGerritTriggerEnabled(), "gerritTriggerEnabled: opposite value is false");
+        assertTrue(instance.isDoNotAnalyzeAbortedJob(), "doNotAnalyzeAbortedJob: opposite value is true");
+        assertTrue(instance.isGraphsEnabled(), "graphsEnabled: opposite value is true");
+        assertFalse(instance.isNoCausesEnabled(), "noCausesEnabled: opposite value is false");
+        assertTrue(instance.isMetricSquashingEnabled(), "metricSquashingEnabled: opposite value is true");
     }
 
     /**
      * Tests that {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getKnowledgeBaseDescriptors()} contains the
      * default descriptors.
      *
-     * @throws Exception if so.
+     * @param jenkins
      */
     @Test
-    public void testGetKnowledgeBaseDescriptors() throws Exception {
+    void testGetKnowledgeBaseDescriptors(JenkinsRule jenkins) {
         ExtensionList<KnowledgeBase.KnowledgeBaseDescriptor> descriptors =
                 PluginImpl.getInstance().getKnowledgeBaseDescriptors();
         boolean foundLocalFile = false;
@@ -151,19 +145,21 @@ public class PluginImplHudsonTest {
                 foundDifferentKb = true;
             }
         }
-        assertTrue("Expected to find a LocalFileKnowledgeBaseDescriptor", foundLocalFile);
-        assertTrue("Expected to find a MongoDBKnowledgeBaseDescriptor", foundMongoDB);
-        assertTrue("Expected to find a DifferentKnowledgeBaseDescriptor", foundDifferentKb);
+        assertTrue(foundLocalFile, "Expected to find a LocalFileKnowledgeBaseDescriptor");
+        assertTrue(foundMongoDB, "Expected to find a MongoDBKnowledgeBaseDescriptor");
+        assertTrue(foundDifferentKb, "Expected to find a DifferentKnowledgeBaseDescriptor");
     }
 
     /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}. with a new
      * KnowledgeBase type.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testConfigureConvert() throws Exception {
+    void testConfigureConvert(JenkinsRule jenkins) throws Exception {
         PluginImpl instance = PluginImpl.getInstance();
         KnowledgeBase prevKnowledgeBase = instance.getKnowledgeBase();
         FailureCause cause = new FailureCause("Olle", "Olle");
@@ -194,10 +190,12 @@ public class PluginImplHudsonTest {
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}. with the same
      * KnowledgeBase type but different configuration.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testConfigureConvertSameType() throws Exception {
+    void testConfigureConvertSameType(JenkinsRule jenkins) throws Exception {
         DifferentKnowledgeBase prevKnowledgeBase = new DifferentKnowledgeBase("Original");
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
@@ -231,10 +229,12 @@ public class PluginImplHudsonTest {
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}.
      * Tests that a LocalFileKnowledgebase is preserved through a reconfigure without changes.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testConfigureIdenticalLocalKB() throws Exception {
+    void testConfigureIdenticalLocalKB(JenkinsRule jenkins) throws Exception {
         LocalFileKnowledgeBase prevKnowledgeBase = new LocalFileKnowledgeBase();
         FailureCause cause = new FailureCause("Olle", "Olle");
         cause.addIndication(new BuildLogIndication(".*olle"));
@@ -257,10 +257,12 @@ public class PluginImplHudsonTest {
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest2, net.sf.json.JSONObject)}.
      * Tests that a MongoDBKnowledgebase is preserved through a reconfigure without changes.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testConfigureIdenticalMongoKB() throws Exception {
+    void testConfigureIdenticalMongoKB(JenkinsRule jenkins) throws Exception {
         MongoDBKnowledgeBase prevKnowledgeBase = new MongoDBKnowledgeBase("host",
                 27017,
                 "dbname",
@@ -285,10 +287,10 @@ public class PluginImplHudsonTest {
      * @param knowledgeBase the configured knowledgeBase.
      * @param page          the html page (http://jenkins/configure).
      */
-    private void assertConfigPageRendering(DifferentKnowledgeBase knowledgeBase, HtmlPage page) {
+    private static void assertConfigPageRendering(DifferentKnowledgeBase knowledgeBase, HtmlPage page) {
         //Check that the select box has the correct value
         HtmlElement element = getStorageTypeRow(page);
-        assertNotNull("Should have found the base div", element);
+        assertNotNull(element, "Should have found the base div");
         HtmlElement settingsMainElement = element.getOneHtmlElementByAttribute("div", "class", "jenkins-select");
         HtmlSelect select = (HtmlSelect)settingsMainElement.getChildElements().iterator().next();
         assertEquals(knowledgeBase.getDescriptor().getDisplayName(), select.getSelectedOptions().get(0).getText());
@@ -296,9 +298,9 @@ public class PluginImplHudsonTest {
         //Check that it has the someString input field with correct value
         DomNode container = settingsMainElement.getEnclosingElement("div").getNextSibling();
         HtmlElement table = page.getDocumentElement().getOneHtmlElementByAttribute("div", "name", "knowledgeBase");
-        assertSame("The table should be inside the dropDownContainer", container, table.getParentNode().getParentNode());
+        assertSame(container, table.getParentNode().getParentNode(), "The table should be inside the dropDownContainer");
         final HtmlTextInput someStringInput = table.getOneHtmlElementByAttribute("input", "name", "_.someString");
-        assertNotNull("Should have found some text input", someStringInput);
+        assertNotNull(someStringInput, "Should have found some text input");
         assertEquals(knowledgeBase.getSomeString(), someStringInput.getText());
     }
 
@@ -308,7 +310,7 @@ public class PluginImplHudsonTest {
      * @param page the page to search in.
      * @return the table row.
      */
-    private HtmlElement getStorageTypeRow(HtmlPage page) {
+    private static HtmlElement getStorageTypeRow(HtmlPage page) {
         List<HtmlElement> elements = page.getDocumentElement().getElementsByAttribute(
                 "div", "class", "jenkins-form-label help-sibling");
         for (HtmlElement element : elements) {
@@ -327,7 +329,7 @@ public class PluginImplHudsonTest {
      * @param nrOfScanThreads        the number of threads.
      * @return the form data.
      */
-    private JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
+    private static JSONObject createForm(String expectedNoCauseMessage, int nrOfScanThreads, Boolean convert) {
         JSONObject form = new JSONObject();
         form.put("noCausesMessage", expectedNoCauseMessage);
         form.put("noCausesEnabled", true);

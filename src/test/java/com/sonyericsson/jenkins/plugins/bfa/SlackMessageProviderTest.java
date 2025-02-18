@@ -2,12 +2,12 @@ package com.sonyericsson.jenkins.plugins.bfa;
 
 import jenkins.model.Jenkins;
 import jenkins.plugins.slack.SlackNotifier;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -19,7 +19,7 @@ import org.mockito.MockedStatic;
  * Tests for the SlackMessageProvider class.
  * @author Johan Cornelissen &lt;j.cornelissen@queensu.ca&gt;
  */
-public class SlackMessageProviderTest {
+class SlackMessageProviderTest {
     private SlackNotifier slackPlugin;
     private SlackNotifier.DescriptorImpl descriptor;
     private static final String JENKINS_URL =  "http://some.jenkins.com";
@@ -30,11 +30,11 @@ public class SlackMessageProviderTest {
     /**
      * Initialize basic stuff: Jenkins, PluginImpl, etc.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jenkinsMockedStatic = mockStatic(Jenkins.class);
         Jenkins jenkins = mock(Jenkins.class);
-        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkins);
         when(jenkins.getRootUrl()).thenReturn(JENKINS_URL);
 
         slackNotifierMockedStatic = mockStatic(SlackNotifier.class);
@@ -50,8 +50,8 @@ public class SlackMessageProviderTest {
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         jenkinsMockedStatic.close();
         slackNotifierMockedStatic.close();
         pluginMockedStatic.close();
@@ -59,10 +59,9 @@ public class SlackMessageProviderTest {
 
     /**
      * Test to no slack message is sent if a slack channel is not provided.
-     * @throws Exception if so.
      */
     @Test
-    public void testEmptyChannelSlackMessage() throws Exception {
+    void testEmptyChannelSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("team", "", "akasfahjfh", true, "", "");
@@ -72,15 +71,14 @@ public class SlackMessageProviderTest {
             result = true;
         }
 
-        assertEquals(false, result);
+        assertFalse(result);
     }
 
     /**
      * Test to ensure a slack message can use baseUrl if no team domain is provided.
-     * @throws Exception if so.
      */
     @Test
-    public void testEmptyTeamDomainSlackMessage() throws Exception {
+    void testEmptyTeamDomainSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("", "team.slack.com", "akasfahjfh",
@@ -91,15 +89,14 @@ public class SlackMessageProviderTest {
             result = true;
         }
 
-        assertEquals(true, result);
+        assertTrue(result);
     }
 
     /**
      * Test to ensure a slack message can use team domain if no baseUrl is provided.
-     * @throws Exception if so.
      */
     @Test
-    public void testEmptyBaseUrlSlackMessage() throws Exception {
+    void testEmptyBaseUrlSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("team", "", "akasfahjfh",
@@ -110,15 +107,14 @@ public class SlackMessageProviderTest {
             result = true;
         }
 
-        assertEquals(true, result);
+        assertTrue(result);
     }
 
     /**
      * Test to ensure a slack message is not sent if both baseUrl and team domain are missing.
-     * @throws Exception if so.
      */
     @Test
-    public void testEmptyBaseUrlAndTeamDomainSlackMessage() throws Exception {
+    void testEmptyBaseUrlAndTeamDomainSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("", "", "akasfahjfh",
@@ -129,15 +125,14 @@ public class SlackMessageProviderTest {
             result = true;
         }
 
-        assertEquals(false, result);
+        assertFalse(result);
     }
 
     /**
      * Test to ensure a slack message is not sent if authtoken and authCredentialId is missing.
-     * @throws Exception if so.
      */
     @Test
-    public void testMissingAuthSlackMessage() throws Exception {
+    void testMissingAuthSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("", "team.slack.com", "",
@@ -148,15 +143,14 @@ public class SlackMessageProviderTest {
             result = true;
         }
 
-        assertEquals(false, result);
+        assertFalse(result);
     }
 
     /**
      * Test to ensure a slack message is sent if all necessary fields are supplied.
-     * @throws Exception if so.
      */
     @Test
-    public void testSuccessfulSlackMessage() throws Exception {
+    void testSuccessfulSlackMessage() {
         boolean result = false;
         try {
             SlackMessageProvider slackTest = new SlackMessageProvider("team", "", "akasfahjfh",
@@ -166,6 +160,6 @@ public class SlackMessageProviderTest {
             //SSL error indicates it tried to send to slack, so therefore was "successful"
             result = true;
         }
-        assertEquals(true, result);
+        assertTrue(result);
     }
 }

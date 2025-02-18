@@ -24,9 +24,12 @@
 package com.sonyericsson.jenkins.plugins.bfa.db;
 
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
@@ -34,22 +37,24 @@ import static org.junit.Assert.assertEquals;
  * Tests for the Semaphore.
  * @author Tomas Westling &lt;tomas.westling@sonyericsson.com&gt;
  */
-public class SemaphoreTest {
+class SemaphoreTest {
 
     /**
      * Tests that acquire and release works in the the correct way for the Semaphore.
      * @throws Exception if so.
      */
-    @Test(timeout = 20000)
-    public void testAcquireAndRelease() throws Exception {
+    @Test
+    @Timeout(value = 20000, unit = TimeUnit.MILLISECONDS)
+    void testAcquireAndRelease() throws Exception {
         Semaphore semaphore = new Semaphore();
         java.util.concurrent.Semaphore innerSemaphore = Whitebox.getInternalState(semaphore, "semaphoreLock");
-        assertEquals("The semaphore should have no available permits to start with", 0,
-                innerSemaphore.availablePermits());
+        assertEquals(0,
+                innerSemaphore.availablePermits(),
+                "The semaphore should have no available permits to start with");
         semaphore.release();
         semaphore.release();
-        assertEquals("The semaphore should have 2 available permits", 2, innerSemaphore.availablePermits());
+        assertEquals(2, innerSemaphore.availablePermits(), "The semaphore should have 2 available permits");
         semaphore.acquire();
-        assertEquals("All of the semaphore's permits should be taken", 0, innerSemaphore.availablePermits());
+        assertEquals(0, innerSemaphore.availablePermits(), "All of the semaphore's permits should be taken");
     }
 }

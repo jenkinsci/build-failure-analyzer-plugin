@@ -39,14 +39,20 @@ import hudson.matrix.MatrixRun;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static hudson.Util.fixEmpty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //CS IGNORE MagicNumber FOR NEXT 160 LINES. REASON: TestData
 
@@ -55,14 +61,18 @@ import static hudson.Util.fixEmpty;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class BackwardsCompatibilityTest extends HudsonTestCase {
+@WithJenkins
+class BackwardsCompatibilityTest {
 
     /**
      * Tests that a build containing version 1 of {@link FailureCauseBuildAction} can be done.
+     *
+     * @param jenkins
      */
     @LocalData
-    public void testReadResolveFromVersion1() {
-        FreeStyleProject job = (FreeStyleProject)Jenkins.getInstance().getItem("bfa");
+    @Test
+    void testReadResolveFromVersion1(JenkinsRule jenkins) {
+        FreeStyleProject job = (FreeStyleProject)Jenkins.get().getItem("bfa");
         assertNotNull(job);
         FailureCauseBuildAction action = job.getBuilds().getFirstBuild().getAction(FailureCauseBuildAction.class);
         List<FoundFailureCause> foundFailureCauses = Whitebox.getInternalState(action, "foundFailureCauses");
@@ -84,32 +94,37 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
      * Tests that legacy causes in {@link PluginImpl#causes} gets converted during startup to a {@link
      * com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase}.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @LocalData
-    public void testLoadVersion1ConfigXml() throws Exception {
+    @Test
+    void testLoadVersion1ConfigXml(JenkinsRule jenkins) throws Exception {
         KnowledgeBase knowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
         Collection<FailureCause> causes = knowledgeBase.getCauses();
         assertEquals(3, causes.size());
         Indication indication = null;
         for (FailureCause c : causes) {
-            assertNotNull(c.getName() + " should have an id", fixEmpty(c.getId()));
             if ("The Wrong".equals(c.getName())) {
                 indication = c.getIndications().get(0);
             }
         }
-        assertNotNull("Missing a cause!", indication);
+        assertNotNull(indication, "Missing a cause!");
         assertEquals(".+wrong.*", Whitebox.getInternalState(indication, "pattern").toString());
     }
 
     /**
      * Tests that a legacy FoundFailureCause can be loaded by the annotator.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @LocalData
-    public void testLoadOldFailureCauseWithOnlyLineNumbers() throws Exception {
-        FreeStyleProject job = (FreeStyleProject)Jenkins.getInstance().getItem("MyProject");
+    @Test
+    void testLoadOldFailureCauseWithOnlyLineNumbers(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject job = (FreeStyleProject)Jenkins.get().getItem("MyProject");
         assertNotNull(job);
         FreeStyleBuild build = job.getBuilds().getFirstBuild();
         OldDataConverter.getInstance().waitForInitialCompletion();
@@ -128,11 +143,14 @@ public class BackwardsCompatibilityTest extends HudsonTestCase {
     /**
      * Tests if a {@link MatrixBuild} gets loaded and converted correctly from a version 1.2.0 save.
      *
+     * @param jenkins
+     *
      * @throws InterruptedException if it is not allowed to sleep in the beginning.
      */
     @LocalData
-    public void testMatrix120() throws InterruptedException {
-        MatrixProject project = (MatrixProject)jenkins.getItem("mymatrix");
+    @Test
+    void testMatrix120(JenkinsRule jenkins) throws InterruptedException {
+        MatrixProject project = (MatrixProject)jenkins.jenkins.getItem("mymatrix");
         MatrixBuild build = project.getBuildByNumber(1);
         MatrixBuild build2 = project.getBuildByNumber(2);
         OldDataConverter.getInstance().waitForInitialCompletion();

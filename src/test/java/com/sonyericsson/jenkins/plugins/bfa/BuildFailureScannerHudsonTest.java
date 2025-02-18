@@ -25,6 +25,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.codahale.metrics.MetricRegistry;
+import hudson.model.Run;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlPage;
@@ -55,15 +56,13 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.junit.JUnitResultArchiver;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -77,32 +76,26 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-//CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: TestData.
+//CS IGNORE MagicNumber FOR NEXT 1500 LINES. REASON: TestData.
 
 /**
  * Tests for the FailureScanner.
  *
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
+@WithJenkins
 public class BuildFailureScannerHudsonTest {
-
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkins = new JenkinsRule();
 
     private static final String BUILD_LOG = "ERROR: brief\n  detail\n";
     private static final String BUILD_LOG_FIRST_LINE = "ERROR: brief";
@@ -116,11 +109,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Happy test that should find one failure indication in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testOneIndicationFound() throws Exception {
-        FreeStyleProject project = createProject();
+    void testOneIndicationFound(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         FailureCause failureCause = configureCauseAndIndication();
 
@@ -155,7 +150,7 @@ public class BuildFailureScannerHudsonTest {
         HtmlElement error = errorElements.get(0);
 
         assertNotNull(error);
-        assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+        assertEquals(BUILD_LOG_FIRST_LINE, error.getTextContent().trim(), "Error message not found: ");
 
         MetricRegistry metricRegistry = Metrics.metricRegistry();
         assertEquals(1, metricRegistry.counter("jenkins_bfa.cause.Error").getCount());
@@ -163,11 +158,14 @@ public class BuildFailureScannerHudsonTest {
 
     /**
      * Test when an exception occurred during scan.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testExceptionDuringParsing() throws Exception {
-        FreeStyleProject project = createProject();
+    void testExceptionDuringParsing(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         FailureCause failureCause = configureCauseAndIndication(new BuildLogIndication("(wrong pattern"));
 
@@ -189,10 +187,12 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Happy test that should find one generic failure indication in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testOnlyOneGenericIndicationFound() throws Exception {
+    void testOnlyOneGenericIndicationFound(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
 
         FailureCause genericFailureCause = configureCauseAndIndication(
@@ -202,7 +202,7 @@ public class BuildFailureScannerHudsonTest {
                 "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
         );
 
-        FreeStyleProject project = createProject("Generic Error\nUnknown Error");
+        FreeStyleProject project = createProject(jenkins, "Generic Error\nUnknown Error");
 
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
@@ -225,10 +225,12 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Happy test that should replace the generic failure indication with the specific one.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testGenericFailureCauseIsDroppedForSpecificOne() throws Exception {
+    void testGenericFailureCauseIsDroppedForSpecificOne(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setFallbackCategoriesAsString("Generic");
 
         FailureCause genericFailureCause = configureCauseAndIndication(
@@ -238,7 +240,7 @@ public class BuildFailureScannerHudsonTest {
                 "Specific Error", "an error", "", "Specific", new BuildLogIndication(".*Specific Error.*")
         );
 
-        FreeStyleProject project = createProject("Generic Error\nSpecific Error");
+        FreeStyleProject project = createProject(jenkins, "Generic Error\nSpecific Error");
 
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
 
@@ -261,11 +263,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Happy test that should find one failure indication in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testOneMultilineIndicationFound() throws Exception {
-        FreeStyleProject project = createProject();
+    void testOneMultilineIndicationFound(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         FailureCause failureCause = configureCauseAndIndication(new MultilineBuildLogIndication(MULTILINE_REGEX));
 
@@ -294,9 +298,9 @@ public class BuildFailureScannerHudsonTest {
         HtmlElement error = errorElements.get(0);
 
         assertNotNull(error);
-        assertEquals("Error message not found: ",
-                new StringTokenizer(BUILD_LOG).nextToken("\n"),
-                error.getTextContent().trim());
+        assertEquals(new StringTokenizer(BUILD_LOG).nextToken("\n"),
+                error.getTextContent().trim(),
+                "Error message not found: ");
 
         MetricRegistry metricRegistry = Metrics.metricRegistry();
         assertEquals(1, metricRegistry.counter("jenkins_bfa.cause.Error").getCount());
@@ -306,11 +310,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Happy test that should find two failure causes in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testTwoIndicationsSameLine() throws Exception {
-        FreeStyleProject project = createProject();
+    void testTwoIndicationsSameLine(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         FailureCause failureCause = configureCauseAndIndication();
 
@@ -333,7 +339,7 @@ public class BuildFailureScannerHudsonTest {
 
         HtmlElement document = page.getDocumentElement();
 
-        final Set<String> causeDescriptions = new HashSet<String>();
+        final Set<String> causeDescriptions = new HashSet<>();
         causeDescriptions.add(FORMATTED_DESCRIPTION);
         causeDescriptions.add(otherDescription);
 
@@ -358,14 +364,14 @@ public class BuildFailureScannerHudsonTest {
 
         List<HtmlElement> errorElements = document.getElementsByAttribute("span", "title", title);
         //The titles could be in any given order, trying both orders before failing.
-        if (errorElements.size() < 1) {
+        if (errorElements.isEmpty()) {
             title = failureCause2.getName() + "\n" + failureCause.getName();
             errorElements = document.getElementsByAttribute("span", "title", title);
         }
-        assertTrue("Title not found in annotated text", errorElements.size() > 0);
+        assertFalse(errorElements.isEmpty(), "Title not found in annotated text");
         HtmlElement error = errorElements.get(0);
         assertNotNull(error);
-        assertEquals("Error message not found: ", BUILD_LOG_FIRST_LINE, error.getTextContent().trim());
+        assertEquals(BUILD_LOG_FIRST_LINE, error.getTextContent().trim(), "Error message not found: ");
 
         MetricRegistry metricRegistry = Metrics.metricRegistry();
         assertEquals(1, metricRegistry.counter("jenkins_bfa.cause.Error").getCount());
@@ -376,28 +382,31 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure no failure category can be specified, and if all build failures
      * are to be reported, a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoCategoryALLSlackMessage() throws Exception {
+    void testNoCategoryALLSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        List<String> slackFailureCauseCategories = List.of("ALL");
         PrintStream buildLog = null;
 
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
                 "*Description:* Some Description",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -406,28 +415,31 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure no failure Description can be specified,
      * are to be reported, a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoDesriptionSlackMessage() throws Exception {
+    void testNoDesriptionSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "", "", "env");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories = Arrays.asList("");
+        List<String> slackFailureCauseCategories = List.of("");
         PrintStream buildLog = null;
 
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
                 "*Description:* ",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -436,28 +448,31 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure no failure category can be specified,
      * are to be reported, a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoCategorySlackMessage() throws Exception {
+    void testNoCategorySlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories = Arrays.asList("");
+        List<String> slackFailureCauseCategories = List.of("");
         PrintStream buildLog = null;
 
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* []",
                 "*Description:* Some Description",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -466,39 +481,46 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure one failure category can be specified, and if all build failures
      * are to be reported, a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testSingleCategoryALLSlackMessage() throws Exception {
+    void testSingleCategoryALLSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        List<String> slackFailureCauseCategories = List.of("ALL");
         PrintStream buildLog = null;
 
         String result = BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
                 "*Description:* Some Description",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
     }
+
     /**
      * Test to ensure multiple failure categories can be specified, and if at least one of the categories
      * match a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testMultiCategoryFailureSlackMessage() throws Exception {
+    void testMultiCategoryFailureSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
@@ -507,13 +529,13 @@ public class BuildFailureScannerHudsonTest {
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories =  Arrays.asList(new String[] {"Some Fail Cause",
-                "Some Fail Cause git"});
+        List<String> slackFailureCauseCategories =  Arrays.asList("Some Fail Cause",
+                "Some Fail Cause git");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
 
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
@@ -524,7 +546,7 @@ public class BuildFailureScannerHudsonTest {
                 "*Failure Name:* Some Fail Cause git",
                 "*Failure Categories:* [git]",
                 "*Description:* Some Description git",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -533,10 +555,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure multiple failure categories can be specified, and if at least one of the categories
      * match a new Slack message should be created.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testMultiCategoryFailureSlackMessageALL() throws Exception {
+    void testMultiCategoryFailureSlackMessageALL(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
@@ -545,12 +570,12 @@ public class BuildFailureScannerHudsonTest {
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
         boolean notifySlackOfAllFailures = true;
-        List<String> slackFailureCauseCategories = Arrays.asList("ALL");
+        List<String> slackFailureCauseCategories = List.of("ALL");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
 
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
@@ -561,7 +586,7 @@ public class BuildFailureScannerHudsonTest {
                 "*Failure Name:* Some Fail Cause git",
                 "*Failure Categories:* [git]",
                 "*Description:* Some Description git",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -570,10 +595,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure multiple failure categories can be specified, and if not all the categories
      * match a new Slack message should be created with only the selected category.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testMultiCategoryFailureSlackMessageOnlySelected() throws Exception {
+    void testMultiCategoryFailureSlackMessageOnlySelected(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
@@ -582,19 +610,19 @@ public class BuildFailureScannerHudsonTest {
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
         boolean notifySlackOfAllFailures = false;
-        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        List<String> slackFailureCauseCategories = List.of("env");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
 
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
                 "*Description:* Some Description",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
 
         assertEquals(expected, result);
@@ -603,22 +631,23 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure single failure category can be specified, and if none of the categories
      * match no new Slack message should be created.
-     * @throws Exception if so.
+     *
+     * @param jenkins
      */
     @Test
-    public void testSingleNonChosenCategoryFailureSlackMessage() throws Exception {
+    void testSingleNonChosenCategoryFailureSlackMessage(JenkinsRule jenkins) {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1);
+        List<FoundFailureCause> foundCauseList = List.of(testFailureCause1);
 
         boolean notifySlackOfAllFailures = false;
-        List<String> slackFailureCauseCategories = Arrays.asList("git");
+        List<String> slackFailureCauseCategories = List.of("git");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
 
         assertNull(result);
     }
@@ -626,10 +655,11 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure multiple failure categories can be specified, and if none of the categories
      * match no new Slack message should be created.
-     * @throws Exception if so.
+     *
+     * @param jenkins
      */
     @Test
-    public void testMultiNonChosenCategoryFailureSlackMessage() throws Exception {
+    void testMultiNonChosenCategoryFailureSlackMessage(JenkinsRule jenkins) {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause testFailureCause1 = new FoundFailureCause(testFailureCause);
@@ -638,12 +668,12 @@ public class BuildFailureScannerHudsonTest {
         List<FoundFailureCause> foundCauseList = Arrays.asList(testFailureCause1, testFailureCause2);
 
         boolean notifySlackOfAllFailures = false;
-        List<String> slackFailureCauseCategories = Arrays.asList("git");
+        List<String> slackFailureCauseCategories = List.of("git");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
 
         assertNull(result);
     }
@@ -651,28 +681,31 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure a single failure cause category can be chosen in the slack configuration
      * section of the BFA plugin.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testSingleChosenCategoryFailureSlackMessage() throws Exception {
+    void testSingleChosenCategoryFailureSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause", "Some Description", "", "env");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = false;
-        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        List<String> slackFailureCauseCategories = List.of("env");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
                 "*Failure Categories:* [env]",
                 "*Description:* Some Description",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
         assertEquals(expected, result);
     }
@@ -680,23 +713,26 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test to ensure a single failure cause category can be chosen in the slack configuration
      * section of the BFA plugin.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testMultiLineDescriptionSlackMessage() throws Exception {
+    void testMultiLineDescriptionSlackMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setSlackNotifEnabled(true);
         FailureCause testFailureCause = new FailureCause("Some Fail Cause",
                 "Some Description\nwith multiple lines\nTo test that it works", "", "env");
         FoundFailureCause test1 = new FoundFailureCause(testFailureCause);
-        List<FoundFailureCause> foundCauseList = Arrays.asList(test1);
+        List<FoundFailureCause> foundCauseList = List.of(test1);
 
         boolean notifySlackOfAllFailures = false;
-        List<String> slackFailureCauseCategories = Arrays.asList("env");
+        List<String> slackFailureCauseCategories = List.of("env");
         PrintStream buildLog = null;
 
         String result =  BuildFailureScanner.createSlackMessage(foundCauseList, notifySlackOfAllFailures,
                 slackFailureCauseCategories, "Sandbox", "#1",
-                Jenkins.getInstance().getRootUrl() + "job/test0/1/", buildLog);
+                Jenkins.get().getRootUrl() + "job/test0/1/", buildLog);
         String expected = String.join("\n",
                 "Job *\"Sandbox\"* build *##1* FAILED due to following failure causes: ",
                 "*Failure Name:* Some Fail Cause",
@@ -704,7 +740,7 @@ public class BuildFailureScannerHudsonTest {
                 "*Description:* Some Description",
                 "with multiple lines",
                 "To test that it works",
-                String.format("See %sjob/test0/1/ for details.", this.jenkins.getURL())
+                String.format("See %sjob/test0/1/ for details.", jenkins.getURL())
         );
         assertEquals(expected, result);
     }
@@ -712,13 +748,15 @@ public class BuildFailureScannerHudsonTest {
     /**
      * One indication should be found and a correct looking Gerrit-Trigger-Plugin message can be constructed.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testOneIndicationBuildCompletedMessage() throws Exception {
+    void testOneIndicationBuildCompletedMessage(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setGerritTriggerEnabled(true);
 
-        FreeStyleProject project = createProject();
+        FreeStyleProject project = createProject(jenkins);
 
         configureCauseAndIndication();
 
@@ -729,26 +767,28 @@ public class BuildFailureScannerHudsonTest {
 
         GerritMessageProviderExtension messageProvider = new GerritMessageProviderExtension();
 
-        assertEquals("The " + GerritMessageProviderExtension.class.getSimpleName()
-                + " extension would not return the expected message.",
-                FORMATTED_DESCRIPTION + " ( " + Jenkins.getInstance().getRootUrl() + "job/test0/1/ )",
-                messageProvider.getBuildCompletedMessage(build));
+        assertEquals(FORMATTED_DESCRIPTION + " ( " + Jenkins.get().getRootUrl() + "job/test0/1/ )",
+                messageProvider.getBuildCompletedMessage((Run)build),
+                "The " + GerritMessageProviderExtension.class.getSimpleName()
+                + " extension would not return the expected message.");
 
         PluginImpl.getInstance().setGerritTriggerEnabled(false);
 
-        assertNull("The " + GerritMessageProviderExtension.class.getSimpleName()
-                + " extension would not return null.",
-                messageProvider.getBuildCompletedMessage(build));
+        assertNull(messageProvider.getBuildCompletedMessage((Run)build),
+                "The " + GerritMessageProviderExtension.class.getSimpleName()
+                + " extension would not return null.");
     }
 
     /**
      * Unhappy test that should not find any failure indications in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoIndicationFound() throws Exception {
-        FreeStyleProject project = createProject();
+    void testNoIndicationFound(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
 
@@ -763,11 +803,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Unhappy test that should not find any failure multiline indications in the build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoMultilineIndicationFound() throws Exception {
-        FreeStyleProject project = createProject();
+    void testNoMultilineIndicationFound(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
 
         configureCauseAndIndication(new MultilineBuildLogIndication(".*something completely different.*"));
 
@@ -782,11 +824,13 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that "no problem identified" message is not shown when no failure cause has been found.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testNoIndicationMessageShownIfNoCausesDisabled() throws Exception {
-        FreeStyleProject project = createProject();
+    void testNoIndicationMessageShownIfNoCausesDisabled(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = createProject(jenkins);
         PluginImpl.getInstance().setNoCausesEnabled(false);
 
         configureCauseAndIndication(new BuildLogIndication(".*something completely different.*"));
@@ -807,10 +851,12 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Makes sure that the build action is not added to a successful build.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testSuccessfulBuild() throws Exception {
+    void testSuccessfulBuild(JenkinsRule jenkins) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(BUILD_LOG));
         configureCauseAndIndication();
@@ -825,12 +871,14 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that there is no scanner result when the the global setting {@link PluginImpl#isGlobalEnabled()} is false.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoNotScanGlobal() throws Exception {
+    void testDoNotScanGlobal(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setGlobalEnabled(false);
-        FreeStyleProject project = createProject();
+        FreeStyleProject project = createProject(jenkins);
         configureCauseAndIndication();
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -842,12 +890,14 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that there is no scanner result when build log size exceeds max log size.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoNotScanIfLogSizeExceedsLimit() throws Exception {
+    void testDoNotScanIfLogSizeExceedsLimit(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setMaxLogSize(1);
-        FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
+        FreeStyleProject project = createProject(jenkins, createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -859,12 +909,14 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that scanner result presents when build log size is less than max log size.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoScanIfLogSizeIsInLimit() throws Exception {
+    void testDoScanIfLogSizeIsInLimit(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setMaxLogSize(2);
-        FreeStyleProject project = createProject(createHugeString(1024 * 1024) + BUILD_LOG);
+        FreeStyleProject project = createProject(jenkins, createHugeString(1024 * 1024) + BUILD_LOG);
         configureCauseAndIndication();
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
@@ -882,9 +934,7 @@ public class BuildFailureScannerHudsonTest {
      */
     private static String createHugeString(int length)  {
         char[] text = new char[length];
-        for (int i = 0; i < length; i++) {
-            text[i] = 'a';
-        }
+        Arrays.fill(text, 'a');
         return new String(text);
     }
 
@@ -893,12 +943,14 @@ public class BuildFailureScannerHudsonTest {
      * {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty}
      * is set to true.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoNotScanSpecific() throws Exception {
+    void testDoNotScanSpecific(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setGlobalEnabled(true);
-        FreeStyleProject project = createProject();
+        FreeStyleProject project = createProject(jenkins);
         project.addProperty(new ScannerJobProperty(true));
         configureCauseAndIndication();
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
@@ -912,31 +964,30 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that the saveStatistics method of KnowledgeBase is called with a Statistics object.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testStatisticsLogging() throws Exception {
+    void testStatisticsLogging(JenkinsRule jenkins) throws Exception {
 
         Indication indication = new BuildLogIndication(REGEX);
-        List<Indication> indicationList = new LinkedList<Indication>();
+        List<Indication> indicationList = new LinkedList<>();
         indicationList.add(indication);
         FailureCause cause = new FailureCause("myId", "testcause", "testdescription", "testcomment",
                                               null, "testcategory", indicationList, null);
-        List<FailureCause> causes = new LinkedList<FailureCause>();
+        List<FailureCause> causes = new LinkedList<>();
         causes.add(cause);
         KnowledgeBase base = mock(KnowledgeBase.class);
         when(base.isEnableStatistics()).thenReturn(true);
         when(base.getCauses()).thenReturn(causes);
         when(base.isEnableStatistics()).thenReturn(true);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                hasCalledStatistics = true;
-                return null;
-            }
-        }).when(base).saveStatistics(ArgumentMatchers.<Statistics>any());
+        doAnswer(invocation -> {
+            hasCalledStatistics = true;
+            return null;
+        }).when(base).saveStatistics(ArgumentMatchers.any());
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, base);
-        FreeStyleProject project = createProject();
+        FreeStyleProject project = createProject(jenkins);
         QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
         jenkins.assertBuildStatus(Result.FAILURE, build);
@@ -954,9 +1005,11 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Tests that {@link BuildFailureScanner} is found before
      * {@link com.sonyericsson.hudson.plugins.gerrit.trigger.gerritnotifier.ToGerritRunListener}.
+     *
+     * @param jenkins
      */
     @Test
-    public void testOrdinal() {
+    void testOrdinal(JenkinsRule jenkins) {
         int counter = 0;
         int bfaPlacement = 0;
         int gtPlacement = 0;
@@ -974,16 +1027,18 @@ public class BuildFailureScannerHudsonTest {
         }
         assertTrue(gtFound);
         assertTrue(bfaFound);
-        assertTrue("BFA (" + bfaPlacement + ") should list before GT (" + gtPlacement + ")", bfaPlacement < gtPlacement);
+        assertTrue(bfaPlacement < gtPlacement, "BFA (" + bfaPlacement + ") should list before GT (" + gtPlacement + ")");
     }
 
     /**
      * Test whether failed test cases are successfully matched as failure causes.
      *
+     * @param jenkins
+     *
      * @throws Exception if not so.
      */
     @Test
-    public void testTestResultInterpretation() throws Exception {
+    void testTestResultInterpretation(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(true);
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
@@ -1007,23 +1062,25 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(action);
 
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
-        assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
+        assertEquals(2, causeListFromAction.size(), "Amount of failure causes does not match.");
 
-        assertEquals(causeListFromAction.get(0).getName(), "AFailingTest");
-        assertEquals(causeListFromAction.get(0).getDescription(), "Here are details of the failure...");
+        assertEquals("AFailingTest", causeListFromAction.get(0).getName());
+        assertEquals("Here are details of the failure...", causeListFromAction.get(0).getDescription());
         assertEquals(new ArrayList<String>(), causeListFromAction.get(0).getCategories());
-        assertEquals(causeListFromAction.get(1).getName(), "AnotherFailingTest");
-        assertEquals(causeListFromAction.get(1).getDescription(), "More details");
+        assertEquals("AnotherFailingTest", causeListFromAction.get(1).getName());
+        assertEquals("More details", causeListFromAction.get(1).getDescription());
         assertEquals(new ArrayList<String>(), causeListFromAction.get(1).getCategories());
     }
 
     /**
      * Test whether failed test cases are registered against the configured categories.
      *
+     * @param jenkins
+     *
      * @throws Exception if not so.
      */
     @Test
-    public void testTestResultInterpretationWithCategories() throws Exception {
+    void testTestResultInterpretationWithCategories(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(true);
         String categories = "foo bar";
         PluginImpl.getInstance().setTestResultCategories(categories);
@@ -1049,7 +1106,7 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(action);
 
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
-        assertEquals("Amount of failure causes does not match.", 2, causeListFromAction.size());
+        assertEquals(2, causeListFromAction.size(), "Amount of failure causes does not match.");
 
         List<String> categoriesList = Arrays.asList(categories.split("\\s+"));
         assertEquals(categoriesList, causeListFromAction.get(0).getCategories());
@@ -1059,10 +1116,12 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Test whether failed test cases are not detected when feature is disabled.
      *
+     * @param jenkins
+     *
      * @throws Exception if not so.
      */
     @Test
-    public void testTestResultInterpretationIfDisabled() throws Exception {
+    void testTestResultInterpretationIfDisabled(JenkinsRule jenkins) throws Exception {
         PluginImpl.getInstance().setTestResultParsingEnabled(false);
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
@@ -1085,7 +1144,7 @@ public class BuildFailureScannerHudsonTest {
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
         assertNotNull(action);
         List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
-        assertEquals("Amount of failure causes does not match.", 0, causeListFromAction.size());
+        assertEquals(0, causeListFromAction.size(), "Amount of failure causes does not match.");
     }
 
     /**
@@ -1104,14 +1163,9 @@ public class BuildFailureScannerHudsonTest {
             if (failureCauseStatisticsList == null || failureCauseStatisticsList.size() != 1) {
                 return false;
             }
-            if (!"myId".equals(failureCauseStatisticsList.get(0).getId())) {
-                return false;
-            }
-            return true;
+            return "myId".equals(failureCauseStatisticsList.get(0).getId());
         }
     }
-
-    //CS IGNORE LineLength FOR NEXT 11 LINES. REASON: JavaDoc.
 
     /**
      * Convenience method for a standard cause that finds {@link #BUILD_LOG} in the build log.
@@ -1123,11 +1177,9 @@ public class BuildFailureScannerHudsonTest {
      * @see #configureCauseAndIndication(String, String,
      *        com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication() throws Exception {
+    private static FailureCause configureCauseAndIndication() throws Exception {
         return configureCauseAndIndication(new BuildLogIndication(REGEX));
     }
-
-    //CS IGNORE LineLength FOR NEXT 10 LINES. REASON: JavaDoc.
 
     /**
      * Convenience method for the standard cause with a special indication.
@@ -1139,7 +1191,7 @@ public class BuildFailureScannerHudsonTest {
      * @see #configureCauseAndIndication(String, String,
      *           com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication(Indication indication) throws Exception {
+    private static FailureCause configureCauseAndIndication(Indication indication) throws Exception {
         return configureCauseAndIndication("Error", DESCRIPTION, indication);
     }
 
@@ -1152,7 +1204,7 @@ public class BuildFailureScannerHudsonTest {
      * @return the configured cause that was added to the global config.
      * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, Indication indication)
+    private static FailureCause configureCauseAndIndication(String name, String description, Indication indication)
             throws Exception {
         return configureCauseAndIndication(name, description, "comment", "category", indication);
     }
@@ -1170,15 +1222,14 @@ public class BuildFailureScannerHudsonTest {
      */
     public static FailureCause configureCauseAndIndication(String name, String description, String comment,
                                                            String category, Indication indication) throws Exception {
-        List<Indication> indicationList = new LinkedList<Indication>();
+        List<Indication> indicationList = new LinkedList<>();
         indicationList.add(indication);
         FailureCause failureCause =
                 new FailureCause(name, name, description, comment, null, category, indicationList, null);
 
         Collection<FailureCause> causes = PluginImpl.getInstance().getKnowledgeBase().getCauses();
 
-        List<FailureCause> causeList = new LinkedList<FailureCause>();
-        causeList.addAll(causes);
+        List<FailureCause> causeList = new LinkedList<>(causes);
         causeList.add(failureCause);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(causeList));
         return failureCause;
@@ -1187,22 +1238,27 @@ public class BuildFailureScannerHudsonTest {
     /**
      * Creates a project that prints {@link #BUILD_LOG} to the console and fails the build.
      *
+     * @param jenkins
+     *
      * @return the project
      *
      * @throws IOException if so.
      */
-    private FreeStyleProject createProject() throws IOException {
-        return createProject(BUILD_LOG);
+    private static FreeStyleProject createProject(JenkinsRule jenkins) throws IOException {
+        return createProject(jenkins, BUILD_LOG);
     }
 
     /**
      * Creates a project that prints the given log string to the console and fails the build.
      *
+     * @param jenkins
      * @param logString the string to appear in the build log
+     *
      * @return the project
+     *
      * @throws IOException if so
      */
-    private FreeStyleProject createProject(String logString) throws IOException {
+    private static FreeStyleProject createProject(JenkinsRule jenkins, String logString) throws IOException {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(logString));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
