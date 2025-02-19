@@ -43,7 +43,7 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.util.Iterators;
 import jenkins.model.Jenkins;
-import org.acegisecurity.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Ancestor;
