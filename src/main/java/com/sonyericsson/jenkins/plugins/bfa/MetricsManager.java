@@ -3,6 +3,7 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.codahale.metrics.MetricRegistry;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.IFailureCauseMetricData;
+import hudson.model.Run;
 import jenkins.metrics.api.Metrics;
 
 import java.util.HashSet;
@@ -70,6 +71,29 @@ public final class MetricsManager {
                     metricRegistry.counter(metric).inc();
                 }
             }
+        }
+    }
+
+    /**
+     * Add and increment counter metric for found failure causes in a build.
+     * @param job The name of the job where the failed build occurred
+     * @param build The build where failure causes occurred
+     * @param causes A list of found causes for a failed job build
+     *
+     */
+    public static void addJobBuildCausesMetric(String job, Run build, List<? extends IFailureCauseMetricData> causes) {
+        MetricRegistry metricRegistry = Metrics.metricRegistry();
+        int buildNumber = build.getNumber();
+        for (IFailureCauseMetricData cause : causes) {
+            String causeName = cause.getName();
+            StringBuilder metricName = new StringBuilder();
+            metricName.append("jenkins_bfa.job.@")
+                .append(job)
+                .append("@.number.@")
+                .append(buildNumber)
+                .append("@.cause.@")
+                .append(causeName);
+            metricRegistry.counter(metricName.toString()).inc();
         }
     }
 }
