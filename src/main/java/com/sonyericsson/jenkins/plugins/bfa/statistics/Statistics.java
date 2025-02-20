@@ -209,7 +209,7 @@ public class Statistics {
      * @param timeZoneOffset the time zone offset.
      * @param result the result of the build.
      * @param failureCauseStatistics the statistics for the FailureCauses.
-     * @deprecated, kept for backwards compatibility.
+     * @deprecated kept for backwards compatibility.
      */
     @Deprecated
     public Statistics(String projectName,

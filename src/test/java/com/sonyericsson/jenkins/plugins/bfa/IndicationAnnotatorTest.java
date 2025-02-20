@@ -1,14 +1,14 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
-import static org.junit.Assert.assertTrue;
-
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import hudson.MarkupText;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 /**
@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author Tomas Westling &lt;tomas.westling@axis.com&gt;
  */
-public class IndicationAnnotatorTest {
+class IndicationAnnotatorTest {
 
     private static final String EXPECTED_ANNOTATED_TEXT = "tilt&quot; onmouseover=alert(1) foo=&quot;bar";
 
@@ -25,7 +25,7 @@ public class IndicationAnnotatorTest {
      */
     @Issue("SECURITY-3244")
     @Test
-    public void testAnnotate() {
+    void testAnnotate() {
         MarkupText text = new MarkupText("matchingString");
         FoundIndication fi = new FoundIndication(
                 "pattern", "matchingFile", "matchingString");
@@ -37,6 +37,6 @@ public class IndicationAnnotatorTest {
         foundFailureCauses.add(ffc);
         IndicationAnnotator ia = new IndicationAnnotator(foundFailureCauses);
         ia.annotate(null, text);
-        assertTrue(text.toString(false).indexOf(EXPECTED_ANNOTATED_TEXT) != -1);
+        assertTrue(text.toString(false).contains(EXPECTED_ANNOTATED_TEXT));
     }
 }

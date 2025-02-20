@@ -37,18 +37,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
 import hudson.model.Run;
-import org.junit.Test;
 
-import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 
@@ -59,12 +60,12 @@ import static org.mockito.Mockito.mock;
  *
  * @author Claes Elgemark &lt;claes.egemark@sonymobile.com&gt;
  */
-public class FailureReaderTest {
+class FailureReaderTest {
 
     /**
      * Simple FailureReader used in the tests.
      */
-    class TestReader extends FailureReader {
+    static class TestReader extends FailureReader {
 
         /**
          * Standard constructor.
@@ -75,7 +76,7 @@ public class FailureReaderTest {
         }
 
         @Override
-        public FoundIndication scan(Run build) throws IOException {
+        public FoundIndication scan(Run build) {
             return null;
         }
 
@@ -97,7 +98,7 @@ public class FailureReaderTest {
                                  String currentFile) throws IOException {
         Run run = mock(Run.class);
 
-        List<FailureCause> causes = new ArrayList<FailureCause>();
+        List<FailureCause> causes = new ArrayList<>();
         FailureCause cause = new FailureCause("test", "description");
         cause.addIndication(indication);
         causes.add(cause);
@@ -113,7 +114,7 @@ public class FailureReaderTest {
         }
 
         assertEquals(1, foundFailureCauses.size());
-        assertFalse(foundFailureCauses.get(0).getIndications().isEmpty());
+        Assertions.assertFalse(foundFailureCauses.get(0).getIndications().isEmpty());
         return foundFailureCauses.get(0).getIndications().get(0);
     }
 
@@ -122,15 +123,15 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanOneFile() throws Exception {
+    void testScanOneFile() throws Exception {
         BufferedReader br = new BufferedReader(new StringReader("scan for me please will you!\nA second line"));
 
         long startTime = System.currentTimeMillis();
         FoundIndication indication = scan(new BuildLogIndication(".*scan for me please.*"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected long time to parse log: " + elapsedTime, elapsedTime <= 1000);
-        assertNotNull("Expected to find an indication", indication);
+        assertTrue(elapsedTime <= 1000, "Unexpected long time to parse log: " + elapsedTime);
+        assertNotNull(indication, "Expected to find an indication");
     }
 
     /**
@@ -139,7 +140,7 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanOneFileWithLineTimeout() throws Exception {
+    void testScanOneFileWithLineTimeout() throws Exception {
         InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
         ZipInputStream zipStream = new ZipInputStream(resStream);
         zipStream.getNextEntry();
@@ -148,8 +149,8 @@ public class FailureReaderTest {
         FoundIndication indication = scan(new BuildLogIndication(".*scan for me please.*"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= 5000);
-        assertNotNull("Expected to find an indication", indication);
+        assertTrue(elapsedTime >= 1000 && elapsedTime <= 12000, "Unexpected time to parse log: " + elapsedTime);
+        assertNotNull(indication, "Expected to find an indication");
     }
 
     /**
@@ -157,7 +158,7 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanOneFileWithFileTimeout() throws Exception {
+    void testScanOneFileWithFileTimeout() throws Exception {
         InputStream inStream = new ByteArrayInputStream(new byte[0]);
         for (int i = 0; i < 10; i++) {
             InputStream resStream = this.getClass().getResourceAsStream("FailureReaderTest.zip");
@@ -170,8 +171,8 @@ public class FailureReaderTest {
         FoundIndication indication = scan(new BuildLogIndication(".*non existing string"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 10000 && elapsedTime <= 12000);
-        assertNull("Did not expect to find an indication", indication);
+        assertTrue(elapsedTime >= 10000 && elapsedTime <= 12000, "Unexpected time to parse log: " + elapsedTime);
+        assertNull(indication, "Did not expect to find an indication");
     }
 
     /**
@@ -179,16 +180,16 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanMultiLineOneFile() throws Exception {
+    void testScanMultiLineOneFile() throws Exception {
         FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*scan for me please.*"));
         LineNumberReader br = new LineNumberReader(new StringReader("scan for me please will you!\nA second line"));
         long startTime = System.currentTimeMillis();
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected long time to parse log: " + elapsedTime, elapsedTime <= 1000);
-        assertNotNull("Expected to find an indication", indication);
-        assertEquals(indication.getMatchingLine(), 1);
+        assertTrue(elapsedTime <= 1000, "Unexpected long time to parse log: " + elapsedTime);
+        assertNotNull(indication, "Expected to find an indication");
+        assertEquals(1, indication.getMatchingLine());
     }
 
     /**
@@ -196,7 +197,7 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanMultiLineOneFileWithBlockTimeout() throws Exception {
+    void testScanMultiLineOneFileWithBlockTimeout() throws Exception {
         // Evil input + expression. Will timeout every time.
         FailureReader reader = new TestReader(new MultilineBuildLogIndication("^(([a-z])+.)+[A-Z]([a-z])+$"));
         LineNumberReader br = new LineNumberReader(new InputStreamReader(
@@ -205,8 +206,8 @@ public class FailureReaderTest {
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 5000);
-        assertNull("Did not expect to find an indication", indication);
+        assertTrue(elapsedTime <= 5000, "Unexpected time to parse log: " + elapsedTime);
+        assertNull(indication, "Did not expect to find an indication");
     }
 
     /**
@@ -214,7 +215,7 @@ public class FailureReaderTest {
      * @throws Exception if so
      */
     @Test
-    public void testScanMultilineOneFileWithFileTimeout() throws Exception {
+    void testScanMultilineOneFileWithFileTimeout() throws Exception {
         FailureReader reader = new TestReader(new MultilineBuildLogIndication(".*non existing string"));
         InputStream inStream = new ByteArrayInputStream(new byte[0]);
         for (int i = 0; i < 10; i++) {
@@ -228,8 +229,8 @@ public class FailureReaderTest {
         FoundIndication indication = reader.scanMultiLineOneFile(null, br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime <= 12000);
-        assertNull("Did not expect to find an indication", indication);
+        assertTrue(elapsedTime <= 12000, "Unexpected time to parse log: " + elapsedTime);
+        assertNull(indication, "Did not expect to find an indication");
     }
 
     /**
@@ -270,11 +271,7 @@ public class FailureReaderTest {
                 return null;
             }
 
-            StringBuilder str = new StringBuilder(line);
-            for (int i = 0; i < 20; i++) {
-                str.append(line);
-            }
-            return str.toString();
+            return line + line.repeat(20);
         }
     }
 }

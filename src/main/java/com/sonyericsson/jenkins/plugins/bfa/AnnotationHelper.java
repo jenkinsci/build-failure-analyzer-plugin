@@ -80,7 +80,7 @@ public class AnnotationHelper implements Serializable {
      * @param addedTitle the title of the line.
      */
     public void addTitle(String addedTitle) {
-        if (this.title.equals("")) {
+        if (this.title.isEmpty()) {
             this.title = addedTitle;
         } else {
             this.title += "\n" + addedTitle;

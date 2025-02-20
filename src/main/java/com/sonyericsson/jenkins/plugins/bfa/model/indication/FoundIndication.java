@@ -32,7 +32,9 @@ import hudson.model.Run;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -50,7 +52,7 @@ public class FoundIndication {
     /**
      * The platform file encoding. We assume that Jenkins uses it when writing the logs.
      */
-    protected static final String FILE_ENCODING = System.getProperty("file.encoding");
+    protected static final String FILE_ENCODING = Charset.defaultCharset().displayName();
     private String matchingFile;
     private String pattern;
     private Run build;
@@ -170,12 +172,9 @@ public class FoundIndication {
      */
     @Exported
     public String getFirstMatchingLine() {
-        final Scanner scanner = new Scanner(matchingString);
-        try {
+        try (Scanner scanner = new Scanner(matchingString)) {
             scanner.useDelimiter(Pattern.compile("[\\n\\r]"));
             return scanner.next();
-        } finally {
-            scanner.close();
         }
     }
 
@@ -213,11 +212,7 @@ public class FoundIndication {
      */
     @Exported
     public int getMatchingLine() {
-        if (matchingLine != null) {
-            return matchingLine;
-        } else {
-            return -1;
-        }
+        return Objects.requireNonNullElse(matchingLine, -1);
     }
 
     /**

@@ -27,7 +27,6 @@ package com.sonyericsson.jenkins.plugins.bfa.db;
 import com.mongodb.MongoException;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCursor;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import org.mongojack.JacksonMongoCollection;
 
@@ -157,11 +156,10 @@ public class MongoDBKnowledgeBaseCache {
 
     private List<FailureCause> loadCauses() {
         try {
-            List<FailureCause> list = new LinkedList<FailureCause>();
+            List<FailureCause> list = new LinkedList<>();
             FindIterable<FailureCause> dbCauses =  jacksonCollection.find(NOT_REMOVED_QUERY_FILTER);
-            final MongoCursor<FailureCause> iterator = dbCauses.iterator();
-            while (iterator.hasNext()) {
-                list.add(iterator.next());
+            for (FailureCause dbCause : dbCauses) {
+                list.add(dbCause);
             }
             return list;
         } catch (MongoException e) {
@@ -173,12 +171,11 @@ public class MongoDBKnowledgeBaseCache {
 
     private List<String> loadCategories() {
         try {
-            List<String> catList = new LinkedList<String>();
+            List<String> catList = new LinkedList<>();
             final DistinctIterable<String> categoriesIterable = jacksonCollection.distinct(
                     "categories", String.class);
-            final MongoCursor<String> catIterator = categoriesIterable.iterator();
-            while (catIterator.hasNext()) {
-                catList.add(catIterator.next());
+            for (String s : categoriesIterable) {
+                catList.add(s);
             }
             return catList;
         } catch (MongoException e) {

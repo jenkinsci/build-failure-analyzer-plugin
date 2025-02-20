@@ -59,7 +59,7 @@ public class CoreDBF extends DownstreamBuildFinder {
             buildMap = ((AbstractBuild)build).getDownstreamBuilds();
         }
         LinkedList<Run<?, ?>> foundBuilds =
-                new LinkedList<Run<?, ?>>();
+                new LinkedList<>();
 
 
         if (buildMap != null && !buildMap.isEmpty()) {

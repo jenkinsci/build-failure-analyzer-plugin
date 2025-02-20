@@ -68,7 +68,7 @@ public abstract class FailureReader {
      * 5000 bytes (~50 lines) anywhere in the buildlog and still get a match.
      * Used when scanning for
      * {@link com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication}.
-     *
+     * <p>
      * Can never be larger than BUF_SIZE_BYTES.
      */
     private static final int OVERLAP_BYTES = 5000;
@@ -169,8 +169,8 @@ public abstract class FailureReader {
         TimerThread timerThread = new TimerThread(Thread.currentThread(), TIMEOUT_LINE);
         final long adjustedFileTimeout = TIMEOUT_FILE * getTotalNumberOfPatterns(causes);
 
-        Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<FailureCause, List<FoundIndication>>();
-        Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<FailureCause, List<Indication>>();
+        Map<FailureCause, List<FoundIndication>> resultMap = new HashMap<>();
+        Map<FailureCause, List<Indication>> firstOccurrences = new HashMap<>();
 
         timerThread.start();
         try {
@@ -186,7 +186,7 @@ public abstract class FailureReader {
                             if (wasBefore == null || !wasBefore.contains(indication)) {
                                 if (processIndication(build, currentFile, resultMap, line, cause, indication,
                                         currentLine)) {
-                                    wasBefore = new ArrayList<Indication>();
+                                    wasBefore = new ArrayList<>();
                                     wasBefore.add(indication);
                                     firstOccurrences.put(cause, wasBefore);
                                 }
@@ -287,7 +287,7 @@ public abstract class FailureReader {
         if (causeIndicationsMap.containsKey(cause)) {
             causeIndicationsMap.get(cause).add(foundIndication);
         } else {
-            List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
+            List<FoundIndication> foundIndications = new ArrayList<>();
             foundIndications.add(foundIndication);
             causeIndicationsMap.put(cause, foundIndications);
         }
@@ -302,7 +302,7 @@ public abstract class FailureReader {
      * @return List of FoundFailureCauses that was generated from input data
      */
     private static List<FoundFailureCause> convertToFoundFailureCauses(Map<FailureCause, List<FoundIndication>> causes) {
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>(causes.size());
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<>(causes.size());
 
         for (Map.Entry<FailureCause, List<FoundIndication>> entry : causes.entrySet()) {
             foundFailureCauses.add(new FoundFailureCause(entry.getKey(), entry.getValue()));
@@ -379,15 +379,12 @@ public abstract class FailureReader {
      * as the input string.
      */
     private String removeConsoleNotes(final String input) {
-        final List<String> cleanLines = new LinkedList<String>();
-        final Scanner lineTokenizer = new Scanner(input);
-        try {
+        final List<String> cleanLines = new LinkedList<>();
+        try (Scanner lineTokenizer = new Scanner(input)) {
             lineTokenizer.useDelimiter(Pattern.compile("[\\n\\r]"));
             while (lineTokenizer.hasNext()) {
                 cleanLines.add(ConsoleNote.removeNotes(lineTokenizer.next()));
             }
-        } finally {
-            lineTokenizer.close();
         }
         return Joiner.on('\n').join(cleanLines);
     }

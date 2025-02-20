@@ -69,7 +69,7 @@ public class FailureCauseMatrixAggregator extends MatrixAggregator {
      */
     public static List<MatrixRun> getRuns(MatrixBuild matrixBuild) {
         List<MatrixRun> runs = matrixBuild.getRuns();
-        List<MatrixRun> runsWithCorrectNumber = new LinkedList<MatrixRun>();
+        List<MatrixRun> runsWithCorrectNumber = new LinkedList<>();
         for (MatrixRun run : runs) {
             if (run.getNumber() == matrixBuild.getNumber()) {
                 runsWithCorrectNumber.add(run);

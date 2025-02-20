@@ -15,6 +15,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.test.utils;
 //CHECKSTYLE:OFF
+import java.io.Serial;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -249,7 +250,7 @@ public class Whitebox {
         public static void setInternalState(Object object, Object value, Object... additionalValues) {
             setField(object, value,
                     findFieldInHierarchy(object, new AssignableFromFieldTypeMatcherStrategy(getType(value))));
-            if (additionalValues != null && additionalValues.length > 0) {
+            if (additionalValues != null) {
                 for (Object additionalValue : additionalValues) {
                     setField(
                             object,
@@ -304,7 +305,7 @@ public class Whitebox {
          * @param where     which class the field is defined
          */
         public static void setInternalState(Object object, String fieldName, Object value, Class<?> where) {
-            if (object == null || fieldName == null || fieldName.equals("") || fieldName.startsWith(" ")) {
+            if (object == null || fieldName == null || fieldName.isEmpty() || fieldName.startsWith(" ")) {
                 throw new IllegalArgumentException("object, field name, and \"where\" must not be empty or null.");
             }
 
@@ -397,7 +398,7 @@ public class Whitebox {
          */
         @SuppressWarnings("unchecked")
         public static <T> T getInternalState(Object object, String fieldName, Class<?> where) {
-            if (object == null || fieldName == null || fieldName.equals("") || fieldName.startsWith(" ")) {
+            if (object == null || fieldName == null || fieldName.isEmpty() || fieldName.startsWith(" ")) {
                 throw new IllegalArgumentException("object, field name, and \"where\" must not be empty or null.");
             }
 
@@ -497,7 +498,7 @@ public class Whitebox {
          */
         private static boolean hasFieldProperModifier(Object object, Field field) {
             return ((object instanceof Class<?> && Modifier.isStatic(field.getModifiers()))
-                    || ((object instanceof Class<?> == false && Modifier.isStatic(field.getModifiers()) == false)));
+                    || ((!(object instanceof Class<?>) && !Modifier.isStatic(field.getModifiers()))));
         }
 
 
@@ -666,6 +667,7 @@ public class Whitebox {
      * found.
      */
     public static class FieldNotFoundException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = 5420195402982130931L;
 
         /**
@@ -686,6 +688,7 @@ public class Whitebox {
      * found.
      */
     public static class TooManyFieldsFoundException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = 1564231184610341053L;
 
         /**
@@ -728,7 +731,7 @@ public class Whitebox {
         private final String fieldName;
 
         public FieldNameMatcherStrategy(String fieldName) {
-            if (fieldName == null || fieldName.equals("") || fieldName.startsWith(" ")) {
+            if (fieldName == null || fieldName.isEmpty() || fieldName.startsWith(" ")) {
                 throw new IllegalArgumentException("field name cannot be null.");
             }
             this.fieldName = fieldName;
@@ -828,7 +831,7 @@ public class Whitebox {
      * translating wrapper types to its related primitive type.
      */
     public static class PrimitiveWrapper {
-        private static final Map<Class<?>, Class<?>> primitiveWrapper = new HashMap<Class<?>, Class<?>>();
+        private static final Map<Class<?>, Class<?>> primitiveWrapper = new HashMap<>();
 
         static {
             primitiveWrapper.put(Integer.class, int.class);

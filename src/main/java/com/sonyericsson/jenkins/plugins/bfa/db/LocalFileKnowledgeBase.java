@@ -28,7 +28,6 @@ import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 import static hudson.Util.fixEmpty;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,7 +75,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
      * @param initialCauses the causes.
      */
     public LocalFileKnowledgeBase(Collection<FailureCause> initialCauses) {
-        this.causes = new HashMap<String, FailureCause>();
+        this.causes = new HashMap<>();
         for (FailureCause cause : initialCauses) {
             if (fixEmpty(cause.getId()) == null) {
                 cause.setId(UUID.randomUUID().toString());
@@ -90,7 +89,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
      */
     @DataBoundConstructor
     public LocalFileKnowledgeBase() {
-        causes = new HashMap<String, FailureCause>();
+        causes = new HashMap<>();
     }
 
     @Override
@@ -104,7 +103,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public Collection<FailureCause> getShallowCauses() throws Exception {
+    public Collection<FailureCause> getShallowCauses() {
         return getCauses();
     }
 
@@ -114,7 +113,7 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause addCause(FailureCause cause) throws IOException {
+    public FailureCause addCause(FailureCause cause) {
         cause.setId(UUID.randomUUID().toString());
         causes.put(cause.getId(), cause);
         PluginImpl.getInstance().save();
@@ -122,14 +121,14 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public FailureCause removeCause(String id) throws Exception {
+    public FailureCause removeCause(String id) {
         FailureCause remove = causes.remove(id);
         PluginImpl.getInstance().save();
         return remove;
     }
 
     @Override
-    public FailureCause saveCause(FailureCause cause) throws IOException {
+    public FailureCause saveCause(FailureCause cause) {
         addMetric(cause);
         if (fixEmpty(cause.getId()) == null) {
             return addCause(cause);
@@ -149,9 +148,8 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
-        if (oldKnowledgeBase instanceof LocalFileKnowledgeBase) {
-            LocalFileKnowledgeBase lfkb = (LocalFileKnowledgeBase)oldKnowledgeBase;
+    public void convertFrom(KnowledgeBase oldKnowledgeBase) {
+        if (oldKnowledgeBase instanceof LocalFileKnowledgeBase lfkb) {
             causes = lfkb.causes;
         } else {
             convertFromAbstract(oldKnowledgeBase);
@@ -159,11 +157,11 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public List<String> getCategories() throws Exception {
+    public List<String> getCategories() {
         if (causes == null) {
             return null;
         }
-        List<String> categories = new LinkedList<String>();
+        List<String> categories = new LinkedList<>();
         Set myset = new HashSet<String>();
         for (FailureCause cause : causes.values()) {
             List<String> categoriesForCause = cause.getCategories();
@@ -228,17 +226,17 @@ public class LocalFileKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void saveStatistics(Statistics stat) throws Exception {
+    public void saveStatistics(Statistics stat) {
         //Not implemented.
     }
 
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorByType(LocalFileKnowledgeBaseDescriptor.class);
+        return Jenkins.get().getDescriptorByType(LocalFileKnowledgeBaseDescriptor.class);
     }
 
     @Override
-    public void removeBuildfailurecause(Run build) throws Exception {
+    public void removeBuildfailurecause(Run build) {
         //Not implemented
     }
 

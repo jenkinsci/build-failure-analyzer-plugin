@@ -46,7 +46,7 @@ public final class TokenUtils {
      * @return the text lines
      */
     /* package private */ static List<String> wrap(final String text, final int width) {
-        final List<String> lines = new ArrayList< String>();
+        final List<String> lines = new ArrayList<>();
         final Splitter lineSplitter = Splitter.on(Pattern.compile("\\r?\\n"));
         //Split the text into lines
         for (final String line : lineSplitter.split(text)) {

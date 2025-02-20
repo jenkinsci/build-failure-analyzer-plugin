@@ -21,7 +21,7 @@ public final class MetricsManager {
     }
 
     private static Set<String> getMetricNames(IFailureCauseMetricData cause) {
-        Set<String> metrics = new HashSet<String>();
+        Set<String> metrics = new HashSet<>();
         metrics.add(CAUSEPREFIX + cause.getName());
         List<String> categoriesForCause = cause.getCategories();
         if (categoriesForCause != null) {
