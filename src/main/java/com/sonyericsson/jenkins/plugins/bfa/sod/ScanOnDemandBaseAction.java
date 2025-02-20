@@ -23,7 +23,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.sod;
 
-import com.sonyericsson.jenkins.plugins.bfa.Messages;AccessDeniedException
+import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
