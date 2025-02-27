@@ -161,6 +161,7 @@ public class PluginImpl extends GlobalConfiguration {
 
     private int nrOfScanThreads;
     private int maxLogSize;
+    private boolean buildDescriptionEnabled;
 
     private Boolean graphsEnabled;
 
@@ -705,6 +706,25 @@ public class PluginImpl extends GlobalConfiguration {
         return maxLogSize;
     }
 
+
+    /**
+     * Set option to append failure causes to job's build description.
+     *
+     * @param buildDescriptionEnabled should build description option be turned on
+     */
+    @DataBoundSetter
+    public void setBuildDescriptionEnabled(boolean buildDescriptionEnabled) {
+      this.buildDescriptionEnabled = buildDescriptionEnabled;
+    }
+
+    /**
+     * If buildDescriptionEnabled is enabled or not. Build Descriptions will be set to a concatenated
+     * list of the failure descriptions as a convenience.
+     * @return True if enabled.
+     */
+    public boolean isBuildDescriptionEnabled() {
+        return buildDescriptionEnabled;
+    }
 
     /**
      * Checks if the build with certain result should be analyzed or not.
