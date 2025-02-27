@@ -32,9 +32,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
-import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
-
-import java.io.IOException;
 
 /**
  * The Build Failure Analyzer token for TokenMacro consumers.
@@ -98,16 +95,14 @@ public class Token extends DataBoundTokenMacro {
     }
 
     @Override
-    public String evaluate(final AbstractBuild<?, ?> build, final TaskListener listener, final String macroName)
-        throws MacroEvaluationException, IOException, InterruptedException {
+    public String evaluate(final AbstractBuild<?, ?> build, final TaskListener listener, final String macroName) {
 
         return evaluate(build);
     }
 
     @Override
     public String evaluate(final Run<?, ?> run, final FilePath workspace, final TaskListener listener,
-                           final String macroName)
-            throws MacroEvaluationException, IOException, InterruptedException {
+                           final String macroName) {
 
         return evaluate(run);
     }

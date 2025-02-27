@@ -103,8 +103,8 @@ public final class OldDataConverter extends ItemListener {
      * Default Constructor. <strong>Should only be instantiated by Jenkins</strong>
      */
     public OldDataConverter() {
-        performedBuilds = Collections.synchronizedSet(new HashSet<Run>());
-        actionsToConvert = Collections.synchronizedMap(new HashMap<String, List<FailureCauseMatrixBuildAction>>());
+        performedBuilds = Collections.synchronizedSet(new HashSet<>());
+        actionsToConvert = Collections.synchronizedMap(new HashMap<>());
         executor = (ScheduledThreadPoolExecutor)Executors.newScheduledThreadPool(POOL_SIZE);
     }
 
@@ -134,11 +134,8 @@ public final class OldDataConverter extends ItemListener {
         if (itemsLoaded) {
             executor.schedule(new MatrixBuildActionWork(matrixProjectName, action), SCHEDULE_DELAY, TimeUnit.SECONDS);
         } else {
-            List<FailureCauseMatrixBuildAction> actions = actionsToConvert.get(matrixProjectName);
-            if (actions == null) {
-                actions = new LinkedList<FailureCauseMatrixBuildAction>();
-                actionsToConvert.put(matrixProjectName, actions);
-            }
+            List<FailureCauseMatrixBuildAction> actions =
+                    actionsToConvert.computeIfAbsent(matrixProjectName, k -> new LinkedList<>());
             actions.add(action);
         }
 

@@ -29,15 +29,13 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 
-import java.io.IOException;
-
 /**
  * A builder that writes something in the build log.
  *
  * @author Robert Sandell, Tomas Westling
  */
 public class PrintToLogBuilder extends Builder {
-    private String toPrint;
+    private final String toPrint;
 
     /**
      * Standard Constructor.
@@ -49,7 +47,7 @@ public class PrintToLogBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println(toPrint);
         return true;
     }

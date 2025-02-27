@@ -93,9 +93,7 @@ public class ParameterizedTriggerDBF extends DownstreamBuildFinder {
             logger.log(Level.FINER, "Method " + methodName
                     + " doesn't exists in " + "class " + className + ".");
             return EMPTY;
-        } catch (InvocationTargetException e) {
-            return EMPTY;
-        } catch (IllegalAccessException e) {
+        } catch (InvocationTargetException | IllegalAccessException e) {
             return EMPTY;
         }
     }

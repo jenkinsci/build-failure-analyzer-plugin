@@ -39,7 +39,6 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
-import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.User;
 import hudson.util.FormValidation;
@@ -133,11 +132,11 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         this.categories = categories;
         this.indications = indications;
         if (this.indications == null) {
-            this.indications = new LinkedList<Indication>();
+            this.indications = new LinkedList<>();
         }
         this.modifications = modifications;
         if (this.modifications == null) {
-            this.modifications = new LinkedList<FailureCauseModification>();
+            this.modifications = new LinkedList<>();
         }
     }
 
@@ -248,7 +247,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
     public synchronized void doConfigSubmit(StaplerRequest2 request, StaplerResponse2 response)
             throws Exception {
         logger.entering(getClass().getName(), "doConfigSubmit");
-        Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+        Jenkins.get().checkPermission(PluginImpl.UPDATE_PERMISSION);
         JSONObject form = request.getSubmittedForm();
         String newId = form.getString("id");
         newId = Util.fixEmpty(newId);
@@ -311,7 +310,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     public void addIndication(Indication indication) {
         if (indications == null) {
-            indications = new LinkedList<Indication>();
+            indications = new LinkedList<>();
         }
         indications.add(indication);
     }
@@ -453,7 +452,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
         StringBuilder builder = new StringBuilder();
         for (String item : categories) {
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 builder.append(" ");
             }
             builder.append(item);
@@ -466,7 +465,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     private void initModifications() {
         if (this.modifications == null) {
-            this.modifications = new LinkedList<FailureCauseModification>();
+            this.modifications = new LinkedList<>();
         }
 
         KnowledgeBase kb = PluginImpl.getInstance().getKnowledgeBase();
@@ -489,7 +488,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         }
 
         if (originalCause.modifications == null) {
-            originalCause.modifications = new LinkedList<FailureCauseModification>();
+            originalCause.modifications = new LinkedList<>();
         }
         originalCause.modifications.add(creation);
 
@@ -552,7 +551,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
      */
     public List<Indication> getIndications() {
         if (indications == null) {
-            indications = new LinkedList<Indication>();
+            indications = new LinkedList<>();
         }
         return indications;
     }
@@ -572,9 +571,6 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
             return null;
         }
         CauseManagement ancestorObject = currentRequest.findAncestorObject(CauseManagement.class);
-        if (ancestorObject == null) {
-            return null;
-        }
         return ancestorObject;
     }
 
@@ -599,7 +595,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
 
     @Override
     public FailureCauseDescriptor getDescriptor() {
-        return Jenkins.getInstance().getDescriptorByType(FailureCauseDescriptor.class);
+        return Jenkins.get().getDescriptorByType(FailureCauseDescriptor.class);
     }
 
     /**
@@ -641,7 +637,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
                 Job project = staplerRequest.findAncestorObject(Job.class);
                 if (project != null && project.getLastFailedBuild() != null) {
                     staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME,
-                            Hudson.getInstance().getRootUrl() + project.getLastFailedBuild().getUrl());
+                            Jenkins.get().getRootUrl() + project.getLastFailedBuild().getUrl());
                 } else {
                     staplerRequest.getSession(true).setAttribute(LAST_FAILED_BUILD_URL_SESSION_ATTRIBUTE_NAME, "");
                 }
@@ -661,7 +657,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
          */
         @RequirePOST
         public FormValidation doCheckDescription(@QueryParameter final String value) {
-            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            Jenkins.get().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (Util.fixEmpty(value) == null) {
                 return FormValidation.error("You should provide a description.");
             }
@@ -684,7 +680,7 @@ public class FailureCause implements Serializable, Action, Describable<FailureCa
         public FormValidation doCheckName(
                 @QueryParameter final String value,
                 @QueryParameter final String id) {
-            Jenkins.getInstance().checkPermission(PluginImpl.UPDATE_PERMISSION);
+            Jenkins.get().checkPermission(PluginImpl.UPDATE_PERMISSION);
             if (Util.fixEmpty(value) == null) {
                 return FormValidation.error("You must provide a name for the failure cause!");
             }

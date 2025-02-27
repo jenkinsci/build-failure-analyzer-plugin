@@ -216,13 +216,13 @@ public class Renderer {
         if (useHtmlFormat) {
             stringBuilder.append("<li>");
             try {
-                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(cause.getName()));
+                stringBuilder.append(Jenkins.get().getMarkupFormatter().translate(cause.getName()));
             } catch (final IOException exception) {
                 stringBuilder.append("cause-name");
             }
             stringBuilder.append(": ");
             try {
-                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(cause.getDescription()));
+                stringBuilder.append(Jenkins.get().getMarkupFormatter().translate(cause.getDescription()));
             } catch (final IOException exception) {
                 stringBuilder.append("cause-description");
             }
@@ -383,7 +383,7 @@ public class Renderer {
         if (useHtmlFormat) {
             stringBuilder.append("<li>");
             try {
-                stringBuilder.append(Jenkins.getInstance().getMarkupFormatter().translate(
+                stringBuilder.append(Jenkins.get().getMarkupFormatter().translate(
                         matrixRun.getFullDisplayName()));
             } catch (final IOException exception) {
                 stringBuilder.append("matrix-full-display-name");
@@ -440,7 +440,7 @@ public class Renderer {
          */
         String getUrlString() {
             final StringBuilder builder = new StringBuilder();
-            builder.append(Jenkins.getInstance().getRootUrl());
+            builder.append(Jenkins.get().getRootUrl());
             builder.append("/");
             builder.append(buildUrl);
             builder.append("consoleFull#");

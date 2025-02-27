@@ -40,7 +40,7 @@ public class FailureCauseDisplayData {
 
     private List<FoundFailureCause> foundFailureCauses;
     private List<FailureCauseDisplayData> downstreamFailureCauses =
-            new LinkedList<FailureCauseDisplayData>();
+            new LinkedList<>();
     private Links links;
 
     /**
@@ -149,7 +149,7 @@ public class FailureCauseDisplayData {
 
         /**
          * Constructor evaluating links.
-         *
+         * <p>
          * Url to the project and the build will be displayed in the view.
          *
          * @param parentUrl url of the parent job.

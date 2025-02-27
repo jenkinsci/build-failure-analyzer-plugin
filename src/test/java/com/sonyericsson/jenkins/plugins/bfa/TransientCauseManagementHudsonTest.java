@@ -37,16 +37,19 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.Result;
 import hudson.tasks.Shell;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 
@@ -55,50 +58,49 @@ import static org.hamcrest.Matchers.containsString;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class TransientCauseManagementHudsonTest extends HudsonTestCase {
+@WithJenkins
+class TransientCauseManagementHudsonTest {
 
     /**
      * Tests that the {@link CauseManagement} link is present on a freestyle project and that you can navigate to it.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testOnAProject() throws Exception {
-        FreeStyleProject project = createFreeStyleProject("nils-job");
+    @Test
+    void testOnAProject(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject("nils-job");
         project.getBuildersList().add(new Shell("env | sort"));
-        project = (FreeStyleProject)configRoundtrip((Item)project);
-        WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + project.getUrl());
-        try {
-            HtmlAnchor anchor = getAnchorBySuffix(page, CauseManagement.URL_NAME);
-            HtmlPage configPage = anchor.click();
-            verifyIsConfigurationPage(configPage);
-        } catch (ElementNotFoundException e) {
-            fail("The link should be there! " + e.getMessage());
-        }
+        project = (FreeStyleProject)jenkins.configRoundtrip((Item)project);
+        JenkinsRule.WebClient web = jenkins.createWebClient();
+        HtmlPage page = web.goTo(project.getUrl());
+
+        HtmlAnchor anchor = getAnchorBySuffix(page, CauseManagement.URL_NAME);
+        HtmlPage configPage = anchor.click();
+        assertDoesNotThrow(() -> verifyIsConfigurationPage(configPage), "The link should be there!");
     }
 
     /**
      * Tests that the {@link CauseManagement} link is present on a freestyle build and that you can navigate to it.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testOnABuild() throws Exception {
-        FreeStyleProject project = createFreeStyleProject("nils-job");
+    @Test
+    void testOnABuild(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject("nils-job");
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserCause());
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
         FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
-        WebClient web = createWebClient();
-        HtmlPage page = web.goTo("/" + build.getUrl());
-        try {
-            HtmlAnchor anchor = getAnchorBySuffix(page, FailureCauseBuildAction.URL_NAME);
-            HtmlPage configPage = anchor.click();
-            verifyIsConfigurationPage(configPage);
-        } catch (ElementNotFoundException e) {
-            fail("The link should be there! " + e.getMessage());
-        }
-    }
+        JenkinsRule.WebClient web = jenkins.createWebClient();
+        HtmlPage page = web.goTo(build.getUrl());
 
-    //CS IGNORE JavadocMethod FOR NEXT 10 LINES. REASON: The exception can be thrown.
+        HtmlAnchor anchor = getAnchorBySuffix(page, FailureCauseBuildAction.URL_NAME);
+        HtmlPage configPage = anchor.click();
+        assertDoesNotThrow(() -> verifyIsConfigurationPage(configPage), "The link should be there!");
+    }
 
     /**
      * Finds an anchor on the page who's href attribute ends with the provided suffix.
@@ -109,7 +111,7 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
      *
      * @throws ElementNotFoundException if no anchor was found.
      */
-    private HtmlAnchor getAnchorBySuffix(HtmlPage page, String suffix) {
+    private static HtmlAnchor getAnchorBySuffix(HtmlPage page, String suffix) {
         List<HtmlAnchor> anchors = page.getAnchors();
         for (HtmlAnchor anchor : anchors) {
             if (anchor.getHrefAttribute().endsWith(suffix)) {
@@ -123,27 +125,22 @@ public class TransientCauseManagementHudsonTest extends HudsonTestCase {
      * Verifies that the provided page is the cause management page, by doing some checks on specific elements.
      *
      * @param page the page to verify.
-     * @throws IOException if so.
+     * @throws ElementNotFoundException if so.
      */
-    private void verifyIsConfigurationPage(HtmlPage page) throws IOException {
-        try {
-            //Some smoke test to see if it is the correct page
-            HtmlAnchor newAnchor = getAnchorBySuffix(page, "new");
-            assertThat("New Cause link is missing it's icon.",
-                    newAnchor.toString(), containsString("newinformation.png"));
-            DomNodeList<DomElement> elementsByTagName = page.getElementsByTagName("h1");
-            boolean headingFound = false;
-            for (DomElement element : elementsByTagName) {
-                if ("Update Failure Causes".equals(element.getTextContent())) {
-                    headingFound = true;
-                    break;
-                }
+    private static void verifyIsConfigurationPage(HtmlPage page) throws ElementNotFoundException {
+        //Some smoke test to see if it is the correct page
+        HtmlAnchor newAnchor = getAnchorBySuffix(page, "new");
+        assertThat("New Cause link is missing it's icon.",
+                newAnchor.toString(), containsString("newinformation.png"));
+        DomNodeList<DomElement> elementsByTagName = page.getElementsByTagName("h1");
+        boolean headingFound = false;
+        for (DomElement element : elementsByTagName) {
+            if ("Update Failure Causes".equals(element.getTextContent())) {
+                headingFound = true;
+                break;
             }
-            assertTrue("H1 Heading not found!", headingFound);
-
-        } catch (ElementNotFoundException e) {
-            fail("The element should be there! " + e.getMessage());
         }
+        assertTrue(headingFound, "H1 Heading not found!");
     }
 }
 

@@ -74,7 +74,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      */
     private void makeIdList(List<MatrixRun> matrixRuns) {
         logger.finer("making runIds");
-        this.runIds = new LinkedList<String>();
+        this.runIds = new LinkedList<>();
         for (MatrixRun run : matrixRuns) {
             MatrixConfiguration configuration = run.getProject();
             runIds.add(configuration.getCombination().toString());
@@ -113,7 +113,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      * @return the runs with the action.
      */
     public List<MatrixRun> getRunsWithAction() {
-        List<MatrixRun> returnList = new LinkedList<MatrixRun>();
+        List<MatrixRun> returnList = new LinkedList<>();
         for (MatrixRun run : getRuns()) {
             if (run.getAction(FailureCauseBuildAction.class) != null) {
                 returnList.add(run);
@@ -129,7 +129,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
      */
     private synchronized List<MatrixRun> getRuns() {
         if (runIds != null && build != null && runs == null) {
-            runs = new LinkedList<MatrixRun>();
+            runs = new LinkedList<>();
             for (String id : runIds) {
                 Combination combination = Combination.fromString(id);
                 if (combination != null) {
@@ -190,7 +190,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
         if (action != null) {
             return action.getFoundFailureCauses();
         }
-        return new LinkedList<FoundFailureCause>();
+        return new LinkedList<>();
     }
 
     /**
@@ -298,9 +298,9 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
             // but stapler can't help me if I use the URL which would be preferred.
             //TODO what to do when the job is renamed?
             TopLevelItem item;
-            item = Jenkins.getInstance().getItem(project);
+            item = Jenkins.get().getItem(project);
             logger.log(Level.FINE, "Project item for {0} is {1}", new Object[]{project, item});
-            if (item != null && item instanceof MatrixProject) {
+            if (item instanceof MatrixProject) {
                 logger.log(Level.FINEST, "It is a matrix project; searching for build {0}", cause.getUpstreamBuild());
                 //Find the build
                 return ((MatrixProject)item).getBuildByNumber(cause.getUpstreamBuild());
