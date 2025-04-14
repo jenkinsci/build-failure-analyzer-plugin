@@ -66,9 +66,9 @@ l.layout(norefresh: true) {
     }
 
     def shallowCauses = management.getShallowCauses()
-    if (management.isError(request)) {
+    if (management.isError(request2)) {
       div(class: "error", id: "errorMessage") {
-        text(management.getErrorMessage(request))
+        text(management.getErrorMessage(request2))
       }
     }
 
