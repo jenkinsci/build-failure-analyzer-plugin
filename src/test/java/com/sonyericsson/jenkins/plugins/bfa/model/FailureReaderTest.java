@@ -148,12 +148,7 @@ public class FailureReaderTest {
         FoundIndication indication = scan(new BuildLogIndication(".*scan for me please.*"), br, "test");
         long elapsedTime = System.currentTimeMillis() - startTime;
         br.close();
-
-        // windows filesystem seems to be slow, tests are failing, so adding 3x delays instead.
-        boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
-        long maxTimeout = isWindows ? 15000 : 5000;
-
-        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= maxTimeout);
+        assertTrue("Unexpected time to parse log: " + elapsedTime, elapsedTime >= 1000 && elapsedTime <= 5000);
         assertNotNull("Expected to find an indication", indication);
     }
 
