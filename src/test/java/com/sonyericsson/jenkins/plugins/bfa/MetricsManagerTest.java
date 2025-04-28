@@ -7,6 +7,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.IFailureCauseMetricData;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
+import hudson.model.Run;
 import jenkins.metrics.api.Metrics;
 
 import org.junit.After;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.incCounters;
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addJobBuildCausesMetric;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -37,6 +39,8 @@ public class MetricsManagerTest {
     private MetricRegistry metricRegistry;
     private Counter counter;
 
+    private String mockedJobDisplayName;
+    private Run mockedJobBuild;
     private FailureCause mockedCause;
     private List<? extends IFailureCauseMetricData> mockedCauseList;
     private MockedStatic<Metrics> metricsMockedStatic;
@@ -49,6 +53,8 @@ public class MetricsManagerTest {
         metricRegistry = mock(MetricRegistry.class);
         counter = mock(Counter.class);
         List<Indication> indications = new LinkedList<>();
+        mockedJobDisplayName = "myJob";
+        mockedJobBuild = mock(Run.class);
         Indication indication = new BuildLogIndication("something");
         indications.add(indication);
         mockedCause = new FailureCause("id", "myFailureCause", "description", "comment", new Date(),
@@ -59,6 +65,7 @@ public class MetricsManagerTest {
         metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
 
         when(metricRegistry.counter(anyString())).thenReturn(counter);
+        when(mockedJobBuild.getNumber()).thenReturn(1);
     }
 
     /**
@@ -100,4 +107,13 @@ public class MetricsManagerTest {
         verify(counter, times(mockedCauseList.size())).inc();
     }
 
+    /**
+     * Test that a job counter is incremented for found failure causes in a build.
+     */
+    @Test
+    public void testaddJobBuildCausesMetric() {
+        addJobBuildCausesMetric(mockedJobDisplayName, mockedJobBuild, mockedCauseList);
+
+        verify(metricRegistry, times(2)).counter("jenkins_bfa.job.@myJob@.number.@1@.cause.@myFailureCause");
+    }
 }
