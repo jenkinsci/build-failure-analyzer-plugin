@@ -25,12 +25,13 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
@@ -39,25 +40,25 @@ import static org.mockito.Mockito.mockStatic;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class PluginImplTest {
+class PluginImplTest {
 
     private MockedStatic<Jenkins> jenkinsMockedStatic;
 
     /**
      * Initial mocking.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         Jenkins jenkins = mock(Jenkins.class);
         jenkinsMockedStatic = mockStatic(Jenkins.class);
-        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkins);
     }
 
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         jenkinsMockedStatic.close();
     }
 
@@ -66,10 +67,9 @@ public class PluginImplTest {
      * <p/>
      * TODO Make a similar test in a full Jenkins context.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testGetStaticResourcesBase() throws Exception {
+    void testGetStaticResourcesBase() {
         assertEquals("/plugin/build-failure-analyzer", PluginImpl.getStaticResourcesBase());
     }
 
@@ -79,19 +79,19 @@ public class PluginImplTest {
      * <p/>
      * TODO Make a similar test in a full Jenkins context.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testGetStaticImagesBase() throws Exception {
+    void testGetStaticImagesBase() {
         assertEquals("/plugin/build-failure-analyzer/images", PluginImpl.getStaticImagesBase());
     }
 
     /**
      * Tests that you can't set {@link PluginImpl#setNrOfScanThreads(int)} to 0.
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testSetNrOfScanThreadsZero() {
+    @Test
+    void testSetNrOfScanThreadsZero() {
         PluginImpl plugin = new PluginImpl();
-        plugin.setNrOfScanThreads(0);
+        assertThrows(IllegalArgumentException.class, () ->
+            plugin.setNrOfScanThreads(0));
     }
 }

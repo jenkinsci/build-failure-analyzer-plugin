@@ -31,7 +31,7 @@ import com.sonyericsson.jenkins.plugins.bfa.providers.FailureCauseProvider;
 import hudson.model.Run;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,14 +45,15 @@ import static org.mockito.Mockito.when;
  * used to prepare build information for the MQ Notification plugin.
  * @author Tomas Westling &lt;tomas.westling@axis.com&gt;
  */
-public class FailureCauseProviderTest {
+class FailureCauseProviderTest {
     private static final int MATCHING_LINE_NUMBER = 10;
+
     /**
      * Tests that the Json structure is correct after the FailureCauseProvider has done its thing.
      */
     @Test
-    public void testCorrectJson() {
-        List<String> categories = new ArrayList<String>();
+    void testCorrectJson() {
+        List<String> categories = new ArrayList<>();
         categories.add("category1");
         categories.add("category2");
         //Create the needed objects in order to test the FailureCauseProvider.
@@ -68,12 +69,12 @@ public class FailureCauseProviderTest {
                 categories,
                 null,
                 null);
-        List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
+        List<FoundIndication> foundIndications = new ArrayList<>();
         FoundIndication foundIndication = new FoundIndication(null, "mypattern", "myfile", "mystring",
             MATCHING_LINE_NUMBER);
         foundIndications.add(foundIndication);
         FoundFailureCause foundFailureCause = new FoundFailureCause(failureCause, foundIndications);
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<>();
         foundFailureCauses.add(foundFailureCause);
         FailureCauseBuildAction action = new FailureCauseBuildAction(foundFailureCauses);
         Run run = mock(Run.class);

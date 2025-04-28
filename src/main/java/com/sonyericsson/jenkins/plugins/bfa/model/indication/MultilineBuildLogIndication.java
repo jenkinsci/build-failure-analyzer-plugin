@@ -30,9 +30,10 @@ import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.MultilineBuildLogFailureReader;
 import hudson.Extension;
-import hudson.model.Hudson;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.util.regex.Pattern;
 
 /**
@@ -44,6 +45,7 @@ import java.util.regex.Pattern;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MultilineBuildLogIndication extends BuildLogIndication {
 
+    @Serial
     private static final long serialVersionUID = 8436383594898812087L;
     private transient Pattern compiled = null;
 
@@ -73,7 +75,7 @@ public class MultilineBuildLogIndication extends BuildLogIndication {
 
     @Override
     public IndicationDescriptor getDescriptor() {
-        return Hudson.getInstance().getDescriptorByType(MultilineBuildLogIndicationDescriptor.class);
+        return Jenkins.get().getDescriptorByType(MultilineBuildLogIndicationDescriptor.class);
     }
 
     /**

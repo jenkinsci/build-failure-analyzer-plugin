@@ -85,7 +85,7 @@ public class SlackMessageProvider {
      * @return Descriptor
      */
     private SlackNotifier.DescriptorImpl getSlackDescriptor() {
-        return (SlackNotifier.DescriptorImpl)Jenkins.getInstance().getDescriptor(SlackNotifier.class);
+        return (SlackNotifier.DescriptorImpl)Jenkins.get().getDescriptor(SlackNotifier.class);
     }
 
     /**
@@ -133,13 +133,10 @@ public class SlackMessageProvider {
      * @return Boolean true if configuration is valid, false otherwise
      */
     private boolean checkSlackConfigurationParams() {
-        if (room != null && !room.equals("")
+        return room != null && !room.equals("")
                 && ((teamDomain != null && !teamDomain.equals("")) || (baseUrl != null && !baseUrl.equals("")))
                 && ((authToken != null && !authToken.equals(""))
-                        || (authTokenCredentialId != null && !authTokenCredentialId.equals(""))))  {
-            return true;
-        }
-        return false;
+                || (authTokenCredentialId != null && !authTokenCredentialId.equals("")));
     }
 
     /**
@@ -183,7 +180,7 @@ public class SlackMessageProvider {
         String useRoom;
 
         String customSlackChannel = PluginImpl.getInstance().getSlackChannelName();
-        if (customSlackChannel.equals("")) {
+        if (customSlackChannel.isEmpty()) {
             // If no slack channel was specified in plugin settings,
             // use channel specified in Global Slack Notifier Plugin settings
             useRoom = this.room;

@@ -28,9 +28,9 @@ import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import jenkins.model.TransientActionFactory;
 
@@ -53,7 +53,7 @@ public class ScanOnDemandTransientActionProvider extends TransientActionFactory<
         if (PluginImpl.shouldScan(target)) {
             final ScanOnDemandBaseAction sodBaseAction = new ScanOnDemandBaseAction(target);
             if (sodBaseAction.hasPermission()) {
-                return Arrays.asList(sodBaseAction);
+                return List.of(sodBaseAction);
             }
         }
         return Collections.emptyList();

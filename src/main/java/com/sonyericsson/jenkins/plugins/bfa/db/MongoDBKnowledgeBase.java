@@ -42,7 +42,6 @@ import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addMetric;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterConnectionMode;
@@ -59,6 +58,7 @@ import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 
+import java.io.Serial;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -94,6 +94,7 @@ import org.mongojack.internal.MongoJackModule;
  */
 public class MongoDBKnowledgeBase extends KnowledgeBase {
 
+    @Serial
     private static final long serialVersionUID = 4984133048405390951L;
     /**The name of the cause collection in the database.*/
     public static final String COLLECTION_NAME = "failureCauses";
@@ -271,13 +272,12 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     @Override
     public Collection<FailureCause> getCauseNames() {
-        List<FailureCause> list = new LinkedList<FailureCause>();
+        List<FailureCause> list = new LinkedList<>();
         DBObject keys = new BasicDBObject();
         keys.put("name", 1);
         final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY_FILTER);
-        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
-        while (iterator.hasNext()) {
-            list.add(iterator.next());
+        for (FailureCause dbCause : dbCauses) {
+            list.add(dbCause);
         }
         return list;
 
@@ -297,9 +297,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
         final FindIterable<FailureCause> dbCauses = getJacksonCollection().find(NOT_REMOVED_QUERY_FILTER);
         dbCauses.sort(orderBy);
 
-        final MongoCursor<FailureCause> iterator = dbCauses.iterator();
-        while (iterator.hasNext()) {
-            list.add(iterator.next());
+        for (FailureCause dbCause : dbCauses) {
+            list.add(dbCause);
         }
         return list;
     }
@@ -324,7 +323,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     @Override
     public FailureCause removeCause(String id) {
         BasicDBObject removedInfo = new BasicDBObject("timestamp", new Date());
-        removedInfo.put("by", Jenkins.getAuthentication().getName());
+        removedInfo.put("by", Jenkins.getAuthentication2().getName());
         BasicDBObject update = new BasicDBObject("$set", new BasicDBObject("_removed", removedInfo));
         getJacksonCollection().updateById(id, update);
         final FailureCause modifiedFailureCause = getJacksonCollection().findOneById(id);
@@ -377,7 +376,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
     }
 
     @Override
-    public void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception {
+    public void convertFrom(KnowledgeBase oldKnowledgeBase) {
         if (oldKnowledgeBase instanceof MongoDBKnowledgeBase) {
             convertFromAbstract(oldKnowledgeBase);
             convertRemoved((MongoDBKnowledgeBase)oldKnowledgeBase);
@@ -414,9 +413,8 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Copies all causes flagged as removed from the old database to this one.
      *
      * @param oldKnowledgeBase the old database.
-     * @throws Exception if something goes wrong.
      */
-    protected void convertRemoved(MongoDBKnowledgeBase oldKnowledgeBase) throws Exception {
+    protected void convertRemoved(MongoDBKnowledgeBase oldKnowledgeBase) {
         List<FailureCause> removed = oldKnowledgeBase.getRemovedCauses();
         for (FailureCause fc : removed) {
             getJacksonCollection().save(fc);
@@ -427,12 +425,11 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      * Gets all causes flagged as removed in a "raw" JSON format.
      *
      * @return the list of removed causes.
-     * @throws Exception if so.
      */
-    protected List<FailureCause> getRemovedCauses() throws Exception {
+    protected List<FailureCause> getRemovedCauses() {
         BasicDBObject query = new BasicDBObject("_removed", new BasicDBObject("$exists", true));
         FindIterable<FailureCause> causes = getJacksonCollection().find(query);
-        List<FailureCause> removed = new LinkedList<FailureCause>();
+        List<FailureCause> removed = new LinkedList<>();
         while (causes.iterator().hasNext()) {
             removed.add(causes.iterator().next());
         }
@@ -473,10 +470,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     public static boolean equals(Object firstObject, Object secondObject) {
         if (firstObject == null) {
-            if (secondObject == null) {
-                return true;
-            }
-            return false;
+            return secondObject == null;
         }
         if (secondObject == null) {
             return false;
@@ -670,7 +664,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private void addFailureCausesToDBObject(DBObject object, List<FailureCauseStatistics> failureCauseStatisticsList) {
         if (failureCauseStatisticsList != null && !failureCauseStatisticsList.isEmpty()) {
-            List<DBObject> failureCauseStatisticsObjects = new LinkedList<DBObject>();
+            List<DBObject> failureCauseStatisticsObjects = new LinkedList<>();
 
             for (FailureCauseStatistics failureCauseStatistics : failureCauseStatisticsList) {
                 DBObject failureCauseStatisticsObject = new BasicDBObject();
@@ -692,7 +686,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
      */
     private void addIndicationsToDBObject(DBObject object, List<FoundIndication> indications) {
         if (indications != null && !indications.isEmpty()) {
-            List<DBObject> foundIndicationObjects = new LinkedList<DBObject>();
+            List<DBObject> foundIndicationObjects = new LinkedList<>();
             for (FoundIndication foundIndication : indications) {
                 DBObject foundIndicationObject = new BasicDBObject();
                 foundIndicationObject.put("pattern", foundIndication.getPattern());
@@ -707,7 +701,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
 
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorByType(MongoDBKnowledgeBaseDescriptor.class);
+        return Jenkins.get().getDescriptorByType(MongoDBKnowledgeBaseDescriptor.class);
     }
 
     /**
@@ -878,7 +872,7 @@ public class MongoDBKnowledgeBase extends KnowledgeBase {
                 @QueryParameter("password") final String password,
                 @QueryParameter("tls") final boolean tls,
                 @QueryParameter("retrywrites") final boolean retryWrites) {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             MongoDBKnowledgeBase base = new MongoDBKnowledgeBase(host, port, dbName, userName,
                     Secret.fromString(password), false, false);
             base.setTls(tls);

@@ -98,7 +98,7 @@ l.layout(norefresh: true) {
     }
 
     //One time check so we don't do it for every iteration below
-    def canRemove = Jenkins.getInstance().hasPermission(PluginImpl.REMOVE_PERMISSION)
+    def canRemove = Jenkins.get().hasPermission(PluginImpl.REMOVE_PERMISSION)
 
     //Main FailureCauses table
     table(cellpadding: "2", cellspacing: "0", border: "1", class: "sortable pane bigtable", width: "90%",

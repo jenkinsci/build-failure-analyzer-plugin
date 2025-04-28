@@ -48,7 +48,7 @@ public class IndicationAnnotator extends ConsoleAnnotator<Object> {
      * @param foundFailureCauses the {@link FoundFailureCause}s to add annotation for.
      */
     public IndicationAnnotator(List<FoundFailureCause> foundFailureCauses) {
-        helperMap = new HashMap<String, AnnotationHelper>();
+        helperMap = new HashMap<>();
         for (FoundFailureCause foundFailureCause : foundFailureCauses) {
             addToHelperMap(foundFailureCause);
         }

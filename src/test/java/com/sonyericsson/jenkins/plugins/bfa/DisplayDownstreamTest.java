@@ -30,7 +30,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
-import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.MatrixSupport;
 import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -49,16 +49,16 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //CS IGNORE MagicNumber FOR NEXT 260 LINES. REASON: TestData
 
@@ -68,15 +68,8 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Jan-Olof Sivtoft
  */
-public class DisplayDownstreamTest {
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRuleWithMatrixSupport jenkins = new JenkinsRuleWithMatrixSupport();
-
-    private MatrixProject matrixProject;
+@WithJenkins
+class DisplayDownstreamTest {
 
     private static final String MATRIX_PROJECT_NEWS = "NEWS";
     private static final String PROJECT_NE = "NORTH-EAST";
@@ -98,24 +91,26 @@ public class DisplayDownstreamTest {
     /**
      * Test the FailureCauseDisplayData object.
      *
+     * @param jenkins
+     *
      * @throws Exception if failure  build can't be executed
      */
     @Test
-    public void testFailureCauseDisplayData() throws Exception {
+    void testFailureCauseDisplayData(JenkinsRule jenkins) throws Exception {
         FailureCauseDisplayData failureCauseDisplayData =
-                getDisplayData(executeBuild());
+                getDisplayData(executeBuild(jenkins));
 
-        assertNotNull(failureCauseDisplayData.getDownstreamFailureCauses());
-        assertNotNull(failureCauseDisplayData.getFoundFailureCauses());
+        Assertions.assertNotNull(failureCauseDisplayData.getDownstreamFailureCauses());
+        Assertions.assertNotNull(failureCauseDisplayData.getFoundFailureCauses());
 
         FailureCauseDisplayData.Links links =
                 failureCauseDisplayData.getLinks();
-        assertNotNull(links);
+        Assertions.assertNotNull(links);
 
         assertEquals("WEST,SOUTH", links.getProjectDisplayName());
-        assertNotNull(links.getProjectUrl());
+        Assertions.assertNotNull(links.getProjectUrl());
         assertEquals("#1", links.getBuildDisplayName());
-        assertNotNull(links.getBuildUrl());
+        Assertions.assertNotNull(links.getBuildUrl());
     }
 
 
@@ -123,17 +118,19 @@ public class DisplayDownstreamTest {
      * Test FailureCauseDisplayData object population when no indication is
      * specified.
      *
+     * @param jenkins
+     *
      * @throws Exception if failure build can't be executed
      */
     @Test
-    public void testMatrixNoIdentifiedCause() throws Exception {
+    void testMatrixNoIdentifiedCause(JenkinsRule jenkins) throws Exception {
         FailureCauseDisplayData failureCauseDisplayData =
-                getDisplayData(executeBuild());
+                getDisplayData(executeBuild(jenkins));
 
         // It is not the matrix run that fails
-        assertTrue(failureCauseDisplayData.getFoundFailureCauses().size() == 0);
-        assertTrue(failureCauseDisplayData.
-                getDownstreamFailureCauses().size() == 1);
+        Assertions.assertTrue(failureCauseDisplayData.getFoundFailureCauses().isEmpty());
+        assertEquals(1, failureCauseDisplayData.
+                getDownstreamFailureCauses().size());
 
         FailureCauseDisplayData downstreamFailureCauseDisplayData =
                 failureCauseDisplayData.getDownstreamFailureCauses().
@@ -143,7 +140,7 @@ public class DisplayDownstreamTest {
                 downstreamFailureCauseDisplayData.getFoundFailureCauses();
 
         // No indication added so this is expected
-        assertTrue(causeListFromAction.size() == 0);
+        Assertions.assertTrue(causeListFromAction.isEmpty());
 
         assertEquals(PROJECT_SW, downstreamFailureCauseDisplayData.
                 getLinks().getProjectDisplayName());
@@ -153,23 +150,25 @@ public class DisplayDownstreamTest {
      * Test FailureCauseDisplayData object population when an indication is
      * specified.
      *
+     * @param jenkins
+     *
      * @throws Exception if failure cause cant be configured or build can't
      *                   be executed
      */
     @Test
-    public void testMatrixIdentifiedCause() throws Exception {
+    void testMatrixIdentifiedCause(JenkinsRule jenkins) throws Exception {
         Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         FailureCause failureCause = BuildFailureScannerHudsonTest.
                 configureCauseAndIndication("Other cause", "Other description", "Other comment",
                         "Category", indication);
 
         FailureCauseDisplayData failureCauseDisplayData =
-                getDisplayData(executeBuild());
+                getDisplayData(executeBuild(jenkins));
 
         // It is not the matrix run that fails
-        assertTrue(failureCauseDisplayData.getFoundFailureCauses().size() == 0);
-        assertTrue(failureCauseDisplayData.
-                getDownstreamFailureCauses().size() == 1);
+        Assertions.assertTrue(failureCauseDisplayData.getFoundFailureCauses().isEmpty());
+        assertEquals(1, failureCauseDisplayData.
+                getDownstreamFailureCauses().size());
 
         FailureCauseDisplayData downstreamFailureCauseDisplayData =
                 failureCauseDisplayData.getDownstreamFailureCauses().
@@ -178,10 +177,10 @@ public class DisplayDownstreamTest {
         List<FoundFailureCause> causeListFromAction =
                 downstreamFailureCauseDisplayData.getFoundFailureCauses();
 
-        assertTrue(causeListFromAction.size() == 1);
+        assertEquals(1, causeListFromAction.size());
 
         // This is the expected indication
-        assertTrue(BuildFailureScannerHudsonTest.findCauseInList(
+        Assertions.assertTrue(BuildFailureScannerHudsonTest.findCauseInList(
                 causeListFromAction, failureCause));
 
         assertEquals(PROJECT_SW, downstreamFailureCauseDisplayData.getLinks().
@@ -192,19 +191,21 @@ public class DisplayDownstreamTest {
      * Test FailureCauseDisplayData object population when an indication is
      * specified.
      *
+     * @param jenkins
+     *
      * @throws Exception if failure cause cant be configured or build can't
      *                   be executed
      */
     @Test
-    public void testIdentifiedTwoCauses() throws Exception {
-        final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
-        final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
+    void testIdentifiedTwoCauses(JenkinsRule jenkins) throws Exception {
+        final FreeStyleProject child1 = createFreestyleProjectWithShell(jenkins, "child1", FAILED);
+        final FreeStyleProject child2 = createFreestyleProjectWithShell(jenkins, "child2", FAILED);
 
         final FreeStyleProject parent = jenkins.createFreeStyleProject("parent");
         parent.getBuildersList().add(new TriggerBuilder(
                 new BlockableBuildTriggerConfig(child1.getName() + ", " + child2.getName(),
                     new BlockingBehaviour(Result.FAILURE, Result.FAILURE, Result.FAILURE),
-                    new ArrayList<AbstractBuildParameters>())));
+                        new ArrayList<>())));
 
         final Indication indication = new BuildLogIndication(".*" + FAILED + ".*");
         BuildFailureScannerHudsonTest.configureCauseAndIndication("Other cause",
@@ -222,20 +223,22 @@ public class DisplayDownstreamTest {
         for (FailureCauseDisplayData causeDisplayData : downstreamCauses) {
             final List<FoundFailureCause> causeListFromAction = causeDisplayData.getFoundFailureCauses();
             assertEquals(1, causeListFromAction.size());
-            assertEquals(causeListFromAction.get(0).getName(), "Other cause");
+            assertEquals("Other cause", causeListFromAction.get(0).getName());
         }
     }
 
     /**
      * Test FailureCauseDisplayData object population from pipeline (using build-cache-dbf).
      *
+     * @param jenkins
+     *
      * @throws Exception if failure cause cant be configured or build can't
      *                   be executed
      */
     @Test
-    public void testIdentifiedTwoCausesFromPipeline() throws Exception {
-        final FreeStyleProject child1 = createFreestyleProjectWithShell("child1", FAILED);
-        final FreeStyleProject child2 = createFreestyleProjectWithShell("child2", FAILED);
+    void testIdentifiedTwoCausesFromPipeline(JenkinsRule jenkins) throws Exception {
+        final FreeStyleProject child1 = createFreestyleProjectWithShell(jenkins, "child1", FAILED);
+        final FreeStyleProject child2 = createFreestyleProjectWithShell(jenkins, "child2", FAILED);
 
         final WorkflowJob parent = jenkins.createProject(WorkflowJob.class, "parent");
         parent.setDefinition(new CpsFlowDefinition("try {build('child1')} catch (e) {};build('child2')", true));
@@ -256,23 +259,25 @@ public class DisplayDownstreamTest {
         for (FailureCauseDisplayData causeDisplayData : downstreamCauses) {
             final List<FoundFailureCause> causeListFromAction = causeDisplayData.getFoundFailureCauses();
             assertEquals(1, causeListFromAction.size());
-            assertEquals(causeListFromAction.get(0).getName(), "Other cause");
+            assertEquals("Other cause", causeListFromAction.get(0).getName());
         }
     }
 
     /**
      * Creates and executes a matrix build.
      *
+     * @param jenkins
+     *
      * @return a Matrix build object
      * @throws Exception if build couldn't be executed
      */
-    private MatrixBuild executeBuild() throws Exception {
+    private static MatrixBuild executeBuild(JenkinsRule jenkins) throws Exception {
 
-        createMatrixProjectNews();
+        MatrixProject matrixProject = createMatrixProjectNews(jenkins);
 
         matrixProject.setQuietPeriod(0);
         jenkins.getInstance().rebuildDependencyGraph();
-        matrixProject.scheduleBuild2(0, new Cause.UserCause()).get();
+        matrixProject.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
         return matrixProject.getLastBuild();
     }
@@ -283,7 +288,7 @@ public class DisplayDownstreamTest {
      * @param build the executed build
      * @return a FailureCauseDisplayData object
      */
-    private FailureCauseDisplayData getDisplayData(MatrixBuild build) {
+    private static FailureCauseDisplayData getDisplayData(MatrixBuild build) {
 
         FailureCauseMatrixBuildAction action =
                 build.getAction(FailureCauseMatrixBuildAction.class);
@@ -298,19 +303,23 @@ public class DisplayDownstreamTest {
      * Creates a Matrix project with two axis. Four Downstream jobs are also
      * created. One of these will fail.
      *
+     * @param jenkins
+     *
+     * @return MatrixProject
+     *
      * @throws Exception if project(s) can't be created
      */
-    private void createMatrixProjectNews() throws Exception {
+    private static MatrixProject createMatrixProjectNews(JenkinsRule jenkins) throws Exception {
 
         createFreestyleProjectWithDefaultShell(
-                PROJECT_NE, PROJECT_EW, PROJECT_SE);
-        createFreestyleProjectWithShell(PROJECT_SW, "rapakalja");
+                jenkins, PROJECT_NE, PROJECT_EW, PROJECT_SE);
+        createFreestyleProjectWithShell(jenkins, PROJECT_SW, "rapakalja");
 
-        jenkins.getInstance().setNumExecutors(50);
+        jenkins.jenkins.setNumExecutors(50);
         //TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary
-        jenkins.getInstance().setNodes(jenkins.getInstance().getNodes()); // update nodes configuration
+        jenkins.jenkins.setNodes(jenkins.getInstance().getNodes()); // update nodes configuration
 
-        matrixProject = jenkins.createMatrixProject(MATRIX_PROJECT_NEWS);
+        MatrixProject matrixProject = MatrixSupport.createMatrixProject(jenkins, MATRIX_PROJECT_NEWS);
 
         AxisList axes = new AxisList();
         axes.add(new Axis("X", "EAST", "WEST"));
@@ -318,7 +327,7 @@ public class DisplayDownstreamTest {
         matrixProject.setAxes(axes);
 
         List<AbstractBuildParameters> buildParameters =
-                new ArrayList<AbstractBuildParameters>();
+                new ArrayList<>();
         buildParameters.add(new CurrentBuildParameters());
         BlockingBehaviour neverFail =
                 new BlockingBehaviour("FAILURE", "FAILURE", "UNSTABLE");
@@ -329,19 +338,23 @@ public class DisplayDownstreamTest {
         matrixProject.getBuildersList().add(new TriggerBuilder(config));
         CaptureEnvironmentBuilder builder = new CaptureEnvironmentBuilder();
         matrixProject.getBuildersList().add(builder);
+
+        return matrixProject;
     }
 
     /**
      * Creates several FreeStyleProjects with a basic shell step. Each shell is
      * loaded with a default command: "echo I am ${PROJECT_NAME}"
      *
+     * @param jenkins
      * @param names an array of project names
+     *
      * @throws Exception if project(s) can't be created
      */
-    private void createFreestyleProjectWithDefaultShell(String... names)
+    private static void createFreestyleProjectWithDefaultShell(JenkinsRule jenkins, String... names)
             throws Exception {
         for (String name : names) {
-            createFreestyleProjectWithShell(name, DEFAULT);
+            createFreestyleProjectWithShell(jenkins, name, DEFAULT);
         }
     }
 
@@ -349,12 +362,13 @@ public class DisplayDownstreamTest {
      * Creates a FreeStyleProject with a basic shell/batch step. The shell is loaded
      * with the supplied command.
      *
+     * @param jenkins
      * @param name the name of the project
      * @param command the shell command
      * @return created project
      * @throws Exception if project(s) can't be created
      */
-    private FreeStyleProject createFreestyleProjectWithShell(String name, String command)
+    private static FreeStyleProject createFreestyleProjectWithShell(JenkinsRule jenkins, String name, String command)
             throws Exception {
         final FreeStyleProject project = jenkins.createFreeStyleProject(name);
         if (Functions.isWindows()) {

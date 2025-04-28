@@ -40,12 +40,12 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.init.Terminator;
 import hudson.model.AutoCompletionCandidates;
-import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
+import hudson.security.PermissionScope;
 import hudson.util.CopyOnWriteList;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -60,6 +60,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,21 +118,21 @@ public class PluginImpl extends GlobalConfiguration {
      */
     public static final Permission UPDATE_PERMISSION =
             new Permission(PERMISSION_GROUP, "UpdateCauses",
-                    Messages._PermissionUpdate_Description(), Hudson.ADMINISTER);
+                    Messages._PermissionUpdate_Description(), Jenkins.ADMINISTER, PermissionScope.JENKINS);
 
     /**
      * Permission to view the causes. E.e. Access {@link CauseManagement}.
      */
     public static final Permission VIEW_PERMISSION =
             new Permission(PERMISSION_GROUP, "ViewCauses",
-                    Messages._PermissionView_Description(), UPDATE_PERMISSION);
+                    Messages._PermissionView_Description(), UPDATE_PERMISSION, PermissionScope.JENKINS);
 
     /**
      * Permission to remove causes.
      */
     public static final Permission REMOVE_PERMISSION =
             new Permission(PERMISSION_GROUP, "RemoveCause",
-                    Messages._PermissionRemove_Description(), Hudson.ADMINISTER);
+                    Messages._PermissionRemove_Description(), Jenkins.ADMINISTER, PermissionScope.JENKINS);
 
     private static final String DEFAULT_NO_CAUSES_MESSAGE = "No problems were identified. "
             + "If you know why this problem occurred, please add a suitable Cause for it.";
@@ -197,7 +198,7 @@ public class PluginImpl extends GlobalConfiguration {
     public XmlFile getConfigFile() {
         return new XmlFile(
                 Jenkins.XSTREAM,
-                new File(Jenkins.getInstance().getRootDir(), "build-failure-analyzer.xml")
+                new File(Jenkins.get().getRootDir(), "build-failure-analyzer.xml")
         ); // for backward compatibility
     }
 
@@ -293,7 +294,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return a URL to the image.
      */
     public static String getFullImageUrl(String size, String name) {
-        return Jenkins.getInstance().getRootUrl() + getImageUrl(size, name);
+        return Jenkins.get().getRootUrl() + getImageUrl(size, name);
     }
 
     /**
@@ -345,11 +346,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return true if on.
      */
     public boolean isNoCausesEnabled() {
-        if (noCausesEnabled == null) {
-            return true;
-        } else {
-            return noCausesEnabled;
-        }
+        return Objects.requireNonNullElse(noCausesEnabled, true);
     }
 
     /**
@@ -369,11 +366,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return true if on.
      */
     public boolean isGlobalEnabled() {
-        if (globalEnabled == null) {
-            return true;
-        } else {
-            return globalEnabled;
-        }
+        return Objects.requireNonNullElse(globalEnabled, true);
     }
 
     /**
@@ -465,11 +458,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return True if enabled.
      */
     public boolean isTestResultParsingEnabled() {
-        if (testResultParsingEnabled == null) {
-            return false;
-        } else {
-            return testResultParsingEnabled;
-        }
+        return Objects.requireNonNullElse(testResultParsingEnabled, false);
     }
 
     /**
@@ -502,11 +491,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return True if enabled.
      */
     public boolean isMetricSquashingEnabled() {
-        if (metricSquashingEnabled == null) {
-            return false;
-        } else {
-            return metricSquashingEnabled;
-        }
+        return Objects.requireNonNullElse(metricSquashingEnabled, false);
     }
 
     /**
@@ -568,11 +553,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return true if on.
      */
     public boolean isGerritTriggerEnabled() {
-        if (gerritTriggerEnabled == null) {
-            return true;
-        } else {
-            return gerritTriggerEnabled;
-        }
+        return Objects.requireNonNullElse(gerritTriggerEnabled, true);
     }
 
     /**
@@ -581,11 +562,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return true if on.
      */
     public boolean isSlackNotifEnabled() {
-        if (slackNotifEnabled == null) {
-            return false;
-        } else {
-            return slackNotifEnabled;
-        }
+        return Objects.requireNonNullElse(slackNotifEnabled, false);
     }
 
     /**
@@ -594,11 +571,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return String - Slack Channel.
      */
     public String getSlackChannelName() {
-        if (slackChannelName == null) {
-            return DEFAULT_SLACK_CHANNEL;
-        } else {
-            return slackChannelName;
-        }
+        return Objects.requireNonNullElse(slackChannelName, DEFAULT_SLACK_CHANNEL);
     }
 
     /**
@@ -607,11 +580,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return String - Space separated list of failure cause categories.
      */
     public String getSlackFailureCategories() {
-        if (slackFailureCategories == null) {
-            return DEFAULT_SLACK_FAILURE_CATEGORIES;
-        } else {
-            return slackFailureCategories;
-        }
+        return Objects.requireNonNullElse(slackFailureCategories, DEFAULT_SLACK_FAILURE_CATEGORIES);
     }
 
     /**
@@ -836,7 +805,7 @@ public class PluginImpl extends GlobalConfiguration {
      * @return the AutoCompletionCandidates.
      */
     public AutoCompletionCandidates getCategoryAutoCompletionCandidates(String prefix) {
-        Jenkins.getInstance().checkPermission(UPDATE_PERMISSION);
+        Jenkins.get().checkPermission(UPDATE_PERMISSION);
         List<String> categories;
         try {
             categories = getKnowledgeBase().getCategories();

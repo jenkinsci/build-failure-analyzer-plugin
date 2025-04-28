@@ -41,15 +41,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
@@ -57,23 +58,20 @@ import static org.junit.Assert.fail;
  * Tests for {@link ScanOnDemandBaseAction}.
  * @author Shemeer Sulaiman &lt;shemeer.x.sulaiman@sonymobile.com&gt;
  */
-public class ScanOnDemandBaseActionTest {
-
-    //CS IGNORE VisibilityModifier FOR NEXT 5 LINES. REASON: by design
-    /**
-     * The Jenkins rule, duh.
-     */
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class ScanOnDemandBaseActionTest {
 
     private static final String TO_PRINT = "ERROR";
+
     /**
      * Tests for performScanMethod by passing failed build.
+     *
+     * @param j
      *
      * @throws Exception if so.
      */
     @Test
-    public void testPerformScanFailedProject() throws Exception {
+    void testPerformScanFailedProject(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TO_PRINT));
         project.getBuildersList().add(new MockBuilder(Result.FAILURE));
@@ -93,10 +91,12 @@ public class ScanOnDemandBaseActionTest {
     /**
      * Tests for performScanMethod by passing sucess build.
      *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testPerformScanSuccessProject() throws Exception {
+    void testPerformScanSuccessProject(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new MockBuilder(Result.SUCCESS));
         Future<FreeStyleBuild> future = project.scheduleBuild2(0);
@@ -114,16 +114,18 @@ public class ScanOnDemandBaseActionTest {
     /**
      * Tests that the action is visible on the project page only when the user has the correct permissions.
      *
+     * @param j
+     *
      * @throws Exception if problemos
      * @see ScanOnDemandBaseAction#hasPermission()
      */
     @Test
-    public void testShouldOnlyShowWhenHasPermission() throws Exception {
+    void testShouldOnlyShowWhenHasPermission(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         String expectedHref = "/jenkins/" + project.getUrl() + "scan-on-demand";
 
         SecurityRealm securityRealm = j.createDummySecurityRealm();
-        Jenkins.getInstance().setSecurityRealm(securityRealm);
+        Jenkins.get().setSecurityRealm(securityRealm);
         GlobalMatrixAuthorizationStrategy strategy = new GlobalMatrixAuthorizationStrategy();
         strategy.add(Jenkins.READ, "anonymous");
         strategy.add(Item.CONFIGURE, "bobby");
@@ -131,7 +133,7 @@ public class ScanOnDemandBaseActionTest {
         strategy.add(Jenkins.READ, "bobby");
         strategy.add(Item.READ, "alice");
         strategy.add(Jenkins.READ, "alice");
-        Jenkins.getInstance().setAuthorizationStrategy(strategy);
+        Jenkins.get().setAuthorizationStrategy(strategy);
 
 
         JenkinsRule.WebClient client = j.createWebClient();
@@ -155,10 +157,12 @@ public class ScanOnDemandBaseActionTest {
     /**
      * Tests that the action is visible on the project page only when scanning is enabled.
      *
+     * @param j
+     *
      * @throws Exception if problemos
      */
     @Test
-    public void testShouldOnlyShowWhenScanningIsEnabled() throws Exception {
+    void testShouldOnlyShowWhenScanningIsEnabled(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project = (FreeStyleProject)j.configRoundtrip((Item)project);
         String expectedHref = "/jenkins/" + project.getUrl() + "scan-on-demand";
@@ -176,12 +180,8 @@ public class ScanOnDemandBaseActionTest {
         //Just check it in case...
         assertFalse(PluginImpl.shouldScan(project));
 
-        page = client.getPage(project);
-        try {
-            anchor = page.getAnchorByHref(expectedHref);
-            fail("We can see the link!");
-        } catch (ElementNotFoundException e) {
-            System.out.println("Didn't find the link == good!");
-        }
+        HtmlPage finalPage = client.getPage(project);
+        assertThrows(ElementNotFoundException.class,
+                () -> finalPage.getAnchorByHref(expectedHref), "We can see the link!");
     }
  }

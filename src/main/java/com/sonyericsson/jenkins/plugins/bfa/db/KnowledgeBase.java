@@ -54,18 +54,16 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * returned as quickly as possible, so the list could be cached.
      *
      * @return the full list of causes.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract Collection<FailureCause> getCauses() throws Exception;
+    public abstract Collection<FailureCause> getCauses();
 
     /**
      * Get the list of the {@link FailureCause}'s names and ids. The list should be the latest possible from the DB as
      * they will be used for editing. The objects returned should contain at least the id and the name of the cause.
      *
      * @return the full list of the names and ids of the causes.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract Collection<FailureCause> getCauseNames() throws Exception;
+    public abstract Collection<FailureCause> getCauseNames();
 
     /**
      * Get a shallow list of the {@link FailureCause}s. The list should be the latest possible from the DB as
@@ -74,10 +72,9 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      * comment, lastOccurred and categories are preferred as well.
      *
      * @return a shallow list of all causes.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      * @see #getCauseNames()
      */
-    public abstract Collection<FailureCause> getShallowCauses() throws Exception;
+    public abstract Collection<FailureCause> getShallowCauses();
 
     /**
      * Get the cause with the given id. The cause returned is intended to be edited right away, so it should be as fresh
@@ -85,27 +82,24 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      *
      * @param id the id of the cause.
      * @return the cause or null if a cause with that id could not be found.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract FailureCause getCause(String id) throws Exception;
+    public abstract FailureCause getCause(String id);
 
     /**
      * Saves a new cause to the db and generates a new id for the cause.
      *
      * @param cause the cause to add.
      * @return the same cause but with a new id.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract FailureCause addCause(FailureCause cause) throws Exception;
+    public abstract FailureCause addCause(FailureCause cause);
 
     /**
      * Removes the cause from the knowledge base.
      *
      * @param id the id of the cause to remove.
-     * @throws Exception if so.
      * @return the removed FailureCause.
      */
-    public abstract FailureCause removeCause(String id) throws Exception;
+    public abstract FailureCause removeCause(String id);
 
     /**
      * Saves a cause to the db. Assumes that the id is kept from when it was fetched. Can also be an existing cause in
@@ -114,25 +108,22 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      *
      * @param cause the cause to add.
      * @return the same cause but with a new id.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract FailureCause saveCause(FailureCause cause) throws Exception;
+    public abstract FailureCause saveCause(FailureCause cause);
 
     /**
      * Converts the existing old knowledge base into this one. Will be called after the creation of a new object when
      * then Jenkins config is saved, So it could just be that the old one is exactly the same as this one.
      *
      * @param oldKnowledgeBase the old one.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract void convertFrom(KnowledgeBase oldKnowledgeBase) throws Exception;
+    public abstract void convertFrom(KnowledgeBase oldKnowledgeBase);
 
     /**
      * Gets the unique categories of all FailureCauses.
      * @return the list of categories.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract List<String> getCategories() throws Exception;
+    public abstract List<String> getCategories();
 
     /**
      * Does a full copy of the data in the old one to this one. Using the public api, can be used by implementations of
@@ -140,9 +131,8 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
      *
      * @param oldKnowledgeBase the old one.
      * @see #convertFrom(KnowledgeBase)
-     * @throws Exception if anything goes wrong in the KnowledgeBase handling.
      */
-    protected void convertFromAbstract(KnowledgeBase oldKnowledgeBase) throws Exception {
+    protected void convertFromAbstract(KnowledgeBase oldKnowledgeBase) {
         for (FailureCause cause : oldKnowledgeBase.getCauseNames()) {
             saveCause(oldKnowledgeBase.getCause(cause.getId()));
         }
@@ -158,9 +148,8 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
 
     /**
      * Called when the KnowledgeBase should be up and running.
-     * @throws  Exception if anything goes wrong during the startup.
      */
-    public abstract void start() throws Exception;
+    public abstract void start();
 
     /**
      * Called when it is time to clean up after the KnowledgeBase.
@@ -185,9 +174,8 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
     /**
      * Saves the Statistics.
      * @param stat the Statistics.
-     * @throws Exception if something in the KnowledgeBase handling goes wrong.
      */
-    public abstract void saveStatistics(Statistics stat) throws Exception;
+    public abstract void saveStatistics(Statistics stat);
 
     /**
      * Find the time at which the latest Failure occurred which matches the provided FailureCause.
@@ -260,7 +248,7 @@ public abstract class KnowledgeBase implements Describable<KnowledgeBase>, Seria
          * @return the extension list.
          */
         public static ExtensionList<KnowledgeBaseDescriptor> all() {
-            return Jenkins.getInstance().getExtensionList(KnowledgeBaseDescriptor.class);
+            return Jenkins.get().getExtensionList(KnowledgeBaseDescriptor.class);
         }
     }
 }

@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,12 +62,7 @@ public final class StatisticsLogger {
      * @see #getInstance()
      */
     private StatisticsLogger() {
-        queueExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable target) {
-                return new Thread(target, "BFA StatisticsLogger Queue");
-            }
-        });
+        queueExecutor = Executors.newSingleThreadExecutor(target -> new Thread(target, "BFA StatisticsLogger Queue"));
     }
 
     /**
@@ -121,13 +115,12 @@ public final class StatisticsLogger {
             String displayName = build.getDisplayName();
             Date startingTime = build.getTime();
             long duration = build.getDuration();
-            List<String> triggerCauses = new LinkedList<String>();
+            List<String> triggerCauses = new LinkedList<>();
             for (Object o : build.getCauses()) {
                 triggerCauses.add(o.getClass().getSimpleName());
             }
             String nodeName = "NoNodeInformation";
-            if (build instanceof AbstractBuild) {
-                AbstractBuild abstractBuild = (AbstractBuild)build;
+            if (build instanceof AbstractBuild abstractBuild) {
                 Node node = abstractBuild.getBuiltOn();
                 if (node != null) {
                     nodeName = node.getNodeName();
@@ -142,8 +135,8 @@ public final class StatisticsLogger {
             if (buildResult != null) {
                 result = buildResult.toString();
             }
-            List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<FailureCauseStatistics>();
-            List<String> causeIds = new LinkedList<String>();
+            List<FailureCauseStatistics> failureCauseStatistics = new LinkedList<>();
+            List<String> causeIds = new LinkedList<>();
             for (FoundFailureCause cause : causes) {
                 FailureCauseStatistics stats = new FailureCauseStatistics(cause.getId(), cause.getIndications());
                 failureCauseStatistics.add(stats);

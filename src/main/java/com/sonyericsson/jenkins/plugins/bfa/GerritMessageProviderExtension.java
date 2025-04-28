@@ -55,7 +55,7 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
                     addFailureCausesFromData(customMessage, displayData);
                     printDownstream(customMessage, displayData.getDownstreamFailureCauses());
 
-                    if (customMessage.length() > 0) {
+                    if (!customMessage.isEmpty()) {
                         return customMessage.toString().replace("'", "\"");
                     }
                 }
@@ -88,25 +88,25 @@ public class GerritMessageProviderExtension extends GerritMessageProvider {
      */
     private void addFailureCausesFromData(StringBuilder message, FailureCauseDisplayData displayData) {
         for (FoundFailureCause failureCause : displayData.getFoundFailureCauses()) {
-            if (message.length() > 0) {
+            if (!message.isEmpty()) {
                 message.append("\n\n");
             }
             message.append(failureCause.getDescription());
 
             message.append(" ( ")
-            .append(Jenkins.getInstance().getRootUrl())
+            .append(Jenkins.get().getRootUrl())
             .append(displayData.getLinks().getBuildUrl())
             .append(" )");
         }
 
         if (displayData.getDownstreamFailureCauses().isEmpty() && displayData.getFoundFailureCauses().isEmpty()) {
-            if (message.length() > 0) {
+            if (!message.isEmpty()) {
                 message.append("\n\n");
             }
 
             message.append(PluginImpl.getInstance().getNoCausesMessage())
                     .append(" ( ")
-                    .append(Jenkins.getInstance().getRootUrl())
+                    .append(Jenkins.get().getRootUrl())
                     .append(displayData.getLinks().getBuildUrl())
                     .append(" )");
         }
