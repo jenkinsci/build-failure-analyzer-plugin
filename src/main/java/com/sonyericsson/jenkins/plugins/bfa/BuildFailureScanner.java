@@ -396,8 +396,8 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     private static List<FoundFailureCause> findCauses(final Collection<FailureCause> causes,
                                                       final Run build, final PrintStream scanLog) {
-        threadPoolExecutor.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
         threadPoolExecutor.setMaximumPoolSize(PluginImpl.getInstance().getNrOfScanThreads());
+        threadPoolExecutor.setCorePoolSize(PluginImpl.getInstance().getNrOfScanThreads());
 
         logToScanLog(scanLog, "Scanning build for known causes...");
         long start = System.currentTimeMillis();
