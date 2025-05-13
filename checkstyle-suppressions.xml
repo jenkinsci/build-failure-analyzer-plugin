@@ -12,4 +12,6 @@
     <suppress checks=".+"
               files="InjectedTest.java"/>
     <suppress checks="MagicNumber" files="BuildLogIndication.java"/>
+    <suppress checks="MagicNumberCheck"
+              files="BuildFailureScannerHudsonTest.java"/>
 </suppressions>
