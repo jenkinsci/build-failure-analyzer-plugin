@@ -58,9 +58,6 @@ public class FailureCauseProjectAction extends InvisibleAction {
         }
 
         FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
-        if (action == null) {
-            return null;
-        }
 
         return action;
     }

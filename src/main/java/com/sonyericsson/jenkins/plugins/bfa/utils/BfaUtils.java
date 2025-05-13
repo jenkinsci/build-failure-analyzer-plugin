@@ -52,7 +52,7 @@ public final class BfaUtils {
      * @return the master name
      */
     public static String getMasterName() {
-        String masterString = Jenkins.getInstance().getRootUrl();
+        String masterString = Jenkins.get().getRootUrl();
         String name = null;
 
         if (masterString == null) {

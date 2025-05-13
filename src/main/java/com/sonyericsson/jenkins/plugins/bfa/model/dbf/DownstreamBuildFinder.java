@@ -28,8 +28,8 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Util;
 import hudson.model.AbstractBuild;
-import hudson.model.Hudson;
 import hudson.model.Run;
+import jenkins.model.Jenkins;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -51,7 +51,7 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
      * Make it unmodifiable to make sure it isn't used.
      */
     protected static final List<Run<?, ?>> EMPTY =
-            Collections.unmodifiableList(new LinkedList<Run<?, ?>>());
+            Collections.unmodifiableList(new LinkedList<>());
 
     /**
      * Return a list of all downstream builds originating from provided build.
@@ -87,7 +87,7 @@ public abstract class DownstreamBuildFinder implements ExtensionPoint {
      * @return a list of DownstreamBuildFinder
      */
     public static ExtensionList<DownstreamBuildFinder> getAll() {
-        return Hudson.getInstance().
+        return Jenkins.get().
                 getExtensionList(DownstreamBuildFinder.class);
     }
 }

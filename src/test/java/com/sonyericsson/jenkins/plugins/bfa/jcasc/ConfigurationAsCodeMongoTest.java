@@ -7,34 +7,31 @@ import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import io.jenkins.plugins.casc.model.CNode;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * Checks configuration as code integration for mongo DB.
  */
-public class ConfigurationAsCodeMongoTest {
-
-    /**
-     * Jenkins rule.
-     */
-    @ClassRule
-    @ConfiguredWithCode("jcasc-mongo.yml")
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
+@WithJenkinsConfiguredWithCode
+class ConfigurationAsCodeMongoTest {
 
     /**
      * Support config as code import.
+     *
+     * @param j
+     *
      */
     @Test
-    public void shouldSupportConfigurationAsCode() {
+    @ConfiguredWithCode("jcasc-mongo.yml")
+    void shouldSupportConfigurationAsCode(JenkinsConfiguredWithCodeRule j) {
         PluginImpl plugin = PluginImpl.getInstance();
 
         assertThat(plugin.isDoNotAnalyzeAbortedJob(), is(true));
@@ -76,10 +73,13 @@ public class ConfigurationAsCodeMongoTest {
     /**
      * Support config as code export.
      *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void shouldSupportConfigurationExport() throws Exception {
+    @ConfiguredWithCode("jcasc-mongo.yml")
+    void shouldSupportConfigurationExport(JenkinsConfiguredWithCodeRule j) throws Exception {
         ConfiguratorRegistry registry = ConfiguratorRegistry.get();
         ConfigurationContext context = new ConfigurationContext(registry);
         CNode yourAttribute = getUnclassifiedRoot(context).get("buildFailureAnalyzer");

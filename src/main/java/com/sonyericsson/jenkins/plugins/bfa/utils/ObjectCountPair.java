@@ -78,12 +78,7 @@ public class ObjectCountPair<T> {
      * @return comparator
      */
     public static Comparator<ObjectCountPair> countComparator() {
-        return new Comparator<ObjectCountPair>() {
-            @Override
-            public int compare(ObjectCountPair o1, ObjectCountPair o2) {
-                return o2.getCount() - o1.getCount();
-            }
-        };
+        return (o1, o2) -> o2.getCount() - o1.getCount();
     }
 
 }

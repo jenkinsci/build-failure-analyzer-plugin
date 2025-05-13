@@ -38,7 +38,6 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -74,7 +73,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getIconFileName() {
-        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Jenkins.get().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
         } else {
             return null;
@@ -83,7 +82,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getDisplayName() {
-        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+        if (Jenkins.get().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return Messages.CauseManagement_DisplayName();
         } else {
             return null;
@@ -139,7 +138,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      */
     public Object readResolve() {
         if (failureCauses != null) {
-            List<FoundFailureCause> list = new LinkedList<FoundFailureCause>();
+            List<FoundFailureCause> list = new LinkedList<>();
             for (FailureCause fc : failureCauses) {
                 list.add(new FoundFailureCause(fc));
             }
@@ -343,16 +342,13 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
     private static Set<Run<?, ?>> getDownstreamBuilds(
             final Run build) {
 
-        Set<Run<?, ?>> foundDbf = new TreeSet<Run<?, ?>>(new Comparator<Run<?, ?>>() {
-            @Override
-            public int compare(Run<?, ?> o1, Run<?, ?> o2) {
-                final int res = o1.getParent().getFullName().compareTo(o2.getParent().getFullName());
-                if (res == 0) {
-                    return o1.number - o2.number;
-                }
-
-                return res;
+        Set<Run<?, ?>> foundDbf = new TreeSet<>((o1, o2) -> {
+            final int res = o1.getParent().getFullName().compareTo(o2.getParent().getFullName());
+            if (res == 0) {
+                return o1.number - o2.number;
             }
+
+            return res;
         });
 
         for (DownstreamBuildFinder dbf : DownstreamBuildFinder.getAll()) {

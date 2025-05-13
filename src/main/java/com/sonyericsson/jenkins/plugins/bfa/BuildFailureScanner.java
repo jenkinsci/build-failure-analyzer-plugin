@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -125,7 +126,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         File file = new File(build.getRootDir(), ScanLogAction.FILE_NAME);
         try (
                 FileOutputStream fos = new FileOutputStream(file, true);
-                PrintStream scanLog = new PrintStream(fos, true, "UTF8")
+                PrintStream scanLog = new PrintStream(fos, true, StandardCharsets.UTF_8)
         ) {
             if (PluginImpl.isSizeInLimit(build)) {
                 scanIfNotScanned(build, scanLog);
@@ -156,7 +157,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
                 } else if (PluginImpl.getInstance().getKnowledgeBase().isSuccessfulLogging()) {
                     final List<FoundFailureCause> emptyCauseList
-                        = Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+                        = Collections.synchronizedList(new LinkedList<>());
                     StatisticsLogger.getInstance().log(build, emptyCauseList);
                 }
             }
@@ -186,7 +187,7 @@ public class BuildFailureScanner extends RunListener<Run> {
              */
             if (PluginImpl.getInstance().isTestResultParsingEnabled()) {
                 foundCauseList = Collections.synchronizedList(
-                        new LinkedList<FoundFailureCause>(foundCauseListToLog));
+                        new LinkedList<>(foundCauseListToLog));
                 foundCauseList.addAll(findFailedTests(build, scanLog));
             } else {
                 foundCauseList = foundCauseListToLog;
@@ -241,23 +242,20 @@ public class BuildFailureScanner extends RunListener<Run> {
 
             /* Split slack failure cause category string from configure menu into list of strings */
             String failureCategories = PluginImpl.getInstance().getSlackFailureCategories();
-            List<String> slackFailCauseCat = Arrays.<String>asList(Util.tokenize(failureCategories));
+            List<String> slackFailCauseCat = Arrays.asList(Util.tokenize(failureCategories));
 
             /* Check if ALL failures are to be reported */
-            boolean notifySlackAllFail = false;
-            if (slackFailCauseCat.get(0).equals(PluginImpl.getInstance().DEFAULT_SLACK_FAILURE_CATEGORIES)) {
-                notifySlackAllFail = true;
-            }
+            boolean notifySlackAllFail = slackFailCauseCat.get(0).equals(PluginImpl.DEFAULT_SLACK_FAILURE_CATEGORIES);
 
             StatisticsLogger.getInstance().log(build, foundCauseListToLog);
 
             // Check slack plugin is installed
-            if (Jenkins.getInstance().getPlugin("slack") != null) {
+            if (Jenkins.get().getPlugin("slack") != null) {
                 boolean slackEnabled = PluginImpl.getInstance().isSlackNotifEnabled();
-                if (slackEnabled && slackFailCauseCat != null) {
+                if (slackEnabled) {
                     String buildNum = String.valueOf(build.getNumber());
                     String buildName = data.getLinks().getProjectDisplayName();
-                    String buildUrl = Jenkins.getInstance().getRootUrl() + build.getUrl();
+                    String buildUrl = Jenkins.get().getRootUrl() + build.getUrl();
                     createSlackMessage(foundCauseList, notifySlackAllFail, slackFailCauseCat, buildName,
                             buildNum, buildUrl, scanLog);
                 }
@@ -292,7 +290,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (FoundFailureCause foundCause : foundCauseList) {
             if (notifySlackOfAllFailures) {
                 //Add two new lines between found Failure Causes
-                if (bufBuildFailCause.length() != 0) {
+                if (!bufBuildFailCause.isEmpty()) {
                     bufBuildFailCause.append("\n\n");
                 }
                 //Create list for slack message with failure Name, Category and Description from build
@@ -312,7 +310,7 @@ public class BuildFailureScanner extends RunListener<Run> {
                         if (failureCategoryMatches(category, slackFailureCauseCategories)) {
                             notifySlackOfFailure = true;
                             //Add two new lines between found Failure Causes
-                            if (bufBuildFailCause.length() != 0) {
+                            if (!bufBuildFailCause.isEmpty()) {
                                 bufBuildFailCause.append("\n\n");
                             }
                             // Create list for slack message with failure Name, Category and Description from build
@@ -337,7 +335,7 @@ public class BuildFailureScanner extends RunListener<Run> {
 
             StringBuilder s = new StringBuilder("Job *\"" + buildName + "\"*");
             s.append(" build *#").append(buildNum).append("* FAILED due to following failure causes: \n");
-            s.append(bufBuildFailCause.toString()).append("\nSee ");
+            s.append(bufBuildFailCause).append("\nSee ");
             s.append(buildUrl).append(" for details.");
 
             slack.postToSlack(s.toString(), scanLog);
@@ -373,7 +371,7 @@ public class BuildFailureScanner extends RunListener<Run> {
         for (FailureCauseDisplayData displayData : downstreamFailureCauses) {
             FailureCauseDisplayData.Links links = displayData.getLinks();
             if (!displayData.getFoundFailureCauses().isEmpty()) {
-                logToScanLog(scanLog, "See: " + Jenkins.getInstance().getRootUrl() + links.getBuildUrl());
+                logToScanLog(scanLog, "See: " + Jenkins.get().getRootUrl() + links.getBuildUrl());
                 for (FoundFailureCause foundCause : displayData.getFoundFailureCauses()) {
                     String foundString = foundCause.getName();
                     if (foundCause.getCategories() != null) {
@@ -444,45 +442,39 @@ public class BuildFailureScanner extends RunListener<Run> {
     private static List<FoundFailureCause> findIndications(final Collection<FailureCause> causes,
                                                            final Run build,
                                                            final PrintStream scanLog) {
-        final List<FailureCause> singleLineCauses = new ArrayList<FailureCause>();
-        final List<FailureCause> notOnlySingleLineCauses = new ArrayList<FailureCause>();
+        final List<FailureCause> singleLineCauses = new ArrayList<>();
+        final List<FailureCause> notOnlySingleLineCauses = new ArrayList<>();
 
         splitCauses(causes, singleLineCauses, notOnlySingleLineCauses);
 
-        final List<Future<?>> scanningTasks = new ArrayList<Future<?>>(notOnlySingleLineCauses.size() + 1);
+        final List<Future<?>> scanningTasks = new ArrayList<>(notOnlySingleLineCauses.size() + 1);
         final List<FoundFailureCause> foundFailureCauses = Collections.synchronizedList(
-                new ArrayList<FoundFailureCause>());
+                new ArrayList<>());
 
         if (!singleLineCauses.isEmpty()) {
-            scanningTasks.add(threadPoolExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    foundFailureCauses.addAll(parseSingleLineCauses(build, scanLog, singleLineCauses));
-                    Thread.currentThread().setName("BFA-scanner-" + build.getFullDisplayName());
-                }
+            scanningTasks.add(threadPoolExecutor.submit(() -> {
+                foundFailureCauses.addAll(parseSingleLineCauses(build, scanLog, singleLineCauses));
+                Thread.currentThread().setName("BFA-scanner-" + build.getFullDisplayName());
             }));
         }
 
         for (final FailureCause cause : notOnlySingleLineCauses) {
-            scanningTasks.add(threadPoolExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    final List<FoundIndication> foundIndications = new ArrayList<FoundIndication>();
-                    for (final Indication indication : cause.getIndications()) {
-                        Thread.currentThread().setName("BFA-scanner-"
-                                + build.getFullDisplayName() + ": "
-                                + cause.getName() + "-"
-                                + indication.getUserProvidedExpression());
+            scanningTasks.add(threadPoolExecutor.submit(() -> {
+                final List<FoundIndication> foundIndications = new ArrayList<>();
+                for (final Indication indication : cause.getIndications()) {
+                    Thread.currentThread().setName("BFA-scanner-"
+                            + build.getFullDisplayName() + ": "
+                            + cause.getName() + "-"
+                            + indication.getUserProvidedExpression());
 
-                        FoundIndication foundIndication = parseIndication(build, scanLog, indication, cause.getName());
-                        if (foundIndication != null) {
-                            foundIndications.add(foundIndication);
-                        }
+                    FoundIndication foundIndication = parseIndication(build, scanLog, indication, cause.getName());
+                    if (foundIndication != null) {
+                        foundIndications.add(foundIndication);
                     }
+                }
 
-                    if (!foundIndications.isEmpty()) {
-                        foundFailureCauses.add(new FoundFailureCause(cause, foundIndications));
-                    }
+                if (!foundIndications.isEmpty()) {
+                    foundFailureCauses.add(new FoundFailureCause(cause, foundIndications));
                 }
             }));
         }
@@ -585,7 +577,7 @@ public class BuildFailureScanner extends RunListener<Run> {
     private static List<FoundFailureCause> parseSingleLineCauses(Run build,
                                               PrintStream scanLog,
                                               List<FailureCause> singleLineCauses) {
-        final List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
+        final List<FoundFailureCause> foundFailureCauses = new ArrayList<>();
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(build.getLogReader());
@@ -635,7 +627,7 @@ public class BuildFailureScanner extends RunListener<Run> {
      */
     private static List<FoundFailureCause> findFailedTests(final Run build, final PrintStream scanLog) {
         final List<FoundFailureCause> failedTestList =
-            Collections.synchronizedList(new LinkedList<FoundFailureCause>());
+            Collections.synchronizedList(new LinkedList<>());
         final List<AbstractTestResultAction> testActions =
             build.getActions(AbstractTestResultAction.class);
 

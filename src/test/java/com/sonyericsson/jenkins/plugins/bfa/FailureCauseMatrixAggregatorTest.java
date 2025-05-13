@@ -24,7 +24,7 @@
 package com.sonyericsson.jenkins.plugins.bfa;
 
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
-import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.MatrixSupport;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -33,15 +33,17 @@ import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
 
@@ -49,23 +51,20 @@ import static org.junit.Assert.assertNull;
  * Tests for the FailureCauseMatrixAggregator.
  * @author Tomas Westling &lt;thomas.westling@sonyericsson.com&gt;
  */
-public class FailureCauseMatrixAggregatorTest {
-    /**
-     * The Jenkins Rule.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRuleWithMatrixSupport jenkins = new JenkinsRuleWithMatrixSupport();
+@WithJenkins
+class FailureCauseMatrixAggregatorTest {
 
     /**
      * Tests that an action is added when the builds fail.
      * Also tests getRunsWithAction.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testAggregateFailureCauses() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+    void testAggregateFailureCauses(JenkinsRule jenkins) throws Exception {
+        MatrixProject matrix = MatrixSupport.createMatrixProject(jenkins);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         matrix.getBuildersList().add(new MockBuilder(Result.FAILURE));
@@ -79,11 +78,13 @@ public class FailureCauseMatrixAggregatorTest {
     /**
      * Tests that no action is added if all builds are successful.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testAggregateFailureCausesWhenNotFailed() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+    void testAggregateFailureCausesWhenNotFailed(JenkinsRule jenkins) throws Exception {
+        MatrixProject matrix = MatrixSupport.createMatrixProject(jenkins);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
         QueueTaskFuture<MatrixBuild> future = matrix.scheduleBuild2(0, new Cause.UserIdCause());
@@ -95,11 +96,13 @@ public class FailureCauseMatrixAggregatorTest {
     /**
      * Tests that an action is not added when the builds abort.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testAggregateIgnoreAbortedCauses() throws Exception {
-        MatrixProject matrix = jenkins.createMatrixProject();
+    void testAggregateIgnoreAbortedCauses(JenkinsRule jenkins) throws Exception {
+        MatrixProject matrix = MatrixSupport.createMatrixProject(jenkins);
         PluginImpl.getInstance().setDoNotAnalyzeAbortedJob(true);
         Axis axis = new Axis("Axel", "Foley", "Rose");
         matrix.setAxes(new AxisList(axis));
