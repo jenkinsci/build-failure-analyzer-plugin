@@ -21,7 +21,7 @@
         <jenkins.baseline>2.479</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.1</jenkins.version>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <checkstyle.version>3.1.1</checkstyle.version>
+        <checkstyle.version>3.6.0</checkstyle.version>
         <no-test-jar>false</no-test-jar>
     </properties>
 
