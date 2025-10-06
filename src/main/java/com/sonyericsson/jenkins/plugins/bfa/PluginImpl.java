@@ -80,9 +80,9 @@ public class PluginImpl extends GlobalConfiguration {
     public static final String DEFAULT_ICON_SIZE = "24x24";
 
     /**
-     * Convenience constant for the default icon size. used for {@link #getImageUrl(String, String)}.
+     * Convenience constant for the default icon size. used for {@link #getDefaultIcon()}.
      */
-    public static final String DEFAULT_ICON_NAME = "information.png";
+    public static final String DEFAULT_ICON_NAME = "symbol-bulb-outline plugin-ionicons-api";
 
     /**
      * Default number of concurrent scan threads.
@@ -269,7 +269,9 @@ public class PluginImpl extends GlobalConfiguration {
      * @return the images directory.
      *
      * @see #getStaticResourcesBase()
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public static String getStaticImagesBase() {
         return getStaticResourcesBase() + "/images";
     }
@@ -280,9 +282,11 @@ public class PluginImpl extends GlobalConfiguration {
      * @param size the size of the image (the sub directory of images).
      * @param name the name of the image file.
      * @return a URL to the image.
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public static String getImageUrl(String size, String name) {
-        return getStaticImagesBase() + "/" + size + "/" + name;
+        return "";
     }
 
     /**
@@ -291,9 +295,11 @@ public class PluginImpl extends GlobalConfiguration {
      * @param size the size of the image (the sub directory of images).
      * @param name the name of the image file.
      * @return a URL to the image.
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public static String getFullImageUrl(String size, String name) {
-        return Jenkins.getInstance().getRootUrl() + getImageUrl(size, name);
+        return "";
     }
 
     /**
@@ -303,21 +309,21 @@ public class PluginImpl extends GlobalConfiguration {
      * @return a URL to the image.
      *
      * @see #getImageUrl(String, String)
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public static String getImageUrl(String name) {
-        return getImageUrl(DEFAULT_ICON_SIZE, name);
+        return "";
     }
 
     /**
-     * The default icon to be used throughout this plugin.
      *
-     * @return the relative URL to the image.
+     * Returns the default icon to use for this plugin.
      *
-     * @see #getImageUrl(String)
-     * @see #getImageUrl(String, String)
+     * @return the default icon.
      */
     public static String getDefaultIcon() {
-        return getImageUrl(DEFAULT_ICON_NAME);
+        return DEFAULT_ICON_NAME;
     }
 
     /**

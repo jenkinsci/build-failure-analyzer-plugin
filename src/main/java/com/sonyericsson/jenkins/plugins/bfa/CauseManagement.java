@@ -138,7 +138,9 @@ public class CauseManagement implements RootAction {
      * @return the url.
      *
      * @see PluginImpl#getImageUrl(String, String)
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public String getImageUrl(String size, String name) {
         return PluginImpl.getImageUrl(size, name);
     }

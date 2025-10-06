@@ -28,7 +28,7 @@ THE SOFTWARE.
 		<j:set var="failureCauses" value="${it.getFoundFailureCauses(job)}"/>
     	<j:if test="${failureCauses.size() gt 0}">
 	        <j:set var="firstCause" value="${failureCauses.get(0)}"/>
-        	<img src="${it.getBadgeImageUrl(job)}" border="0" alt="${%Identified problems}" title="${firstCause.name}"/>
+        	<l:icon src="${it.getIconFileName(job)}" class="icon-md" alt="${%Identified problems}" tooltip="${firstCause.name}"/>
         	<j:if test="${it.showText}">
         		${firstCause.name}
         	</j:if>

@@ -23,10 +23,10 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" >
     <j:set var="failureCauses" value="${it.getFoundFailureCauses()}"/>
     <j:if test="${failureCauses.size() gt 0}">
         <j:set var="firstCause" value="${failureCauses.get(0)}"/>
-        <img src="${it.getBadgeImageUrl()}" border="0" alt="${%Identified problems}" title="${firstCause.name}"/>
+        <l:icon src="${it.getIconFileName()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
     </j:if>
 </j:jelly>

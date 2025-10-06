@@ -37,7 +37,7 @@ if (PluginImpl.getInstance().isNoCausesEnabled() || !matrixRuns.isEmpty()) {
 
     tr {
         td {
-            img(width: "48", height: "48", src: my.getImageUrl(), style: "margin-right:1em;")
+            l.icon(src: my.getIconFileName(), class: "icon-xlg")
         }
         td(style: "vertical-align: middle;") {
             h2(class: "h4") {
@@ -106,11 +106,11 @@ def displayLinkTree(linkTree) {
                     if (i > 0) {
                         text(" / ")
                     }
-                    a(href: "${rootURL}/${link.projectUrl}", class: "model-link") {
+                    a(href: "${rootURL}/${link.projectUrl}") {
                         text(link.projectDisplayName + " ")
                     }
                     text(" (")
-                    a(href: "${rootURL}/${link.buildUrl}", class: "model-link") {
+                    a(href: "${rootURL}/${link.buildUrl}") {
                         text(link.buildDisplayName)
                     }
                     text(") ")
@@ -134,8 +134,7 @@ def displayCauses(cause, run, indent, links) {
                 }
                 br {}
                 cause.getIndications().each { indication ->
-                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull#" + indication.matchingHash + cause.id
-                                , class: "model-link") {
+                        a(href: "${rootURL}/${links.buildUrl}" + "consoleFull#" + indication.matchingHash + cause.id) {
                             text(_("Indication") + " " + (index++))
                     }
                     text(" ")

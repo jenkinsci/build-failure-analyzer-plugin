@@ -23,9 +23,9 @@
   -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" >
     <j:set var="firstCause" value="${it.getFirstFailureCause()}"/>
     <j:if test="${firstCause != null}">
-        <img src="${it.getBadgeImageUrl()}" border="0" alt="${%Identified problems}" title="${firstCause.name}"/>
+        <l:icon src="${it.getIconFileName()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
     </j:if>
 </j:jelly>
