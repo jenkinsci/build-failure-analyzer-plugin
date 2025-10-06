@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static hudson.Util.fixEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -106,6 +107,7 @@ class BackwardsCompatibilityTest {
         assertEquals(3, causes.size());
         Indication indication = null;
         for (FailureCause c : causes) {
+            assertNotNull(fixEmpty(c.getId()), c.getName() + " should have an id");
             if ("The Wrong".equals(c.getName())) {
                 indication = c.getIndications().get(0);
             }
