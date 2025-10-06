@@ -109,7 +109,9 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * Gets the image url for the summary page.
      *
      * @return the image url.
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public String getImageUrl() {
         return PluginImpl.getFullImageUrl("48x48", PluginImpl.DEFAULT_ICON_NAME);
     }
@@ -118,7 +120,9 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
      * Gets the image url for the badge page.
      *
      * @return the image url.
+     * @deprecated plugin now uses icons.
      */
+
     public String getBadgeImageUrl() {
         return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
     }

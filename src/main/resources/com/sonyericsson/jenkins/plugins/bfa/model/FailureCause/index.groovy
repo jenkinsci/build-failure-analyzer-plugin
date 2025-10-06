@@ -35,7 +35,6 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   l.header(title: _("Failure Cause Management") + " " + my.getName())
 
   def management = my.getAncestorCauseManagement();
-  def imageUrl = PluginImpl.getImageUrl("256x256", "information.png");
 
   context.setVariable("descriptor", my.getDescriptor());
   descriptor.setLastFailedBuildUrl();
@@ -47,14 +46,6 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   }
 
   l.main_panel() {
-    div(style: "width: 256px; "
-            + "height: 256px;"
-            + "opacity:0.2;"
-            + "right:-10px;"
-            + "top: 50px;"
-            + "position: absolute;"
-            + "z-index: -100;"
-            + "background-image: url(\'" + imageUrl + "');") {}
     h1(_("Failure Cause"))
     table(style: "width: 90%", border: "none", cellpadding: "5", cellspacing: "0", width: "90%") {
       tr {
@@ -115,10 +106,7 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
                     + "padding-left: 30px; "
                     + "min-height: 30px; "
                     + "padding-top: 5px; "
-                    + "padding-bottom: 5px; "
-                    + "background-image: url( \'" + imagesURL + "/24x24/edit-delete.png\'); "
-                    + "background-position: left center; "
-                    + "background-repeat: no-repeat;",
+                    + "padding-bottom: 5px; ",
                     href: "../remove?id=" + my.getId(),
                     title: _("Remove this cause")) {text(_("Remove"))}
           }

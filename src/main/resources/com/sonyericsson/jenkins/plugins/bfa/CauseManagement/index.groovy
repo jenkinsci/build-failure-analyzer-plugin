@@ -40,8 +40,6 @@ l.layout(norefresh: true) {
   l.header(title: _("Failure Cause Management - Confirm Remove"))
 
   def management = CauseManagement.getInstance();
-  def bgImageUrl = PluginImpl.getFullImageUrl("256x256", "information.png");
-  def newImageUrl = PluginImpl.getFullImageUrl("24x24", "newinformation.png");
 
   l.side_panel() {
     if (!management.isUnderTest()) {
@@ -50,15 +48,7 @@ l.layout(norefresh: true) {
   }
 
   l.main_panel() {
-    div(style: "width: 256px; "
-            + "height: 256px;"
-            + "opacity:0.2;"
-            + "right:-10px;"
-            + "top: 50px;"
-            + "position: absolute;"
-            + "z-index: -100;"
-            + "background-image: url(\'" + bgImageUrl + "');") {}
-
+    
     if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
       h1(_("Update Failure Causes"))
     } else {
@@ -83,17 +73,10 @@ l.layout(norefresh: true) {
     //The New Cause link
     if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
         div(style: "margin-top: 10px; margin-bottom: 10px; width: 90%;") {
-            a(style: "font-weight: bold; "
-                    + "font-size: larger; "
-                    + "padding-left: 30px; "
-                    + "min-height: 30px; "
-                    + "padding-top: 5px; "
-                    + "padding-bottom: 5px; "
-                    + "background-image: url( \'" + newImageUrl + "\'); "
-                    + "background-position: left center; "
-                    + "background-repeat: no-repeat;",
-                    href: "new",
-                    alt: _("New")) { text(_("Create new")) }
+          a(class: "jenkins-button jenkins-button--primary", href: "new") {
+            l.icon(src:"symbol-add")
+            text(_("Create new"))
+          }
         }
     }
 

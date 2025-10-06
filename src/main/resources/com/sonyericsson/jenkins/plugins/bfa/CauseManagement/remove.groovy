@@ -42,7 +42,6 @@ l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
   if (causeId != null && !causeId.isEmpty()) {
     cause = PluginImpl.getInstance().getKnowledgeBase().getCause(causeId);
   }
-  def imageUrl = PluginImpl.getImageUrl("256x256", "information.png");
 
   l.side_panel() {
     if (!management.isUnderTest()) {
@@ -51,14 +50,6 @@ l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
   }
 
   l.main_panel() {
-    div(style: "width: 256px; "
-            + "height: 256px;"
-            + "opacity:0.2;"
-            + "right:-10px;"
-            + "top: 50px;"
-            + "position: absolute;"
-            + "z-index: -100;"
-            + "background-image: url(\'" + imageUrl + "');") {}
     h1(_("Failure Cause - Confirm Remove"))
     div(style: "width: 70%") {
       st.adjunct(includes: "com.sonyericsson.jenkins.plugins.bfa.CauseManagement.resource")
