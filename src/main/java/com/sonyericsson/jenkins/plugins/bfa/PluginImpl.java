@@ -76,7 +76,9 @@ public class PluginImpl extends GlobalConfiguration {
 
     /**
      * Convenience constant for the 24x24 icon size. used for {@link #getImageUrl(String, String)}.
+     * @deprecated plugin now uses icons.
      */
+    @Deprecated
     public static final String DEFAULT_ICON_SIZE = "24x24";
 
     /**
