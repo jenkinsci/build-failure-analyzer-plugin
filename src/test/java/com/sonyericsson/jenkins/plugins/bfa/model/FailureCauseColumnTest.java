@@ -23,18 +23,18 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.FreeStyleProject;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.FailureBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import org.htmlunit.html.HtmlPage;
@@ -44,24 +44,20 @@ import org.htmlunit.html.HtmlPage;
  *
  * @author Vincent Latombe &lt;vincent@latombe.net&gt;
  */
-public class FailureCauseColumnTest {
+@WithJenkins
+class FailureCauseColumnTest {
 
-  /**
-   * The Jenkins Rule.
-   */
-  @Rule
-  //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-  public JenkinsRuleWithMatrixSupport j = new JenkinsRuleWithMatrixSupport();
-
-  /**
-   * Happy test case with a view containing a {@link FailureCauseColumn}, text option being disabled.
-   *
-   * @throws Exception
+    /**
+     * Happy test case with a view containing a {@link FailureCauseColumn}, text option being disabled.
+     *
+     * @param j
+     *
+     * @throws Exception
    *           if so
-   */
-  @LocalData
-  @Test
-  public void givenAViewWithTheFailureCauseColumnDisplayTheFirstFailureCauseAsTitle() throws Exception {
+     */
+    @LocalData
+    @Test
+    void givenAViewWithTheFailureCauseColumnDisplayTheFirstFailureCauseAsTitle(JenkinsRule j) throws Exception {
     FreeStyleProject fs = j.createFreeStyleProject("total_failure");
     fs.getBuildersList().add(new FailureBuilder());
     fs.save();
@@ -71,20 +67,23 @@ public class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
-    assertNotNull("Couldn't find the failure cause image in columnwithouttext view",
-            page.getFirstByXPath("//img[@title='Failure Builder']"));
+    assertNotNull(page.getFirstByXPath("//img[@title='Failure Builder']"),
+            "Couldn't find the failure cause image in columnwithouttext view");
     assertNull(page.getDocumentElement().getFirstByXPath("//*[.='Failure Builder']"));
   }
 
-  /**
-   * Happy test case with a view containing a {@link FailureCauseColumn}, text option being enabled.
-   *
-   * @throws Exception
-   *           if so
-   */
-  @LocalData
-  @Test
-  public void givenAViewWithTheFailureCauseColumnWithTextDisplayTheFirstFailureCauseAsTitleAndText() throws Exception {
+    /**
+     * Happy test case with a view containing a {@link FailureCauseColumn}, text option being enabled.
+     *
+     * @param j
+     *
+     * @throws Exception
+     *        if so
+     */
+    @LocalData
+    @Test
+    void givenAViewWithTheFailureCauseColumnWithTextDisplayTheFirstFailureCauseAsTitleAndText(JenkinsRule j)
+            throws Exception {
     FreeStyleProject fs = j.createFreeStyleProject("total_failure");
     fs.getBuildersList().add(new FailureBuilder());
     fs.save();
@@ -95,8 +94,8 @@ public class FailureCauseColumnTest {
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithtext");
     System.out.println(page.getTextContent());
-    assertNotNull("Couldn't find the failure cause image in columnwithtext view",
-        page.getFirstByXPath("//img[@title='Failure Builder']"));
+    assertNotNull(page.getFirstByXPath("//img[@title='Failure Builder']"),
+        "Couldn't find the failure cause image in columnwithtext view");
     assertNotNull(page.getFirstByXPath("//*[.='Failure Builder']"));
   }
 

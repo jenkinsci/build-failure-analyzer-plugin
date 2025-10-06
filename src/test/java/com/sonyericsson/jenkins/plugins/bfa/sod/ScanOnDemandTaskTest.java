@@ -30,7 +30,6 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Job;
 import hudson.model.Result;
 import hudson.util.RunList;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
@@ -48,24 +47,22 @@ import java.util.List;
 
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-
-//CS IGNORE MagicNumber FOR NEXT 300 LINES. REASON: TestData.
 /**
  * Tests for the ScanOnDemandTask.
  *
  * @author shemeer.x.sulaiman@sonymobile.com&gt;
  */
-public class ScanOnDemandTaskTest {
+class ScanOnDemandTaskTest {
 
     private AbstractProject mockproject;
     private PluginImpl pluginMock;
@@ -82,8 +79,8 @@ public class ScanOnDemandTaskTest {
      * Mocks {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getInstance()} to avoid NPE's
      * when checking permissions in the code under test.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jenkins = mock(Jenkins.class);
         metricsPlugin = mock(Metrics.class);
         pluginMock = mock(PluginImpl.class);
@@ -94,7 +91,7 @@ public class ScanOnDemandTaskTest {
 
         jenkinsMockedStatic = mockStatic(Jenkins.class);
         metricsMockedStatic = mockStatic(Metrics.class);
-        jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkins);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkins);
         when(jenkins.getPlugin(Metrics.class)).thenReturn(metricsPlugin);
         metricsMockedStatic.when(Metrics::metricRegistry).thenReturn(metricRegistry);
     }
@@ -102,8 +99,8 @@ public class ScanOnDemandTaskTest {
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         jenkinsMockedStatic.close();
         pluginMockedStatic.close();
         metricsMockedStatic.close();
@@ -113,42 +110,40 @@ public class ScanOnDemandTaskTest {
      * Happy test that should find one non scanned build found
      * due to build failure.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testOneSODbuildfoundwithBuildFailure() throws Exception {
+    void testOneSODbuildfoundwithBuildFailure() {
         mockproject = mock(AbstractProject.class);
         AbstractBuild mockbuild1 = mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = mock(AbstractBuild.class);
         when(mockbuild1.getResult()).thenReturn(Result.SUCCESS);
         when(mockbuild2.getResult()).thenReturn(Result.FAILURE);
-        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        RunList<AbstractBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 1, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(1, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Happy test that should find two non scanned build found
      * due to build failure.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testTwoSODbuildfoundwithBuildFailure() throws Exception {
+    void testTwoSODbuildfoundwithBuildFailure() {
         mockproject = mock(AbstractProject.class);
 
         AbstractBuild mockbuild1 = mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = mock(AbstractBuild.class);
         when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         when(mockbuild2.getResult()).thenReturn(Result.FAILURE);
-        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        RunList<AbstractBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
 
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 2, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(2, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
@@ -157,56 +152,54 @@ public class ScanOnDemandTaskTest {
      *
      */
     @Test
-    public void testNoSODbuildfoundwithBuildSuccess() {
+    void testNoSODbuildfoundwithBuildSuccess() {
         mockproject = mock(AbstractProject.class);
         AbstractBuild mockbuild1 = mock(AbstractBuild.class);
         AbstractBuild mockbuild2 = mock(AbstractBuild.class);
         when(mockbuild1.getResult()).thenReturn(Result.SUCCESS);
         when(mockbuild2.getResult()).thenReturn(Result.SUCCESS);
 
-        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        RunList<AbstractBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(mockbuild1, mockbuild2));
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(0, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Happy test that should find no SOD build because
      * all buld are failed but already scanned.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testNoSODbuildfoundwithBuildFailedButAlreadyScanned() throws Exception {
+    void testNoSODbuildfoundwithBuildFailedButAlreadyScanned() {
         mockproject = mock(AbstractProject.class);
 
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<>();
         foundFailureCauses.add(new FoundFailureCause(configureCauseAndIndication()));
-        List<FailureCauseBuildAction> failureCauseBuildActions = new ArrayList<FailureCauseBuildAction>();
+        List<FailureCauseBuildAction> failureCauseBuildActions = new ArrayList<>();
         failureCauseBuildActions.add(new FailureCauseBuildAction(foundFailureCauses));
         AbstractBuild mockbuild1 = mock(AbstractBuild.class);
         when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         FailureCauseBuildAction failureCauseBuildAction = mock(FailureCauseBuildAction.class);
         mockbuild1.addAction(failureCauseBuildAction);
 
-        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        RunList<AbstractBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Collections.singletonList(mockbuild1));
 
         when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(0, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Happy test that should find one matrixbuild need
      * to be scanned.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testOneSODMatrixbuildfoundwithBuildFailure() throws Exception {
+    void testOneSODMatrixbuildfoundwithBuildFailure() {
         mockproject = mock(AbstractProject.class);
 
         MatrixBuild matrixbuild1 = mock(MatrixBuild.class);
@@ -214,22 +207,21 @@ public class ScanOnDemandTaskTest {
         when(matrixbuild1.getResult()).thenReturn(Result.SUCCESS);
         when(matrixbuild2.getResult()).thenReturn(Result.FAILURE);
 
-        RunList<MatrixBuild> builds = new RunList<MatrixBuild>(Collections.<Job>emptyList());
+        RunList<MatrixBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
 
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 1, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(1, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Happy test that should find no matrixbuild since
      * all builds are success.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testNoSODMatrixBuildfoundwithBuildSuccess() throws Exception {
+    void testNoSODMatrixBuildfoundwithBuildSuccess() {
         mockproject = mock(AbstractProject.class);
 
         MatrixBuild matrixbuild1 = mock(MatrixBuild.class);
@@ -237,68 +229,62 @@ public class ScanOnDemandTaskTest {
         when(matrixbuild1.getResult()).thenReturn(Result.SUCCESS);
         when(matrixbuild2.getResult()).thenReturn(Result.SUCCESS);
 
-        RunList<MatrixBuild> builds = new RunList<MatrixBuild>(Collections.<Job>emptyList());
+        RunList<MatrixBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Arrays.asList(matrixbuild1, matrixbuild2));
 
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(0, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Happy test that should find no matrixbuild since
      * build failed but already scanned.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testNoSODmatrixbuildfoundwithBuildFailedButAlreadyScanned() throws Exception {
+    void testNoSODmatrixbuildfoundwithBuildFailedButAlreadyScanned() {
         mockproject = mock(AbstractProject.class);
 
-        List<FoundFailureCause> foundFailureCauses = new ArrayList<FoundFailureCause>();
+        List<FoundFailureCause> foundFailureCauses = new ArrayList<>();
         foundFailureCauses.add(new FoundFailureCause(configureCauseAndIndication()));
-        List<FailureCauseBuildAction> failureCauseBuildActions = new ArrayList<FailureCauseBuildAction>();
+        List<FailureCauseBuildAction> failureCauseBuildActions = new ArrayList<>();
         failureCauseBuildActions.add(new FailureCauseBuildAction(foundFailureCauses));
         MatrixBuild mockbuild1 = mock(MatrixBuild.class);
         when(mockbuild1.getResult()).thenReturn(Result.FAILURE);
         FailureCauseBuildAction failureCauseBuildAction = mock(FailureCauseBuildAction.class);
         mockbuild1.addAction(failureCauseBuildAction);
 
-        RunList<AbstractBuild> builds = new RunList<AbstractBuild>(Collections.<Job>emptyList());
+        RunList<AbstractBuild> builds = new RunList<>(Collections.emptyList());
         Whitebox.setInternalState(builds, "base", Collections.singletonList(mockbuild1));
 
         when(mockbuild1.getActions(FailureCauseBuildAction.class)).thenReturn(failureCauseBuildActions);
         when(mockproject.getBuilds()).thenReturn(builds);
         ScanOnDemandBaseAction.NonScanned action = new ScanOnDemandBaseAction.NonScanned();
-        assertEquals("Nonscanned buils", 0, Lists.newArrayList(action.getRuns(mockproject)).size());
+        assertEquals(0, Lists.newArrayList(action.getRuns(mockproject)).size(), "Nonscanned buils");
     }
 
     /**
      * Convenience method for a standard cause that finds ERROR in the build log.
      *
      * @return the configured cause that was added to the global config.
-     * @throws Exception if something goes wrong in handling the causes.
-     *
      * @see #configureCauseAndIndication(com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      * @see #configureCauseAndIndication(String, String,
      * com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication() throws Exception {
+    private static FailureCause configureCauseAndIndication() {
         return configureCauseAndIndication(new BuildLogIndication(".*ERROR.*"));
     }
 
-    //CS IGNORE LineLength FOR NEXT 10 LINES. REASON: JavaDoc.
     /**
      * Convenience method for the standard cause with a special indication.
      *
      * @param indication the indication for the cause.
      * @return the configured cause that was added to the global config.
-     * @throws Exception if something goes wrong in handling the causes.
-     *
      * @see #configureCauseAndIndication(String, String,
      *        com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication)
      */
-    private FailureCause configureCauseAndIndication(Indication indication) throws Exception {
+    private static FailureCause configureCauseAndIndication(Indication indication) {
         return configureCauseAndIndication("Error", "This is an error", indication);
     }
 
@@ -309,10 +295,8 @@ public class ScanOnDemandTaskTest {
      * @param description the description of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
-     * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, Indication indication)
-            throws Exception {
+    private static FailureCause configureCauseAndIndication(String name, String description, Indication indication) {
         return configureCauseAndIndication(name, description, "comment", "category", indication);
     }
 
@@ -325,16 +309,15 @@ public class ScanOnDemandTaskTest {
      * @param category    the category of the cause.
      * @param indication  the indication.
      * @return the configured cause that was added to the global config.
-     * @throws Exception if something goes wrong in handling the causes.
      */
-    private FailureCause configureCauseAndIndication(String name, String description, String comment, String category,
-            Indication indication) throws Exception {
-        List<Indication> indicationList = new LinkedList<Indication>();
+    private static FailureCause configureCauseAndIndication(String name, String description, String comment,
+            String category, Indication indication) {
+        List<Indication> indicationList = new LinkedList<>();
         indicationList.add(indication);
         FailureCause failureCause =
                 new FailureCause(name, name, description, comment, null, category, indicationList, null);
 
-        List<FailureCause> causeList = new LinkedList<FailureCause>();
+        List<FailureCause> causeList = new LinkedList<>();
         causeList.add(failureCause);
         Whitebox.setInternalState(PluginImpl.getInstance(), KnowledgeBase.class, new LocalFileKnowledgeBase(causeList));
         return failureCause;

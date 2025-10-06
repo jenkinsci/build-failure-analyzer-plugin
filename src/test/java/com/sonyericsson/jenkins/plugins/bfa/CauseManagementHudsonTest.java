@@ -43,7 +43,9 @@ import hudson.Util;
 import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 
@@ -58,7 +60,12 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -72,7 +79,8 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class CauseManagementHudsonTest extends HudsonTestCase {
+@WithJenkins
+class CauseManagementHudsonTest {
 
     private static final int NAME_CELL = 0;
     private static final int CATEGORY_CELL = 1;
@@ -83,8 +91,11 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
     /**
      * Tests {@link com.sonyericsson.jenkins.plugins.bfa.CauseManagement#isUnderTest()}.
+     *
+     * @param jenkins
      */
-    public void testIsUnderTest() {
+    @Test
+    void testIsUnderTest(JenkinsRule jenkins) {
         assertTrue(CauseManagement.getInstance().isUnderTest());
     }
 
@@ -92,9 +103,12 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * Verifies that the table on the {@link CauseManagement} page displays all causes with description and that
      * one of them can be navigated to and a valid edit page for that cause is shown.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testTableViewNavigation() throws Exception {
+    @Test
+    void testTableViewNavigation(JenkinsRule jenkins) throws Exception {
         KnowledgeBase kb = PluginImpl.getInstance().getKnowledgeBase();
 
         //Overriding isEnableStatistics in order to display all fields on the management page:
@@ -102,7 +116,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         when(mockKb.isEnableStatistics()).thenReturn(true);
         Whitebox.setInternalState(PluginImpl.getInstance(), "knowledgeBase", mockKb);
 
-        List<String> myCategories = new LinkedList<String>();
+        List<String> myCategories = new LinkedList<>();
         myCategories.add("myCtegory");
 
         //CS IGNORE MagicNumber FOR NEXT 5 LINES. REASON: TestData.
@@ -122,7 +136,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         cause.addIndication(new BuildLogIndication("."));
         kb.addCause(cause);
 
-        WebClient web = createWebClient();
+        JenkinsRule.WebClient web = jenkins.createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
         HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
 
@@ -148,12 +162,12 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
             assertEquals(c.getCategoriesAsString(), categories);
             assertEquals(c.getDescription(), description);
             assertEquals(c.getComment(), comment);
-            assertEquals("Modified date should be visible", DateFormat.getDateTimeInstance(
+            assertEquals(DateFormat.getDateTimeInstance(
                     DateFormat.SHORT, DateFormat.SHORT).format(c.getLatestModification().getTime())
-                    + " by user", modified);
-            assertEquals("Last seen date should be visible",
+                    + " by user", modified, "Modified date should be visible");
+            assertEquals(
                     DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
-                    .format(c.getLastOccurred()), lastSeen);
+                    .format(c.getLastOccurred()), lastSeen, "Last seen date should be visible");
             if (i == 1) {
                 firstCause = c;
             }
@@ -171,11 +185,15 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
     /**
      * Tests that the "new cause" link on the page navigates to a correct page.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testNewNavigation() throws Exception {
+    @Test
+    void testNewNavigation(JenkinsRule jenkins) throws Exception {
 
-        WebClient web = createWebClient();
+        JenkinsRule.WebClient web = jenkins.createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
 
         HtmlAnchor newLink = page.getAnchorByHref(CauseManagement.NEW_CAUSE_DYNAMIC_ID);
@@ -189,17 +207,21 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
     /**
      * Makes a modification to a {@link FailureCause} and verifies that the modification date was updated.
+     *
+     * @param jenkins
+     *
      * @throws Exception if something goes wrong
      */
-    public void testMakeModificationUpdatesDate() throws Exception {
-        List<FailureCauseModification> modifications = new LinkedList<FailureCauseModification>();
+    @Test
+    void testMakeModificationUpdatesDate(JenkinsRule jenkins) throws Exception {
+        List<FailureCauseModification> modifications = new LinkedList<>();
         modifications.add(new FailureCauseModification("unknown", new Date(1)));
         FailureCause cause = new FailureCause(null, "SomeName", "A Description", "Some comment",
                 null, "", null, modifications);
         cause.addIndication(new BuildLogIndication("."));
         PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
 
-        WebClient web = createWebClient();
+        JenkinsRule.WebClient web = jenkins.createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
 
         HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
@@ -212,7 +234,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         editPage.getElementByName("_.comment").setTextContent("new comment");
 
         HtmlForm form = editPage.getFormByName("causeForm");
-        page = submit(form);
+        page = jenkins.submit(form);
 
         table = (HtmlTable)page.getElementById("failureCausesTable");
         row = table.getRow(1);
@@ -224,17 +246,21 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
     /**
      * Makes a modification to a {@link FailureCause} and verifies that the modification list was updated.
+     *
+     * @param jenkins
+     *
      * @throws Exception if something goes wrong
      */
-    public void testMakeModificationUpdatesModificationList() throws Exception {
-        List<FailureCauseModification> modifications = new LinkedList<FailureCauseModification>();
+    @Test
+    void testMakeModificationUpdatesModificationList(JenkinsRule jenkins) throws Exception {
+        List<FailureCauseModification> modifications = new LinkedList<>();
         modifications.add(new FailureCauseModification("unknown", new Date(1)));
         FailureCause cause = new FailureCause(null, "SomeName", "A Description", "Some comment",
                 null, "", null, modifications);
         cause.addIndication(new BuildLogIndication("."));
         PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
 
-        WebClient web = createWebClient();
+        JenkinsRule.WebClient web = jenkins.createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
 
         HtmlTable table = (HtmlTable)page.getElementById("failureCausesTable");
@@ -248,14 +274,14 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
         editPage.getElementByName("_.comment").setTextContent("new comment");
 
         HtmlForm form = editPage.getFormByName("causeForm");
-        submit(form);
+        jenkins.submit(form);
 
         editPage = firstCauseLink.click();
         modList = editPage.getElementById("modifications");
         int secondNbrOfModifications = modList.getChildNodes().size();
 
         assertEquals(firstNbrOfModifications + 1, secondNbrOfModifications);
-        assertStringContains("Latest modification date should be visible",
+        jenkins.assertStringContains("Latest modification date should be visible",
                 modList.getFirstChild().asNormalizedText(), DateFormat.getDateTimeInstance(
                         DateFormat.SHORT, DateFormat.SHORT).format(cause.getLatestModification().getTime()));
     }
@@ -263,13 +289,17 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
     //CS IGNORE MagicNumber FOR NEXT 100 LINES. REASON: TestData.
     /**
      * Tests that an error message is shown when there is no reachable Mongo database.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testNoMongoDB() throws Exception {
+    @Test
+    void testNoMongoDB(JenkinsRule jenkins) throws Exception {
         KnowledgeBase kb = new MongoDBKnowledgeBase("someurl", 1234, "somedb", "user", Secret.fromString("pass"),
                 false, false);
         Whitebox.setInternalState(PluginImpl.getInstance(), kb);
-        WebClient web = createWebClient();
+        JenkinsRule.WebClient web = jenkins.createWebClient();
         HtmlPage page = web.goTo(CauseManagement.URL_NAME);
         DomElement element =  page.getElementById("errorMessage");
         assertNotNull(element);
@@ -283,7 +313,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @see #testNewNavigation()
      * @see #testTableViewNavigation()
      */
-    private void verifyCorrectCauseEditPage(FailureCause expectedCause, HtmlPage editPage) {
+    private static void verifyCorrectCauseEditPage(FailureCause expectedCause, HtmlPage editPage) {
         HtmlForm form = editPage.getFormByName("causeForm");
         String actualId = form.getInputByName("_.id").getValue();
         if (Util.fixEmpty(expectedCause.getId()) == null) {
@@ -312,9 +342,12 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * org.kohsuke.stapler.StaplerResponse2)}.
      * Assumes that the default {@link com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase} is used.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testDoRemoveConfirm() throws Exception {
+    @Test
+    void testDoRemoveConfirm(JenkinsRule jenkins) throws Exception {
         FailureCause cause = new FailureCause("SomeName", "A Description");
         cause.addIndication(new BuildLogIndication("."));
         FailureCause cause1 = PluginImpl.getInstance().getKnowledgeBase().addCause(cause);
@@ -344,10 +377,14 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
 
     /**
      * Test Cause Management project action hiding.
+     *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
-    public void testProjectCauseManagementActionIsHiddenWhenScanningDisabled() throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+    @Test
+    void testProjectCauseManagementActionIsHiddenWhenScanningDisabled(JenkinsRule jenkins) throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
 
         PluginImpl.getInstance().setGlobalEnabled(true);
         doScan(project, true);
@@ -371,7 +408,7 @@ public class CauseManagementHudsonTest extends HudsonTestCase {
      * @param scan Scan or not.
      * @throws Exception if so.
      */
-    private void doScan(FreeStyleProject project, boolean scan) throws Exception {
+    private static void doScan(FreeStyleProject project, boolean scan) throws Exception {
         project.removeProperty(ScannerJobProperty.class);
         project.addProperty(new ScannerJobProperty(!scan));
     }

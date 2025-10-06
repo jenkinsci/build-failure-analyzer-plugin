@@ -37,44 +37,39 @@ import com.sonyericsson.jenkins.plugins.bfa.db.LocalFileKnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.BuildLogIndication;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import org.apache.http.HttpStatus;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link FailureCause}.
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class FailureCauseHudsonTest {
-
-    /**
-     * The simulated Jenkins instance.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
+@WithJenkins
+class FailureCauseHudsonTest {
 
     /**
      * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
      * org.kohsuke.stapler.StaplerResponse2)}.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoConfigSubmit() throws Exception {
-        List<FailureCause> list = new LinkedList<FailureCause>();
+    void testDoConfigSubmit(JenkinsRule jenkins) throws Exception {
+        List<FailureCause> list = new LinkedList<>();
         FailureCause c = new FailureCause("A Name", "Some Description");
         String id = "uniqueID";
         c.setId(id);
@@ -109,7 +104,7 @@ public class FailureCauseHudsonTest {
             } else {
                 fail("Unexpected cause saved: " + next.getName());
             }
-            assertNotNull("It should have an id!", next.getId());
+            assertNotNull(next.getId(), "It should have an id!");
             assertEquals(oldCause.getName(), next.getName());
             assertEquals(oldCause.getDescription(), next.getDescription());
             assertEquals(oldCause.getIndications().get(0).getPattern().pattern(),
@@ -121,11 +116,13 @@ public class FailureCauseHudsonTest {
      * Happy test for {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
      * org.kohsuke.stapler.StaplerResponse2)} with only one cause configured.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoConfigSubmitOne() throws Exception {
-        List<FailureCause> list = new LinkedList<FailureCause>();
+    void testDoConfigSubmitOne(JenkinsRule jenkins) throws Exception {
+        List<FailureCause> list = new LinkedList<>();
         FailureCause c = new FailureCause("A Name", "Some Description");
         String id = "uniqueID";
         c.setId(id);
@@ -152,10 +149,12 @@ public class FailureCauseHudsonTest {
     /**
      * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoCheckNameViaWebForm() throws Exception {
+    void testDoCheckNameViaWebForm(JenkinsRule jenkins) throws Exception {
         JenkinsRule.WebClient client = jenkins.createWebClient();
 
         WebResponseListener.StatusListener serverErrors =
@@ -178,16 +177,18 @@ public class FailureCauseHudsonTest {
 
         assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
                 "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkName"));
-        assertEquals(webResponse.getContentAsString(), "<div/>");
+        assertEquals("<div/>", webResponse.getContentAsString());
     }
 
     /**
      * Test for JENKINS-47027. Checks that the create validation request does not return an 500.
      *
+     * @param jenkins
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoCheckDescriptionViaWebForm() throws Exception {
+    void testDoCheckDescriptionViaWebForm(JenkinsRule jenkins) throws Exception {
         JenkinsRule.WebClient client = jenkins.createWebClient();
 
         WebResponseListener.StatusListener serverErrors =
@@ -210,6 +211,6 @@ public class FailureCauseHudsonTest {
 
         assertTrue(webResponse.getWebRequest().getUrl().getPath().endsWith(
                 "/descriptorByName/com.sonyericsson.jenkins.plugins.bfa.model.FailureCause/checkDescription"));
-        assertEquals(webResponse.getContentAsString(), "<div/>");
+        assertEquals("<div/>", webResponse.getContentAsString());
     }
 }

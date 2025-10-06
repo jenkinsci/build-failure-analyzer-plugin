@@ -24,6 +24,7 @@
  */
 package com.sonyericsson.jenkins.plugins.bfa.model.indication;
 
+import com.sonyericsson.jenkins.plugins.bfa.test.utils.MatrixSupport;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.Page;
@@ -35,7 +36,6 @@ import com.sonyericsson.jenkins.plugins.bfa.model.BuildLogFailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.test.utils.JenkinsRuleWithMatrixSupport;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.PrintToLogBuilder;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -50,12 +50,12 @@ import hudson.model.Result;
 import hudson.security.SecurityRealm;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -64,34 +64,31 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests for the BuildLogIndication.
  */
-public class BuildLogIndicationTest {
+@WithJenkins
+class BuildLogIndicationTest {
 
     private static final String TEST_STRING = "teststring";
 
     private static final long WAIT_TIME_IN_SECONDS = 10;
 
     /**
-     * The test harness.
-     */
-    @Rule
-    //CS IGNORE VisibilityModifier FOR NEXT 1 LINES. REASON: Jenkins Rule
-    public JenkinsRuleWithMatrixSupport j = new JenkinsRuleWithMatrixSupport();
-
-    /**
      * Tests that the BuildLogFailureReader can find the string in the build log.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderSuccessful() throws Exception {
+    void testBuildLogFailureReaderSuccessful(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
@@ -103,10 +100,13 @@ public class BuildLogIndicationTest {
 
     /**
      * Tests that the FailureReader parses two difference indications of same cause and description in result.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testFailureReaderForTwoIndications() throws Exception {
+    void testFailureReaderForTwoIndications(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder("bla Build timed out bla"));
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
@@ -116,22 +116,25 @@ public class BuildLogIndicationTest {
         cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
         cause.addIndication(new BuildLogIndication("(.*Build timed out.*)"));
 
-        List<FailureCause> causes = new ArrayList<FailureCause>();
+        List<FailureCause> causes = new ArrayList<>();
         causes.add(cause);
 
         List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,
                 new BufferedReader(build.getLogReader()), "test");
-        assertEquals(foundFailureCause.size(), 1);
-        assertEquals(foundFailureCause.get(0).getIndications().size(), 2);
-        assertEquals(foundFailureCause.get(0).getDescription(), "bla Build timed out bla");
+        assertEquals(1, foundFailureCause.size());
+        assertEquals(2, foundFailureCause.get(0).getIndications().size());
+        assertEquals("bla Build timed out bla", foundFailureCause.get(0).getDescription());
     }
 
     /**
      * Tests that Failure reader stops to check indication after first occurrence.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testFailureReaderStopsOnFirstOccurrence() throws Exception {
+    void testFailureReaderStopsOnFirstOccurrence(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder("bla Build timed out bla\nbla Build timed out bla"));
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
@@ -139,22 +142,25 @@ public class BuildLogIndicationTest {
         FailureCause cause = new FailureCause("bla", "${1,1}", "comment");
         cause.addIndication(new BuildLogIndication("(.*timed out.*)"));
 
-        List<FailureCause> causes = new ArrayList<FailureCause>();
+        List<FailureCause> causes = new ArrayList<>();
         causes.add(cause);
 
         List<FoundFailureCause> foundFailureCause = FailureReader.scanSingleLinePatterns(causes, build,
                 new BufferedReader(build.getLogReader()), "test");
-        assertEquals(foundFailureCause.size(), 1);
-        assertEquals(foundFailureCause.get(0).getIndications().size(), 1);
-        assertEquals(foundFailureCause.get(0).getDescription(), "bla Build timed out bla");
+        assertEquals(1, foundFailureCause.size());
+        assertEquals(1, foundFailureCause.get(0).getIndications().size());
+        assertEquals("bla Build timed out bla", foundFailureCause.get(0).getDescription());
     }
 
     /**
      * Tests that the BuildLogFailureReader doesn't find the string in the build log.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testBuildLogFailureReaderUnsuccessful() throws Exception {
+    void testBuildLogFailureReaderUnsuccessful(JenkinsRule j) throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
@@ -166,9 +172,11 @@ public class BuildLogIndicationTest {
 
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string matches the pattern.
+     *
+     * @param j
      */
     @Test
-    public void testDoMatchTextPlainTextOk() {
+    void testDoMatchTextPlainTextOk(JenkinsRule j) {
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
               new BuildLogIndication.BuildLogIndicationDescriptor();
         FormValidation formValidation = indicationDescriptor.doMatchText(".*", "hello", false);
@@ -179,9 +187,11 @@ public class BuildLogIndicationTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string does not
      * match the pattern.
+     *
+     * @param j
      */
     @Test
-    public void testDoMatchTextPlainTextWarning() {
+    void testDoMatchTextPlainTextWarning(JenkinsRule j) {
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
                 new BuildLogIndication.BuildLogIndicationDescriptor();
         FormValidation formValidation = indicationDescriptor.doMatchText("hi", "hello", false);
@@ -192,10 +202,13 @@ public class BuildLogIndicationTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a freestyle build whose log contains a line that matches the pattern.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkFreestyleProject() throws Exception {
+    void testDoMatchTextUrlValidOkFreestyleProject(JenkinsRule j) throws Exception {
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = j.buildAndAssertSuccess(freeStyleProject);
@@ -220,16 +233,19 @@ public class BuildLogIndicationTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a matrix build whose log contains a line that matches the pattern.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidOkMatrixProject() throws Exception {
-        MatrixProject matrixProject = j.createMatrixProject();
+    void testDoMatchTextUrlValidOkMatrixProject(JenkinsRule j) throws Exception {
+        MatrixProject matrixProject = MatrixSupport.createMatrixProject(j);
         Axis axis1 = new Axis("Letter", "Alfa");
         Axis axis2 = new Axis("Number", "One", "Two");
         matrixProject.setAxes(new AxisList(axis1, axis2));
         matrixProject.getBuildersList().add(new MockBuilder(Result.FAILURE));
-        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserCause());
+        Future<MatrixBuild> future = matrixProject.scheduleBuild2(0, new Cause.UserIdCause());
         MatrixBuild build = future.get(WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
         String buildUrl = j.getURL() + build.getUrl();
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
@@ -260,10 +276,13 @@ public class BuildLogIndicationTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid and the string is a url
      * to a build whose log does not contain any line that matches the pattern.
+     *
+     * @param j
+     *
      * @throws Exception if so.
      */
     @Test
-    public void testDoMatchTextUrlValidWarning() throws Exception {
+    void testDoMatchTextUrlValidWarning(JenkinsRule j) throws Exception {
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new PrintToLogBuilder(TEST_STRING));
         FreeStyleBuild freeStyleBuild = j.buildAndAssertSuccess(freeStyleProject);
@@ -278,9 +297,11 @@ public class BuildLogIndicationTest {
     /**
      * Tests that the doMatchText method behaves correctly when the pattern is valid but the string is an invalid url,
      * i.e. a malformed url or a url which does not refer to any Jenkins build.
+     *
+     * @param j
      */
     @Test
-    public void testDoMatchTextUrlInvalid() {
+    void testDoMatchTextUrlInvalid(JenkinsRule j) {
         BuildLogIndication.BuildLogIndicationDescriptor indicationDescriptor =
                 new BuildLogIndication.BuildLogIndicationDescriptor();
         FormValidation formValidation = indicationDescriptor.doMatchText("hi", "this_url_is_malformed", true);
@@ -296,11 +317,15 @@ public class BuildLogIndicationTest {
 
     /**
      * Tests SECURITY-1651.
+     *
+     * @param j
+     *
      * @throws Exception if so
      */
-    @Test @Issue("SECURITY-1651")
-    public void testDoMatchNotHttpGetAccessible() throws Exception {
-        lockDown();
+    @Test
+    @Issue("SECURITY-1651")
+    void testDoMatchNotHttpGetAccessible(JenkinsRule j) throws Exception {
+        lockDown(j);
         final JenkinsRule.WebClient webClient = j.createWebClient();
         webClient.assertFails("descriptorByName/"
                 + BuildLogIndication.class.getName()
@@ -313,11 +338,15 @@ public class BuildLogIndicationTest {
 
     /**
      * Tests SECURITY-1651.
+     *
+     * @param j
+     *
      * @throws Exception if so
      */
-    @Test @Issue("SECURITY-1651")
-    public void testDoMatchHttpPostAccessible() throws Exception {
-        lockDown();
+    @Test
+    @Issue("SECURITY-1651")
+    void testDoMatchHttpPostAccessible(JenkinsRule j) throws Exception {
+        lockDown(j);
         final JenkinsRule.WebClient webClient = j.createWebClient();
         post(webClient, "descriptorByName/"
                         + BuildLogIndication.class.getName()
@@ -330,11 +359,15 @@ public class BuildLogIndicationTest {
 
     /**
      * Tests SECURITY-1651.
+     *
+     * @param j
+     *
      * @throws Exception if so
      */
-    @Test @Issue("SECURITY-1651")
-    public void testDoMatchHttpPostAccessibleWithPermission() throws Exception {
-        lockDown();
+    @Test
+    @Issue("SECURITY-1651")
+    void testDoMatchHttpPostAccessibleWithPermission(JenkinsRule j) throws Exception {
+        lockDown(j);
         final JenkinsRule.WebClient webClient = j.createWebClient().login("bob");
         post(webClient, "descriptorByName/"
                         + BuildLogIndication.class.getName()
@@ -375,8 +408,11 @@ public class BuildLogIndicationTest {
 
     /**
      * Lock down the instance.
+     *
+     * @param j
+     *
      */
-    private void lockDown() {
+    private static void lockDown(JenkinsRule j) {
         SecurityRealm securityRealm = j.createDummySecurityRealm();
         j.getInstance().setSecurityRealm(securityRealm);
         j.getInstance().setAuthorizationStrategy(

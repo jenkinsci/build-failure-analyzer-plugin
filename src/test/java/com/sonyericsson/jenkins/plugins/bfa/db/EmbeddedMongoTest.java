@@ -27,17 +27,16 @@ import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder;
 import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder;
+import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
-
-import org.junit.After;
-import org.junit.Before;
-
+import de.flapdoodle.embed.process.config.store.IDownloadConfig;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import java.io.IOException;
 
 /**
@@ -48,7 +47,7 @@ import java.io.IOException;
  * @author Fredrik Persson &lt;fredrik6.persson@sonymobile.com&gt;
  *
  */
-public abstract class EmbeddedMongoTest {
+abstract class EmbeddedMongoTest {
 
     /**
      * KnowledgeBase to be used for testing.
@@ -58,7 +57,7 @@ public abstract class EmbeddedMongoTest {
     private static final String LOCALHOST = "127.0.0.1";
     private static final String DB_NAME = "jenkinsbfa";
 
-    private static String mongoURL = System.getProperty(EmbeddedMongoTest.class.getName() + ".mongoURL");
+    private static final String mongoURL = System.getProperty(EmbeddedMongoTest.class.getName() + ".mongoURL");
 
     private MongodExecutable mongodExe = null;
     private MongodProcess mongodProc = null;
@@ -67,16 +66,16 @@ public abstract class EmbeddedMongoTest {
      * Sets up an instance of {@link MongoDBKnowledgeBase} backed up by a real MongoDB, to be used for testing.
      * @throws IOException if something goes wrong
      */
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         MongodStarter runtime;
         if (mongoURL != null) {
             // Use separate URL for fetching mongoDB artifacts.
             Command command = Command.MongoD;
-            de.flapdoodle.embed.process.config.store.DownloadConfigBuilder downloadConf = new DownloadConfigBuilder()
-                    .defaultsForCommand(command).downloadPath(mongoURL);
-            de.flapdoodle.embed.process.store.ArtifactStoreBuilder artifactStoreBuilder = new ArtifactStoreBuilder()
-                    .defaults(command).download(downloadConf);
+            IDownloadConfig downloadConf =
+                    new DownloadConfigBuilder().defaultsForCommand(command).downloadPath(mongoURL).build();
+            de.flapdoodle.embed.process.store.ExtractedArtifactStoreBuilder artifactStoreBuilder =
+                    new ExtractedArtifactStoreBuilder().defaults(command).download(downloadConf);
 
             IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
                     .defaults(command)
@@ -99,7 +98,7 @@ public abstract class EmbeddedMongoTest {
     /**
      * Tears down the test environment.
      */
-    @After
+    @AfterEach
     public void tearDown() {
         if (this.mongodProc != null) {
             this.mongodProc.stop();

@@ -8,24 +8,36 @@ import java.io.IOException;
 /**
  * Jenkins Rule with extra methods for {@link MatrixProject}s.
  */
-public class JenkinsRuleWithMatrixSupport extends JenkinsRule {
+public final class MatrixSupport {
 
-    /**
-     * Create matrix project.
-     * @return Project
-     * @throws IOException Failed to save the project
-     */
-    public MatrixProject createMatrixProject() throws IOException {
-        return jenkins.createProject(MatrixProject.class, createUniqueProjectName());
+    private MatrixSupport() {
+        // hidden
     }
 
     /**
      * Create matrix project.
+     *
+     * @param jenkins
+     *
      * @return Project
-     * @param name Project name
+     *
      * @throws IOException Failed to save the project
      */
-    public MatrixProject createMatrixProject(String name) throws IOException {
+    public static MatrixProject createMatrixProject(JenkinsRule jenkins) throws IOException {
+        return jenkins.createProject(MatrixProject.class, "test" + jenkins.jenkins.getItems().size());
+    }
+
+    /**
+     * Create matrix project.
+     *
+     * @param jenkins
+     * @param name Project name
+     *
+     * @return Project
+     *
+     * @throws IOException Failed to save the project
+     */
+    public static MatrixProject createMatrixProject(JenkinsRule jenkins, String name) throws IOException {
         return jenkins.createProject(MatrixProject.class, name);
     }
 }

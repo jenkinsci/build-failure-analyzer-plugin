@@ -37,9 +37,10 @@ import hudson.util.FormValidation;
 import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.mockito.Mock;
@@ -51,10 +52,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.hasItems;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -67,7 +69,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
-public class FailureCauseTest {
+class FailureCauseTest {
 
     private PluginImpl pluginMock;
     private KnowledgeBase baseMock;
@@ -87,8 +89,8 @@ public class FailureCauseTest {
      * Mocks {@link com.sonyericsson.jenkins.plugins.bfa.PluginImpl#getInstance()} to avoid NPE's
      * when checking permissions in the code under test.
      */
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jenkinsMock = mock(Jenkins.class);
         metricsPlugin = mock(Metrics.class);
         pluginMock = mock(PluginImpl.class);
@@ -96,6 +98,7 @@ public class FailureCauseTest {
         pluginMockedStatic.when(PluginImpl::getInstance).thenReturn(pluginMock);
 
         jenkinsMockedStatic = mockStatic(Jenkins.class);
+        jenkinsMockedStatic.when(Jenkins::get).thenReturn(jenkinsMock);
         jenkinsMockedStatic.when(Jenkins::getInstance).thenReturn(jenkinsMock);
         jenkinsMockedStatic.when(() -> Jenkins.checkGoodName(any())).thenCallRealMethod();
 
@@ -110,8 +113,8 @@ public class FailureCauseTest {
     /**
      * Release all the static mocks.
      */
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         pluginMockedStatic.close();
         jenkinsMockedStatic.close();
         metricsMockedStatic.close();
@@ -132,10 +135,10 @@ public class FailureCauseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testAutoCompletionHappy() throws Exception {
+    void testAutoCompletionHappy() throws Exception {
         mockEmptyKnowledgeBase();
         when(pluginMock.getCategoryAutoCompletionCandidates(any())).thenCallRealMethod();
-        List<String> categories = new LinkedList<String>();
+        List<String> categories = new LinkedList<>();
         String compFail = "compilationFailure";
         String compCrashed = "computerCrashed";
         String otherError = "otherError";
@@ -145,7 +148,7 @@ public class FailureCauseTest {
         when(baseMock.getCategories()).thenReturn(categories);
         AutoCompletionCandidates candidates = descriptor.doAutoCompleteCategories("comp");
         List<String> values = candidates.getValues();
-        assertEquals("Two autocompletion candidates should have been found", 2, values.size());
+        assertEquals(2, values.size(), "Two autocompletion candidates should have been found");
         assertThat(values, hasItems(compFail, compCrashed));
     }
 
@@ -153,10 +156,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause#validate(String, String, java.util.List)}.
      * With missing name.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testValidateBadName() throws Exception {
+    void testValidateBadName() {
         FailureCause cause = new FailureCause();
         FormValidation validate = cause.validate("", "description", Collections.EMPTY_LIST);
         assertSame(FormValidation.Kind.ERROR, validate.kind);
@@ -166,10 +168,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause#validate(String, String, java.util.List)}.
      * With missing description.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testValidateBadDescription() throws Exception {
+    void testValidateBadDescription() {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         FormValidation validate = cause.validate("Some Name", "", Collections.EMPTY_LIST);
@@ -180,10 +181,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause#validate(String, String, java.util.List)}.
      * With missing indications.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testValidateNoIndications() throws Exception {
+    void testValidateNoIndications() {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         FormValidation validate = cause.validate("Some Name", "The Description", Collections.EMPTY_LIST);
@@ -194,10 +194,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause#validate(String, String, java.util.List)}.
      * With an indication that won't validate but the rest is ok.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testValidateBadIndication() throws Exception {
+    void testValidateBadIndication() {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         Indication indication = new BuildLogIndication("some(thing");
@@ -209,10 +208,9 @@ public class FailureCauseTest {
     /**
      * Happy test for {@link FailureCause#validate(String, String, java.util.List)}.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testValidate() throws Exception {
+    void testValidate() {
         mockEmptyKnowledgeBase();
         FailureCause cause = new FailureCause();
         Indication indication = new BuildLogIndication(".*");
@@ -224,10 +222,9 @@ public class FailureCauseTest {
     /**
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)} with an empty description.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckDescriptionEmpty() throws Exception {
+    void testDoCheckDescriptionEmpty() {
         FormValidation validation = descriptor.doCheckDescription("");
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
@@ -236,10 +233,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)}.
      * With the reserved "new" description ({@link CauseManagement#NEW_CAUSE_DESCRIPTION}).
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckDescriptionReserved() throws Exception {
+    void testDoCheckDescriptionReserved() {
         FormValidation validation = descriptor.doCheckDescription(CauseManagement.NEW_CAUSE_DESCRIPTION);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
@@ -247,10 +243,9 @@ public class FailureCauseTest {
     /**
      * Happy test for {@link FailureCause.FailureCauseDescriptor#doCheckDescription(String)}.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckDescription() throws Exception {
+    void testDoCheckDescription() {
         FormValidation validation = descriptor.doCheckDescription("My <b>Description</b>");
         assertSame(FormValidation.Kind.OK, validation.kind);
     }
@@ -258,10 +253,9 @@ public class FailureCauseTest {
     /**
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} with an empty name.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckNameEmpty() throws Exception {
+    void testDoCheckNameEmpty() {
         FormValidation validation = descriptor.doCheckName("", null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
@@ -270,10 +264,9 @@ public class FailureCauseTest {
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)}
      * with the reserved "new" name ({@link CauseManagement#NEW_CAUSE_NAME}).
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckNameReserved() throws Exception {
+    void testDoCheckNameReserved() {
         FormValidation validation = descriptor.doCheckName(CauseManagement.NEW_CAUSE_NAME, null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
@@ -281,10 +274,9 @@ public class FailureCauseTest {
     /**
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} with bad characters in the name.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckNameNoneGood() throws Exception {
+    void testDoCheckNameNoneGood() {
         FormValidation validation = descriptor.doCheckName("[Name]", null);
         assertSame(FormValidation.Kind.ERROR, validation.kind);
     }
@@ -293,11 +285,10 @@ public class FailureCauseTest {
      * Test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)} when
      * there already exists a cause with the same name.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckNameExisting() throws Exception {
-        List<FailureCause> initial = new LinkedList<FailureCause>();
+    void testDoCheckNameExisting() {
+        List<FailureCause> initial = new LinkedList<>();
         FailureCause other =
                 new FailureCause("abc", "AName", "description", "comment", null, "", Collections.EMPTY_LIST, null);
         initial.add(other);
@@ -314,10 +305,9 @@ public class FailureCauseTest {
     /**
      * Happy test for {@link FailureCause.FailureCauseDescriptor#doCheckName(String, String)}.
      *
-     * @throws Exception if so.
      */
     @Test
-    public void testDoCheckName() throws Exception {
+    void testDoCheckName() {
         LocalFileKnowledgeBase base = new LocalFileKnowledgeBase();
         when(pluginMock.getKnowledgeBase()).thenReturn(base);
         FormValidation validation = descriptor.doCheckName("Some name", null);
@@ -331,7 +321,7 @@ public class FailureCauseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testDoConfigSubmitNewOk() throws Exception {
+    void testDoConfigSubmitNewOk() throws Exception {
 
         mockEmptyKnowledgeBase();
 
@@ -364,7 +354,7 @@ public class FailureCauseTest {
      * @throws Exception if so.
      */
     @Test
-    public void testDoConfigSubmitSaveOk() throws Exception {
+    void testDoConfigSubmitSaveOk() throws Exception {
         mockEmptyKnowledgeBase();
 
         String id = "abc";
@@ -393,12 +383,10 @@ public class FailureCauseTest {
      * Tests {@link FailureCause#doConfigSubmit(org.kohsuke.stapler.StaplerRequest2,
      * org.kohsuke.stapler.StaplerResponse2)} with a different id in the form than what the stapler binding says it is.
      *
-     * @throws Exception if so
      */
-    @Test(expected = Failure.class)
-    public void testDoConfigSubmitSaveWrongId() throws Exception {
+    @Test
+    void testDoConfigSubmitSaveWrongId() throws ServletException {
         mockEmptyKnowledgeBase();
-
         String origId = "abc";
         String newId = "cde";
         String name = "AName";
@@ -406,12 +394,11 @@ public class FailureCauseTest {
         String comment = "New Comment";
         String pattern = ".*";
         StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
-                Collections.singletonList(new BuildLogIndication(pattern)), null);
+                    Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse2 response = mock(StaplerResponse2.class);
-
         FailureCause cause = new FailureCause("Old Name", "Old Description");
         cause.setId(origId);
-        cause.doConfigSubmit(request, response);
+        assertThrows(Failure.class, () -> cause.doConfigSubmit(request, response));
     }
 
     /**
@@ -419,12 +406,10 @@ public class FailureCauseTest {
      * org.kohsuke.stapler.StaplerResponse2)} where the form data for id is set when it should not be since it is for a
      * new cause.
      *
-     * @throws Exception if so
      */
-    @Test(expected = Failure.class)
-    public void testDoConfigSubmitNewWithId() throws Exception {
+    @Test
+    void testDoConfigSubmitNewWithId() throws ServletException {
         mockEmptyKnowledgeBase();
-
         String origId = "";
         String newId = "cde";
         String name = "AName";
@@ -432,12 +417,11 @@ public class FailureCauseTest {
         String comment = "New Comment";
         String pattern = ".*";
         StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
-                Collections.singletonList(new BuildLogIndication(pattern)), null);
+                    Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse2 response = mock(StaplerResponse2.class);
-
         FailureCause cause = new FailureCause("Old Name", "Old Description");
         cause.setId(origId);
-        cause.doConfigSubmit(request, response);
+        assertThrows(Failure.class, () -> cause.doConfigSubmit(request, response));
     }
 
     /**
@@ -445,12 +429,10 @@ public class FailureCauseTest {
      * org.kohsuke.stapler.StaplerResponse2)} where the form data for id is null when it should be for an existing
      * cause.
      *
-     * @throws Exception if so
      */
-    @Test(expected = Failure.class)
-    public void testDoConfigSubmitNewCloneAttempt() throws Exception {
+    @Test
+    void testDoConfigSubmitNewCloneAttempt() throws ServletException {
         mockEmptyKnowledgeBase();
-
         String origId = "abc";
         String newId = "";
         String name = "New Name";
@@ -458,12 +440,11 @@ public class FailureCauseTest {
         String comment = "New Comment";
         String pattern = ".*";
         StaplerRequest2 request = mockRequest(newId, name, description, comment, null, "",
-                Collections.singletonList(new BuildLogIndication(pattern)), null);
+                    Collections.singletonList(new BuildLogIndication(pattern)), null);
         StaplerResponse2 response = mock(StaplerResponse2.class);
-
         FailureCause cause = new FailureCause("A Name", "The Description");
         cause.setId(origId);
-        cause.doConfigSubmit(request, response);
+        assertThrows(Failure.class, () -> cause.doConfigSubmit(request, response));
     }
 
     /**

@@ -33,6 +33,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static hudson.Util.fixEmpty;
@@ -92,11 +93,7 @@ public class DifferentKnowledgeBase extends LocalFileKnowledgeBase {
 
         DifferentKnowledgeBase that = (DifferentKnowledgeBase)o;
 
-        if (someString != null ? !someString.equals(that.someString) : that.someString != null) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(someString, that.someString);
     }
 
     @Override
@@ -127,7 +124,7 @@ public class DifferentKnowledgeBase extends LocalFileKnowledgeBase {
 
     @Override
     public Descriptor<KnowledgeBase> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorByType(DifferentKnowledgeBaseDescriptor.class);
+        return Jenkins.get().getDescriptorByType(DifferentKnowledgeBaseDescriptor.class);
     }
 
     /**
