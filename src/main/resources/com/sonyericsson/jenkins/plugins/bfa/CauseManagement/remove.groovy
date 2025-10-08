@@ -57,6 +57,7 @@ l.layout(permission: PluginImpl.REMOVE_PERMISSION) {
         form(method: "POST", action: "removeConfirm") {
           p(_("removeQuestion", cause.getName()))
           input(type: "hidden", value: cause.getId(), name: "id")
+          raw("&nbsp;&nbsp;");
           f.submit(value: _("Yes"))
           raw("&nbsp;&nbsp;");
           button(type: "button", class: "jenkins-button bfa-cause-management-back-button", _("Back"))

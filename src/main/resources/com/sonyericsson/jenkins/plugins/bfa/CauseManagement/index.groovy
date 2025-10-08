@@ -48,11 +48,10 @@ l.layout(norefresh: true) {
   }
 
   l.main_panel() {
-    
+    def appBarTitle = "List of Failure Causes"
+
     if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-      h1(_("Update Failure Causes"))
-    } else {
-      h1(_("List of Failure Causes"))
+      appBarTitle = "Update Failure Causes"
     }
 
     def shallowCauses = management.getShallowCauses()
@@ -70,23 +69,22 @@ l.layout(norefresh: true) {
       request2.getSession().removeAttribute(CauseManagement.SESSION_REMOVED_FAILURE_CAUSE);
     }
 
-    //The New Cause link
-    if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-        div(style: "margin-top: 10px; margin-bottom: 10px; width: 90%;") {
-          a(class: "jenkins-button jenkins-button--primary", href: "new") {
-            l.icon(src:"symbol-add")
-            text(_("Create new"))
-          }
+    l.app_bar(title: appBarTitle) {
+      //The New Cause link
+      if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+         a(class: "jenkins-button jenkins-button--primary", href: "new") {
+          l.icon(src:"symbol-add")
+          text(_("Create new"))
         }
+      }
     }
 
     //One time check so we don't do it for every iteration below
     def canRemove = Jenkins.getInstance().hasPermission(PluginImpl.REMOVE_PERMISSION)
 
     //Main FailureCauses table
-    table(cellpadding: "2", cellspacing: "0", border: "1", class: "sortable pane bigtable", width: "90%",
-                   style: "width: 90%; white-space: normal", id: "failureCausesTable") {
-      tr {
+    table(class: "jenkins-table sortable", id: "failureCausesTable") {
+      thead {
         th{text(_("Name"))}
         th{text(_("Categories"))}
         th{text(_("Description"))}
@@ -97,54 +95,55 @@ l.layout(norefresh: true) {
         }
         th{text(" ")}
       }
-
-      shallowCauses.each{ cause ->
-        tr {
-          td{
-            if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-              a(href: cause.getId()) { text(cause.getName()) }
-            } else {
-              text(cause.getName())
-            }
-          }
-          td{
-            text(cause.getCategoriesAsString())
-          }
-          td{
-            raw(app.markupFormatter.translate(cause.getDescription()))
-          }
-          td{
-            text(cause.getComment())
-          }
-          td{
-            def lastModified = cause.getLatestModification();
-            if (lastModified != null) {
-              def lastModifiedString = DateFormat.getDateTimeInstance(
-                    DateFormat.SHORT, DateFormat.SHORT).format(lastModified.getTime());
-              def user = lastModified.getUser();
-              if (user == null) {
-                user = "unknown";
+      tbody {
+        shallowCauses.each{ cause ->
+          tr {
+            td{
+              if (h.hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+                a(href: cause.getId()) { text(cause.getName()) }
+              } else {
+                text(cause.getName())
               }
-              text(_("ModifiedBy", lastModifiedString, user))
             }
-          }
-          if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
-            def lastOccurred = cause.getAndInitiateLastOccurred();
-            def lastOccurredString = DateFormat.getDateTimeInstance(
-                  DateFormat.SHORT, DateFormat.SHORT).format(lastOccurred)
-            if (lastOccurred == new Date(0)) {
-                lastOccurredString = "Never";
+            td{
+              text(cause.getCategoriesAsString())
             }
-            td(data: lastOccurred){
-                text(lastOccurredString)
+            td{
+              raw(app.markupFormatter.translate(cause.getDescription()))
             }
-          }
-          td {
-            if (canRemove) {
-              l.task(href:"remove?id=" + cause.getId(),
-                      title: _("Remove"),
-                      icon: "icon-edit-delete icon-sm",
-                      alt: _("Remove"))
+            td{
+              text(cause.getComment())
+            }
+            td{
+              def lastModified = cause.getLatestModification();
+              if (lastModified != null) {
+                def lastModifiedString = DateFormat.getDateTimeInstance(
+                      DateFormat.SHORT, DateFormat.SHORT).format(lastModified.getTime());
+                def user = lastModified.getUser();
+                if (user == null) {
+                  user = "unknown";
+                }
+                text(_("ModifiedBy", lastModifiedString, user))
+              }
+            }
+            if (PluginImpl.getInstance().getKnowledgeBase().isEnableStatistics()) {
+              def lastOccurred = cause.getAndInitiateLastOccurred();
+              def lastOccurredString = DateFormat.getDateTimeInstance(
+                    DateFormat.SHORT, DateFormat.SHORT).format(lastOccurred)
+              if (lastOccurred == new Date(0)) {
+                  lastOccurredString = "Never";
+              }
+              td(data: lastOccurred){
+                  text(lastOccurredString)
+              }
+            }
+            td {
+              if (canRemove) {
+                 a(class: "jenkins-button jenkins-!-destructive-color", href:"remove?id=" + cause.getId()) {
+                  l.icon(src:"symbol-trash")
+                  text(_("Remove"))
+                }
+              }
             }
           }
         }
