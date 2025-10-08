@@ -46,71 +46,58 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
   }
 
   l.main_panel() {
-    h1(_("Failure Cause"))
-    table(style: "width: 90%", border: "none", cellpadding: "5", cellspacing: "0", width: "90%") {
-      tr {
-        td(width: "90%") {
-          f.form(action: "configSubmit", method: "POST", name: "causeForm") {
-            f.invisibleEntry() {
-              f.textbox(field: "id", value: my.getId())
-            }
-            f.entry(title: _("Name"), field: "name") {
-              f.textbox(value: my.getName(), checkMethod: "post")
-            }
-            f.entry(title: _("Description"), field: "description") {
-              f.textarea(value: my.getDescription(), checkMethod: "post")
-            }
-            f.entry(title: _("Comment"), field: "comment") {
-              f.textarea(value: my.getComment())
-            }
-            f.entry(title: _("Categories"), field: "categories") {
-              f.textbox(value: my.getCategoriesAsString(), autoCompleteDelimChar: " ")
-            }
-            f.section(title: _("Indications")) {
-              f.block {
-                f.hetero_list(
-                        name: "indications",
-                        hasHeader: true,
-                        descriptors: management.getIndicationDescriptors(),
-                        items: my.getIndications(),
-                        addCaption: _("Add Indication"),
-                        deleteCaption: _("Delete Indication"))
+    l.app_bar(title:"Failure Cause") {
+      a(class: "jenkins-button jenkins-!-destructive-color", href: "../remove?id=" + my.getId(), tooltip: _("Remove this cause")) {
+        l.icon(src:"symbol-trash")
+        text(_("Remove"))
+      }
+    }
+
+    f.form(action: "configSubmit", method: "POST", name: "causeForm", class: "jenkins-form") {
+      f.invisibleEntry() {
+        f.textbox(field: "id", value: my.getId())
+      }
+      f.entry(title: _("Name"), field: "name") {
+        f.textbox(value: my.getName(), checkMethod: "post")
+      }
+      f.entry(title: _("Description"), field: "description") {
+        f.textarea(value: my.getDescription(), checkMethod: "post")
+      }
+      f.entry(title: _("Comment"), field: "comment") {
+        f.textarea(value: my.getComment())
+      }
+      f.entry(title: _("Categories"), field: "categories") {
+        f.textbox(value: my.getCategoriesAsString(), autoCompleteDelimChar: " ")
+      }
+      f.section(title: _("Indications")) {
+        f.block {
+          f.hetero_list(
+                  name: "indications",
+                  hasHeader: true,
+                  descriptors: management.getIndicationDescriptors(),
+                  items: my.getIndications(),
+                  addCaption: _("Add Indication"),
+                  deleteCaption: _("Delete Indication"))
+        }
+      }
+      f.section(title: _("Modification history")) {
+        def history = my.getAndInitiateModifications();
+        f.block {
+          if (history != null) {
+            ul(id: "modifications") {
+              history.each{ entry ->
+                def dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,
+                        DateFormat.SHORT).format(entry.getTime());
+                li {text(_("ModifiedBy", dateFormat,
+                        entry.getUser() == null ? "unknown": entry.getUser()))}
               }
-            }
-            f.section(title: _("Modification history")) {
-              def history = my.getAndInitiateModifications();
-              f.block {
-                if (history != null) {
-                  ul(id: "modifications") {
-                    history.each{ entry ->
-                      def dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                              DateFormat.SHORT).format(entry.getTime());
-                      li {text(_("ModifiedBy", dateFormat,
-                              entry.getUser() == null ? "unknown": entry.getUser()))}
-                    }
-                  }
-                }
-              }
-            }
-            f.block {
-              div(style: "margin-top: 10px")
-              f.submit(value: _("Save"))
             }
           }
         }
-        td(width: "10%", valign: "top") {
-          //The Remove Cause link
-          if (Util.fixEmpty(my.getId()) != null) {
-            a(style: "font-weight: bold; "
-                    + "font-size: larger; "
-                    + "padding-left: 30px; "
-                    + "min-height: 30px; "
-                    + "padding-top: 5px; "
-                    + "padding-bottom: 5px; ",
-                    href: "../remove?id=" + my.getId(),
-                    title: _("Remove this cause")) {text(_("Remove"))}
-          }
-        }
+      }
+      f.block {
+        div(style: "margin-top: 10px")
+        f.submit(value: _("Save"))
       }
     }
   }

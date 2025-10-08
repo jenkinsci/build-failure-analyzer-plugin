@@ -135,7 +135,7 @@ class TransientCauseManagementHudsonTest {
         DomNodeList<DomElement> elementsByTagName = page.getElementsByTagName("h1");
         boolean headingFound = false;
         for (DomElement element : elementsByTagName) {
-            if ("Update Failure Causes".equals(element.getTextContent())) {
+            if (element.getTextContent().contains("Update Failure Causes")) {
                 headingFound = true;
                 break;
             }
