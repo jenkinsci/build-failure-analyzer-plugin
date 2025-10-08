@@ -99,7 +99,7 @@ class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.getFirstByXPath("//h1[.='List of Failure Causes']"));
+        assertNotNull(page.getFirstByXPath("//h1[contains(text(), 'List of Failure Causes')]"));
         // Checks the "Create New" button is NOT available
         assertNull(page.getFirstByXPath("//a[.='Create new']"));
     }
@@ -119,7 +119,7 @@ class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.getFirstByXPath("//h1[.='Update Failure Causes']"));
+        assertNotNull(page.getFirstByXPath("//h1[contains(text(),'Update Failure Causes')]"));
         // Checks the "Create New" button is available
         assertNotNull(page.getFirstByXPath("//a[.='Create new']"));
     }
@@ -139,7 +139,7 @@ class CauseManagementPermissionTest {
         // Gets to the Failure Cause page
         HtmlPage page = webClient.goTo("failure-cause-management");
         // Checks we are actually on the page
-        assertNotNull(page.getFirstByXPath("//h1[.='Update Failure Causes']"));
+        assertNotNull(page.getFirstByXPath("//h1[contains(text(), 'Update Failure Causes')]"));
         // Checks the "Create New" button is available
         assertNotNull(page.getFirstByXPath("//a[.='Create new']"));
     }
