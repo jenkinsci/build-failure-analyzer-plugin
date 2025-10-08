@@ -181,6 +181,9 @@ class CauseManagementHudsonTest {
         HtmlPage editPage = firstCauseLink.click();
 
         verifyCorrectCauseEditPage(firstCause, editPage);
+
+        assertNotNull(editPage.getFirstByXPath("//a[contains(text(), 'Remove')]"));
+
     }
 
     /**
@@ -203,6 +206,7 @@ class CauseManagementHudsonTest {
                         CauseManagement.NEW_CAUSE_NAME,
                         CauseManagement.NEW_CAUSE_DESCRIPTION, ""),
                 editPage);
+        assertNull(editPage.getFirstByXPath("//a[contains(text(), 'Remove')]"));
     }
 
     /**
