@@ -47,9 +47,11 @@ l.layout(permission: PluginImpl.UPDATE_PERMISSION) {
 
   l.main_panel() {
     l.app_bar(title:"Failure Cause") {
-      a(class: "jenkins-button jenkins-!-destructive-color", href: "../remove?id=" + my.getId(), tooltip: _("Remove this cause")) {
-        l.icon(src:"symbol-trash")
-        text(_("Remove"))
+      if (Util.fixEmpty(my.getId()) != null) {
+        a(class: "jenkins-button jenkins-!-destructive-color", href: "../remove?id=" + my.getId(), tooltip: _("Remove this cause")) {
+          l.icon(src:"symbol-trash")
+          text(_("Remove"))
+        }
       }
     }
 
