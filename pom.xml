@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sonyericsson.jenkins.plugins.bfa</groupId>
     <artifactId>build-failure-analyzer</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>${revision}.${changelist}</version>
     <packaging>hpi</packaging>
     <name>Build Failure Analyzer</name>
     <url>https://github.com/jenkinsci/build-failure-analyzer-plugin/blob/master/docs/README.md</url>
@@ -15,8 +15,8 @@
     </parent>
 
     <properties>
-        <revision>2.6.2</revision>
-        <changelist>-SNAPSHOT</changelist>
+        <revision>3</revision>
+        <changelist>999999-SNAPSHOT</changelist>
         <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
         <jenkins.baseline>2.479</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
