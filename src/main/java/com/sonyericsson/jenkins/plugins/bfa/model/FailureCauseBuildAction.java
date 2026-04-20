@@ -74,20 +74,12 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     @Override
     public String getIconFileName() {
-        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-            return PluginImpl.getDefaultIcon();
-        } else {
-            return null;
-        }
+        return PluginImpl.getDefaultIcon();
     }
 
     @Override
     public String getDisplayName() {
-        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
-            return Messages.CauseManagement_DisplayName();
-        } else {
-            return null;
-        }
+        return Messages.CauseManagement_DisplayName();
     }
 
     @Override
