@@ -31,7 +31,6 @@ import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
 import hudson.matrix.MatrixRun;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
-import jenkins.model.Jenkins;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
