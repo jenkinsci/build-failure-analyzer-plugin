@@ -84,7 +84,7 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
 
     @Override
     public String getIconFileName() {
-        return PluginImpl.getDefaultIcon();
+        return null;
     }
 
     @Override
@@ -181,6 +181,10 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
     @Deprecated
     public String getBadgeImageUrl() {
         return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+    }
+
+    public String getIcon() {
+        return PluginImpl.getDefaultIcon();
     }
 
     /**

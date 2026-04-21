@@ -77,7 +77,7 @@ public class FailureCauseColumn extends ListViewColumn {
    * @see FailureCauseBuildAction#getBadgeImageUrl()
    * @param job The given job we want the badge image url for
    * @return the image url
-   * @deprecated plugin now uses icons. Please use {@link #getIconFileName(Job)} instead.
+   * @deprecated plugin now uses icons. Please use {@link #getIcon(Job)} instead.
    */
   @Deprecated
   public String getBadgeImageUrl(Job job) {
@@ -89,16 +89,16 @@ public class FailureCauseColumn extends ListViewColumn {
   }
 
   /**
-   * @see FailureCauseBuildAction#getIconFileName()
+   * @see FailureCauseBuildAction#getIcon()
    * @param job The given job we want the badge icon name for
    * @return the icon name
    */
-  public String getIconFileName(Job job) {
+  public String getIcon(Job job) {
     FailureCauseBuildAction action = findFailureCauseBuildAction(job);
     if (action == null) {
       return null;
     }
-    return action.getIconFileName();
+    return action.getIcon();
   }
 
 

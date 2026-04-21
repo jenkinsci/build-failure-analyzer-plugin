@@ -27,6 +27,6 @@
     <j:set var="failureCauses" value="${it.getFoundFailureCauses()}"/>
     <j:if test="${failureCauses.size() gt 0}">
         <j:set var="firstCause" value="${failureCauses.get(0)}"/>
-        <l:icon src="${it.getIconFileName()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
+        <l:icon src="${it.getIcon()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
     </j:if>
 </j:jelly>

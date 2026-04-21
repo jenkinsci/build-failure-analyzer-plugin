@@ -31,6 +31,8 @@ import com.sonyericsson.jenkins.plugins.bfa.model.dbf.DownstreamBuildFinder;
 import hudson.matrix.MatrixRun;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
+import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
@@ -71,14 +73,21 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         this.foundFailureCauses = foundFailureCauses;
     }
 
-    @Override
     public String getIconFileName() {
-        return PluginImpl.getDefaultIcon();
+        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+            return PluginImpl.getDefaultIcon();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public String getDisplayName() {
-        return Messages.CauseManagement_DisplayName();
+        if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
+            return Messages.CauseManagement_DisplayName();
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -116,6 +125,10 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     public String getBadgeImageUrl() {
         return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+    }
+
+    public String getIcon() {
+        return PluginImpl.getDefaultIcon();
     }
 
     /**
