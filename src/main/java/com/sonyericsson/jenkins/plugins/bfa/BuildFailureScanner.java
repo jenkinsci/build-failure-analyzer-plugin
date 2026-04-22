@@ -25,6 +25,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa;
 
+import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.addJobBuildCausesMetric;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.incCounters;
 import static com.sonyericsson.jenkins.plugins.bfa.MetricsManager.UNKNOWNCAUSE;
 
@@ -34,6 +35,7 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
+import com.sonyericsson.jenkins.plugins.bfa.model.IFailureCauseMetricData;
 import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
@@ -219,13 +221,23 @@ public class BuildFailureScanner extends RunListener<Run> {
             }
 
 
+            /* Strip "job/" from beginning and "/build_number/" from end */
+           StringBuilder jobName = new StringBuilder(build.getUrl().replaceFirst("^job/", ""));
+           String jobNameString = jobName.reverse().toString().replaceFirst("^/\\d+/", "");
+           jobName = new StringBuilder(jobNameString).reverse();
+
            if (!foundCauseList.isEmpty()) {
                incCounters(foundCauseList, PluginImpl.getInstance().isMetricSquashingEnabled());
+               addJobBuildCausesMetric(jobName.toString(), build, foundCauseList);
            } else {
+               ArrayList<IFailureCauseMetricData> unknownCauses = new ArrayList<>(
+                   Collections.singletonList(UNKNOWNCAUSE)
+               );
                incCounters(
-                   new ArrayList<>(Collections.singletonList(UNKNOWNCAUSE)),
+                   unknownCauses,
                    PluginImpl.getInstance().isMetricSquashingEnabled()
                 );
+               addJobBuildCausesMetric(jobName.toString(), build, unknownCauses);
            }
 
             FailureCauseBuildAction buildAction = new FailureCauseBuildAction(foundCauseList);
