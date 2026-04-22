@@ -125,7 +125,7 @@
         <dependency>
             <groupId>org.mongojack</groupId>
             <artifactId>mongojack</artifactId>
-            <version>4.0.1</version>
+            <version>5.0.3</version>
             <exclusions>
                 <!-- jackson deps come from jackson2-api plugin instead -->
                 <exclusion>
