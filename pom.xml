@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.sonyericsson.hudson.plugins.gerrit</groupId>
             <artifactId>gerrit-trigger</artifactId>
-            <version>2.39.0</version>
+            <version>3.1969.v65d614ec771a_</version>
             <optional>true</optional>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/slack -->
