@@ -32,6 +32,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.BuildBadgeAction;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
@@ -125,6 +126,15 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
 
     public String getBadgeImageUrl() {
         return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
+    }
+
+    /**
+     * Gets the icon for the badge page.
+     *
+     * @return the icon name
+     */
+    public String getIcon() {
+        return PluginImpl.getDefaultIcon();
     }
 
     /**

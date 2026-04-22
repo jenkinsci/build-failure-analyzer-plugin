@@ -26,6 +26,6 @@
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" >
     <j:set var="firstCause" value="${it.getFirstFailureCause()}"/>
     <j:if test="${firstCause != null}">
-        <l:icon src="${it.getIconFileName()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
+        <l:icon src="${it.getIcon()}" tooltip="${firstCause.name}" alt="${%Identified problems}" class="icon-sm"/>
     </j:if>
 </j:jelly>

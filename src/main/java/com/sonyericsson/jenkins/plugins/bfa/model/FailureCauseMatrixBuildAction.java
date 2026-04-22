@@ -184,6 +184,15 @@ public class FailureCauseMatrixBuildAction implements BuildBadgeAction {
     }
 
     /**
+     * Gets the icon for the badge page.
+     *
+     * @return the icon name
+     */
+    public String getIcon() {
+        return PluginImpl.getDefaultIcon();
+    }
+
+    /**
      * Gets the failure causes for a specific matrix run.
      *
      * @param run the run to find failure causes for.

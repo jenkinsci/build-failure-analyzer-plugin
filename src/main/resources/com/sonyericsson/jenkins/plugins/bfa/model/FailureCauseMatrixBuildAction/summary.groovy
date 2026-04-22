@@ -37,7 +37,7 @@ if (PluginImpl.getInstance().isNoCausesEnabled() || !matrixRuns.isEmpty()) {
 
     tr {
         td {
-            l.icon(src: my.getIconFileName(), class: "icon-xlg")
+            l.icon(src: my.getIcon(), class: "icon-xlg")
         }
         td(style: "vertical-align: middle;") {
             h2(class: "h4") {
