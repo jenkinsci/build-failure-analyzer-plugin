@@ -73,6 +73,7 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         this.foundFailureCauses = foundFailureCauses;
     }
 
+    @Override
     public String getIconFileName() {
         if (Jenkins.getInstance().hasPermission(PluginImpl.UPDATE_PERMISSION)) {
             return PluginImpl.getDefaultIcon();
@@ -127,6 +128,11 @@ public class FailureCauseBuildAction implements BuildBadgeAction {
         return PluginImpl.getFullImageUrl("16x16", PluginImpl.DEFAULT_ICON_NAME);
     }
 
+    /**
+     * Gets the icon for the badge page.
+     *
+     * @return the icon name
+     */
     public String getIcon() {
         return PluginImpl.getDefaultIcon();
     }
