@@ -4,7 +4,7 @@ This is a guide for the integration with the [Metrics plugin](https://plugins.je
 
 ## Metrics
 
-The integration provides counters for each individual cause and category that you create. These counters will reset to zero when jenkins is restarted. The format for the metrics created is `jenkins_bfa_category_<category name>` for each category and `jenkins_bfa_cause_<cause name>` for each cause. The category and cause names will be escaped by the metrics api to replace any spaces with underscores. 
+The integration provides counters for each individual cause and category that you create, as well as each job build. These counters will reset to zero when jenkins is restarted. The format for the metrics created is `jenkins_bfa_category_<category name>` for each category, `jenkins_bfa_cause_<cause name>` for each cause, and `jenkins_bfa_job__<job_name>__number__<job_build_number>__cause__<cause name>` for each job build. The category, cause, and job names will be escaped by the metrics api to replace any spaces with underscores. 
 
 ## Exporting
 
@@ -23,9 +23,21 @@ metric_relabel_configs:
     regex: 'jenkins_bfa_cause_(.*)'
     target_label: 'cause'
   - source_labels: [__name__]
-    regex: 'jenkins_bfa_(.*)_(.*)'
+    regex: 'jenkins_bfa_job__(.*)__number__(.*)__cause__(.*)'
+    replacement: '$1'
+    target_label: 'jenkins_job'
+  - source_labels: [__name__]
+    regex: 'jenkins_bfa_job__(.*)__number__(.*)__cause__(.*)'
+    replacement: '$2'
+    target_label: 'build_number'
+  - source_labels: [__name__]
+    regex: 'jenkins_bfa_job__(.*)__number__(.*)__cause__(.*)'
+    replacement: '$3'
+    target_label: 'cause'
+  - source_labels: [__name__]
+    regex: 'jenkins_bfa_(.*)'
     replacement: 'jenkins_bfa'
-    target_label: __name__ 
+    target_label: __name__
 ```
 
 This will provide a metric called `jenkins_bfa` with labels for the category and specific cause.
