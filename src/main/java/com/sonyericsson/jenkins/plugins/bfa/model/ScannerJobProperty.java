@@ -24,15 +24,8 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model;
 
-import com.sonyericsson.jenkins.plugins.bfa.FailureCauseMatrixAggregator;
 import com.sonyericsson.jenkins.plugins.bfa.Messages;
 import hudson.Extension;
-import hudson.Launcher;
-import hudson.matrix.MatrixAggregatable;
-import hudson.matrix.MatrixAggregator;
-import hudson.matrix.MatrixBuild;
-import hudson.model.Action;
-import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
@@ -40,15 +33,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 /**
- * A JobProperty that flags a job that should not be scanned. Also works as the {@link MatrixAggregatable}
+ * A JobProperty that flags a job that should not be scanned.
  *
  * @author Robert Sandell &lt;robert.sandell@sonymobile.com&gt;
  */
-public class ScannerJobProperty extends JobProperty<Job<?, ?>> implements MatrixAggregatable, Serializable {
+public class ScannerJobProperty extends JobProperty<Job<?, ?>> implements Serializable {
 
     private boolean doNotScan;
 
@@ -75,17 +65,6 @@ public class ScannerJobProperty extends JobProperty<Job<?, ?>> implements Matrix
      */
     public boolean isDoNotScan() {
         return doNotScan;
-    }
-
-    @Override
-    @Restricted(NoExternalUse.class)
-    public Action getJobAction(Job<?, ?> job) {
-        return new FailureCauseProjectAction(job);
-    }
-
-    @Override
-    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
-        return new FailureCauseMatrixAggregator(build, launcher, listener);
     }
 
     /**

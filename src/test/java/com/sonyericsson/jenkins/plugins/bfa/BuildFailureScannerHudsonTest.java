@@ -939,6 +939,26 @@ public class BuildFailureScannerHudsonTest {
     }
 
     /**
+     * Tests that the {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty}
+     * is not silently added to the job configuration.
+     *
+     * @param jenkins
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    void testDoNotAddScannerJobProperty(JenkinsRule jenkins) throws Exception {
+        PluginImpl.getInstance().setGlobalEnabled(true);
+        FreeStyleProject project = createProject(jenkins);
+        configureCauseAndIndication();
+        QueueTaskFuture<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        ScannerJobProperty property = project.getProperty(ScannerJobProperty.class);
+        assertNull(property);
+    }
+
+    /**
      * Tests that there is no scanner result when the property
      * {@link com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty}
      * is set to true.

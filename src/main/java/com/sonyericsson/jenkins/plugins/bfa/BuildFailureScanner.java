@@ -34,7 +34,6 @@ import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseDisplayData;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureReader;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
-import com.sonyericsson.jenkins.plugins.bfa.model.ScannerJobProperty;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.MultilineBuildLogIndication;
@@ -99,20 +98,6 @@ public class BuildFailureScanner extends RunListener<Run> {
         threadPoolExecutor = (ThreadPoolExecutor)Executors.newFixedThreadPool(
                 PluginImpl.getInstance().getNrOfScanThreads()
         );
-    }
-
-    @Override
-    public void onStarted(Run build, TaskListener listener) {
-        if (PluginImpl.shouldScan(build)
-                && build.getParent().getProperty(ScannerJobProperty.class) == null) {
-            try {
-                build.getParent().addProperty(new ScannerJobProperty(false));
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Failed to add a ScannerJobProperty to "
-                        + build.getParent().getFullDisplayName(), e);
-                listener.getLogger().println("[BFA] WARNING! Failed to add the scanner property to this job.");
-            }
-        }
     }
 
     @Override
