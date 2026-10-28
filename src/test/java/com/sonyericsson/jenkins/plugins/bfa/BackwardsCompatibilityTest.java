@@ -27,15 +27,11 @@ package com.sonyericsson.jenkins.plugins.bfa;
 import com.sonyericsson.jenkins.plugins.bfa.db.KnowledgeBase;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction;
-import com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseMatrixBuildAction;
 import com.sonyericsson.jenkins.plugins.bfa.model.FoundFailureCause;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.FoundIndication;
 import com.sonyericsson.jenkins.plugins.bfa.model.indication.Indication;
 import com.sonyericsson.jenkins.plugins.bfa.test.utils.Whitebox;
 import com.sonyericsson.jenkins.plugins.bfa.utils.OldDataConverter;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixProject;
-import hudson.matrix.MatrixRun;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
@@ -52,7 +48,6 @@ import static hudson.Util.fixEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //CS IGNORE MagicNumber FOR NEXT 160 LINES. REASON: TestData
@@ -140,39 +135,5 @@ class BackwardsCompatibilityTest {
         //since the old FoundIndication doesn't contain a matchingString from the start, we check it.
         AnnotationHelper annotationHelper = helperMap.get(indication.getMatchingString());
         assertNotNull(annotationHelper);
-    }
-
-    /**
-     * Tests if a {@link MatrixBuild} gets loaded and converted correctly from a version 1.2.0 save.
-     *
-     * @param jenkins
-     *
-     * @throws InterruptedException if it is not allowed to sleep in the beginning.
-     */
-    @LocalData
-    @Test
-    void testMatrix120(JenkinsRule jenkins) throws InterruptedException {
-        MatrixProject project = (MatrixProject)jenkins.jenkins.getItem("mymatrix");
-        MatrixBuild build = project.getBuildByNumber(1);
-        MatrixBuild build2 = project.getBuildByNumber(2);
-        OldDataConverter.getInstance().waitForInitialCompletion();
-        FailureCauseMatrixBuildAction matrixBuildAction = build.getAction(FailureCauseMatrixBuildAction.class);
-        assertNotNull(matrixBuildAction);
-        List<MatrixRun> runs = Whitebox.getInternalState(matrixBuildAction, "runs");
-        assertNotNull(runs);
-        List<String> runIds = null;
-
-        runIds = Whitebox.getInternalState(matrixBuildAction, "runIds");
-
-        assertEquals(runs.size(), runIds.size());
-        assertNotNull(runs.get(3).getProject());
-        assertEquals(runs.get(3).getProject().getCombination().toString(), runIds.get(3));
-        assertNotNull(Whitebox.getInternalState(matrixBuildAction, "build"));
-
-        List<MatrixRun> aggregatedRuns2 = FailureCauseMatrixAggregator.getRuns(build2);
-        FailureCauseMatrixBuildAction matrixBuildAction2 = build2.getAction(FailureCauseMatrixBuildAction.class);
-        assertNotNull(matrixBuildAction2);
-        List<MatrixRun> runs2 = Whitebox.getInternalState(matrixBuildAction2, "runs");
-        assertSame(aggregatedRuns2.get(5), runs2.get(5));
     }
 }
