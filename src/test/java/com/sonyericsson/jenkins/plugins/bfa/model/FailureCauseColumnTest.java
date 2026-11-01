@@ -67,6 +67,8 @@ class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithouttext");
+    assertNotNull(page.getFirstByXPath("//th[normalize-space(.)='Failure Cause']"),
+            "Couldn't find the failure cause column header in columnwithouttext view");
     assertNotNull(page.getFirstByXPath("//*[local-name()='svg'][@tooltip='Failure Builder']"),
                   "Couldn't find the failure cause svg in columnwithouttext view");
     assertNull(page.getDocumentElement().getFirstByXPath("//*[.='Failure Builder']"));
@@ -93,6 +95,8 @@ class FailureCauseColumnTest {
 
     WebClient webClient = j.createWebClient();
     HtmlPage page = webClient.goTo("view/columnwithtext");
+    assertNotNull(page.getFirstByXPath("//th[normalize-space(.)='Failure Cause']"),
+            "Couldn't find the failure cause column header in columnwithtext view");
     System.out.println(page.getTextContent());
     assertNotNull(page.getFirstByXPath("//*[local-name()='svg'][@tooltip='Failure Builder']"),
                   "Couldn't find the failure cause svg in columnwithtext view");
